@@ -6,4 +6,5 @@ media/
 *.db-journal
 *.db-wal
 *.db-shm
+*.tsbuildinfo
 .DS_Store

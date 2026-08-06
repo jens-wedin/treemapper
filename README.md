@@ -27,6 +27,24 @@ npm run test:e2e # Playwright browse flow (needs wedin.db)
   1–5 generations each way): pan/zoom, click or Enter refocuses, arrow keys walk
   relatives, and a fully equivalent "Lista" view for screen readers/keyboard
 
+## Editing
+
+All editing lives on the Personsida: **Redigera** for names/kön/anteckning,
+per-event **Redigera**/**Ta bort** plus **Lägg till händelse**, and guided
+dialogs for **Lägg till barn/partner/förälder** (pick an existing person or
+create a new one; family records are created and linked correctly).
+
+Every mutation is validated with the shared zod schemas in `lib/schemas.ts` and
+written to `audit_log` with full before/after JSON snapshots, so any change can
+be traced and manually reversed. Impossible states (self-relations, ancestry
+cycles, a third parent, duplicate children) are rejected with Swedish messages.
+Fuzzy dates are always accepted — `ABT 1715`, `17xx`, free text — and only the
+sortable year is left blank when it can't be parsed.
+
+Note: `npm run test:e2e` mutates data, so it runs against a **copy**
+(`.e2e.db`, recreated from `wedin.db` at the start of each run) on ports
+5199/3199 — the real database is never touched by tests.
+
 API: `GET /api/stats`, `GET /api/persons`, `GET /api/persons/:id/full`,
 `GET /api/media/:id`, `GET /api/tree/:id?up=&down=`. All UI copy lives in
 `src/lib/i18n.ts` (Swedish).

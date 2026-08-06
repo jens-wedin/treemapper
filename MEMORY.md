@@ -1,6 +1,22 @@
 # MEMORY — where the project stands
 
-_Last updated: 2026-08-06, end of Phase 3._
+_Last updated: 2026-08-06, end of Phase 4._
+
+## Done: Phase 4 (Redigering + audit log)
+
+- Plan: `docs/superpowers/plans/2026-08-06-phase4-editing.md` — fully executed.
+- `lib/schemas.ts` (shared zod), `lib/mutations.ts` (transactional, audited),
+  `api/mutations.ts` (PATCH persons, events CRUD, POST relations), edit UI in
+  `src/components/edit/`. 100 vitest + 9 e2e green.
+- **e2e now mutates data → runs against `.e2e.db`** (copy of wedin.db, made in
+  `e2e/global-setup.ts`) on ports 5199/3199 via `npm run dev:e2e`.
+  `createDb()` honours `WEDIN_DB`, server honours `API_PORT`.
+- Gotcha found in real data: MyHeritage seeds a pseudo-person `I88888888`
+  ("Unassociated photos") that broke id generation (new persons got I88888889);
+  `nextId` now ignores ids ≥ 10 000 000. That pseudo-person also shows up in
+  search results — worth hiding or cleaning in a later phase.
+- Watch out when inspecting `.e2e.db` right after a run: reading during the
+  WAL checkpoint can show pre-mutation state (looks like "nothing was saved").
 
 ## Done: Phase 3 (Träd)
 
@@ -26,11 +42,14 @@ _Last updated: 2026-08-06, end of Phase 3._
   resolves against the subquery's own table (see comment in `lib/queries.ts`).
 - Vitest excludes `e2e/**` (Playwright owns `.spec.ts` there) — see vite.config.ts.
 
-## Next: Phase 4 — Editing (spec §13)
+## Next: Phase 5 — Konsekvensbänken (spec §7, §8)
 
-Person/event/family editing + audit log: in-place field editing on Personsida,
-guided relation dialogs, zod validation both sides, every mutation writes
-audit_log with before/after snapshots. Write its plan first.
+13 deterministic issue detectors, review queue grouped by category (worst
+first), duplicate merge with side-by-side comparison + audit snapshots, and
+dismissals via stable fingerprint. This is the phase the merge engine lands in
+(TDD it hard — spec §14 names it the biggest data-loss risk). Write its plan
+first. Note: `/api/families` CRUD was deliberately deferred from Phase 4 to
+land with the merge engine here.
 
 ## Done: Phase 1 (scaffold + import + photo pipeline)
 

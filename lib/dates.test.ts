@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractYear, parseFullDate, daysBetween } from './dates';
+import { extractYear, parseFullDate, daysBetween, yearRange } from './dates';
 
 describe('extractYear', () => {
   it.each([
@@ -34,6 +34,19 @@ describe('parseFullDate', () => {
     for (const raw of ['ABT 1715', 'JUN 1971', '1834', 'BEF 17 JUL 1719', '17xx', '', null]) {
       expect(parseFullDate(raw as string | null)).toBeNull();
     }
+  });
+});
+
+describe('yearRange', () => {
+  it('returns the span a fuzzy date can cover', () => {
+    expect(yearRange('1845')).toEqual({ start: 1845, end: 1845 });
+    expect(yearRange('23 NOV 1845')).toEqual({ start: 1845, end: 1845 });
+    expect(yearRange('BET 1916 AND 1928')).toEqual({ start: 1916, end: 1928 });
+    expect(yearRange('FROM 1687 TO 1694')).toEqual({ start: 1687, end: 1694 });
+    expect(yearRange('BEF 1789')).toEqual({ start: null, end: 1789 });
+    expect(yearRange('AFT 22 DEC 1933')).toEqual({ start: 1933, end: null });
+    expect(yearRange('ABT 1715')).toEqual({ start: 1715, end: 1715 });
+    expect(yearRange('okänt')).toEqual({ start: null, end: null });
   });
 });
 

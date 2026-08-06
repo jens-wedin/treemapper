@@ -30,6 +30,29 @@ export function parseFullDate(dateRaw: string | null | undefined): FullDate | nu
   return { y: Number(m[3]), m: month, d };
 }
 
+export interface YearRange { start: number | null; end: number | null }
+
+/**
+ * The span of years a GEDCOM date can cover. Ranges matter for conflict
+ * detection: a residence recorded as "BET 1916 AND 1928" does not contradict a
+ * birth in 1926 — only the range's end lies before/after a fixed point.
+ * `start`/`end` are null when that side is open (BEF/AFT).
+ */
+export function yearRange(dateRaw: string | null | undefined): YearRange {
+  if (!dateRaw) return { start: null, end: null };
+  const s = dateRaw.trim().toUpperCase();
+  const years = [...s.matchAll(/(?<!\d)(\d{3,4})(?!\d)/g)]
+    .map(m => Number(m[1]))
+    .filter(y => y >= 100 && y <= 2100);
+  if (!years.length) return { start: null, end: null };
+  if (/^BET\b|^FROM\b/.test(s) && years.length >= 2) {
+    return { start: Math.min(...years), end: Math.max(...years) };
+  }
+  if (/^BEF\b|^TO\b/.test(s)) return { start: null, end: years[0]! };
+  if (/^AFT\b|^FROM\b/.test(s)) return { start: years[0]!, end: null };
+  return { start: years[0]!, end: years[0]! };
+}
+
 /** Absolute number of days between two full dates. */
 export function daysBetween(a: FullDate, b: FullDate): number {
   const ms = Math.abs(Date.UTC(a.y, a.m - 1, a.d) - Date.UTC(b.y, b.m - 1, b.d));

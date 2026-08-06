@@ -8,6 +8,12 @@ describe('i18n', () => {
     expect(t('finns.inte')).toBe('finns.inte');
   });
 
+  it('has tree strings', () => {
+    expect(t('nav.tree')).toBe('Träd');
+    expect(t('tree.ancestors')).toBe('Förfäder');
+    expect(t('tree.instructions')).toContain('Piltangenter');
+  });
+
   it('labels GEDCOM event types in Swedish with tag fallback', () => {
     expect(eventLabel('BIRT')).toBe('Födelse');
     expect(eventLabel('MARR')).toBe('Vigsel');

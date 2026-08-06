@@ -1,7 +1,7 @@
 // Swedish UI strings. Spec decision: plain dictionary, i18n-ready, no library.
 const sv = {
   appTitle: 'Wedin släktträd',
-  nav: { home: 'Hem', persons: 'Personer', skip: 'Hoppa till innehåll' },
+  nav: { home: 'Hem', persons: 'Personer', tree: 'Träd', skip: 'Hoppa till innehåll' },
   home: { lead: 'Sök i släktträdet', searchLabel: 'Sök person' },
   search: {
     name: 'Namn', birthYear: 'Födelseår', place: 'Födelseort', button: 'Sök',
@@ -20,6 +20,15 @@ const sv = {
     age: 'ålder', quality: 'kvalitet',
   },
   stats: { persons: 'Personer', families: 'Familjer', sources: 'Källor', photos: 'Foton' },
+  tree: {
+    title: 'Träd', showInTree: 'Visa i träd', chart: 'Diagram', list: 'Lista',
+    ancestors: 'Förfäder', descendants: 'Ättlingar',
+    generationsUp: 'Generationer uppåt', generationsDown: 'Generationer nedåt',
+    zoomIn: 'Zooma in', zoomOut: 'Zooma ut', zoomReset: 'Återställ vy',
+    goToPerson: 'Gå till personsida', focusOn: 'Fokusera trädet på',
+    chartLabel: 'Släktträdsdiagram',
+    instructions: 'Piltangenter flyttar mellan släktingar, Enter fokuserar trädet på vald person.',
+  },
 } as const;
 
 export function t(path: string): string {

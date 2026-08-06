@@ -1,8 +1,8 @@
 import { and, eq, inArray, or, sql } from 'drizzle-orm';
 import type { Db } from '../db/client';
-import { persons, families, familyChildren, events, citations, auditLog } from '../db/schema';
+import { persons, families, familyChildren, events, citations, sources, auditLog } from '../db/schema';
 import { extractYear } from './dates';
-import type { EventCreate, EventUpdate, PersonUpdate, RelationInput } from './schemas';
+import type { EventCreate, EventUpdate, PersonUpdate, RelationInput, SourceUpdate } from './schemas';
 
 export class MutationError extends Error {
   constructor(message: string, public status: 400 | 404 | 409 = 400) {
@@ -39,6 +39,17 @@ export function updatePerson(db: Db, id: string, patch: PersonUpdate): MutationR
     tx.update(persons).set({ ...patch, updatedAt: new Date().toISOString() }).where(eq(persons.id, id)).run();
     const after = tx.select().from(persons).where(eq(persons.id, id)).all()[0];
     audit(tx, 'update', 'person', id, before, after);
+    return { warnings: [], data: null };
+  });
+}
+
+export function updateSource(db: Db, id: string, patch: SourceUpdate): MutationResult {
+  return db.transaction(tx => {
+    const before = tx.select().from(sources).where(eq(sources.id, id)).all()[0];
+    if (!before) throw new MutationError('Källan finns inte', 404);
+    tx.update(sources).set(patch).where(eq(sources.id, id)).run();
+    const after = tx.select().from(sources).where(eq(sources.id, id)).all()[0];
+    audit(tx, 'update', 'source', id, before, after);
     return { warnings: [], data: null };
   });
 }

@@ -37,6 +37,14 @@ export const newPersonSchema = z.object({
 });
 export type NewPerson = z.infer<typeof newPersonSchema>;
 
+export const sourceUpdateSchema = z.object({
+  title: z.string().trim().max(200).nullable(),
+  author: z.string().trim().max(200).nullable(),
+  publication: z.string().trim().max(200).nullable(),
+  note: z.string().trim().max(10_000).nullable(),
+}).partial();
+export type SourceUpdate = z.infer<typeof sourceUpdateSchema>;
+
 const fieldChoice = z.enum(['survivor', 'duplicate']);
 
 export const mergeSchema = z.object({

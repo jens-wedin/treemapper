@@ -8,6 +8,7 @@ import { createTreeApi } from './tree';
 import { createMutationsApi } from './mutations';
 import { createIssuesApi } from './issues';
 import { createMergeApi } from './merge';
+import { createSourcesApi } from './sources';
 
 const db = createDb();
 const app = new Hono();
@@ -18,6 +19,7 @@ app.route('/', createTreeApi(db));
 app.route('/', createMutationsApi(db));
 app.route('/', createIssuesApi(db));
 app.route('/', createMergeApi(db));
+app.route('/', createSourcesApi(db));
 
 const port = Number(process.env.API_PORT ?? 3001);
 serve({ fetch: app.fetch, port });

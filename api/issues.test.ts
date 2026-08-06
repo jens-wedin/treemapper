@@ -79,6 +79,28 @@ describe('POST /api/merge', () => {
     expect(db.select().from(persons).all().map(p => p.id)).toEqual(['I1']);
   });
 
+  it('accepterar tomma och partiella fältval (som gränssnittet skickar)', async () => {
+    const empty = await post(mergeApi, '/api/merge', { survivorId: 'I1', duplicateId: 'I2', fieldChoices: {} });
+    expect(empty.status).toBe(200);
+
+    db.insert(persons).values([
+      { id: 'I3', givenName: 'A', surname: 'X', sex: 'U' },
+      { id: 'I4', givenName: 'B', surname: 'X', sex: 'U' },
+    ]).run();
+    const partial = await post(mergeApi, '/api/merge', {
+      survivorId: 'I3', duplicateId: 'I4', fieldChoices: { givenName: 'duplicate' },
+    });
+    expect(partial.status).toBe(200);
+    expect(db.select().from(persons).all().find(p => p.id === 'I3')!.givenName).toBe('B');
+  });
+
+  it('avvisar ogiltiga fältval', async () => {
+    const res = await post(mergeApi, '/api/merge', {
+      survivorId: 'I1', duplicateId: 'I2', fieldChoices: { givenName: 'neither' },
+    });
+    expect(res.status).toBe(400);
+  });
+
   it('avvisar sammanslagning med sig själv på svenska', async () => {
     const res = await post(mergeApi, '/api/merge', { survivorId: 'I1', duplicateId: 'I1' });
     expect(res.status).toBe(400);

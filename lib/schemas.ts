@@ -37,13 +37,21 @@ export const newPersonSchema = z.object({
 });
 export type NewPerson = z.infer<typeof newPersonSchema>;
 
+const fieldChoice = z.enum(['survivor', 'duplicate']);
+
 export const mergeSchema = z.object({
   survivorId: z.string().trim().min(2),
   duplicateId: z.string().trim().min(2),
-  fieldChoices: z.record(
-    z.enum(['givenName', 'surname', 'marriedName', 'suffix', 'sex', 'note']),
-    z.enum(['survivor', 'duplicate']),
-  ).optional(),
+  // A partial object, not z.record(enum, …): zod requires every key of an enum
+  // keyed record, which would reject the UI's "keep all survivor values" case.
+  fieldChoices: z.object({
+    givenName: fieldChoice,
+    surname: fieldChoice,
+    marriedName: fieldChoice,
+    suffix: fieldChoice,
+    sex: fieldChoice,
+    note: fieldChoice,
+  }).partial().optional(),
 });
 export type MergeRequest = z.infer<typeof mergeSchema>;
 

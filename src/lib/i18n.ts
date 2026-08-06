@@ -1,7 +1,23 @@
 // Swedish UI strings. Spec decision: plain dictionary, i18n-ready, no library.
 const sv = {
   appTitle: 'Wedin släktträd',
-  nav: { home: 'Hem', persons: 'Personer', tree: 'Träd', issues: 'Konsekvens', skip: 'Hoppa till innehåll' },
+  nav: {
+    home: 'Hem', persons: 'Personer', tree: 'Träd', issues: 'Konsekvens',
+    sources: 'Källor', settings: 'Inställningar', skip: 'Hoppa till innehåll',
+  },
+  sources: {
+    title: 'Källor', search: 'Sök källa', author: 'Författare', publication: 'Utgivare',
+    citations: 'Källhänvisningar', usedBy: 'Används av', count: 'Antal hänvisningar',
+    none: 'Inga källhänvisningar.', truncated: 'Visar de första {n} hänvisningarna.',
+    backToSources: 'Till källistan', notFound: 'Källan finns inte.', page: 'Sida',
+  },
+  export: {
+    title: 'Inställningar', gedcom: 'Exportera GEDCOM',
+    gedcomHelp: 'Laddar ner hela trädet som en GEDCOM 5.5.1-fil — säkerhetskopia och väg ut ur appen. Filen kan läsas av MyHeritage, Ancestry, Gramps med flera.',
+    download: 'Ladda ner GEDCOM',
+    backupNote: 'Kom ihåg att också säkerhetskopiera media-mappen — foton ingår inte i GEDCOM-filen, bara länkarna till dem.',
+    cliNote: 'Från terminalen: npm run export',
+  },
   home: { lead: 'Sök i släktträdet', searchLabel: 'Sök person' },
   search: {
     name: 'Namn', birthYear: 'Födelseår', place: 'Födelseort', button: 'Sök',

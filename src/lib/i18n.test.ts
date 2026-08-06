@@ -8,6 +8,11 @@ describe('i18n', () => {
     expect(t('finns.inte')).toBe('finns.inte');
   });
 
+  it('has source and export strings', () => {
+    expect(t('sources.title')).toBe('Källor');
+    expect(t('export.download')).toBe('Ladda ner GEDCOM');
+  });
+
   it('has issue strings', () => {
     expect(t('issues.title')).toBe('Konsekvensbänken');
     expect(t('issues.sev.error')).toBe('Logiskt fel');

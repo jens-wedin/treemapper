@@ -5,6 +5,9 @@ import PersonList from './pages/PersonList';
 import PersonPage from './pages/PersonPage';
 import TreePage from './pages/TreePage';
 import IssuesPage from './pages/IssuesPage';
+import SourcesPage from './pages/SourcesPage';
+import SourcePage from './pages/SourcePage';
+import SettingsPage from './pages/SettingsPage';
 
 export default function App() {
   return (
@@ -24,6 +27,8 @@ export default function App() {
               ['/personer', t('nav.persons')],
               ['/trad', t('nav.tree')],
               ['/konsekvens', t('nav.issues')],
+              ['/kallor', t('nav.sources')],
+              ['/installningar', t('nav.settings')],
             ] as const
           ).map(([to, label]) => (
             <NavLink
@@ -47,6 +52,9 @@ export default function App() {
           <Route path="/trad" element={<TreePage />} />
           <Route path="/trad/:id" element={<TreePage />} />
           <Route path="/konsekvens" element={<IssuesPage />} />
+          <Route path="/kallor" element={<SourcesPage />} />
+          <Route path="/kalla/:id" element={<SourcePage />} />
+          <Route path="/installningar" element={<SettingsPage />} />
         </Routes>
       </main>
     </>

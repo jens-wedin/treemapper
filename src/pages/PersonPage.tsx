@@ -32,7 +32,10 @@ function Citations({ items }: { items: CitationView[] }) {
     <ul className="mt-1 space-y-1 text-sm text-gray-600">
       {items.map(c => (
         <li key={c.id}>
-          {t('person.source')}: {c.sourceTitle ?? c.sourceId}
+          {t('person.source')}:{' '}
+          <Link to={`/kalla/${c.sourceId}`} className="underline-offset-2 hover:underline">
+            {c.sourceTitle ?? c.sourceId}
+          </Link>
           {c.quality != null && <> · {t('person.quality')} {c.quality}</>}
           {c.page && (
             /^https?:\/\//.test(c.page)

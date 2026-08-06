@@ -53,7 +53,6 @@ const fingerprint = (category: string, ids: string[], ...values: (string | numbe
 const normalizeName = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
 const fullName = (p: { givenName: string; surname: string }) =>
   [p.givenName, p.surname].filter(s => s.trim()).join(' ').replace(/\s+/g, ' ').trim();
-const firstToken = (given: string) => given.trim().split(/\s+/)[0]?.toLowerCase() ?? '';
 
 /** Levenshtein distance with an early exit at `max`. */
 function editDistance(a: string, b: string, max = 2): number {

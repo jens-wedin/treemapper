@@ -1,6 +1,30 @@
 # MEMORY — where the project stands
 
-_Last updated: 2026-08-06, end of Phase 4._
+_Last updated: 2026-08-06, end of Phase 5._
+
+## Done: Phase 5 (Konsekvensbänken)
+
+- Plan: `docs/superpowers/plans/2026-08-06-phase5-konsekvensbanken.md`.
+  **Scope decision (Jens, 2026-08-06): full MyHeritage parity, 28 categories**
+  — not the spec's 13. Authoritative source is `data/konsekvensproblem.pdf`
+  (MyHeritage's own report: 894 problems, 24 categories, thresholds and
+  Swedish wording taken from it).
+- `lib/issues.ts` (detectors + fingerprints), `lib/merge.ts` (merge engine),
+  `api/issues.ts`, `api/merge.ts`, `/konsekvens` page + `DuplicateMerge`.
+  149 vitest + 14 e2e green. Detection over the full tree takes ~0.6 s.
+- Current state of the real tree: **2 831 problem, 2 275 flaggade personer**
+  (171 error, 518 dubbletter, 1 868 varningar, 251 övrigt, 23 småfel);
+  241 duplicate groups, 8 of them high-confidence.
+- Calibration deltas vs MyHeritage, all deliberate: Vid liv men för gammal
+  650 vs 200 (ours flags everyone missing death info who'd be 111+);
+  Syskon med samma förnamn 72 vs 31 (we emit one per sibling, and skip the
+  historically normal reuse of a dead sibling's name); stavningsvarianter
+  lower because our GEDCOM is the cleaned copy.
+- Bug worth remembering: **zod 4 `z.record(z.enum(...), v)` requires every
+  key** — it rejected the UI's empty `fieldChoices` and broke every merge from
+  the browser. Use `z.object({...}).partial()` for optional-key maps.
+- Playwright `.check()`/`.uncheck()` fight React checkboxes driven by URL
+  state; use `.click()` + `toBeChecked()`.
 
 ## Done: Phase 4 (Redigering + audit log)
 
@@ -42,14 +66,14 @@ _Last updated: 2026-08-06, end of Phase 4._
   resolves against the subquery's own table (see comment in `lib/queries.ts`).
 - Vitest excludes `e2e/**` (Playwright owns `.spec.ts` there) — see vite.config.ts.
 
-## Next: Phase 5 — Konsekvensbänken (spec §7, §8)
+## Next: Phase 6 — Källor + export (spec §13, final phase)
 
-13 deterministic issue detectors, review queue grouped by category (worst
-first), duplicate merge with side-by-side comparison + audit snapshots, and
-dismissals via stable fingerprint. This is the phase the merge engine lands in
-(TDD it hard — spec §14 names it the biggest data-loss risk). Write its plan
-first. Note: `/api/families` CRUD was deliberately deferred from Phase 4 to
-land with the merge engine here.
+Source management (the 520 sources with their citations, editable, showing
+which events cite each source), GEDCOM 5.5.1 export round-tripping `raw_tags`
+(test by re-parsing our own output), and polish. Write its plan first.
+
+**Jens has UX/UI feedback pending** — ask for it before starting the polish
+part of Phase 6.
 
 ## Done: Phase 1 (scaffold + import + photo pipeline)
 

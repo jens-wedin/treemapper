@@ -27,6 +27,31 @@ npm run test:e2e # Playwright browse flow (needs wedin.db)
   1–5 generations each way): pan/zoom, click or Enter refocuses, arrow keys walk
   relatives, and a fully equivalent "Lista" view for screen readers/keyboard
 
+## Konsekvensbänken
+
+`/konsekvens` is the cleanup workbench. 28 deterministic detectors reproduce
+MyHeritage's own consistency check (calibrated against
+`data/konsekvensproblem.pdf` — its 894 problems in 24 categories) plus four
+completeness categories from the data-quality report: saknar födelse, födelse/
+dödsfall utan datum, and möjlig dubblett.
+
+Issues are **computed, never stored** — fixing the data makes an issue vanish
+and the detectors keep guarding future edits. The queue is sorted worst first
+(logiskt fel → dubblett → varning → övrigt → småfel), filterable by category,
+with **Åtgärda** (jump to the person) and **Avfärda** per issue. Dismissals are
+remembered by a fingerprint of the category, the people involved and the
+offending values, so a dismissed issue stays gone — but legitimately reappears
+if the underlying data changes.
+
+**Duplicate merge** compares two records side by side; you pick which record
+survives and which value wins per field. The merge moves every event, citation
+and photo to the survivor, relinks families (collapsing duplicate child links,
+never creating a self-marriage), deletes the duplicate, and writes one
+`audit_log` row containing a complete before/after snapshot of every affected
+record. It refuses to merge a person with themselves or two people in the same
+ancestry line, and the whole operation is one transaction — a failure anywhere
+leaves the tree untouched.
+
 ## Editing
 
 All editing lives on the Personsida: **Redigera** for names/kön/anteckning,

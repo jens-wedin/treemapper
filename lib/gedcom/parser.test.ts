@@ -48,4 +48,23 @@ describe('parseGedcom', () => {
   it('throws on malformed lines', () => {
     expect(() => parseGedcom('nonsense')).toThrow(/Malformed/);
   });
+
+  // The real MyHeritage export contains note text on its own lines that starts
+  // with digits ("1709 gm", "31 October …") — these must not crash the import.
+  it('recovers garbage lines with implausible levels as continuations', () => {
+    const warnings: string[] = [];
+    const text = ['0 @I1@ INDI', '1 NOTE Han föddes', '1709 gm', '1 SEX M'].join('\n');
+    const [indi] = parseGedcom(text, warnings);
+    expect(indi.children.map(c => c.tag)).toEqual(['NOTE', 'SEX']);
+    expect(indi.children[0].value).toBe('Han föddes\n1709 gm');
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('1709 gm');
+  });
+
+  it('recovers lines that do not match the GEDCOM format at all', () => {
+    const text = ['0 @I1@ INDI', '1 NOTE x', 'bara text', '1 SEX M'].join('\n');
+    const [indi] = parseGedcom(text);
+    expect(indi.children[0].value).toBe('x\nbara text');
+    expect(indi.children[1].tag).toBe('SEX');
+  });
 });

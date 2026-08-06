@@ -8,7 +8,7 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
-  server: { proxy: { '/api': 'http://localhost:3001' } },
+  server: { proxy: { '/api': `http://localhost:${process.env.API_PORT ?? 3001}` } },
   test: {
     environment: 'node',
     passWithNoTests: true,

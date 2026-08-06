@@ -1,46 +1,47 @@
-import { useEffect, useState } from 'react';
-
-interface Stats {
-  persons: number;
-  families: number;
-  sources: number;
-  media: number;
-  mediaDone: number;
-}
+import { NavLink, Route, Routes } from 'react-router';
+import { t } from './lib/i18n';
+import Hem from './pages/Hem';
+import PersonList from './pages/PersonList';
+import PersonPage from './pages/PersonPage';
 
 export default function App() {
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    fetch('/api/stats')
-      .then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then(setStats)
-      .catch(() => setError(true));
-  }, []);
-
   return (
-    <main className="mx-auto max-w-2xl p-8">
-      <h1 className="text-3xl font-bold">Wedin släktträd</h1>
-      {error && <p className="mt-2 text-red-700">Kunde inte nå API:et — kör databasen? (npm run import)</p>}
-      {!error && !stats && <p className="mt-2 text-gray-600">Läser in …</p>}
-      {stats && (
-        <dl className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+    <>
+      <a
+        href="#innehall"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-white focus:p-2 focus:shadow"
+      >
+        {t('nav.skip')}
+      </a>
+      <header className="border-b">
+        <nav aria-label={t('appTitle')} className="mx-auto flex max-w-3xl items-center gap-6 px-4 py-3">
+          <span className="font-semibold">{t('appTitle')}</span>
           {(
             [
-              ['Personer', stats.persons],
-              ['Familjer', stats.families],
-              ['Källor', stats.sources],
-              ['Foton', `${stats.mediaDone}/${stats.media}`],
+              ['/', t('nav.home')],
+              ['/personer', t('nav.persons')],
             ] as const
-          ).map(([label, value]) => (
-            <div key={label} className="rounded-lg border p-4">
-              <dt className="text-sm text-gray-600">{label}</dt>
-              <dd className="text-2xl font-semibold">{value}</dd>
-            </div>
+          ).map(([to, label]) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={to === '/'}
+              className={({ isActive }) =>
+                `underline-offset-4 hover:underline ${isActive ? 'font-semibold underline' : ''}`
+              }
+            >
+              {label}
+            </NavLink>
           ))}
-        </dl>
-      )}
-    </main>
+        </nav>
+      </header>
+      <main id="innehall" className="mx-auto max-w-3xl px-4 py-8">
+        <Routes>
+          <Route path="/" element={<Hem />} />
+          <Route path="/personer" element={<PersonList />} />
+          <Route path="/person/:id" element={<PersonPage />} />
+        </Routes>
+      </main>
+    </>
   );
 }

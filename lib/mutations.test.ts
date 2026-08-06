@@ -6,8 +6,8 @@ import { fileURLToPath } from 'node:url';
 import { eq } from 'drizzle-orm';
 import { runImport } from '../scripts/import';
 import { createDb, type Db } from '../db/client';
-import { persons, events, citations, auditLog, familyChildren } from '../db/schema';
-import { updatePerson, createEvent, updateEvent, deleteEvent } from './mutations';
+import { persons, events, citations, auditLog, familyChildren, families } from '../db/schema';
+import { updatePerson, createEvent, updateEvent, deleteEvent, addRelation } from './mutations';
 
 const fixture = fileURLToPath(new URL('./gedcom/fixtures/mini.ged', import.meta.url));
 let dir: string;
@@ -85,5 +85,55 @@ describe('events', () => {
     expect(db.select().from(citations).all().filter(c => c.ownerType === 'event' && c.ownerId === String(birt.id))).toHaveLength(0);
     const types = db.select().from(auditLog).all().slice(-2).map(l => l.entityType).sort();
     expect(types).toEqual(['citation', 'event']);
+  });
+});
+
+describe('addRelation', () => {
+  it('adds a new-person child to the only family with next seq', () => {
+    const r = addRelation(db, { type: 'child', personId: 'I1', newPerson: { givenName: 'Nya', surname: 'Barnet', sex: 'F' } });
+    expect(r.data).toEqual({ relativeId: 'I4', familyId: 'F1' });
+    const links = db.select().from(familyChildren).all().filter(l => l.familyId === 'F1').sort((a, b) => a.seq - b.seq);
+    expect(links.map(l => l.childId)).toEqual(['I3', 'I4']);
+    const p4 = db.select().from(persons).where(eq(persons.id, 'I4')).all()[0];
+    expect(p4).toMatchObject({ givenName: 'Nya', sex: 'F' });
+  });
+
+  it('rejects duplicates, self-relations, cycles and re-marriage in Swedish', () => {
+    expect(() => addRelation(db, { type: 'child', personId: 'I1', relativeId: 'I3' })).toThrowError('redan barn');
+    expect(() => addRelation(db, { type: 'child', personId: 'I1', relativeId: 'I1' })).toThrowError('sin egen släkting');
+    expect(() => addRelation(db, { type: 'child', personId: 'I3', relativeId: 'I1' })).toThrowError('omöjlig släktlinje');
+    expect(() => addRelation(db, { type: 'spouse', personId: 'I1', relativeId: 'I2' })).toThrowError('redan partner');
+  });
+
+  it('creates a new family for a spouse', () => {
+    const r = addRelation(db, { type: 'spouse', personId: 'I3', newPerson: { givenName: 'Partner', surname: 'Ny', sex: 'F' } });
+    expect(r.data.relativeId).toBe('I5');
+    expect(r.data.familyId).toBe('F2');
+    const f = db.select().from(families).where(eq(families.id, 'F2')).all()[0];
+    expect(f.wifeId).toBe('I5');
+    expect([f.husbandId, f.wifeId]).toContain('I3');
+  });
+
+  it('adds a child into a selected family', () => {
+    const r = addRelation(db, { type: 'child', personId: 'I3', familyId: 'F2', newPerson: { givenName: 'Barn', surname: 'Tre', sex: 'U' } });
+    expect(r.data).toEqual({ relativeId: 'I6', familyId: 'F2' });
+  });
+
+  it('fills a free parent slot, then rejects a third parent', () => {
+    // I6 gets a child I7 → new family F3 holds only I6 → one parent slot free
+    const child = addRelation(db, { type: 'child', personId: 'I6', newPerson: { givenName: 'Barnbarn', surname: 'Tre', sex: 'M' } });
+    expect(child.data).toEqual({ relativeId: 'I7', familyId: 'F3' });
+    const fill = addRelation(db, { type: 'parent', personId: 'I7', relativeId: 'I2' });
+    expect(fill.data.familyId).toBe('F3');
+    expect(db.select().from(families).where(eq(families.id, 'F3')).all()[0].wifeId).toBe('I2');
+    expect(() => addRelation(db, { type: 'parent', personId: 'I7', newPerson: { givenName: 'Tredje', surname: 'X', sex: 'M' } })).toThrowError('redan två föräldrar');
+  });
+
+  it('creates a parent family when none exists', () => {
+    const r = addRelation(db, { type: 'parent', personId: 'I5', newPerson: { givenName: 'Förälder', surname: 'En', sex: 'M' } });
+    expect(r.data).toEqual({ relativeId: 'I8', familyId: 'F4' });
+    const link = db.select().from(familyChildren).all().find(l => l.familyId === 'F4');
+    expect(link).toMatchObject({ childId: 'I5', seq: 0 });
+    expect(db.select().from(families).where(eq(families.id, 'F4')).all()[0].husbandId).toBe('I8');
   });
 });

@@ -1,8 +1,8 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray, or, sql } from 'drizzle-orm';
 import type { Db } from '../db/client';
-import { persons, families, events, citations, auditLog } from '../db/schema';
+import { persons, families, familyChildren, events, citations, auditLog } from '../db/schema';
 import { extractYear } from './dates';
-import type { EventCreate, EventUpdate, PersonUpdate } from './schemas';
+import type { EventCreate, EventUpdate, PersonUpdate, RelationInput } from './schemas';
 
 export class MutationError extends Error {
   constructor(message: string, public status: 400 | 404 | 409 = 400) {
@@ -85,5 +85,149 @@ export function deleteEvent(db: Db, id: number): MutationResult {
     tx.delete(events).where(eq(events.id, id)).run();
     audit(tx, 'delete', 'event', id, before, null);
     return { warnings: [], data: null };
+  });
+}
+
+const CYCLE_MSG = 'Detta skulle skapa en omöjlig släktlinje (personen skulle bli sin egen förfader).';
+
+function nextId(tx: Tx, table: typeof persons | typeof families, prefix: 'I' | 'F'): string {
+  const row = tx.select({ n: sql<number>`coalesce(max(cast(substr(id, 2) as integer)), 0)` })
+    .from(table).where(sql`id like ${prefix + '%'}`).all()[0];
+  return `${prefix}${(row?.n ?? 0) + 1}`;
+}
+
+function parentIdsOfTx(tx: Tx, id: string): string[] {
+  const links = tx.select().from(familyChildren).where(eq(familyChildren.childId, id)).all();
+  if (!links.length) return [];
+  const fams = tx.select().from(families).where(inArray(families.id, links.map(l => l.familyId))).all();
+  return fams.flatMap(f => [f.husbandId, f.wifeId]).filter((x): x is string => !!x);
+}
+
+function isAncestor(tx: Tx, ancestorId: string, personId: string): boolean {
+  const visited = new Set<string>();
+  const queue = [personId];
+  while (queue.length) {
+    for (const p of parentIdsOfTx(tx, queue.pop()!)) {
+      if (p === ancestorId) return true;
+      if (!visited.has(p)) {
+        visited.add(p);
+        queue.push(p);
+      }
+    }
+  }
+  return false;
+}
+
+export function addRelation(db: Db, input: RelationInput): MutationResult<{ relativeId: string; familyId: string }> {
+  return db.transaction(tx => {
+    const person = tx.select().from(persons).where(eq(persons.id, input.personId)).all()[0];
+    if (!person) throw new MutationError('Personen finns inte', 404);
+
+    let relativeId: string;
+    let relativeSex: 'M' | 'F' | 'U';
+    if (input.relativeId) {
+      const rel = tx.select().from(persons).where(eq(persons.id, input.relativeId)).all()[0];
+      if (!rel) throw new MutationError('Personen finns inte', 404);
+      relativeId = rel.id;
+      relativeSex = rel.sex;
+    } else {
+      const np = input.newPerson!;
+      relativeId = nextId(tx, persons, 'I');
+      relativeSex = np.sex;
+      tx.insert(persons).values({ id: relativeId, givenName: np.givenName, surname: np.surname, sex: np.sex }).run();
+      audit(tx, 'create', 'person', relativeId, null, tx.select().from(persons).where(eq(persons.id, relativeId)).all()[0]);
+    }
+    if (relativeId === input.personId) throw new MutationError('En person kan inte vara sin egen släkting.');
+
+    const createFamily = (husbandId: string | null, wifeId: string | null): string => {
+      const fid = nextId(tx, families, 'F');
+      tx.insert(families).values({ id: fid, husbandId, wifeId }).run();
+      audit(tx, 'create', 'family', fid, null, tx.select().from(families).where(eq(families.id, fid)).all()[0]);
+      return fid;
+    };
+    // Slot placement: M→husband, F→wife, U→husband (the other party takes the rest).
+    const slotsFor = (id: string, sex: string): { husbandId: string | null; wifeId: string | null } =>
+      sex === 'F' ? { husbandId: null, wifeId: id } : { husbandId: id, wifeId: null };
+
+    const fillSpouseSlot = (familyId: string, memberId: string, memberSex: string, fullMessage: string) => {
+      const before = tx.select().from(families).where(eq(families.id, familyId)).all()[0]!;
+      const free = memberSex === 'F'
+        ? (!before.wifeId ? 'wifeId' : !before.husbandId ? 'husbandId' : null)
+        : (!before.husbandId ? 'husbandId' : !before.wifeId ? 'wifeId' : null);
+      if (!free) throw new MutationError(fullMessage, 409);
+      const patch = free === 'husbandId' ? { husbandId: memberId } : { wifeId: memberId };
+      tx.update(families).set(patch).where(eq(families.id, familyId)).run();
+      audit(tx, 'update', 'family', familyId, before, tx.select().from(families).where(eq(families.id, familyId)).all()[0]);
+    };
+
+    const addChildLink = (familyId: string, childId: string) => {
+      const links = tx.select().from(familyChildren).where(eq(familyChildren.familyId, familyId)).all();
+      if (links.some(l => l.childId === childId)) throw new MutationError('Personen är redan barn i den här familjen.', 409);
+      const seq = links.length ? Math.max(...links.map(l => l.seq)) + 1 : 0;
+      tx.insert(familyChildren).values({ familyId, childId, seq }).run();
+      audit(tx, 'create', 'family_child', `${familyId}:${childId}`, null, { familyId, childId, seq });
+    };
+
+    let familyId: string;
+    if (input.type === 'child') {
+      if (isAncestor(tx, relativeId, input.personId)) throw new MutationError(CYCLE_MSG, 409);
+      const own = tx.select().from(families)
+        .where(or(eq(families.husbandId, input.personId), eq(families.wifeId, input.personId))).all();
+      if (input.familyId) {
+        const f = own.find(f => f.id === input.familyId);
+        if (!f) throw new MutationError('Familjen finns inte', 404);
+        familyId = f.id;
+      } else if (own.length === 1) {
+        familyId = own[0]!.id;
+      } else if (own.length === 0) {
+        const slots = slotsFor(input.personId, person.sex);
+        familyId = createFamily(slots.husbandId, slots.wifeId);
+      } else {
+        throw new MutationError('Ange vilken familj barnet ska läggas i.');
+      }
+      addChildLink(familyId, relativeId);
+    } else if (input.type === 'spouse') {
+      const own = tx.select().from(families)
+        .where(or(eq(families.husbandId, input.personId), eq(families.wifeId, input.personId))).all();
+      if (own.some(f =>
+        (f.husbandId === input.personId && f.wifeId === relativeId) ||
+        (f.wifeId === input.personId && f.husbandId === relativeId))) {
+        throw new MutationError('Personerna är redan partner.', 409);
+      }
+      if (input.familyId) {
+        const f = own.find(f => f.id === input.familyId);
+        if (!f) throw new MutationError('Familjen finns inte', 404);
+        fillSpouseSlot(f.id, relativeId, relativeSex, 'Familjen har redan två partner.');
+        familyId = f.id;
+      } else {
+        const slots = slotsFor(input.personId, person.sex);
+        familyId = slots.husbandId
+          ? createFamily(slots.husbandId, relativeId)
+          : createFamily(relativeId, slots.wifeId);
+      }
+    } else {
+      if (isAncestor(tx, input.personId, relativeId)) throw new MutationError(CYCLE_MSG, 409);
+      const links = tx.select().from(familyChildren).where(eq(familyChildren.childId, input.personId)).all();
+      const parentFams = links.length
+        ? tx.select().from(families).where(inArray(families.id, links.map(l => l.familyId))).all()
+        : [];
+      if (parentFams.some(f => f.husbandId === relativeId || f.wifeId === relativeId)) {
+        throw new MutationError('Personen är redan förälder.', 409);
+      }
+      const target = input.familyId
+        ? parentFams.find(f => f.id === input.familyId)
+        : parentFams.find(f => !f.husbandId || !f.wifeId);
+      if (input.familyId && !target) throw new MutationError('Familjen finns inte', 404);
+      if (!target && parentFams.length) throw new MutationError('Personen har redan två föräldrar.', 409);
+      if (target) {
+        fillSpouseSlot(target.id, relativeId, relativeSex, 'Familjen har redan två föräldrar.');
+        familyId = target.id;
+      } else {
+        const slots = slotsFor(relativeId, relativeSex);
+        familyId = createFamily(slots.husbandId, slots.wifeId);
+        addChildLink(familyId, input.personId);
+      }
+    }
+    return { warnings: [], data: { relativeId, familyId } };
   });
 }

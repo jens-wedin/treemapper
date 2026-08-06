@@ -1,9 +1,12 @@
 import { hierarchy, tree, type HierarchyNode } from 'd3-hierarchy';
 import type { AncestorNode, DescendantNode, TreeData, TreePerson } from '../../lib/tree';
 
-export const NODE_W = 168;
-export const NODE_H = 60;
-const STEP_X = NODE_W + 20;
+export const NODE_W = 210;
+export const NODE_H = 66;
+/** Portrait circle on the left of each card. */
+export const AVATAR_R = 21;
+export const AVATAR_CX = 6 + AVATAR_R;
+const STEP_X = NODE_W + 24;
 const STEP_Y = NODE_H + 56;
 
 export interface PositionedNode { key: string; person: TreePerson; x: number; y: number; isFocus: boolean }

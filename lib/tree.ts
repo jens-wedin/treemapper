@@ -1,6 +1,6 @@
-import { eq, inArray, or, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, or, sql } from 'drizzle-orm';
 import type { Db } from '../db/client';
-import { persons, families, familyChildren } from '../db/schema';
+import { persons, families, familyChildren, media } from '../db/schema';
 
 export interface TreePerson {
   id: string;
@@ -9,6 +9,8 @@ export interface TreePerson {
   birthYear: number | null;
   deathYear: number | null;
   sex: 'M' | 'F' | 'U';
+  /** Downloaded photo to show on the chart card, if the person has one. */
+  photoId: number | null;
 }
 export interface AncestorNode { person: TreePerson; parents: AncestorNode[] }
 export interface DescendantNode { person: TreePerson; children: DescendantNode[] }
@@ -18,13 +20,41 @@ export interface TreeData { focus: TreePerson; ancestors: AncestorNode; descenda
 const birthYearSql = sql<number | null>`(select min(e.date_year) from events e where e.owner_id = persons.id and e.owner_type = 'person' and e.type = 'BIRT')`;
 const deathYearSql = sql<number | null>`(select min(e.date_year) from events e where e.owner_id = persons.id and e.owner_type = 'person' and e.type = 'DEAT')`;
 
+/**
+ * Picks one photo per person for the chart: MyHeritage's primary photo
+ * (`_PRIM Y`, kept in raw_tags) when there is one, otherwise the first
+ * downloaded photo. Photos that never downloaded are skipped.
+ */
+function fetchPhotoIds(db: Db, ids: string[]): Map<string, number> {
+  const rows = db.select({ id: media.id, ownerId: media.ownerId, rawTags: media.rawTags })
+    .from(media)
+    .where(and(
+      eq(media.ownerType, 'person'),
+      eq(media.downloadStatus, 'done'),
+      inArray(media.ownerId, ids),
+    ))
+    .orderBy(asc(media.id))
+    .all();
+
+  const best = new Map<string, { id: number; primary: boolean }>();
+  for (const row of rows) {
+    const primary = /"_PRIM"/.test(row.rawTags ?? '') && /"value"\s*:\s*"Y"/.test(row.rawTags ?? '');
+    const current = best.get(row.ownerId);
+    if (!current || (primary && !current.primary)) {
+      best.set(row.ownerId, { id: row.id, primary });
+    }
+  }
+  return new Map([...best].map(([ownerId, v]) => [ownerId, v.id]));
+}
+
 function fetchPersons(db: Db, ids: string[]): Map<string, TreePerson> {
   if (!ids.length) return new Map();
   const rows = db.select({
     id: persons.id, givenName: persons.givenName, surname: persons.surname,
     birthYear: birthYearSql, deathYear: deathYearSql, sex: persons.sex,
   }).from(persons).where(inArray(persons.id, ids)).all();
-  return new Map(rows.map(r => [r.id, r]));
+  const photos = fetchPhotoIds(db, ids);
+  return new Map(rows.map(r => [r.id, { ...r, photoId: photos.get(r.id) ?? null }]));
 }
 
 function parentIdsOf(db: Db, id: string): string[] {

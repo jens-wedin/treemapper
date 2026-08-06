@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runImport } from '../scripts/import';
 import { createDb, type Db } from '../db/client';
-import { families, familyChildren, persons } from '../db/schema';
+import { families, familyChildren, persons, media } from '../db/schema';
 import { getTree } from './tree';
 
 let dir: string;
@@ -38,6 +38,30 @@ describe('getTree', () => {
   it('respects depth limits', () => {
     const tree = getTree(db, 'I3', 0, 0)!;
     expect(tree.ancestors.parents).toEqual([]);
+  });
+
+  it('väljer porträtt: primärt foto först, hoppar över ej nedladdade', () => {
+    const pdb = createDb(path.join(dir, 'photos.db'));
+    pdb.insert(persons).values([
+      { id: 'P1', givenName: 'Med', surname: 'Primärt', sex: 'M' },
+      { id: 'P2', givenName: 'Utan', surname: 'Primärt', sex: 'F' },
+      { id: 'P3', givenName: 'Inget', surname: 'Foto', sex: 'U' },
+    ]).run();
+    const prim = JSON.stringify([{ tag: '_PRIM', value: 'Y', children: [] }]);
+    pdb.insert(media).values([
+      // P1: två foton, det andra är markerat som primärt
+      { id: 1, ownerType: 'person', ownerId: 'P1', originalUrl: 'u1', downloadStatus: 'done', localPath: 'media/1.jpg' },
+      { id: 2, ownerType: 'person', ownerId: 'P1', originalUrl: 'u2', downloadStatus: 'done', localPath: 'media/2.jpg', rawTags: prim },
+      // P2: bara ett nedladdat foto, plus ett som misslyckades
+      { id: 3, ownerType: 'person', ownerId: 'P2', originalUrl: 'u3', downloadStatus: 'failed' },
+      { id: 4, ownerType: 'person', ownerId: 'P2', originalUrl: 'u4', downloadStatus: 'done', localPath: 'media/4.jpg' },
+      // P3: bara ett foto som inte laddats ner
+      { id: 5, ownerType: 'person', ownerId: 'P3', originalUrl: 'u5', downloadStatus: 'failed' },
+    ]).run();
+
+    expect(getTree(pdb, 'P1')!.focus.photoId).toBe(2);   // primärt vinner över lägre id
+    expect(getTree(pdb, 'P2')!.focus.photoId).toBe(4);   // hoppar över failed
+    expect(getTree(pdb, 'P3')!.focus.photoId).toBeNull();
   });
 
   it('survives ancestry cycles', () => {

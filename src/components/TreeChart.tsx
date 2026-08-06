@@ -2,7 +2,23 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { t, displayName, lifespan } from '../lib/i18n';
-import { NODE_W, NODE_H, type TreeLayoutResult } from '../lib/treeLayout';
+import { NODE_W, NODE_H, AVATAR_R, AVATAR_CX, type TreeLayoutResult } from '../lib/treeLayout';
+import type { TreePerson } from '../../lib/tree';
+
+/** Up to two initials, for people without a downloaded photo. */
+function initials(person: TreePerson): string {
+  return [person.givenName, person.surname]
+    .map(part => part.trim()[0] ?? '')
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+}
+
+// A hard cut mid-name reads like broken data — mark it with an ellipsis
+// instead. The full name is always in the node's aria-label.
+const MAX_NAME = 20;
+const truncate = (name: string) =>
+  name.length > MAX_NAME ? `${name.slice(0, MAX_NAME - 1).trimEnd()}…` : name;
 
 export default function TreeChart({ layout, depthQuery }: { layout: TreeLayoutResult; depthQuery: string }) {
   const navigate = useNavigate();
@@ -118,10 +134,42 @@ export default function TreeChart({ layout, depthQuery }: { layout: TreeLayoutRe
                 className={`fill-white ${n.key === activeKey ? 'stroke-amber-500' : n.isFocus ? 'stroke-blue-700' : 'stroke-gray-300'}`}
                 strokeWidth={n.isFocus || n.key === activeKey ? 2.5 : 1.5}
               />
-              <text x={NODE_W / 2} y={24} textAnchor="middle" className="fill-gray-900 text-[13px] font-medium">
-                {displayName(n.person).slice(0, 22)}
+              {n.person.photoId != null ? (
+                <>
+                  <clipPath id={`avatar-${n.key}`}>
+                    <circle cx={AVATAR_CX} cy={NODE_H / 2} r={AVATAR_R} />
+                  </clipPath>
+                  <image
+                    href={`/api/media/${n.person.photoId}`}
+                    x={AVATAR_CX - AVATAR_R}
+                    y={NODE_H / 2 - AVATAR_R}
+                    width={AVATAR_R * 2}
+                    height={AVATAR_R * 2}
+                    preserveAspectRatio="xMidYMid slice"
+                    clipPath={`url(#avatar-${n.key})`}
+                  />
+                  <circle
+                    cx={AVATAR_CX} cy={NODE_H / 2} r={AVATAR_R}
+                    className="fill-none stroke-gray-200"
+                    strokeWidth={1}
+                  />
+                </>
+              ) : (
+                <>
+                  <circle cx={AVATAR_CX} cy={NODE_H / 2} r={AVATAR_R} className="fill-gray-100 stroke-gray-200" strokeWidth={1} />
+                  <text
+                    x={AVATAR_CX} y={NODE_H / 2 + 5}
+                    textAnchor="middle"
+                    className="fill-gray-400 text-[14px] font-medium"
+                  >
+                    {initials(n.person)}
+                  </text>
+                </>
+              )}
+              <text x={AVATAR_CX + AVATAR_R + 12} y={NODE_H / 2 - 3} className="fill-gray-900 text-[13px] font-medium">
+                {truncate(displayName(n.person))}
               </text>
-              <text x={NODE_W / 2} y={44} textAnchor="middle" className="fill-gray-500 text-[12px]">
+              <text x={AVATAR_CX + AVATAR_R + 12} y={NODE_H / 2 + 15} className="fill-gray-500 text-[12px]">
                 {lifespan(n.person.birthYear, n.person.deathYear)}
               </text>
             </g>

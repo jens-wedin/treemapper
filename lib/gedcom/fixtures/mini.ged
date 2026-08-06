@@ -1,0 +1,53 @@
+0 HEAD
+1 GEDC
+2 VERS 5.5.1
+1 CHAR UTF-8
+0 @A1@ ALBUM
+1 TITL Testalbum
+0 @I1@ INDI
+1 NAME Sven-Erik /Wedin/
+2 GIVN Sven-Erik
+2 SURN Wedin
+1 SEX M
+1 BIRT
+2 DATE 15 APR 1942
+2 PLAC Gävleborgs län, Sverige
+2 SOUR @S1@
+3 PAGE Sida 12
+3 QUAY 3
+3 DATA
+4 TEXT Utdrag ur kyrkbok
+4 DATE 12 JAN 2020
+1 OCCU Snickare
+2 DATE ABT 1965
+1 NOTE En anteckning
+2 CONT med två rader
+1 OBJE
+2 FORM jpg
+2 FILE https://example.com/photo1.jpg
+2 TITL Porträtt
+2 _FILESIZE 12345
+2 _PHOTO_RIN MH:P1
+1 _UPD 30 DEC 2019 11:11:20
+0 @I2@ INDI
+1 NAME Anna /Larsson/
+2 _MARNM Wedin
+1 SEX F
+1 DEAT
+2 DATE 17xx
+0 @I3@ INDI
+1 NAME //
+1 SOUR @S1@
+2 PAGE Sida 99
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 MARR
+2 DATE 1964
+2 PLAC Stockholm, Sverige
+1 CHIL @I3@
+0 @S1@ SOUR
+1 TITL Kyrkbok Hälsingland
+1 AUTH Svenska kyrkan
+1 TEXT Beskrivning av källan
+0 TRLR

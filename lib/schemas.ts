@@ -37,6 +37,16 @@ export const newPersonSchema = z.object({
 });
 export type NewPerson = z.infer<typeof newPersonSchema>;
 
+export const mergeSchema = z.object({
+  survivorId: z.string().trim().min(2),
+  duplicateId: z.string().trim().min(2),
+  fieldChoices: z.record(
+    z.enum(['givenName', 'surname', 'marriedName', 'suffix', 'sex', 'note']),
+    z.enum(['survivor', 'duplicate']),
+  ).optional(),
+});
+export type MergeRequest = z.infer<typeof mergeSchema>;
+
 export const relationSchema = z.object({
   type: z.enum(['child', 'spouse', 'parent']),
   personId: z.string().trim().min(2),

@@ -6,6 +6,8 @@ import { createPersonsApi } from './persons';
 import { createMediaApi } from './media';
 import { createTreeApi } from './tree';
 import { createMutationsApi } from './mutations';
+import { createIssuesApi } from './issues';
+import { createMergeApi } from './merge';
 
 const db = createDb();
 const app = new Hono();
@@ -14,6 +16,8 @@ app.route('/', createPersonsApi(db));
 app.route('/', createMediaApi(db));
 app.route('/', createTreeApi(db));
 app.route('/', createMutationsApi(db));
+app.route('/', createIssuesApi(db));
+app.route('/', createMergeApi(db));
 
 const port = Number(process.env.API_PORT ?? 3001);
 serve({ fetch: app.fetch, port });

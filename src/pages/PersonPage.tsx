@@ -86,6 +86,11 @@ export default function PersonPage() {
           {birth?.place && <> · {birth.place}</>}
           {person.sex !== 'U' && <Badge variant="outline" className="ml-2">{person.sex === 'M' ? 'Man' : 'Kvinna'}</Badge>}
         </p>
+        <p className="mt-2">
+          <Link to={`/trad/${person.id}`} className="text-blue-700 underline-offset-2 hover:underline">
+            {t('tree.showInTree')}
+          </Link>
+        </p>
       </header>
 
       {photos.length > 0 && (

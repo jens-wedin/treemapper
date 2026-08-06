@@ -3,6 +3,7 @@ import { t } from './lib/i18n';
 import Hem from './pages/Hem';
 import PersonList from './pages/PersonList';
 import PersonPage from './pages/PersonPage';
+import TreePage from './pages/TreePage';
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
             [
               ['/', t('nav.home')],
               ['/personer', t('nav.persons')],
+              ['/trad', t('nav.tree')],
             ] as const
           ).map(([to, label]) => (
             <NavLink
@@ -40,6 +42,8 @@ export default function App() {
           <Route path="/" element={<Hem />} />
           <Route path="/personer" element={<PersonList />} />
           <Route path="/person/:id" element={<PersonPage />} />
+          <Route path="/trad" element={<TreePage />} />
+          <Route path="/trad/:id" element={<TreePage />} />
         </Routes>
       </main>
     </>

@@ -136,4 +136,12 @@ describe('addRelation', () => {
     expect(link).toMatchObject({ childId: 'I5', seq: 0 });
     expect(db.select().from(families).where(eq(families.id, 'F4')).all()[0].husbandId).toBe('I8');
   });
+
+  it('ignores MyHeritage sentinel ids when numbering new persons', () => {
+    // The real export contains I88888888 "Unassociated photos" — new ids must
+    // continue the real sequence rather than jumping to I88888889.
+    db.insert(persons).values({ id: 'I88888888', givenName: 'Unassociated photos', surname: '', sex: 'U' }).run();
+    const r = addRelation(db, { type: 'child', personId: 'I1', familyId: 'F1', newPerson: { givenName: 'Efter', surname: 'Sentinel', sex: 'U' } });
+    expect(r.data.relativeId).toBe('I9');
+  });
 });

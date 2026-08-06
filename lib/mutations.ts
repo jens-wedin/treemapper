@@ -90,9 +90,16 @@ export function deleteEvent(db: Db, id: number): MutationResult {
 
 const CYCLE_MSG = 'Detta skulle skapa en omöjlig släktlinje (personen skulle bli sin egen förfader).';
 
+// MyHeritage seeds sentinel records far outside the real sequence (e.g.
+// I88888888 "Unassociated photos"); ignore those so new ids continue the
+// actual numbering instead of jumping to 88888889.
+const ID_SENTINEL_FLOOR = 10_000_000;
+
 function nextId(tx: Tx, table: typeof persons | typeof families, prefix: 'I' | 'F'): string {
   const row = tx.select({ n: sql<number>`coalesce(max(cast(substr(id, 2) as integer)), 0)` })
-    .from(table).where(sql`id like ${prefix + '%'}`).all()[0];
+    .from(table)
+    .where(sql`id like ${prefix + '%'} and cast(substr(id, 2) as integer) < ${ID_SENTINEL_FLOOR}`)
+    .all()[0];
   return `${prefix}${(row?.n ?? 0) + 1}`;
 }
 

@@ -1,6 +1,28 @@
 # MEMORY — where the project stands
 
-_Last updated: 2026-08-06, end of Phase 5._
+_Last updated: 2026-08-06 — all six phases of the spec are built._
+
+## Done: Phase 6 (Källor + export) — feature-complete
+
+- Plan: `docs/superpowers/plans/2026-08-06-phase6-kallor-export.md`.
+- `lib/sources.ts`, `lib/gedcomExport.ts`, `api/sources.ts`, `api/export.ts`,
+  `scripts/export.ts`, `/kallor`, `/kalla/:id`, `/installningar`.
+  168 vitest + 19 e2e green.
+- **Round-trip verified on the real tree**: `npm run export` → `npm run import`
+  reproduces all 7 tables exactly, only the 2 known BLES/NMR tag warnings.
+- Export gotcha fixed: values carrying `\r\n` from the original import leaked a
+  stray CR into exported lines; `splitValue` normalises line endings first.
+- Photos are NOT in the GEDCOM (only URLs) — a full backup is the .ged file
+  plus `media/`.
+
+## Open
+
+- **Jens has UX/UI feedback pending** — that's the natural next piece of work
+  (spec §13 "polish"). Ask for it rather than guessing.
+- The live MyHeritage tree drifted after the July export (4 572/985/522 vs our
+  4 561/983/520); decide whether to re-import before serious editing.
+- MyHeritage's pseudo-person `I88888888` ("Unassociated photos") still appears
+  in person search; detectors already skip it.
 
 ## Done: Phase 5 (Konsekvensbänken)
 
@@ -66,14 +88,6 @@ _Last updated: 2026-08-06, end of Phase 5._
   resolves against the subquery's own table (see comment in `lib/queries.ts`).
 - Vitest excludes `e2e/**` (Playwright owns `.spec.ts` there) — see vite.config.ts.
 
-## Next: Phase 6 — Källor + export (spec §13, final phase)
-
-Source management (the 520 sources with their citations, editable, showing
-which events cite each source), GEDCOM 5.5.1 export round-tripping `raw_tags`
-(test by re-parsing our own output), and polish. Write its plan first.
-
-**Jens has UX/UI feedback pending** — ask for it before starting the polish
-part of Phase 6.
 
 ## Done: Phase 1 (scaffold + import + photo pipeline)
 

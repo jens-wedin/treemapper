@@ -27,6 +27,27 @@ npm run test:e2e # Playwright browse flow (needs wedin.db)
   1–5 generations each way): pan/zoom, click or Enter refocuses, arrow keys walk
   relatives, and a fully equivalent "Lista" view for screen readers/keyboard
 
+## Källor och export
+
+`/kallor` lists all 520 sources with how many citations each carries; a source
+page shows its fields (editable, audit-logged) and every citation that uses it,
+linked back to the person and event. Citations on a Personsida link the other
+way, to the source.
+
+`/installningar` exports the whole tree as **GEDCOM 5.5.1** — the backup and the
+escape hatch out of this app, readable by MyHeritage, Ancestry, Gramps and
+others. `npm run export -- [sökväg]` does the same from the terminal.
+
+The export re-emits everything the import preserved, including the `raw_tags`
+subtrees holding GEDCOM structures this app doesn't model. It is verified by a
+round-trip test — export, re-parse through our own parser, compare — and by a
+full-tree check: exporting and re-importing the real database reproduces every
+table exactly (4 561 personer, 983 familjer, 3 616 barnlänkar, 14 588 händelser,
+5 804 källhänvisningar, 985 media, 520 källor).
+
+**Photos are not inside the GEDCOM** — only the links to them. A complete backup
+is the exported `.ged` plus the `media/` folder.
+
 ## Konsekvensbänken
 
 `/konsekvens` is the cleanup workbench. 28 deterministic detectors reproduce

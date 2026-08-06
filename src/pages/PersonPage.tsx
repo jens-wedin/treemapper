@@ -1,10 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { PersonFull, CitationView, FamilyMember } from '../../lib/queries';
-import { t, eventLabel, lifespan, displayName } from '../lib/i18n';
+import { t, lifespan, displayName } from '../lib/i18n';
 import { fetchJson } from '../lib/api';
+import PersonEditForm from '../components/edit/PersonEditForm';
+import EventEditor from '../components/edit/EventEditor';
+import RelationDialog from '../components/edit/RelationDialog';
 
 function MemberLinks({ people }: { people: FamilyMember[] }) {
   if (!people.length) return <span className="text-gray-500">–</span>;
@@ -46,10 +50,10 @@ export default function PersonPage() {
   const { id } = useParams<{ id: string }>();
   const [data, setData] = useState<PersonFull | null>(null);
   const [state, setState] = useState<'loading' | 'ok' | 'missing' | 'error'>('loading');
+  const [editing, setEditing] = useState(false);
+  const [warnings, setWarnings] = useState<string[]>([]);
 
-  useEffect(() => {
-    setState('loading');
-    setData(null);
+  const load = useCallback(() => {
     fetchJson<PersonFull>(`/api/persons/${id}/full`)
       .then(d => {
         setData(d);
@@ -58,6 +62,14 @@ export default function PersonPage() {
       })
       .catch(err => setState(err instanceof Error && err.message === 'HTTP 404' ? 'missing' : 'error'));
   }, [id]);
+
+  useEffect(() => {
+    setState('loading');
+    setData(null);
+    setEditing(false);
+    setWarnings([]);
+    load();
+  }, [id, load]);
 
   if (state === 'loading') {
     return <div className="space-y-3"><Skeleton className="h-9 w-64" /><Skeleton className="h-40 w-full" /></div>;
@@ -86,11 +98,24 @@ export default function PersonPage() {
           {birth?.place && <> · {birth.place}</>}
           {person.sex !== 'U' && <Badge variant="outline" className="ml-2">{person.sex === 'M' ? 'Man' : 'Kvinna'}</Badge>}
         </p>
-        <p className="mt-2">
+        <p className="mt-2 flex items-center gap-3">
           <Link to={`/trad/${person.id}`} className="text-blue-700 underline-offset-2 hover:underline">
             {t('tree.showInTree')}
           </Link>
+          <Button variant="outline" size="sm" aria-expanded={editing} onClick={() => setEditing(v => !v)}>
+            {t('edit.edit')}
+          </Button>
         </p>
+        {warnings.length > 0 && (
+          <p role="status" className="mt-2 text-sm text-amber-700">{warnings.join(' ')}</p>
+        )}
+        {editing && (
+          <PersonEditForm
+            person={person}
+            onSaved={w => { setWarnings(w); setEditing(false); load(); }}
+            onCancel={() => setEditing(false)}
+          />
+        )}
       </header>
 
       {photos.length > 0 && (
@@ -113,6 +138,11 @@ export default function PersonPage() {
 
       <section className="mt-8">
         <h2 className="text-xl font-semibold">{t('person.family')}</h2>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {(['child', 'spouse', 'parent'] as const).map(type => (
+            <RelationDialog key={type} type={type} person={person} families={data.families} onSaved={load} />
+          ))}
+        </div>
         <dl className="mt-3 space-y-2">
           <div><dt className="inline font-medium">{t('person.parents')}: </dt><dd className="inline"><MemberLinks people={data.parents} /></dd></div>
           <div><dt className="inline font-medium">{t('person.siblings')}: </dt><dd className="inline"><MemberLinks people={data.siblings} /></dd></div>
@@ -135,21 +165,12 @@ export default function PersonPage() {
 
       <section className="mt-8">
         <h2 className="text-xl font-semibold">{t('person.timeline')}</h2>
-        <ol className="mt-3 space-y-4 border-l pl-4">
-          {data.events.map(e => (
-            <li key={e.id}>
-              <div className="font-medium">
-                {eventLabel(e.type)}
-                {e.dateRaw && <span className="ml-2 font-normal text-gray-600">{e.dateRaw}</span>}
-                {e.age && <span className="ml-2 text-sm font-normal text-gray-500">({t('person.age')} {e.age})</span>}
-              </div>
-              {(e.place || e.description) && (
-                <div className="text-gray-700">{[e.description, e.place].filter(Boolean).join(' — ')}</div>
-              )}
-              <Citations items={e.citations} />
-            </li>
-          ))}
-        </ol>
+        <EventEditor
+          events={data.events}
+          ownerId={person.id}
+          citations={Citations}
+          onChanged={load}
+        />
       </section>
 
       {person.note && (

@@ -1,8 +1,15 @@
 import { serve } from '@hono/node-server';
+import { Hono } from 'hono';
 import { createDb } from '../db/client';
 import { createApi } from './stats';
+import { createPersonsApi } from './persons';
+import { createMediaApi } from './media';
 
-const app = createApi(createDb());
+const db = createDb();
+const app = new Hono();
+app.route('/', createApi(db));
+app.route('/', createPersonsApi(db));
+app.route('/', createMediaApi(db));
 
 serve({ fetch: app.fetch, port: 3001 });
 console.log('API igång på http://localhost:3001');

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractYear } from './dates';
+import { extractYear, parseFullDate, daysBetween } from './dates';
 
 describe('extractYear', () => {
   it.each([
@@ -21,4 +21,26 @@ describe('extractYear', () => {
       expect(extractYear(input as string | null | undefined)).toBeNull();
     },
   );
+});
+
+describe('parseFullDate', () => {
+  it('parses complete GEDCOM dates', () => {
+    expect(parseFullDate('23 NOV 1845')).toEqual({ y: 1845, m: 11, d: 23 });
+    expect(parseFullDate('5 APR 1942')).toEqual({ y: 1942, m: 4, d: 5 });
+    expect(parseFullDate('08 JUL 2026')).toEqual({ y: 2026, m: 7, d: 8 });
+  });
+
+  it('returns null for anything less precise', () => {
+    for (const raw of ['ABT 1715', 'JUN 1971', '1834', 'BEF 17 JUL 1719', '17xx', '', null]) {
+      expect(parseFullDate(raw as string | null)).toBeNull();
+    }
+  });
+});
+
+describe('daysBetween', () => {
+  it('counts days between two full dates regardless of order', () => {
+    expect(daysBetween({ y: 1934, m: 12, d: 30 }, { y: 1935, m: 6, d: 1 })).toBe(153);
+    expect(daysBetween({ y: 1935, m: 6, d: 1 }, { y: 1934, m: 12, d: 30 })).toBe(153);
+    expect(daysBetween({ y: 1900, m: 1, d: 1 }, { y: 1900, m: 1, d: 1 })).toBe(0);
+  });
 });

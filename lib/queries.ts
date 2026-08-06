@@ -31,9 +31,12 @@ export interface PersonFull {
 
 // Correlated scalar subqueries — avoid join-multiplication when a person has
 // duplicate BIRT/DEAT events (dirty data is a fact of this tree).
-const birthYearSql = sql<number | null>`(select min(e.date_year) from events e where e.owner_id = ${persons.id} and e.owner_type = 'person' and e.type = 'BIRT')`;
-const deathYearSql = sql<number | null>`(select min(e.date_year) from events e where e.owner_id = ${persons.id} and e.owner_type = 'person' and e.type = 'DEAT')`;
-const birthPlaceSql = sql<string | null>`(select e.place from events e where e.owner_id = ${persons.id} and e.owner_type = 'person' and e.type = 'BIRT' and e.place is not null limit 1)`;
+// The outer-table qualifier must be raw: drizzle renders an interpolated
+// ${persons.id} as unqualified "id", which the subquery resolves against
+// events (e.owner_id = e.id) instead of the outer persons row.
+const birthYearSql = sql<number | null>`(select min(e.date_year) from events e where e.owner_id = persons.id and e.owner_type = 'person' and e.type = 'BIRT')`;
+const deathYearSql = sql<number | null>`(select min(e.date_year) from events e where e.owner_id = persons.id and e.owner_type = 'person' and e.type = 'DEAT')`;
+const birthPlaceSql = sql<string | null>`(select e.place from events e where e.owner_id = persons.id and e.owner_type = 'person' and e.type = 'BIRT' and e.place is not null limit 1)`;
 
 export function searchPersons(db: Db, p: SearchParams): { items: PersonListItem[]; total: number } {
   const limit = Math.min(p.limit ?? 50, 200);

@@ -13,8 +13,19 @@ npm install
 npm run import   # one-time: data/Wedin_Family_Tree_CLEANED.ged → wedin.db
 npm run media    # download photos from MyHeritage CDN → media/
 npm run dev      # http://localhost:5173 (API on :3001)
-npm test
+npm test         # vitest unit tests
+npm run test:e2e # Playwright browse flow (needs wedin.db)
 ```
+
+## Browse
+
+- `/` — Hem: search front and center + tree stats
+- `/personer` — searchable person list (namn, födelseår, födelseort) with pagination
+- `/person/:id` — read-only Personsida: photos, family box (clickable), event
+  timeline with citations, notes
+
+API: `GET /api/stats`, `GET /api/persons`, `GET /api/persons/:id/full`,
+`GET /api/media/:id`. All UI copy lives in `src/lib/i18n.ts` (Swedish).
 
 ## Photos: the CDN links in the July 2026 export are dead
 

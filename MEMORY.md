@@ -13,13 +13,18 @@ _Last updated: 2026-08-06, end of Phase 1._
 - 42 tests green (`npm test`), `tsc -b` clean, `npm run build` works,
   `npm run dev` serves the Swedish shell with live stats on :5173 (API :3001).
 
-## Open: photos
+## Photos: RESCUED (2026-08-06)
 
-All 985 media URLs in the July 2026 export are expired signed CDN links
-(HTTP 403, verified). All media rows are `download_status='failed'`, resumable.
-**Waiting on Jens to make a fresh MyHeritage GEDCOM export** →
-`npm run refresh-media -- data/<fresh>.ged` then `npm run media`.
-This is time-sensitive while the MyHeritage account is still active.
+Jens provided a fresh export (`data/747450_3645859j0190k64i4da57a_A.ged`);
+`refresh-media` matched all 985, `npm run media` downloaded **985/985, 0 failures**
+(425 MB in `media/`, all rows `done`). Back up `wedin.db` + `media/` — the repo
+doesn't hold them.
+
+Note: the fresh export shows the live MyHeritage tree has drifted since the
+cleaned July import (4 572 INDI / 985 FAM / 522 SOUR vs 4 561/983/520 in the
+db). Recent MyHeritage edits are NOT in the database — worth deciding before
+editing starts whether to re-import from a cleaned fresh export or accept the
+July snapshot as the system of record.
 
 ## Next: Phase 2 — Browse (spec §13)
 

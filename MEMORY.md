@@ -1,6 +1,19 @@
 # MEMORY — where the project stands
 
-_Last updated: 2026-08-06, end of Phase 2._
+_Last updated: 2026-08-06, end of Phase 3._
+
+## Done: Phase 3 (Träd)
+
+- Plan: `docs/superpowers/plans/2026-08-06-phase3-trad.md` — fully executed.
+  Owner decision: SVG + d3-hierarchy (layout math only), not WebGL/Three.js.
+- `/trad/:id?upp=&ned=` (default focus I500001), `/api/tree/:id?up=&down=`,
+  `lib/tree.ts` (cycle-guarded), `src/lib/treeLayout.ts` (path-based node keys
+  — same person can appear twice under pedigree collapse), `TreeChart` (roving
+  tabindex, wheel zoom via non-passive listener), `TreeList` (equivalent view).
+- 71 vitest + 6 Playwright e2e green.
+- Gotcha: `-0` from `-depth * STEP` fails `Object.is`-based assertions;
+  playwright `section:has(> h2:text-is(...))` needed to avoid matching the
+  page-level wrapper section.
 
 ## Done: Phase 2 (Browse)
 
@@ -13,11 +26,11 @@ _Last updated: 2026-08-06, end of Phase 2._
   resolves against the subquery's own table (see comment in `lib/queries.ts`).
 - Vitest excludes `e2e/**` (Playwright owns `.spec.ts` there) — see vite.config.ts.
 
-## Next: Phase 3 — Träd (spec §13)
+## Next: Phase 4 — Editing (spec §13)
 
-Interactive SVG chart centered on a person: ancestors up/descendants down,
-pan/zoom, click to refocus, d3-hierarchy for layout math only, arrow-key
-navigation + parallel accessible list view. Write its plan first.
+Person/event/family editing + audit log: in-place field editing on Personsida,
+guided relation dialogs, zod validation both sides, every mutation writes
+audit_log with before/after snapshots. Write its plan first.
 
 ## Done: Phase 1 (scaffold + import + photo pipeline)
 

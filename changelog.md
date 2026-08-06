@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+- Phase 3 (Träd): interactive SVG family-tree chart (SVG + d3-hierarchy for layout math only, per owner decision over WebGL) — ancestors up/descendants down 1–5 generations, pan/zoom (hjul, drag, knappar), klick/Enter fokuserar om, piltangentsnavigering mellan släktingar, likvärdig listvy, `/api/tree/:id`, cykelskydd i datat och stöd för anförlust (samma person två gånger i diagrammet).
 - Phase 2 (Browse): searchable person list (namn/födelseår/födelseort, married-name aware, paginated), read-only Personsida (foton, familjeruta med klickbara relationer, händelsetidslinje med källhänvisningar, anteckningar), Hem with search front and center, Swedish i18n dictionary, `/api/persons` + `/api/persons/:id/full` + `/api/media/:id`, Playwright e2e for the browse flow.
 - Phase 1: repo scaffold, SQLite schema, GEDCOM import CLI, photo download CLI, stats API + app shell.
 - Fault-tolerant GEDCOM parsing: 2 331 malformed lines in the real export are recovered as note continuations and listed in the import report instead of crashing the import.

@@ -23,9 +23,13 @@ npm run test:e2e # Playwright browse flow (needs wedin.db)
 - `/personer` — searchable person list (namn, födelseår, födelseort) with pagination
 - `/person/:id` — read-only Personsida: photos, family box (clickable), event
   timeline with citations, notes
+- `/trad/:id` — interactive SVG family tree (ancestors up, descendants down,
+  1–5 generations each way): pan/zoom, click or Enter refocuses, arrow keys walk
+  relatives, and a fully equivalent "Lista" view for screen readers/keyboard
 
 API: `GET /api/stats`, `GET /api/persons`, `GET /api/persons/:id/full`,
-`GET /api/media/:id`. All UI copy lives in `src/lib/i18n.ts` (Swedish).
+`GET /api/media/:id`, `GET /api/tree/:id?up=&down=`. All UI copy lives in
+`src/lib/i18n.ts` (Swedish).
 
 ## Photos: the CDN links in the July 2026 export are dead
 

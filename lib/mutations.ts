@@ -11,7 +11,7 @@ export class MutationError extends Error {
 }
 export interface MutationResult<T = null> { warnings: string[]; data: T }
 
-type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
+export type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
 
 function audit(tx: Tx, action: 'create' | 'update' | 'delete', entityType: string, entityId: string | number, before: unknown, after: unknown) {
   tx.insert(auditLog).values({
@@ -110,7 +110,7 @@ function parentIdsOfTx(tx: Tx, id: string): string[] {
   return fams.flatMap(f => [f.husbandId, f.wifeId]).filter((x): x is string => !!x);
 }
 
-function isAncestor(tx: Tx, ancestorId: string, personId: string): boolean {
+export function isAncestor(tx: Tx, ancestorId: string, personId: string): boolean {
   const visited = new Set<string>();
   const queue = [personId];
   while (queue.length) {

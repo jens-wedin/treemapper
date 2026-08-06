@@ -8,3 +8,5 @@ media/
 *.db-shm
 *.tsbuildinfo
 .DS_Store
+test-results/
+playwright-report/

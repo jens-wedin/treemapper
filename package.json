@@ -7,6 +7,7 @@
     "dev": "concurrently -k \"tsx watch api/server.ts\" \"vite\"",
     "build": "tsc -b && vite build",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
     "import": "tsx scripts/import.ts",
     "media": "tsx scripts/download-media.ts",
@@ -27,6 +28,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/vite": "^4.3.3",
     "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^26.1.2",

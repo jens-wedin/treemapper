@@ -8,6 +8,12 @@ describe('i18n', () => {
     expect(t('finns.inte')).toBe('finns.inte');
   });
 
+  it('has issue strings', () => {
+    expect(t('issues.title')).toBe('Konsekvensbänken');
+    expect(t('issues.sev.error')).toBe('Logiskt fel');
+    expect(t('issues.remaining')).toContain('{n}');
+  });
+
   it('has edit strings', () => {
     expect(t('edit.save')).toBe('Spara');
     expect(t('edit.addChild')).toBe('Lägg till barn');

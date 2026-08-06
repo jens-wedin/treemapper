@@ -1,20 +1,24 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { t } from '../lib/i18n';
 import { fetchJson } from '../lib/api';
 
 interface Stats { persons: number; families: number; sources: number; media: number; mediaDone: number }
+interface IssueSummary { total: number; totalAll: number; dismissed: number }
 
 export default function Hem() {
   const [q, setQ] = useState('');
   const [stats, setStats] = useState<Stats | null>(null);
+  const [issues, setIssues] = useState<IssueSummary | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     document.title = t('appTitle');
     fetchJson<Stats>('/api/stats').then(setStats).catch(() => setStats(null));
+    // limit=0: vi behöver bara summorna till resultattavlan
+    fetchJson<IssueSummary>('/api/issues?limit=0').then(setIssues).catch(() => setIssues(null));
   }, []);
 
   return (
@@ -46,6 +50,20 @@ export default function Hem() {
             </div>
           ))}
         </dl>
+      )}
+
+      {issues && (
+        <section className="mt-8 rounded-lg border p-4">
+          <h2 className="text-lg font-semibold">{t('issues.scoreboard')}</h2>
+          <p className="mt-1 text-gray-700">
+            {t('issues.remaining')
+              .replace('{n}', issues.total.toLocaleString('sv-SE'))
+              .replace('{total}', issues.totalAll.toLocaleString('sv-SE'))}
+          </p>
+          <Link to="/konsekvens" className="mt-2 inline-block text-blue-700 underline-offset-2 hover:underline">
+            {t('issues.title')}
+          </Link>
+        </section>
       )}
     </section>
   );

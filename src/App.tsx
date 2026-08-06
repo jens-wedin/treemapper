@@ -4,6 +4,7 @@ import Hem from './pages/Hem';
 import PersonList from './pages/PersonList';
 import PersonPage from './pages/PersonPage';
 import TreePage from './pages/TreePage';
+import IssuesPage from './pages/IssuesPage';
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
               ['/', t('nav.home')],
               ['/personer', t('nav.persons')],
               ['/trad', t('nav.tree')],
+              ['/konsekvens', t('nav.issues')],
             ] as const
           ).map(([to, label]) => (
             <NavLink
@@ -44,6 +46,7 @@ export default function App() {
           <Route path="/person/:id" element={<PersonPage />} />
           <Route path="/trad" element={<TreePage />} />
           <Route path="/trad/:id" element={<TreePage />} />
+          <Route path="/konsekvens" element={<IssuesPage />} />
         </Routes>
       </main>
     </>

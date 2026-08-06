@@ -20,6 +20,18 @@ const sv = {
     age: 'ålder', quality: 'kvalitet',
   },
   stats: { persons: 'Personer', families: 'Familjer', sources: 'Källor', photos: 'Foton' },
+  edit: {
+    edit: 'Redigera', save: 'Spara', cancel: 'Avbryt', remove: 'Ta bort',
+    confirmRemove: 'Ta bort händelsen? Detta loggas i ändringshistoriken.',
+    addEvent: 'Lägg till händelse', eventType: 'Typ', date: 'Datum (fritext, t.ex. ABT 1715)',
+    place: 'Plats', description: 'Beskrivning', age: 'Ålder',
+    addChild: 'Lägg till barn', addSpouse: 'Lägg till partner', addParent: 'Lägg till förälder',
+    pickExisting: 'Välj befintlig person', createNew: 'Skapa ny person',
+    firstName: 'Förnamn', lastName: 'Efternamn', sex: 'Kön',
+    sexM: 'Man', sexF: 'Kvinna', sexU: 'Okänt',
+    family: 'Familj', marriedName: 'Giftasnamn', suffix: 'Suffix', note: 'Anteckning',
+    saved: 'Sparat', noHits: 'Inga träffar', searchFirst: 'Sök och välj en person',
+  },
   tree: {
     title: 'Träd', showInTree: 'Visa i träd', chart: 'Diagram', list: 'Lista',
     ancestors: 'Förfäder', descendants: 'Ättlingar',

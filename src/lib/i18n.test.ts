@@ -8,6 +8,11 @@ describe('i18n', () => {
     expect(t('finns.inte')).toBe('finns.inte');
   });
 
+  it('has edit strings', () => {
+    expect(t('edit.save')).toBe('Spara');
+    expect(t('edit.addChild')).toBe('Lägg till barn');
+  });
+
   it('has tree strings', () => {
     expect(t('nav.tree')).toBe('Träd');
     expect(t('tree.ancestors')).toBe('Förfäder');

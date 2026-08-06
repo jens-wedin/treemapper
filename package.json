@@ -9,7 +9,8 @@
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "import": "tsx scripts/import.ts",
-    "media": "tsx scripts/download-media.ts"
+    "media": "tsx scripts/download-media.ts",
+    "refresh-media": "tsx scripts/refresh-media-urls.ts"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.0",

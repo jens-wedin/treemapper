@@ -9,6 +9,9 @@ export interface TreePerson {
   surname: string;
   birthYear: number | null;
   deathYear: number | null;
+  /** Raw GEDCOM dates, for views that show more than the year. */
+  birthDate: string | null;
+  deathDate: string | null;
   sex: 'M' | 'F' | 'U';
   /** Downloaded photo to show on the chart card, if the person has one. */
   photoId: number | null;
@@ -33,6 +36,8 @@ export interface TreeData { focus: TreePerson; ancestors: AncestorNode; descenda
 // Raw persons.id qualifier — see the drizzle-rendering gotcha in lib/queries.ts.
 const birthYearSql = sql<number | null>`(select min(e.date_year) from events e where e.owner_id = persons.id and e.owner_type = 'person' and e.type = 'BIRT')`;
 const deathYearSql = sql<number | null>`(select min(e.date_year) from events e where e.owner_id = persons.id and e.owner_type = 'person' and e.type = 'DEAT')`;
+const birthDateSql = sql<string | null>`(select e.date_raw from events e where e.owner_id = persons.id and e.owner_type = 'person' and e.type = 'BIRT' and e.date_raw is not null limit 1)`;
+const deathDateSql = sql<string | null>`(select e.date_raw from events e where e.owner_id = persons.id and e.owner_type = 'person' and e.type = 'DEAT' and e.date_raw is not null limit 1)`;
 
 /**
  * Picks one photo per person for the chart: MyHeritage's primary photo
@@ -95,7 +100,9 @@ function fetchPersons(db: Db, ids: string[]): Map<string, TreePerson> {
   if (!ids.length) return new Map();
   const rows = db.select({
     id: persons.id, givenName: persons.givenName, surname: persons.surname,
-    birthYear: birthYearSql, deathYear: deathYearSql, sex: persons.sex,
+    birthYear: birthYearSql, deathYear: deathYearSql,
+    birthDate: birthDateSql, deathDate: deathDateSql,
+    sex: persons.sex,
   }).from(persons).where(inArray(persons.id, ids)).all();
   const photos = fetchPhotoIds(db, ids);
   const countries = fetchCountries(db, ids);

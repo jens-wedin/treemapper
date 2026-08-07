@@ -9,7 +9,8 @@ test('trädet renderas och piltangenter flyttar fokus', async ({ page }) => {
   const focusNode = page.locator('[data-tree-node="I500001"]');
   await expect(focusNode).toBeVisible();
   await focusNode.focus();
-  await page.keyboard.press('ArrowUp'); // I500001 har 2 föräldrar
+  await expect(focusNode).toBeFocused();   // vänta in renderingen innan tangenttryck
+  await page.keyboard.press('ArrowUp');    // I500001 har 2 föräldrar
   const active = page.locator('[data-tree-node][tabindex="0"]');
   await expect(active).not.toHaveAttribute('data-tree-node', 'I500001');
 });
@@ -29,7 +30,9 @@ test('klick på ett kort öppnar personpanelen', async ({ page }) => {
 test('panelen kan fokusera om trädet och öppna personsidan', async ({ page }) => {
   await page.goto('/trad/I500001');
   // Enter på ett kort öppnar panelen
-  await page.locator('[data-tree-node="I500001"]').focus();
+  const start = page.locator('[data-tree-node="I500001"]');
+  await start.focus();
+  await expect(start).toBeFocused();
   await page.keyboard.press('ArrowUp');
   await page.keyboard.press('Enter');
   const panel = page.getByRole('complementary', { name: 'Personuppgifter' });
@@ -43,6 +46,56 @@ test('panelen kan fokusera om trädet och öppna personsidan', async ({ page }) 
   await page.getByRole('complementary', { name: 'Personuppgifter' })
     .getByRole('link', { name: 'Gå till personsida' }).click();
   await expect(page).toHaveURL(/\/person\/I\d+/);
+});
+
+test('antavlan visar förfäder men inga ättlingar', async ({ page }) => {
+  await page.goto('/trad/I500003?upp=3&ned=2');
+  await page.getByRole('button', { name: 'Antavla', exact: true }).click();
+  await expect(page).toHaveURL(/vy=pedigree/);
+  await expect(page.getByRole('group', { name: 'Antavla' })).toBeVisible();
+
+  // fokuspersonen och hans far finns med
+  await expect(page.locator('[data-tree-node="I500003"]')).toBeVisible();
+  await expect(page.locator('[data-tree-node="I500001"]')).toBeVisible();
+
+  // inga ättlingar — hämta barnen ur API:et i stället för att gissa id:n
+  const tree = await (await page.request.get('/api/tree/I500003?up=0&down=1')).json();
+  const childIds: string[] = tree.descendants.children.map((c: { person: { id: string } }) => c.person.id);
+  expect(childIds.length).toBeGreaterThan(0);
+  for (const id of childIds) {
+    await expect(page.locator(`[data-tree-node="${id}"]`)).toHaveCount(0);
+  }
+  await expect(page.getByText('Antavla och solfjäder visar bara förfäder.')).toBeVisible();
+});
+
+test('solfjädern renderas och kan navigeras med tangentbord', async ({ page }) => {
+  await page.goto('/trad/I500003?upp=4&vy=fan');
+  await expect(page.getByRole('group', { name: 'Solfjäder' })).toBeVisible();
+  const slices = page.locator('[data-tree-node]');
+  await expect(slices.first()).toBeVisible();
+  expect(await slices.count()).toBeGreaterThan(5);
+
+  // piltangent flyttar fokus mellan skivor
+  const first = page.locator('[data-tree-node="I500001"]');
+  await first.focus();
+  await expect(first).toBeFocused();
+  await page.keyboard.press('ArrowRight');
+  const active = page.locator('[data-tree-node][tabindex="0"]');
+  await expect(active).not.toHaveAttribute('data-tree-node', 'I500001');
+});
+
+test('personpanelen fungerar i både antavla och solfjäder', async ({ page }) => {
+  for (const [view, label] of [['pedigree', 'Antavla'], ['fan', 'Solfjäder']] as const) {
+    await page.goto(`/trad/I500003?upp=3&vy=${view}`);
+    await expect(page.getByRole('group', { name: label })).toBeVisible();
+    // klicka på etiketten: en skivas bounding box har sin mittpunkt inne i
+    // solfjäderns navcirkel, så ett klick "mitt på" elementet träffar navet
+    await page.locator('[data-tree-node="I500001"] text').first().click();
+    const panel = page.getByRole('complementary', { name: 'Personuppgifter' });
+    await expect(panel).toBeVisible();
+    await expect(panel.getByRole('heading', { level: 2 })).toContainText('Sven-Erik Wedin');
+    await page.keyboard.press('Escape');
+  }
 });
 
 test('listvyn är en likvärdig väg och kan fokusera om trädet', async ({ page }) => {

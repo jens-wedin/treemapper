@@ -1,0 +1,176 @@
+import { useEffect, useMemo, useState } from 'react';
+import type { TreeData } from '../../lib/tree';
+import { t, displayName, lifespan } from '../lib/i18n';
+import { flattenAncestors, BRANCH_COLORS } from '../lib/ahnentafel';
+import { layoutFan } from '../lib/fanLayout';
+import { useChartViewport } from '../lib/useChartViewport';
+import { useFlagPreference } from '../lib/flagPreference';
+import ChartToolbar from './ChartToolbar';
+import CountryFlag from './CountryFlag';
+
+const shorten = (s: string, max = 22) => (s.length > max ? `${s.slice(0, max - 1).trimEnd()}…` : s);
+
+export default function FanChart({ data, generations, onSelect, selectedId }: {
+  data: TreeData;
+  generations: number;
+  onSelect: (personId: string) => void;
+  selectedId: string | null;
+}) {
+  const layout = useMemo(
+    () => layoutFan(flattenAncestors(data.ancestors, generations), generations),
+    [data, generations],
+  );
+  const viewport = useChartViewport(layout.bounds);
+  const [showFlags, setShowFlags] = useFlagPreference();
+  const [activeKey, setActiveKey] = useState<string>(() => layout.slices[0]?.key ?? 'centre');
+
+  useEffect(() => { setActiveKey(layout.slices[0]?.key ?? 'centre'); }, [layout]);
+
+  function moveFocus(key: string | undefined) {
+    if (!key) return;
+    setActiveKey(key);
+    viewport.svgRef.current?.querySelector<SVGGElement>(`[data-node-key="${CSS.escape(key)}"]`)?.focus();
+  }
+
+  function onKeyDown(e: React.KeyboardEvent, key: string, personId: string) {
+    const nav = layout.nav[key] ?? {};
+    const actions: Record<string, () => void> = {
+      ArrowUp: () => moveFocus(nav.up),
+      ArrowDown: () => moveFocus(nav.down),
+      ArrowLeft: () => moveFocus(nav.left),
+      ArrowRight: () => moveFocus(nav.right),
+      Enter: () => onSelect(personId),
+      ' ': () => onSelect(personId),
+    };
+    const action = actions[e.key];
+    if (action) {
+      e.preventDefault();
+      action();
+    }
+  }
+
+  const centre = layout.centre;
+
+  return (
+    <div className="mt-3 flex min-h-0 flex-1 flex-col">
+      <ChartToolbar
+        zoomPercent={viewport.zoomPercent}
+        onZoom={viewport.zoomBy}
+        onReset={viewport.reset}
+        showFlags={showFlags}
+        onFlagsChange={setShowFlags}
+        hint={t('tree.instructionsAncestors')}
+      />
+      <div ref={viewport.wrapRef} className="mt-2 min-h-[320px] w-full flex-1 overflow-hidden rounded-lg border bg-white">
+        <svg
+          ref={viewport.svgRef}
+          role="group"
+          aria-label={t('tree.fanLabel')}
+          aria-describedby="trad-instruktioner"
+          className="cursor-grab touch-none active:cursor-grabbing"
+          {...viewport.svgProps}
+        >
+          <g transform={viewport.transform}>
+            {layout.slices.map(s => {
+              const colors = BRANCH_COLORS[s.branch];
+              const isSelected = s.person.id === selectedId;
+              const isActive = s.key === activeKey;
+              return (
+                <g
+                  key={s.key}
+                  data-tree-node={s.person.id}
+                  data-node-key={s.key}
+                  tabIndex={isActive ? 0 : -1}
+                  role="button"
+                  aria-label={`${displayName(s.person)}, ${lifespan(s.person.birthYear, s.person.deathYear) || '?'}`}
+                  className="cursor-pointer outline-none"
+                  onClick={() => onSelect(s.person.id)}
+                  onFocus={() => setActiveKey(s.key)}
+                  onKeyDown={e => onKeyDown(e, s.key, s.person.id)}
+                >
+                  <path
+                    d={s.wedgePath}
+                    fill={isSelected ? '#fef3c7' : colors.fill}
+                    stroke={isActive ? '#f59e0b' : '#e5e7eb'}
+                    strokeWidth={isActive ? 2.5 : 1}
+                  />
+                  {/* the coloured band marking each generation's outer edge */}
+                  <path d={s.bandPath} fill="none" stroke={colors.band} strokeWidth={3} />
+
+                  {s.labelPath ? (
+                    <>
+                      <path id={`lbl-${s.key}`} d={s.labelPath} fill="none" />
+                      <text className="fill-gray-800 text-[12px]" dy={-2}>
+                        <textPath href={`#lbl-${s.key}`} startOffset="50%" textAnchor="middle">
+                          {shorten(displayName(s.person), s.labelMaxChars)}
+                        </textPath>
+                      </text>
+                      <text className="fill-gray-500 text-[10px]" dy={13}>
+                        <textPath href={`#lbl-${s.key}`} startOffset="50%" textAnchor="middle">
+                          {lifespan(s.person.birthYear, s.person.deathYear)}
+                        </textPath>
+                      </text>
+                    </>
+                  ) : s.labelRadial && (
+                    <text
+                      x={s.labelRadial.x}
+                      y={s.labelRadial.y}
+                      transform={`rotate(${s.labelRadial.rotate} ${s.labelRadial.x} ${s.labelRadial.y})`}
+                      textAnchor={s.labelRadial.anchor}
+                      dominantBaseline="middle"
+                      className="fill-gray-800 text-[11px]"
+                    >
+                      {shorten(displayName(s.person), s.labelMaxChars)}
+                      <tspan className="fill-gray-500 text-[10px]">
+                        {'  '}{lifespan(s.person.birthYear, s.person.deathYear)}
+                      </tspan>
+                    </text>
+                  )}
+
+                  {showFlags && <CountryFlag code={s.person.country} cx={s.flag.cx} cy={s.flag.cy} r={7} />}
+                </g>
+              );
+            })}
+
+            {/* the focus person sits in the middle, not as a slice */}
+            <g
+              data-tree-node={centre.person.id}
+              data-node-key="centre"
+              tabIndex={-1}
+              role="button"
+              aria-label={`${displayName(centre.person)}, ${lifespan(centre.person.birthYear, centre.person.deathYear) || '?'}`}
+              className="cursor-pointer outline-none"
+              onClick={() => onSelect(centre.person.id)}
+            >
+              <circle r={centre.r} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1.5} />
+              {centre.person.photoId != null ? (
+                <>
+                  <clipPath id="fan-centre-photo">
+                    <circle r={centre.r * 0.52} cy={-10} />
+                  </clipPath>
+                  <image
+                    href={`/api/media/${centre.person.photoId}`}
+                    x={-centre.r * 0.52}
+                    y={-10 - centre.r * 0.52}
+                    width={centre.r * 1.04}
+                    height={centre.r * 1.04}
+                    preserveAspectRatio="xMidYMid slice"
+                    clipPath="url(#fan-centre-photo)"
+                  />
+                </>
+              ) : (
+                <circle r={centre.r * 0.52} cy={-10} className="fill-gray-100" />
+              )}
+              <text y={centre.r * 0.55} textAnchor="middle" className="fill-gray-900 text-[12px] font-medium">
+                {shorten(displayName(centre.person))}
+              </text>
+              <text y={centre.r * 0.55 + 15} textAnchor="middle" className="fill-gray-500 text-[11px]">
+                {lifespan(centre.person.birthYear, centre.person.deathYear)}
+              </text>
+            </g>
+          </g>
+        </svg>
+      </div>
+    </div>
+  );
+}

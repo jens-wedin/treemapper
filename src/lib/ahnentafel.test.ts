@@ -3,7 +3,7 @@ import { generationOf, branchOf, flattenAncestors } from './ahnentafel';
 import type { AncestorNode, TreePerson } from '../../lib/tree';
 
 const P = (id: string, sex: 'M' | 'F' | 'U' = 'U'): TreePerson => ({
-  id, givenName: id, surname: 'X', birthYear: null, deathYear: null, sex, photoId: null, country: null,
+  id, givenName: id, surname: 'X', birthYear: null, deathYear: null, birthDate: null, deathDate: null, sex, photoId: null, country: null,
 });
 const A = (id: string, sex: 'M' | 'F' | 'U', parents: AncestorNode[] = []): AncestorNode =>
   ({ person: P(id, sex), parents });

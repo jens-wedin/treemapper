@@ -4,7 +4,7 @@ import type { AncestorSlot } from './ahnentafel';
 import type { TreePerson } from '../../lib/tree';
 
 const P = (id: string): TreePerson => ({
-  id, givenName: id, surname: 'X', birthYear: null, deathYear: null, sex: 'U', photoId: null, country: null,
+  id, givenName: id, surname: 'X', birthYear: null, deathYear: null, birthDate: null, deathDate: null, sex: 'U', photoId: null, country: null,
 });
 const slot = (n: number, id: string): AncestorSlot => ({ ahnentafel: n, person: P(id) });
 

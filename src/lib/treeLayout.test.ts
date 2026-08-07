@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { layoutTree } from './treeLayout';
 import type { DescendantNode, TreeData, TreePerson } from '../../lib/tree';
 
-const P = (id: string): TreePerson => ({ id, givenName: id, surname: 'X', birthYear: null, deathYear: null, sex: 'U', photoId: null, country: null });
+const P = (id: string): TreePerson => ({ id, givenName: id, surname: 'X', birthYear: null, deathYear: null, birthDate: null, deathDate: null, sex: 'U', photoId: null, country: null });
 
 /** Descendant node with the boring fields defaulted. */
 const D = (id: string, extra: Partial<Omit<DescendantNode, 'person'>> = {}): DescendantNode =>

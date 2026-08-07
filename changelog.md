@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Changed
+- Smalare kort i trädet (150×106 i stället för 210×66): porträttet ligger överst och centrerat, förnamn och efternamn på var sin centrerad rad, årtalen under. Fler personer får plats i bredd och färre namn behöver kortas.
+
 ### Added
 - Landsflaggor på trädets kort, ritade som SVG, med kryssrutan "Visa flaggor" i verktygsraden (valet sparas mellan besök). Flaggan visas bara när födelseplatsen uttryckligen namnger ett land — en socken utan land antas alltså inte vara svensk. Dop räknas som födelseort när födelseplats saknas; bosättning och död gör det inte, eftersom de kan peka på ett annat land än personen föddes i.
 

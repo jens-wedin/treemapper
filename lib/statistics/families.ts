@@ -14,11 +14,21 @@ export interface FamiliesStats {
   marriageAge: { sex: 'F' | 'M'; averageAge: number; people: number }[];
   averageAgeGap: number | null;
   largestAgeGap: AgeGap | null;
+  /** Couples the age-gap figures rest on — not the same set as the marriages. */
+  couplesWithBothBirths: number;
   marriagesWithYear: number;
 }
 
 /** Anyone older than this at their wedding is a date error, not a late bloomer. */
 const MAX_MARRIAGE_AGE = 100;
+
+/**
+ * Spouses further apart than this are a wrong link or a wrong date, not a
+ * remarkable marriage. In the real database only two couples exceed it — 61 and
+ * 111 years — against a 99th percentile of 30. Same principle as
+ * MAX_PLAUSIBLE_AGE: never present a data error as a fun fact.
+ */
+export const MAX_PLAUSIBLE_AGE_GAP = 50;
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
 const mean = (xs: number[]) => (xs.length ? round1(xs.reduce((s, x) => s + x, 0) / xs.length) : null);
@@ -78,12 +88,10 @@ export function getFamilies(db: Db, ids: Set<string> | null): FamiliesStats {
     const husbandBorn = f.husbandId ? births.get(f.husbandId) : undefined;
     const wifeBorn = f.wifeId ? births.get(f.wifeId) : undefined;
     if (f.husbandId && f.wifeId && husbandBorn != null && wifeBorn != null) {
-      gaps.push({
-        familyId: f.id,
-        husband: name(f.husbandId)!,
-        wife: name(f.wifeId)!,
-        gap: Math.abs(husbandBorn - wifeBorn),
-      });
+      const gap = Math.abs(husbandBorn - wifeBorn);
+      if (gap <= MAX_PLAUSIBLE_AGE_GAP) {
+        gaps.push({ familyId: f.id, husband: name(f.husbandId)!, wife: name(f.wifeId)!, gap });
+      }
     }
   }
 
@@ -100,6 +108,7 @@ export function getFamilies(db: Db, ids: Set<string> | null): FamiliesStats {
     marriageAge,
     averageAgeGap: mean(gaps.map(g => g.gap)),
     largestAgeGap: gaps.length ? gaps.reduce((a, b) => (b.gap > a.gap ? b : a)) : null,
+    couplesWithBothBirths: gaps.length,
     marriagesWithYear,
   };
 }

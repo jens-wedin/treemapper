@@ -7,6 +7,8 @@ import { fetchJson } from '../lib/api';
 import PersonSearch from '../components/PersonSearch';
 import LivesSection from '../components/statistics/LivesSection';
 import NamesSection from '../components/statistics/NamesSection';
+import FamiliesSection from '../components/statistics/FamiliesSection';
+import PlacesSection from '../components/statistics/PlacesSection';
 
 export default function StatisticsPage() {
   const [params, setParams] = useSearchParams();
@@ -54,8 +56,8 @@ export default function StatisticsPage() {
         <div className="mt-8 space-y-12">
           <LivesSection stats={data.lives} />
           <NamesSection stats={data.names} />
-          <h2 className="text-xl font-semibold">{t('statistics.families')}</h2>
-          <h2 className="text-xl font-semibold">{t('statistics.places')}</h2>
+          <FamiliesSection stats={data.families} />
+          <PlacesSection stats={data.places} />
         </div>
       )}
     </section>

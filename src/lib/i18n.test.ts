@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { t, eventLabel, lifespan, displayName } from './i18n';
+import { t, eventLabel, eventDescription, lifespan, displayName } from './i18n';
 
 describe('i18n', () => {
   it('resolves dot-paths and falls back to the key', () => {
@@ -41,6 +41,13 @@ describe('i18n', () => {
     expect(lifespan(1942, null)).toBe('f. 1942');
     expect(lifespan(null, 1941)).toBe('d. 1941');
     expect(lifespan(null, null)).toBe('');
+  });
+
+  it('döljer GEDCOM-flaggan Y men behåller riktig text', () => {
+    expect(eventDescription('Y')).toBeNull();      // "1 DEAT Y" är en flagga
+    expect(eventDescription(' Y ')).toBeNull();
+    expect(eventDescription('Snickare')).toBe('Snickare');
+    expect(eventDescription(null)).toBeNull();
   });
 
   it('formats display names with id fallback', () => {

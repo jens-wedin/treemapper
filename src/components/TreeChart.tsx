@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { t, displayName, lifespan } from '../lib/i18n';
 import { NODE_W, NODE_H, AVATAR_R, AVATAR_CX, AVATAR_CY, type TreeLayoutResult } from '../lib/treeLayout';
@@ -41,8 +40,12 @@ function readFlagPreference(): boolean {
 
 interface View { x: number; y: number; k: number }
 
-export default function TreeChart({ layout, depthQuery }: { layout: TreeLayoutResult; depthQuery: string }) {
-  const navigate = useNavigate();
+export default function TreeChart({ layout, onSelect, selectedId }: {
+  layout: TreeLayoutResult;
+  /** A card was activated — the page opens the details panel. */
+  onSelect: (personId: string) => void;
+  selectedId: string | null;
+}) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const drag = useRef<{ px: number; py: number } | null>(null);
@@ -149,8 +152,8 @@ export default function TreeChart({ layout, depthQuery }: { layout: TreeLayoutRe
       ArrowDown: () => moveFocus(nav.down),
       ArrowLeft: () => moveFocus(nav.left),
       ArrowRight: () => moveFocus(nav.right),
-      Enter: () => navigate(`/trad/${personId}${depthQuery}`),
-      ' ': () => navigate(`/trad/${personId}${depthQuery}`),
+      Enter: () => onSelect(personId),
+      ' ': () => onSelect(personId),
     };
     const action = actions[e.key];
     if (action) {
@@ -205,7 +208,7 @@ export default function TreeChart({ layout, depthQuery }: { layout: TreeLayoutRe
           {t('tree.showFlags')}
         </label>
         <p id="trad-instruktioner" className="ml-3 text-sm text-gray-500">
-          {t('tree.instructions')}
+          {t('tree.instructionsPanel')}
         </p>
       </div>
       <div ref={wrapRef} className="mt-2 min-h-[320px] w-full flex-1 overflow-hidden rounded-lg border bg-white">
@@ -255,7 +258,7 @@ export default function TreeChart({ layout, depthQuery }: { layout: TreeLayoutRe
                 aria-label={`${displayName(n.person)}, ${lifespan(n.person.birthYear, n.person.deathYear) || '?'}`}
                 transform={`translate(${n.x - NODE_W / 2} ${n.y - NODE_H / 2})`}
                 className="cursor-pointer outline-none"
-                onClick={() => navigate(`/trad/${n.person.id}${depthQuery}`)}
+                onClick={() => onSelect(n.person.id)}
                 onFocus={() => setActiveKey(n.key)}
                 onKeyDown={e => onNodeKeyDown(e, n.key, n.person.id)}
               >
@@ -263,8 +266,12 @@ export default function TreeChart({ layout, depthQuery }: { layout: TreeLayoutRe
                   width={NODE_W}
                   height={NODE_H}
                   rx={10}
-                  className={`fill-white ${n.key === activeKey ? 'stroke-amber-500' : n.isFocus ? 'stroke-blue-700' : 'stroke-gray-300'}`}
-                  strokeWidth={n.isFocus || n.key === activeKey ? 2.5 : 1.5}
+                  className={`${n.person.id === selectedId ? 'fill-amber-50' : 'fill-white'} ${
+                    n.key === activeKey ? 'stroke-amber-500'
+                      : n.person.id === selectedId ? 'stroke-amber-400'
+                        : n.isFocus ? 'stroke-blue-700' : 'stroke-gray-300'
+                  }`}
+                  strokeWidth={n.isFocus || n.key === activeKey || n.person.id === selectedId ? 2.5 : 1.5}
                 />
                 {n.person.photoId != null ? (
                   <>

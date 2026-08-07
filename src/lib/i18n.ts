@@ -73,6 +73,8 @@ const sv = {
     zoomIn: 'Zooma in', zoomOut: 'Zooma ut', zoomReset: 'Återställ vy',
     goToPerson: 'Gå till personsida', focusOn: 'Fokusera trädet på',
     showFlags: 'Visa flaggor', with: 'med',
+    panelTitle: 'Personuppgifter', focusHere: 'Fokusera trädet här', closePanel: 'Stäng panelen',
+    instructionsPanel: 'Piltangenter flyttar mellan släktingar, Enter öppnar personuppgifter.',
     chartLabel: 'Släktträdsdiagram',
     instructions: 'Piltangenter flyttar mellan släktingar, Enter fokuserar trädet på vald person.',
   },
@@ -108,3 +110,11 @@ export function lifespan(birthYear: number | null, deathYear: number | null): st
 export function displayName(p: { givenName?: string | null; surname?: string | null; id: string }): string {
   return [p.givenName, p.surname].filter(Boolean).join(' ') || p.id;
 }
+
+/**
+ * GEDCOM writes "1 DEAT Y" to assert that an event happened. The Y is a flag,
+ * not a description — it is kept in the database for lossless export but must
+ * never be shown as if it were text.
+ */
+export const eventDescription = (description: string | null | undefined): string | null =>
+  !description || description.trim() === 'Y' ? null : description;

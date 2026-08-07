@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { Button } from '@/components/ui/button';
 import type { TreeData } from '../../lib/tree';
 import { t, displayName, lifespan } from '../lib/i18n';
@@ -7,6 +7,7 @@ import { fetchJson } from '../lib/api';
 import { layoutTree } from '../lib/treeLayout';
 import TreeChart from '../components/TreeChart';
 import TreeList from '../components/TreeList';
+import TreePersonPanel from '../components/TreePersonPanel';
 
 // Tree owner — the natural default root for /trad without an id.
 const DEFAULT_FOCUS = 'I500001';
@@ -22,6 +23,8 @@ export default function TreePage() {
   const [data, setData] = useState<TreeData | null>(null);
   const [state, setState] = useState<'loading' | 'ok' | 'error'>('loading');
   const [mode, setMode] = useState<'chart' | 'list'>('chart');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setState('loading');
@@ -83,9 +86,23 @@ export default function TreePage() {
 
       {state === 'loading' && <p className="mt-4 text-gray-600">{t('common.loading')}</p>}
       {data && layout && (
-        mode === 'chart'
-          ? <TreeChart layout={layout} depthQuery={depthQuery} />
-          : <TreeList ancestors={data.ancestors} descendants={data.descendants} depthQuery={depthQuery} />
+        mode === 'chart' ? (
+          <div className="flex min-h-0 flex-1 gap-3">
+            <div className="flex min-w-0 flex-1 flex-col">
+              <TreeChart layout={layout} onSelect={setSelectedId} selectedId={selectedId} />
+            </div>
+            {selectedId && (
+              <TreePersonPanel
+                personId={selectedId}
+                onClose={() => setSelectedId(null)}
+                onSelect={setSelectedId}
+                onFocusTree={id => { setSelectedId(null); navigate(`/trad/${id}${depthQuery}`); }}
+              />
+            )}
+          </div>
+        ) : (
+          <TreeList ancestors={data.ancestors} descendants={data.descendants} depthQuery={depthQuery} />
+        )
       )}
     </section>
   );

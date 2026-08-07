@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 
 test.skip(!fs.existsSync('wedin.db'), 'wedin.db saknas — kör npm run import först');
 
-test('trädet renderas och piltangenter + Enter fokuserar om', async ({ page }) => {
+test('trädet renderas och piltangenter flyttar fokus', async ({ page }) => {
   await page.goto('/trad/I500001');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Träd');
   const focusNode = page.locator('[data-tree-node="I500001"]');
@@ -12,9 +12,37 @@ test('trädet renderas och piltangenter + Enter fokuserar om', async ({ page }) 
   await page.keyboard.press('ArrowUp'); // I500001 har 2 föräldrar
   const active = page.locator('[data-tree-node][tabindex="0"]');
   await expect(active).not.toHaveAttribute('data-tree-node', 'I500001');
+});
+
+test('klick på ett kort öppnar personpanelen', async ({ page }) => {
+  await page.goto('/trad/I500001');
+  await page.locator('[data-tree-node="I500001"]').click();
+  const panel = page.getByRole('complementary', { name: 'Personuppgifter' });
+  await expect(panel).toBeVisible();
+  await expect(panel.getByRole('heading', { level: 2 })).toContainText('Sven-Erik Wedin');
+  await expect(panel.getByRole('heading', { name: 'Familj' })).toBeVisible();
+  // panelen stängs med Escape
+  await page.keyboard.press('Escape');
+  await expect(panel).toBeHidden();
+});
+
+test('panelen kan fokusera om trädet och öppna personsidan', async ({ page }) => {
+  await page.goto('/trad/I500001');
+  // Enter på ett kort öppnar panelen
+  await page.locator('[data-tree-node="I500001"]').focus();
+  await page.keyboard.press('ArrowUp');
   await page.keyboard.press('Enter');
-  await expect(page).not.toHaveURL(/\/trad\/I500001/);
-  await expect(page).toHaveURL(/\/trad\//);
+  const panel = page.getByRole('complementary', { name: 'Personuppgifter' });
+  await expect(panel).toBeVisible();
+
+  await panel.getByRole('button', { name: 'Fokusera trädet här' }).click();
+  await expect(page).toHaveURL(/\/trad\/(?!I500001)I\d+/);
+  await expect(panel).toBeHidden();
+
+  await page.locator('[data-tree-node]').first().click();
+  await page.getByRole('complementary', { name: 'Personuppgifter' })
+    .getByRole('link', { name: 'Gå till personsida' }).click();
+  await expect(page).toHaveURL(/\/person\/I\d+/);
 });
 
 test('listvyn är en likvärdig väg och kan fokusera om trädet', async ({ page }) => {

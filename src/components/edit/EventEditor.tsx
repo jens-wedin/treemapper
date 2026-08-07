@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import type { CitationView, EventView } from '../../../lib/queries';
-import { t, eventLabel } from '../../lib/i18n';
+import { t, eventLabel, eventDescription } from '../../lib/i18n';
 import { mutateJson } from '../../lib/api';
 import EventForm from './EventForm';
 
@@ -60,8 +60,10 @@ export default function EventEditor({ events, ownerId, citations: Citations, onC
                     </Button>
                   </span>
                 </div>
-                {(e.place || e.description) && (
-                  <div className="text-gray-700">{[e.description, e.place].filter(Boolean).join(' — ')}</div>
+                {(e.place || eventDescription(e.description)) && (
+                  <div className="text-gray-700">
+                    {[eventDescription(e.description), e.place].filter(Boolean).join(' — ')}
+                  </div>
                 )}
                 <Citations items={e.citations} />
               </>

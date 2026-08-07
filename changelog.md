@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Fixed
+- Trädets zoom är nu absolut: 100 % betyder kort i verklig storlek oavsett hur brett trädet är (tidigare skalades hela trädet in i vyn först, så breda generationer gick inte att zooma till läsbar storlek). Zoomområde 4–300 %, vyn anpassas till trädet vid inladdning, +/- utgår från fokuspersonen och piltangentsnavigering panorerar så att det aktiva kortet syns.
+
 ### Added
 - Porträtt på trädets kort: personens primära foto (eller första nedladdade) visas som rund bild, med initialer som reserv så att alla kort behåller samma form; namn kortas nu med ellips i stället för hårt avhugget.
 - Phase 6 (Källor + export): källista med sökning och antal hänvisningar, källsida med redigerbara fält (auditloggade) och alla hänvisningar länkade till personer och händelser, korslänkning från personsidans källhänvisningar; GEDCOM 5.5.1-export som round-trippar `raw_tags` — verifierad både med enhetstester genom vår egen parser och genom att exportera och återimportera hela det riktiga trädet med identiskt resultat i samtliga tabeller; `/api/export/gedcom`, `npm run export` och en inställningssida med nedladdningsknapp.

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { t, displayName, lifespan } from '../lib/i18n';
-import { NODE_W, NODE_H, AVATAR_R, AVATAR_CX, type TreeLayoutResult } from '../lib/treeLayout';
+import { NODE_W, NODE_H, AVATAR_R, AVATAR_CX, AVATAR_CY, type TreeLayoutResult } from '../lib/treeLayout';
 import type { TreePerson } from '../../lib/tree';
 import CountryFlag from './CountryFlag';
 
@@ -17,7 +17,7 @@ function initials(person: TreePerson): string {
 
 // A hard cut mid-name reads like broken data — mark it with an ellipsis
 // instead. The full name is always in the node's aria-label.
-const MAX_NAME = 20;
+const MAX_NAME = 17;
 const truncate = (name: string) =>
   name.length > MAX_NAME ? `${name.slice(0, MAX_NAME - 1).trimEnd()}…` : name;
 
@@ -265,28 +265,28 @@ export default function TreeChart({ layout, depthQuery }: { layout: TreeLayoutRe
                 {n.person.photoId != null ? (
                   <>
                     <clipPath id={`avatar-${n.key}`}>
-                      <circle cx={AVATAR_CX} cy={NODE_H / 2} r={AVATAR_R} />
+                      <circle cx={AVATAR_CX} cy={AVATAR_CY} r={AVATAR_R} />
                     </clipPath>
                     <image
                       href={`/api/media/${n.person.photoId}`}
                       x={AVATAR_CX - AVATAR_R}
-                      y={NODE_H / 2 - AVATAR_R}
+                      y={AVATAR_CY - AVATAR_R}
                       width={AVATAR_R * 2}
                       height={AVATAR_R * 2}
                       preserveAspectRatio="xMidYMid slice"
                       clipPath={`url(#avatar-${n.key})`}
                     />
                     <circle
-                      cx={AVATAR_CX} cy={NODE_H / 2} r={AVATAR_R}
+                      cx={AVATAR_CX} cy={AVATAR_CY} r={AVATAR_R}
                       className="fill-none stroke-gray-200"
                       strokeWidth={1}
                     />
                   </>
                 ) : (
                   <>
-                    <circle cx={AVATAR_CX} cy={NODE_H / 2} r={AVATAR_R} className="fill-gray-100 stroke-gray-200" strokeWidth={1} />
+                    <circle cx={AVATAR_CX} cy={AVATAR_CY} r={AVATAR_R} className="fill-gray-100 stroke-gray-200" strokeWidth={1} />
                     <text
-                      x={AVATAR_CX} y={NODE_H / 2 + 5}
+                      x={AVATAR_CX} y={AVATAR_CY + 5}
                       textAnchor="middle"
                       className="fill-gray-400 text-[14px] font-medium"
                     >
@@ -294,17 +294,22 @@ export default function TreeChart({ layout, depthQuery }: { layout: TreeLayoutRe
                     </text>
                   </>
                 )}
-                <text x={AVATAR_CX + AVATAR_R + 12} y={NODE_H / 2 - 3} className="fill-gray-900 text-[13px] font-medium">
-                  {truncate(displayName(n.person))}
+                {/* Given names and surname on their own lines, the way a name
+                    reads on a family chart. */}
+                <text x={NODE_W / 2} y={72} textAnchor="middle" className="fill-gray-900 text-[13px] font-medium">
+                  {truncate(n.person.givenName.trim())}
                 </text>
-                <text x={AVATAR_CX + AVATAR_R + 12} y={NODE_H / 2 + 15} className="fill-gray-500 text-[12px]">
+                <text x={NODE_W / 2} y={87} textAnchor="middle" className="fill-gray-900 text-[13px] font-medium">
+                  {truncate(n.person.surname.trim())}
+                </text>
+                <text x={NODE_W / 2} y={101} textAnchor="middle" className="fill-gray-500 text-[12px]">
                   {lifespan(n.person.birthYear, n.person.deathYear)}
                 </text>
                 {showFlags && (
                   <CountryFlag
                     code={n.person.country}
                     cx={AVATAR_CX + AVATAR_R - 4}
-                    cy={NODE_H / 2 + AVATAR_R - 4}
+                    cy={AVATAR_CY + AVATAR_R - 4}
                     r={FLAG_R}
                   />
                 )}

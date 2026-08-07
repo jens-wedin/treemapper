@@ -1,13 +1,15 @@
 import { hierarchy, tree, type HierarchyNode } from 'd3-hierarchy';
 import type { AncestorNode, DescendantNode, TreeData, TreePerson } from '../../lib/tree';
 
-export const NODE_W = 210;
-export const NODE_H = 66;
-/** Portrait circle on the left of each card. */
-export const AVATAR_R = 21;
-export const AVATAR_CX = 6 + AVATAR_R;
-const STEP_X = NODE_W + 24;
-const STEP_Y = NODE_H + 56;
+// Portrait on top, name and years centred underneath — narrow cards fit far
+// more people across a generation than the old wide ones.
+export const NODE_W = 150;
+export const NODE_H = 106;
+export const AVATAR_R = 20;
+export const AVATAR_CX = NODE_W / 2;
+export const AVATAR_CY = 12 + AVATAR_R;
+const STEP_X = NODE_W + 22;
+const STEP_Y = NODE_H + 48;
 
 export interface PositionedNode { key: string; person: TreePerson; x: number; y: number; isFocus: boolean }
 export interface TreeEdge { x1: number; y1: number; x2: number; y2: number }

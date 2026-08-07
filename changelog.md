@@ -4,6 +4,9 @@
 
 ### Added
 
+**Språk**
+- Gränssnittet finns nu på **svenska, engelska, tyska och spanska**. Språkväljare i sidhuvudet, valet minns mellan besök och sätter även `<html lang>`. Svenska är källspråk och reserv för nycklar som saknas i en översättning (ett test kontrollerar att alla fyra ordlistor har samma nyckeluppsättning). Översättningen omfattar gränssnittet, GEDCOM-händelsernas namn, datumformatering (månadsnamn och ABT/BEF/AFT) och förkortningarna för född/död. Personuppgifter — namn, platser, anteckningar — står kvar som de är registrerade, och konsekvensproblemens kategorier och beskrivningar är kvar på svenska (sidan säger till när ett annat språk är valt).
+
 **Träd (UI-omgång 2026-08-07)**
 - Två nya vyer: **Antavla** (klassisk vänster-till-höger-tavla) och **Solfjäder** (cirkulärt diagram), båda med enbart förfäder i upp till 8 generationer. De fyra mor-/farföräldragrenarna färgas var för sig, platserna räknas ut från anfarsnumreringen så att en saknad förfader lämnar en tom plats i stället för att förskjuta resten, och i solfjädern vänds text på nedre och vänstra halvan så att inget står upp och ned. Vyval sparas i URL:en (`?vy=`), och alla diagram delar zoom, personpanel, porträtt, flaggor och tangentbordsmodell.
 - Personpanel: klick (eller Enter) på ett kort öppnar en panel med porträtt, datum, familj och händelser. Att fokusera om trädet är nu en egen knapp i panelen i stället för något som händer vid varje klick, och släktingarna i panelen går att klicka på för att läsa vidare utan att diagrammet flyttar sig. Escape stänger.

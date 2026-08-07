@@ -17,6 +17,23 @@ npm test         # vitest unit tests
 npm run test:e2e # Playwright browse flow (needs wedin.db)
 ```
 
+## Språk / Language
+
+The interface is available in **Swedish, English, German and Spanish**, picked
+in the header and remembered between visits (it also sets `<html lang>`).
+Swedish is the source language and the fallback for any key a translation
+misses; a unit test asserts all four dictionaries carry the same keys.
+
+Translation covers the interface itself, GEDCOM event names, date formatting
+(month names and the `ABT`/`BEF`/`AFT` qualifiers) and the born/died
+abbreviations. **Record content stays as entered** — names, places and notes are
+genealogical data, not UI. The Konsekvens category names and problem
+descriptions are produced by the detectors in Swedish and stay Swedish; the
+page says so when another language is selected.
+
+Adding a language means one dictionary in `src/lib/i18n/dictionaries.ts` plus
+its event labels, month names and qualifiers.
+
 ## Browse
 
 - `/` — Hem: search front and center + tree stats

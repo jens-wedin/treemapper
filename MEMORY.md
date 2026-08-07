@@ -18,11 +18,24 @@ labels on the lower half need the arc drawn backwards; radial labels on the
 left half need a 180° flip and `text-anchor: end`; and labels must be truncated
 to the arc length their slice actually has, or they bleed into neighbours.
 
+## Languages (2026-08-07)
+
+UI in sv/en/de/es. `src/lib/i18n/dictionaries.ts` holds the four dictionaries
+(Swedish is source + fallback), `src/lib/i18n/index.ts` the store: `t()` stays a
+plain function reading a module variable, and `useLanguage()` in `App` re-renders
+the tree on change. Event labels, month names and date qualifiers are per
+language too. A test asserts all four dictionaries have identical key sets — add
+a key to Swedish and that test tells you which translations are missing.
+
+Not translated on purpose: record content (names, places, notes) and the
+Konsekvens categories/messages, which the detectors generate in Swedish.
+Translating those means moving `lib/issues.ts` to keys + params.
+
 ## Current state
 
 - **Data**: 4 561 personer, 983 familjer, 3 616 barnlänkar, 14 588 händelser,
   5 804 källhänvisningar, 520 källor, 985 foton (alla nedladdade, 425 MB).
-- **Tests**: 213 vitest + 24 Playwright e2e, all green. `tsc -b` clean,
+- **Tests**: 215 vitest + 27 Playwright e2e, all green (e2e runs with one worker — they share .e2e.db). `tsc -b` clean,
   `npm run build` clean.
 - **Konsekvens**: 2 831 problem över 2 275 personer (171 fel, 518 dubbletter,
   1 868 varningar, 251 övrigt, 23 småfel), 241 dubblettgrupper.

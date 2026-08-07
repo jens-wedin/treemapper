@@ -1,4 +1,4 @@
-import { NavLink, Route, Routes } from 'react-router';
+import { NavLink, Route, Routes, useLocation } from 'react-router';
 import { t } from './lib/i18n';
 import Hem from './pages/Hem';
 import PersonList from './pages/PersonList';
@@ -9,9 +9,25 @@ import SourcesPage from './pages/SourcesPage';
 import SourcePage from './pages/SourcePage';
 import SettingsPage from './pages/SettingsPage';
 
+/**
+ * Page width follows the content: the chart takes the whole window, tables get
+ * room for their columns, and prose keeps a readable line length.
+ */
+function containerClass(pathname: string): string {
+  if (pathname.startsWith('/trad')) return 'w-full px-4';
+  if (/^\/(personer|kallor|konsekvens)/.test(pathname)) return 'mx-auto w-full max-w-6xl px-4';
+  return 'mx-auto w-full max-w-3xl px-4';
+}
+
 export default function App() {
+  const { pathname } = useLocation();
+  const container = containerClass(pathname);
+  const isTree = pathname.startsWith('/trad');
+
   return (
-    <>
+    // The chart page is pinned to the viewport so the SVG can fill it; every
+    // other page grows and scrolls normally.
+    <div className={`flex flex-col ${isTree ? 'h-dvh overflow-hidden' : 'min-h-dvh'}`}>
       <a
         href="#innehall"
         className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-white focus:p-2 focus:shadow"
@@ -19,7 +35,7 @@ export default function App() {
         {t('nav.skip')}
       </a>
       <header className="border-b">
-        <nav aria-label={t('appTitle')} className="mx-auto flex max-w-3xl items-center gap-6 px-4 py-3">
+        <nav aria-label={t('appTitle')} className={`${container} flex items-center gap-6 py-3`}>
           <span className="font-semibold">{t('appTitle')}</span>
           {(
             [
@@ -44,7 +60,10 @@ export default function App() {
           ))}
         </nav>
       </header>
-      <main id="innehall" className="mx-auto max-w-3xl px-4 py-8">
+      <main
+        id="innehall"
+        className={`${container} flex min-h-0 flex-1 flex-col ${isTree ? 'overflow-auto py-4' : 'py-8'}`}
+      >
         <Routes>
           <Route path="/" element={<Hem />} />
           <Route path="/personer" element={<PersonList />} />
@@ -57,6 +76,6 @@ export default function App() {
           <Route path="/installningar" element={<SettingsPage />} />
         </Routes>
       </main>
-    </>
+    </div>
   );
 }

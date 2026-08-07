@@ -152,9 +152,8 @@ export default function TreeChart({ layout, depthQuery }: { layout: TreeLayoutRe
   }
 
   return (
-    <div className="mt-4">
-      <p id="trad-instruktioner" className="text-sm text-gray-600">{t('tree.instructions')}</p>
-      <div className="mt-2 flex items-center gap-1">
+    <div className="mt-3 flex min-h-0 flex-1 flex-col">
+      <div className="flex flex-wrap items-center gap-1">
         <Button
           variant="outline" size="sm" aria-label={t('tree.zoomIn')}
           onClick={() => zoomWithButton(ZOOM_STEP)}
@@ -176,8 +175,11 @@ export default function TreeChart({ layout, depthQuery }: { layout: TreeLayoutRe
         <span aria-live="polite" className="ml-2 text-sm tabular-nums text-gray-500">
           {zoomPercent}%
         </span>
+        <p id="trad-instruktioner" className="ml-3 text-sm text-gray-500">
+          {t('tree.instructions')}
+        </p>
       </div>
-      <div ref={wrapRef} className="mt-2 h-[70vh] w-full overflow-hidden rounded-lg border bg-white">
+      <div ref={wrapRef} className="mt-2 min-h-[320px] w-full flex-1 overflow-hidden rounded-lg border bg-white">
         <svg
           ref={svgRef}
           role="group"

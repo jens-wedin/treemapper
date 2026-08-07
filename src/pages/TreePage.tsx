@@ -46,7 +46,7 @@ export default function TreePage() {
   if (state === 'error') return <p role="alert">{t('common.error')}</p>;
 
   return (
-    <section>
+    <section className="flex min-h-0 flex-1 flex-col">
       <h1 className="text-2xl font-bold">{t('tree.title')}</h1>
       {data && (
         <p className="mt-1 text-gray-600">

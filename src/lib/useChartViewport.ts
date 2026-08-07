@@ -55,6 +55,13 @@ export function useChartViewport(bounds: ChartBounds) {
 
   const markFresh = useCallback(() => { adjusted.current = false; }, []);
 
+  /**
+   * Keeps the current pan and zoom across the next change of bounds. Expanding
+   * a branch grows the chart, and re-fitting it would shove the person you just
+   * clicked across the screen.
+   */
+  const holdView = useCallback(() => { adjusted.current = true; }, []);
+
   const zoomAround = useCallback((factor: number, px: number, py: number) => {
     adjusted.current = true;
     setView(v => {
@@ -136,7 +143,7 @@ export function useChartViewport(bounds: ChartBounds) {
   return {
     wrapRef, svgRef, size, view,
     zoomPercent: Math.round(view.k * 100),
-    zoomBy, reset, ensureVisible, markFresh, svgProps,
+    zoomBy, reset, ensureVisible, markFresh, holdView, svgProps,
     transform: `translate(${view.x} ${view.y}) scale(${view.k})`,
   };
 }

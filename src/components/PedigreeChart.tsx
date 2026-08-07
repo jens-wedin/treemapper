@@ -1,41 +1,109 @@
-import { useEffect, useMemo, useState } from 'react';
-import type { TreeData } from '../../lib/tree';
-import { t } from '../lib/i18n';
-import { flattenAncestors } from '../lib/ahnentafel';
-import { layoutPedigree, PED_W, PED_H, EXPANDER_R } from '../lib/pedigreeLayout';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { AncestorNode, TreeData } from '../../lib/tree';
+import { t, displayName } from '../lib/i18n';
+import { fetchJson } from '../lib/api';
+import { flattenAncestors, graftAt, type AncestorSlot } from '../lib/ahnentafel';
+import { layoutPedigree, PED_W, PED_H, HANDLE_R } from '../lib/pedigreeLayout';
 import { useChartViewport } from '../lib/useChartViewport';
 import { useFlagPreference } from '../lib/flagPreference';
 import PersonCard, { cardLabel } from './PersonCard';
 import ChartToolbar from './ChartToolbar';
-import { displayName } from '../lib/i18n';
 
-export default function PedigreeChart({ data, generations, onSelect, onExpand, selectedId }: {
+/** Generations added by one ▸ click: the parents and their parents. */
+const EXPAND_BY = 2;
+
+/** Is this slot somewhere above `host` in the chart — i.e. inside its branch? */
+function isAbove(slot: number, host: number): boolean {
+  let n = Math.floor(slot / 2);
+  while (n > host) n = Math.floor(n / 2);
+  return n === host;
+}
+
+export default function PedigreeChart({ data, generations, onSelect, selectedId }: {
   data: TreeData;
   generations: number;
   onSelect: (personId: string) => void;
-  /** Re-roots the chart on an ancestor whose own parents are off the edge. */
-  onExpand: (personId: string) => void;
   selectedId: string | null;
 }) {
-  const layout = useMemo(
-    () => layoutPedigree(flattenAncestors(data.ancestors, generations), generations),
-    [data, generations],
+  // Branches opened by hand, keyed by the Ahnentafel slot they hang under.
+  // Insertion order matters: a branch opened inside another one can only be
+  // grafted after its host.
+  const [opened, setOpened] = useState<Map<number, AncestorNode>>(() => new Map());
+  const [pending, setPending] = useState<number | null>(null);
+  const [justOpened, setJustOpened] = useState<number | null>(null);
+
+  // A new focus person or depth is a different chart; opened branches go with it.
+  useEffect(() => { setOpened(new Map()); }, [data, generations]);
+
+  const slots = useMemo(() => {
+    const byNumber = new Map<number, AncestorSlot>();
+    for (const slot of flattenAncestors(data.ancestors, generations)) byNumber.set(slot.ahnentafel, slot);
+    for (const [under, branch] of opened) {
+      if (!byNumber.has(under)) continue;              // its host was folded away
+      for (const slot of graftAt(under, flattenAncestors(branch, EXPAND_BY))) {
+        byNumber.set(slot.ahnentafel, slot);
+      }
+    }
+    return [...byNumber.values()].sort((a, b) => a.ahnentafel - b.ahnentafel);
+  }, [data, generations, opened]);
+
+  const expandedSlots = useMemo(
+    () => new Set([...opened.keys()].filter(n => slots.some(s => s.ahnentafel === n))),
+    [opened, slots],
   );
+  const layout = useMemo(() => layoutPedigree(slots, expandedSlots), [slots, expandedSlots]);
+
   const viewport = useChartViewport(layout.bounds);
   const [showFlags, setShowFlags] = useFlagPreference();
   const [activeKey, setActiveKey] = useState('a1');
 
-  useEffect(() => { setActiveKey('a1'); }, [layout]);
+  // Only a genuinely different chart resets the keyboard position — expanding a
+  // branch should leave you where you were.
+  useEffect(() => { setActiveKey('a1'); }, [data, generations]);
+
+  const { holdView, ensureVisible } = viewport;
+  const expand = useCallback(async (ahnentafel: number, personId: string) => {
+    setPending(ahnentafel);
+    try {
+      const more = await fetchJson<TreeData>(`/api/tree/${personId}?up=${EXPAND_BY}&down=0`);
+      holdView();
+      setOpened(prev => new Map(prev).set(ahnentafel, more.ancestors));
+      setJustOpened(ahnentafel);
+    } finally {
+      setPending(null);
+    }
+  }, [holdView]);
+
+  // Keep the zoom, but pan far enough that the branch you just opened is on
+  // screen — it can otherwise unfold past the right edge, out of sight.
+  useEffect(() => {
+    if (justOpened == null) return;
+    setJustOpened(null);
+    const revealed = layout.nodes.filter(n => isAbove(n.ahnentafel, justOpened));
+    const outermost = revealed.reduce<typeof revealed[number] | undefined>(
+      (far, n) => (!far || n.x > far.x ? n : far), undefined,
+    );
+    if (outermost) ensureVisible(outermost.x + PED_W / 2, outermost.y);
+  }, [justOpened, layout, ensureVisible]);
+
+  const collapse = useCallback((ahnentafel: number) => {
+    holdView();
+    setOpened(prev => {
+      const next = new Map(prev);
+      next.delete(ahnentafel);
+      return next;
+    });
+  }, [holdView]);
 
   function moveFocus(key: string | undefined) {
     if (!key) return;
-    const target = layout.nodes.find(n => n.key === key) ?? layout.expanders.find(x => x.key === key);
+    const target = layout.nodes.find(n => n.key === key) ?? layout.handles.find(h => h.key === key);
     setActiveKey(key);
     viewport.svgRef.current?.querySelector<SVGGElement>(`[data-node-key="${CSS.escape(key)}"]`)?.focus();
     if (target) viewport.ensureVisible(target.x, target.y);
   }
 
-  /** `activate` is what Enter and Space do: open a card, or follow a handle. */
+  /** `activate` is what Enter and Space do: open a card, or work a handle. */
   function onNodeKeyDown(e: React.KeyboardEvent, key: string, activate: () => void) {
     const nav = layout.nav[key] ?? {};
     const actions: Record<string, () => void> = {
@@ -107,37 +175,45 @@ export default function PedigreeChart({ data, generations, onSelect, onExpand, s
               </g>
             ))}
 
-            {/* the line continues past the edge of the chart — click to follow it */}
-            {layout.expanders.map(x => (
-              <g
-                key={x.key}
-                data-expander={x.person.id}
-                data-node-key={x.key}
-                tabIndex={x.key === activeKey ? 0 : -1}
-                role="button"
-                aria-label={t('tree.expandLine').replace('{name}', displayName(x.person))}
-                transform={`translate(${x.x} ${x.y})`}
-                className="group cursor-pointer outline-none"
-                onClick={() => onExpand(x.person.id)}
-                onFocus={() => setActiveKey(x.key)}
-                onKeyDown={e => onNodeKeyDown(e, x.key, () => onExpand(x.person.id))}
-              >
-                <circle
-                  r={EXPANDER_R}
-                  strokeWidth={x.key === activeKey ? 2.5 : 1.25}
-                  className={`fill-white group-hover:fill-blue-50 ${
-                    x.key === activeKey ? 'stroke-amber-500' : 'stroke-gray-400 group-hover:stroke-blue-600'
-                  }`}
-                />
-                <path
-                  d="M -3 -5 L 3 0 L -3 5"
-                  className="fill-none stroke-gray-600 group-hover:stroke-blue-700"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </g>
-            ))}
+            {/* ▸ opens the two generations above this person, ‹ folds them away */}
+            {layout.handles.map(h => {
+              const isPending = pending === h.ahnentafel;
+              const label = h.action === 'expand' ? 'tree.expandLine' : 'tree.collapseLine';
+              return (
+                <g
+                  key={h.key}
+                  data-handle={h.person.id}
+                  data-handle-action={h.action}
+                  data-node-key={h.key}
+                  tabIndex={h.key === activeKey ? 0 : -1}
+                  role="button"
+                  aria-label={t(label).replace('{name}', displayName(h.person))}
+                  aria-busy={isPending || undefined}
+                  transform={`translate(${h.x} ${h.y})`}
+                  className="group cursor-pointer outline-none"
+                  onClick={() => (h.action === 'expand' ? expand(h.ahnentafel, h.person.id) : collapse(h.ahnentafel))}
+                  onFocus={() => setActiveKey(h.key)}
+                  onKeyDown={e => onNodeKeyDown(e, h.key, () => (
+                    h.action === 'expand' ? expand(h.ahnentafel, h.person.id) : collapse(h.ahnentafel)
+                  ))}
+                >
+                  <circle
+                    r={HANDLE_R}
+                    strokeWidth={h.key === activeKey ? 2.5 : 1.25}
+                    className={`fill-white group-hover:fill-blue-50 ${
+                      h.key === activeKey ? 'stroke-amber-500' : 'stroke-gray-400 group-hover:stroke-blue-600'
+                    }`}
+                  />
+                  <path
+                    d={h.action === 'expand' ? 'M -3 -5 L 3 0 L -3 5' : 'M 3 -5 L -3 0 L 3 5'}
+                    className={`fill-none group-hover:stroke-blue-700 ${isPending ? 'stroke-gray-300' : 'stroke-gray-600'}`}
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </g>
+              );
+            })}
           </g>
         </svg>
       </div>

@@ -49,16 +49,21 @@ export default function TreePage() {
     navigate(`/trad/${personId}${depthQuery}&vy=${view}`);
   }
 
+  // The previous chart stays on screen while the next one loads: blanking it
+  // made every change of person or depth flash. `stale` guards against an
+  // earlier request landing after a later one.
   useEffect(() => {
+    let stale = false;
     setState('loading');
-    setData(null);
     fetchJson<TreeData>(`/api/tree/${id}?up=${upp}&down=${ned}`)
       .then(d => {
+        if (stale) return;
         setData(d);
         setState('ok');
         document.title = `${t('tree.title')}: ${displayName(d.focus)} – ${t('appTitle')}`;
       })
-      .catch(() => setState('error'));
+      .catch(() => { if (!stale) setState('error'); });
+    return () => { stale = true; };
   }, [id, upp, ned]);
 
   const layout = useMemo(() => (data ? layoutTree(data) : null), [data]);
@@ -73,7 +78,7 @@ export default function TreePage() {
   if (state === 'error') return <p role="alert">{t('common.error')}</p>;
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col">
+    <section className="flex min-h-0 flex-1 flex-col" aria-busy={state === 'loading' || undefined}>
       <h1 className="text-2xl font-bold">{t('tree.title')}</h1>
       {data && (
         <p className="mt-1 text-gray-600">
@@ -118,7 +123,8 @@ export default function TreePage() {
         )}
       </div>
 
-      {state === 'loading' && <p className="mt-4 text-gray-600">{t('common.loading')}</p>}
+      {/* only the very first load has nothing to show; a reload keeps the chart */}
+      {state === 'loading' && !data && <p className="mt-4 text-gray-600">{t('common.loading')}</p>}
       {data && layout && (
         view === 'list' ? (
           <TreeList ancestors={data.ancestors} descendants={data.descendants} depthQuery={depthQuery} />
@@ -129,13 +135,7 @@ export default function TreePage() {
                 <TreeChart layout={layout} onSelect={setSelectedId} selectedId={selectedId} />
               )}
               {view === 'pedigree' && (
-                <PedigreeChart
-                  data={data}
-                  generations={upp}
-                  onSelect={setSelectedId}
-                  onExpand={focusOn}
-                  selectedId={selectedId}
-                />
+                <PedigreeChart data={data} generations={upp} onSelect={setSelectedId} selectedId={selectedId} />
               )}
               {view === 'fan' && (
                 <FanChart data={data} generations={upp} onSelect={setSelectedId} selectedId={selectedId} />

@@ -87,45 +87,58 @@ test('generationsvalet håller i sig och gäller genast', async ({ page }) => {
   await expect(page.getByLabel('Generationer uppåt')).toHaveValue('5');
 });
 
-test('fortsättningsknappen öppnar antavlan vidare bakåt', async ({ page }) => {
+test('utfällningsknappen öppnar två generationer till på plats', async ({ page }) => {
   // två generationer: förfäder bortom farföräldrarna ligger utanför tavlan
   await page.goto('/trad/I500003?upp=2&vy=pedigree');
   await expect(page.locator('[data-tree-node]').first()).toBeVisible();
+  const before = await page.locator('[data-tree-node]').count();
 
-  const expander = page.locator('[data-expander]').first();
-  await expect(expander).toBeVisible();
-  const ancestorId = await expander.getAttribute('data-expander');
+  const handle = page.locator('[data-handle]').first();
+  await expect(handle).toBeVisible();
+  const ancestorId = await handle.getAttribute('data-handle');
+  const url = page.url();
 
-  await expander.click();
+  await handle.click();
 
-  // tavlan ritas om med den förfadern i mitten, och hans egna förfäder syns nu
-  await expect(page).toHaveURL(new RegExp(`/trad/${ancestorId}\\?upp=2`));
-  await expect(page).toHaveURL(/vy=pedigree/);
-  await expect(page.locator(`[data-tree-node="${ancestorId}"]`)).toBeVisible();
-  const parents = await (await page.request.get(`/api/tree/${ancestorId}?up=1&down=0`)).json();
-  const parentIds: string[] = parents.ancestors.parents.map((p: { person: { id: string } }) => p.person.id);
+  // förfäderns egna föräldrar ritas ut — resten av tavlan står kvar
+  const forebears = await (await page.request.get(`/api/tree/${ancestorId}?up=1&down=0`)).json();
+  const parentIds: string[] = forebears.ancestors.parents.map((p: { person: { id: string } }) => p.person.id);
   expect(parentIds.length).toBeGreaterThan(0);
   for (const id of parentIds) {
     await expect(page.locator(`[data-tree-node="${id}"]`)).toBeVisible();
   }
+  await expect(page.locator(`[data-tree-node="I500003"]`)).toBeVisible();
+  expect(await page.locator('[data-tree-node]').count()).toBeGreaterThan(before);
+  expect(page.url()).toBe(url);                 // ingen omnavigering, ingen blink
+
+  // knappen blir en hopfällningsknapp, och fäller ihop grenen igen
+  const collapse = page.locator(`[data-handle="${ancestorId}"]`);
+  await expect(collapse).toHaveAttribute('data-handle-action', 'collapse');
+  await collapse.click();
+  for (const id of parentIds) {
+    await expect(page.locator(`[data-tree-node="${id}"]`)).toHaveCount(0);
+  }
+  await expect
+    .poll(() => page.locator('[data-tree-node]').count())
+    .toBe(before);
 });
 
-test('fortsättningsknappen nås med tangentbordet', async ({ page }) => {
+test('utfällningsknappen nås med tangentbordet', async ({ page }) => {
   await page.goto('/trad/I500003?upp=2&vy=pedigree');
-  const expander = page.locator('[data-expander]').first();
-  await expect(expander).toBeVisible();
-  const ancestorId = await expander.getAttribute('data-expander');
+  const handle = page.locator('[data-handle]').first();
+  await expect(handle).toBeVisible();
+  const ancestorId = await handle.getAttribute('data-handle');
 
   // fokusera förfaderns kort och gå höger — där finns ingen förälder utritad,
-  // så högerpilen ska landa på fortsättningsknappen
+  // så högerpilen ska landa på knappen
   await page.locator(`[data-tree-node="${ancestorId}"]`).first().focus();
   await page.keyboard.press('ArrowRight');
   await expect
-    .poll(() => page.evaluate(() => document.activeElement?.getAttribute('data-expander')))
+    .poll(() => page.evaluate(() => document.activeElement?.getAttribute('data-handle')))
     .toBe(ancestorId);
 
   await page.keyboard.press('Enter');
-  await expect(page).toHaveURL(new RegExp(`/trad/${ancestorId}`));
+  await expect(page.locator(`[data-handle="${ancestorId}"]`)).toHaveAttribute('data-handle-action', 'collapse');
 });
 
 test('solfjädern renderas och kan navigeras med tangentbord', async ({ page }) => {

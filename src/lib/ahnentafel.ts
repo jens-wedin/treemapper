@@ -71,3 +71,19 @@ export function flattenAncestors(root: AncestorNode, maxGenerations: number): An
   walk(root, 1);
   return slots.sort((a, b) => a.ahnentafel - b.ahnentafel);
 }
+
+/**
+ * Re-numbers a separately fetched ancestor tree as if it had always hung at
+ * `under` in the main chart, so an expanded branch keeps the same numbering —
+ * and therefore the same branch colour and grid position — as the rest.
+ *
+ * A slot's own number carries its generation in the leading bit; stripping that
+ * bit leaves the path, which is what gets appended below `under`.
+ */
+export function graftAt(under: number, slots: AncestorSlot[]): AncestorSlot[] {
+  return slots.map(slot => {
+    const generation = generationOf(slot.ahnentafel);
+    const path = slot.ahnentafel - 2 ** generation;
+    return { ...slot, ahnentafel: under * 2 ** generation + path };
+  });
+}

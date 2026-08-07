@@ -19,35 +19,40 @@ export interface PedigreeNode {
 }
 export interface PedigreeLink { path: string }
 /**
- * A "continue from here" handle on a card whose parents exist but fall outside
- * the generations being drawn. Clicking it re-roots the chart on that person.
+ * The button just past a card's right edge: ▸ opens the two generations above
+ * someone whose parents are on record but not drawn, ‹ folds them away again.
  */
-export interface PedigreeExpander {
+export interface PedigreeHandle {
   key: string;
+  ahnentafel: number;
   person: TreePerson;
   x: number;
   y: number;
+  action: 'expand' | 'collapse';
 }
 export interface PedigreeLayout {
   nodes: PedigreeNode[];
   links: PedigreeLink[];
-  expanders: PedigreeExpander[];
+  handles: PedigreeHandle[];
   nav: NavMap;
   bounds: ChartBounds;
 }
 
-/** Gap between a card's right edge and the centre of its expander button. */
-const EXPANDER_GAP = 22;
-export const EXPANDER_R = 13;
+/** Gap between a card's right edge and the centre of its handle. */
+const HANDLE_GAP = 22;
+export const HANDLE_R = 13;
 
 /**
- * Classic left-to-right ancestor chart. Positions come from the Ahnentafel
- * number alone, so a missing ancestor simply leaves its slot empty instead of
- * shifting everyone else — the grid is the same whether the tree is complete
- * or full of holes.
+ * Classic left-to-right ancestor chart. Columns come from the Ahnentafel
+ * number, so a missing ancestor leaves its slot empty instead of shifting
+ * everyone else. Whatever slots are handed in are drawn — the caller decides
+ * how deep the chart goes, including branches it has expanded by hand.
+ *
+ * `expanded` names the slots the caller opened, which is what turns their ▸
+ * into a ‹.
  */
-export function layoutPedigree(slots: AncestorSlot[], generations: number): PedigreeLayout {
-  const shown = slots.filter(s => generationOf(s.ahnentafel) <= generations);
+export function layoutPedigree(slots: AncestorSlot[], expanded: ReadonlySet<number> = new Set()): PedigreeLayout {
+  const shown = slots;
   const byNumber = new Map(shown.map(s => [s.ahnentafel, s]));
 
   /**
@@ -62,18 +67,17 @@ export function layoutPedigree(slots: AncestorSlot[], generations: number): Pedi
    */
   const rows = new Map<number, number>();
   let nextRow = 0;
-  const assignRow = (ahnentafel: number, generation: number): number => {
+  const assignRow = (ahnentafel: number): number => {
     const parents = [ahnentafel * 2, ahnentafel * 2 + 1];
-    const anyDrawn = generation < generations && parents.some(p => byNumber.has(p));
-    const row = anyDrawn
+    const row = parents.some(p => byNumber.has(p))
       ? parents
-        .map(p => (byNumber.has(p) ? assignRow(p, generation + 1) : nextRow++))
+        .map(p => (byNumber.has(p) ? assignRow(p) : nextRow++))
         .reduce((a, b) => (a + b) / 2)
       : nextRow++;
     rows.set(ahnentafel, row);
     return row;
   };
-  assignRow(1, 0);
+  assignRow(1);
   const slotY = (ahnentafel: number): number => (rows.get(ahnentafel) ?? 0) * ROW_STEP;
 
   const nodes: PedigreeNode[] = shown.map(s => ({
@@ -100,19 +104,20 @@ export function layoutPedigree(slots: AncestorSlot[], generations: number): Pedi
     }
   }
 
-  // Only cards with no drawn parent get a handle: elsewhere the line already
-  // continues on screen.
-  const expanders: PedigreeExpander[] = shown
-    .filter(s => s.hasMoreAncestors
-      && !byNumber.has(s.ahnentafel * 2)
-      && !byNumber.has(s.ahnentafel * 2 + 1))
+  // A card offers ▸ when its parents are on record but off the chart, and ‹
+  // once the caller has opened them. Everyone else already shows their line.
+  const handles: PedigreeHandle[] = shown
+    .filter(s => expanded.has(s.ahnentafel)
+      || (s.hasMoreAncestors && !byNumber.has(s.ahnentafel * 2) && !byNumber.has(s.ahnentafel * 2 + 1)))
     .map(s => ({
       key: `x${s.ahnentafel}`,
+      ahnentafel: s.ahnentafel,
       person: s.person,
-      x: generationOf(s.ahnentafel) * COL_STEP + PED_W / 2 + EXPANDER_GAP,
+      x: generationOf(s.ahnentafel) * COL_STEP + PED_W / 2 + HANDLE_GAP,
       y: slotY(s.ahnentafel),
+      action: expanded.has(s.ahnentafel) ? 'collapse' as const : 'expand' as const,
     }));
-  const expanderOf = new Map(expanders.map(x => [x.key, x]));
+  const handleOf = new Map(handles.map(h => [h.key, h]));
 
   const nav: NavMap = {};
   const keyOf = (n: number) => (byNumber.has(n) ? `a${n}` : undefined);
@@ -122,18 +127,18 @@ export function layoutPedigree(slots: AncestorSlot[], generations: number): Pedi
     list.push(node);
     byGeneration.set(generationOf(node.ahnentafel), list);
   }
+  // right = further back in time (father first, mother if he is missing). A
+  // handle is drawn between a card and its parents, so it is a stop on the way.
+  const parentKeyOf = (n: number) => keyOf(n * 2) ?? keyOf(n * 2 + 1);
   for (const node of nodes) {
-    const entry: NavMap[string] = {};
-    // right = further back in time (father first, mother if he is missing);
-    // with nobody drawn there, the expander takes that place instead.
-    entry.right = keyOf(node.ahnentafel * 2)
-      ?? keyOf(node.ahnentafel * 2 + 1)
-      ?? (expanderOf.has(`x${node.ahnentafel}`) ? `x${node.ahnentafel}` : undefined);
-    entry.left = keyOf(Math.floor(node.ahnentafel / 2));
-    nav[node.key] = entry;
+    nav[node.key] = {
+      right: (handleOf.has(`x${node.ahnentafel}`) ? `x${node.ahnentafel}` : undefined)
+        ?? parentKeyOf(node.ahnentafel),
+      left: keyOf(Math.floor(node.ahnentafel / 2)),
+    };
   }
-  for (const expander of expanders) {
-    nav[expander.key] = { left: expander.key.replace(/^x/, 'a') };
+  for (const handle of handles) {
+    nav[handle.key] = { left: `a${handle.ahnentafel}`, right: parentKeyOf(handle.ahnentafel) };
   }
   for (const list of byGeneration.values()) {
     list.sort((a, b) => a.y - b.y);
@@ -148,11 +153,11 @@ export function layoutPedigree(slots: AncestorSlot[], generations: number): Pedi
   return {
     nodes,
     links,
-    expanders,
+    handles,
     nav,
     bounds: {
       minX: Math.min(...xs, 0) - PED_W / 2 - 20,
-      maxX: Math.max(...xs.map(x => x + PED_W / 2), ...expanders.map(x => x.x + EXPANDER_R), 0) + 20,
+      maxX: Math.max(...xs.map(x => x + PED_W / 2), ...handles.map(h => h.x + HANDLE_R), 0) + 20,
       minY: Math.min(...ys, 0) - PED_H / 2 - 20,
       maxY: Math.max(...ys, 0) + PED_H / 2 + 20,
     },

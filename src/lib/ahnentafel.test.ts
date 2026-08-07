@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generationOf, branchOf, flattenAncestors } from './ahnentafel';
+import { generationOf, branchOf, flattenAncestors, graftAt } from './ahnentafel';
 import type { AncestorNode, TreePerson } from '../../lib/tree';
 
 const P = (id: string, sex: 'M' | 'F' | 'U' = 'U'): TreePerson => ({
@@ -76,5 +76,28 @@ describe('flattenAncestors', () => {
     const tree = A('barn', 'U', [A('mor', 'F', [A('morfar', 'M'), A('mormor', 'F')])]);
     const byNumber = Object.fromEntries(flattenAncestors(tree, 3).map(s => [s.ahnentafel, s.person.id]));
     expect(byNumber).toEqual({ 1: 'barn', 3: 'mor', 6: 'morfar', 7: 'mormor' });
+  });
+});
+
+describe('graftAt', () => {
+  const sub = flattenAncestors(
+    A('rot', 'M', [A('far', 'M', [A('farfar', 'M'), A('farmor', 'F')]), A('mor', 'F')]),
+    2,
+  );
+
+  it('numrerar om en hämtad gren som om den suttit där hela tiden', () => {
+    // grenen hängs under mormor (nr 7): hennes far blir 14, hennes farfar 28
+    const grafted = Object.fromEntries(graftAt(7, sub).map(s => [s.ahnentafel, s.person.id]));
+    expect(grafted).toEqual({ 7: 'rot', 14: 'far', 15: 'mor', 28: 'farfar', 29: 'farmor' });
+  });
+
+  it('låter roten behålla sin plats', () => {
+    expect(graftAt(5, sub).find(s => s.person.id === 'rot')!.ahnentafel).toBe(5);
+    expect(graftAt(1, sub).map(s => s.ahnentafel)).toEqual(sub.map(s => s.ahnentafel));
+  });
+
+  it('behåller grenfärgen från huvudtavlan', () => {
+    // allt som hängs under en morfar (nr 6) tillhör mf-grenen
+    for (const slot of graftAt(6, sub)) expect(branchOf(slot.ahnentafel)).toBe('mf');
   });
 });

@@ -15,7 +15,7 @@ const full: AncestorSlot[] = [
 ];
 
 describe('layoutPedigree', () => {
-  const r = layoutPedigree(full, 2);
+  const r = layoutPedigree(full);
   const at = (id: string) => r.nodes.find(n => n.person.id === id)!;
 
   it('lägger generationerna i kolumner från vänster', () => {
@@ -53,19 +53,19 @@ describe('layoutPedigree', () => {
 
   it('hoppar över saknade förfäder', () => {
     const gaps: AncestorSlot[] = [slot(1, 'jag'), slot(3, 'mor'), slot(6, 'morfar')];
-    const g = layoutPedigree(gaps, 2);
+    const g = layoutPedigree(gaps);
     expect(g.nodes.map(n => n.person.id).sort()).toEqual(['jag', 'mor', 'morfar']);
     expect(g.links).toHaveLength(2);                       // jag→mor, mor→morfar
   });
 
   it('håller en tom rad för den förälder som saknas', () => {
     // bara modern känd → hon ska ligga under den tomma faderns plats
-    const motherOnly = layoutPedigree([slot(1, 'jag'), slot(3, 'mor')], 2);
+    const motherOnly = layoutPedigree([slot(1, 'jag'), slot(3, 'mor')]);
     const m = motherOnly.nodes.find(n => n.person.id === 'mor')!;
     expect(m.y).toBeGreaterThan(motherOnly.nodes.find(n => n.isFocus)!.y);
 
     // bara fadern känd → han ligger över den tomma moderns plats
-    const fatherOnly = layoutPedigree([slot(1, 'jag'), slot(2, 'far')], 2);
+    const fatherOnly = layoutPedigree([slot(1, 'jag'), slot(2, 'far')]);
     const f = fatherOnly.nodes.find(n => n.person.id === 'far')!;
     expect(f.y).toBeLessThan(fatherOnly.nodes.find(n => n.isFocus)!.y);
   });
@@ -74,7 +74,7 @@ describe('layoutPedigree', () => {
     // en rak fäderlinje genom fem generationer: rutnätet har 32 rader,
     // men linjen behöver bara en handfull — annars blir tavlan oläsligt liten
     const line = [1, 2, 4, 8, 16, 32].map((n, i) => slot(n, `g${i}`));
-    const l = layoutPedigree(line, 5);
+    const l = layoutPedigree(line);
     const ys = l.nodes.map(n => n.y);
     expect(Math.max(...ys) - Math.min(...ys)).toBeLessThan(6 * ROW_STEP);
   });
@@ -84,7 +84,7 @@ describe('layoutPedigree', () => {
       slot(1, 'jag'), slot(2, 'far'), slot(3, 'mor'),
       slot(4, 'anfader'), slot(6, 'anfader'),   // samma person i två grenar
     ];
-    const c = layoutPedigree(collapse, 2);
+    const c = layoutPedigree(collapse);
     const keys = c.nodes.filter(n => n.person.id === 'anfader').map(n => n.key);
     expect(keys).toHaveLength(2);
     expect(new Set(keys).size).toBe(2);
@@ -112,26 +112,27 @@ describe('layoutPedigree', () => {
       { ...slot(5, 'farmor'), hasMoreAncestors: false },
       { ...slot(7, 'mormor'), hasMoreAncestors: true },
     ];
-    const e = layoutPedigree(edge, 2);
+    const e = layoutPedigree(edge);
 
     it('ger bara de yttersta korten som har fler förfäder en knapp', () => {
-      expect(e.expanders.map(x => x.person.id).sort()).toEqual(['farfar', 'mormor']);
+      expect(e.handles.map(h => h.person.id).sort()).toEqual(['farfar', 'mormor']);
+      expect(e.handles.every(h => h.action === 'expand')).toBe(true);
     });
 
     it('lägger knappen till höger om sitt kort, i samma höjd', () => {
       const node = e.nodes.find(n => n.person.id === 'farfar')!;
-      const button = e.expanders.find(x => x.person.id === 'farfar')!;
+      const button = e.handles.find(h => h.person.id === 'farfar')!;
       expect(button.y).toBe(node.y);
       expect(button.x).toBeGreaterThan(node.x + PED_W / 2);
     });
 
     it('får plats innanför diagrammets gränser', () => {
-      expect(e.bounds.maxX).toBeGreaterThanOrEqual(Math.max(...e.expanders.map(x => x.x)));
+      expect(e.bounds.maxX).toBeGreaterThanOrEqual(Math.max(...e.handles.map(h => h.x)));
     });
 
     it('nås med högerpil från kortet och vänsterpil tillbaka', () => {
       const node = e.nodes.find(n => n.person.id === 'farfar')!;
-      const button = e.expanders.find(x => x.person.id === 'farfar')!;
+      const button = e.handles.find(h => h.person.id === 'farfar')!;
       expect(e.nav[node.key]?.right).toBe(button.key);
       expect(e.nav[button.key]?.left).toBe(node.key);
     });
@@ -139,7 +140,33 @@ describe('layoutPedigree', () => {
     it('låter högerpilen gå till en riktig förfader när en sådan ritas ut', () => {
       const far = r.nodes.find(n => n.person.id === 'far')!;
       expect(r.nav[far.key]?.right).toBe(r.nodes.find(n => n.person.id === 'farfar')!.key);
-      expect(r.expanders).toEqual([]);   // inga flaggade slut i det fullständiga trädet
+      expect(r.handles).toEqual([]);   // inga flaggade slut i det fullständiga trädet
+    });
+
+    it('byter till en hopfällningsknapp för den gren som öppnats', () => {
+      // farfar (4) är utfälld: hans föräldrar ritas nu ut
+      const opened: AncestorSlot[] = [
+        ...edge,
+        slot(8, 'farfars far'), { ...slot(9, 'farfars mor'), hasMoreAncestors: true },
+      ];
+      const o = layoutPedigree(opened, new Set([4]));
+      const farfar = o.handles.find(h => h.person.id === 'farfar')!;
+      expect(farfar.action).toBe('collapse');
+      // och de nya yttersta korten erbjuder i sin tur att fortsätta
+      expect(o.handles.filter(h => h.action === 'expand').map(h => h.person.id).sort())
+        .toEqual(['farfars mor', 'mormor']);
+    });
+
+    it('lägger hopfällningsknappen mellan kortet och den utfällda grenen', () => {
+      const opened = layoutPedigree([...edge, slot(8, 'farfars far')], new Set([4]));
+      const node = opened.nodes.find(n => n.person.id === 'farfar')!;
+      const button = opened.handles.find(h => h.person.id === 'farfar')!;
+      const parent = opened.nodes.find(n => n.person.id === 'farfars far')!;
+      expect(button.x).toBeGreaterThan(node.x + PED_W / 2);
+      expect(button.x).toBeLessThan(parent.x - PED_W / 2);
+      // högerpilen stannar vid knappen och går sedan vidare till föräldern
+      expect(opened.nav[node.key]?.right).toBe(button.key);
+      expect(opened.nav[button.key]?.right).toBe(parent.key);
     });
   });
 });

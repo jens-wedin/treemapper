@@ -4,8 +4,8 @@
 
 ### Added
 
-**Antavlan går vidare bakåt**
-- Kort vars föräldrar finns i databasen men ligger utanför tavlan får en **▸-knapp**. Den ritar om antavlan med den förfadern i mitten, så att man följer en enskild linje längre bak i stället för att fördubbla hela diagrammet. Knappen syns bara där släkten faktiskt fortsätter — saknas den tar linjen slut i vårt material. Den nås med högerpil från kortet (där ingen förälder är utritad) och aktiveras med Enter.
+**Antavlan fälls ut gren för gren**
+- Kort vars föräldrar finns i databasen men ligger utanför tavlan får en **▸-knapp** som fäller ut två generationer till **på plats**: resten av tavlan står kvar och zoomen behålls, så man följer en enskild linje längre bak i stället för att fördubbla hela diagrammet. Knappen blir sedan ett **‹** som fäller ihop grenen igen — och tar med sig det som öppnats inuti den. Knappen syns bara där släkten faktiskt fortsätter, så den visar samtidigt var det finns mer att hämta. Utfällda grenar behåller sin anfarsnumrering och därmed sin grenfärg. Tavlan panorerar precis så mycket som behövs för att den nyöppnade grenen ska synas. Med tangentbord: högerpilen stannar vid knappen på väg mot föräldrarna, Enter fäller ut och ihop.
 
 **Språk**
 - Gränssnittet finns nu på **svenska, engelska, tyska och spanska**. Språkväljare i sidhuvudet, valet minns mellan besök och sätter även `<html lang>`. Svenska är källspråk och reserv för nycklar som saknas i en översättning (ett test kontrollerar att alla fyra ordlistor har samma nyckeluppsättning). Översättningen omfattar gränssnittet, GEDCOM-händelsernas namn, datumformatering (månadsnamn och ABT/BEF/AFT) och förkortningarna för född/död. Personuppgifter — namn, platser, anteckningar — står kvar som de är registrerade, och konsekvensproblemens kategorier och beskrivningar är kvar på svenska (sidan säger till när ett annat språk är valt).
@@ -28,6 +28,7 @@
 - `npm run refresh-media` — laddar om döda signerade CDN-länkar från en färsk MyHeritage-export.
 
 ### Changed
+- Trädet blinkar inte längre när man byter person eller djup: sidan tömde diagrammet innan den hämtade nästa, så vyn hann bli tom och passades sedan in på nytt. Nu står det gamla diagrammet kvar tills det nya är hämtat (och ett svar som hinner bli omkört kastas).
 - Antavlan reserverar inte längre plats för grenar som saknas helt. Rutnätet var alltid 2^generationer rader högt, så en gles linje spreds ut över en nästan tom tavla — elva kort hamnade på 28 % zoom. Nu kostar en okänd förälder en tom rad (så att en ensam mor stannar under sin saknade make i stället för att glida upp i hans plats), medan en gren som är borta i sin helhet inte kostar något: samma elva kort visas nu på 82 %.
 - Antavla och solfjäder visar 1–5 generationer i stället för 1–8. Åtta generationer krympte tavlan till några få procent — bortom fem följer man i stället en linje i taget med ▸-knappen.
 - Smalare kort i trädet (150×106 i stället för 210×66): porträttet ligger överst och centrerat, förnamn och efternamn på var sin centrerade rad, årtalen under. Fler personer får plats i bredd och färre namn behöver kortas.

@@ -29,6 +29,7 @@
 - Sidbredden följer innehållet: träddiagrammet tar hela fönstret (fäst vid fönsterhöjden, ingen sidscroll), tabellsidor (personer, källor, konsekvens) fick bredare yta för sina kolumner, och löptext behåller läsbar radlängd. Trädets verktygsrad kortades från tre rader till två.
 
 ### Fixed
+- Antavla och solfjäder tar emot fler än fem generationer: sidan klämde fortfarande `upp` till 5 trots att API:et och rullgardinen höjts till 8, så 6–8 studsade tillbaka. Samtidigt krymper solfjäderns yttre ringar textstorleken och utelämnar årtal och flaggor där skivorna blir för tunna — den överlappningen går inte att zooma bort.
 - Trädets zoom är nu absolut: 100 % betyder kort i verklig storlek oavsett hur brett trädet är (tidigare skalades hela trädet in i vyn först, så breda generationer gick inte att zooma till läsbar storlek). Zoomområde 4–300 %, vyn anpassas till trädet vid inladdning, +/− utgår från fokuspersonen och piltangentsnavigering panorerar så att det aktiva kortet syns.
 - GEDCOM-flaggan `Y` (som i `1 DEAT Y`, "händelsen har inträffat") visas inte längre som beskrivningstext på personsidan eller i trädpanelen. Värdet finns kvar i databasen så att exporten förblir förlustfri.
 - Nya person-id:n utgår inte längre från MyHeritages platshållarpost `I88888888` ("Unassociated photos") — de fortsätter den riktiga numreringen.

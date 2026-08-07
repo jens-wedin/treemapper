@@ -1,5 +1,6 @@
 import { hierarchy, tree, type HierarchyNode } from 'd3-hierarchy';
 import type { AncestorNode, DescendantNode, TreeData, TreePerson } from '../../lib/tree';
+import { branchOf, type Branch } from './ahnentafel';
 
 // Portrait on top, name and years centred underneath — narrow cards fit far
 // more people across a generation than the old wide ones.
@@ -22,6 +23,12 @@ export interface PositionedNode {
   isFocus: boolean;
   /** Partner card placed beside the person it belongs to. */
   isSpouse?: boolean;
+  /**
+   * Which grandparent line an ancestor belongs to, coloured the same way as
+   * the pedigree and the fan. Descendants have no such line, so they stay
+   * 'focus' — neutral.
+   */
+  branch: Branch;
 }
 export interface TreeEdge { x1: number; y1: number; x2: number; y2: number; type?: 'parent' | 'marriage' }
 export interface NavMap { [key: string]: { up?: string; down?: string; left?: string; right?: string } }
@@ -118,9 +125,31 @@ export function layoutTree(data: TreeData, expanded: ReadonlySet<string> = new S
   const anc = hierarchy<AncestorNode>(data.ancestors, a => a.parents);
   tree<AncestorNode>().nodeSize([STEP_X, STEP_Y])(anc);
   const ancKey = keyOf<AncestorNode>('a');
+
+  /**
+   * Ahnentafel numbers for the ancestors, so their cards take the same branch
+   * colours as the pedigree and the fan. A family that records only a mother
+   * puts her at 2n+1 by her sex rather than by her position in the array —
+   * otherwise everyone above her would be coloured as the father's side.
+   * `each` walks parents before children, so the number is always ready.
+   */
+  const ahnentafel = new Map<HierarchyNode<AncestorNode>, number>([[anc, 1]]);
+  anc.each(n => {
+    const base = ahnentafel.get(n) ?? 1;
+    const parents = n.children ?? [];
+    if (parents.length === 1) {
+      ahnentafel.set(parents[0]!, parents[0]!.data.person.sex === 'F' ? base * 2 + 1 : base * 2);
+    } else {
+      parents.forEach((p, i) => ahnentafel.set(p, base * 2 + i));
+    }
+  });
+
   anc.each(n => {
     const y = n.depth === 0 ? 0 : -n.depth * STEP_Y;
-    const node: PositionedNode = { key: ancKey(n), person: n.data.person, x: n.x!, y, isFocus: n.depth === 0 };
+    const node: PositionedNode = {
+      key: ancKey(n), person: n.data.person, x: n.x!, y, isFocus: n.depth === 0,
+      branch: branchOf(ahnentafel.get(n) ?? 1),
+    };
     nodes.push(node);
     // Parents already on screen continue the line themselves; the handle is
     // for where the chart stops but the family does not.
@@ -157,7 +186,7 @@ export function layoutTree(data: TreeData, expanded: ReadonlySet<string> = new S
     // hangs under the card that is actually drawn.
     let node = nodes.find(m => m.key === key)!;
     if (n.depth > 0) {
-      node = { key, person: n.data.person, x: n.x!, y, isFocus: false };
+      node = { key, person: n.data.person, x: n.x!, y, isFocus: false, branch: 'focus' };
       nodes.push(node);
       links.push({ x1: familyAnchor(n.parent!, n.data.familyIndex ?? 0), y1: (n.depth - 1) * STEP_Y, x2: n.x!, y2: y });
       setNav(n.parent!.depth === 0 ? 'focus' : descKey(n.parent!), 'down', key);
@@ -171,7 +200,7 @@ export function layoutTree(data: TreeData, expanded: ReadonlySet<string> = new S
     (n.data.spouses ?? []).forEach((spouse, i) => {
       const spouseKey = `p${key}.${i}`;
       const x = n.x! + COUPLE_STEP * (i + 1);
-      nodes.push({ key: spouseKey, person: spouse, x, y, isSpouse: true, isFocus: false });
+      nodes.push({ key: spouseKey, person: spouse, x, y, isSpouse: true, isFocus: false, branch: 'focus' });
       // marriage bar between the previous card and this one
       links.push({ x1: n.x! + COUPLE_STEP * i, y1: y, x2: x, y2: y, type: 'marriage' });
       // the partner shares the couple's children for keyboard navigation

@@ -127,6 +127,10 @@ flags and keyboard model.
 Ancestors up, descendants down, 1–5 generations each way (d3-hierarchy does the
 layout maths only).
 
+- **Branch colours** match the pedigree and the fan: the four grandparent lines
+  are coloured the same way in all three views, worked out from the same
+  Ahnentafel numbering, so a person keeps their colour whichever view you are
+  in. Descendants stay neutral — they belong to no grandparent line.
 - **Unfolding** works like the pedigree's, but in both directions: a **⌃** above
   the topmost ancestors opens two more generations of parents, a **⌄** below the
   outermost descendants opens two more of children, and each turns into the

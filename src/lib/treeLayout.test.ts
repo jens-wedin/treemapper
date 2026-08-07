@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { layoutTree } from './treeLayout';
+import { branchOf, flattenAncestors } from './ahnentafel';
 import type { DescendantNode, TreeData, TreePerson } from '../../lib/tree';
 
 const P = (id: string): TreePerson => ({ id, givenName: id, surname: 'X', birthYear: null, deathYear: null, birthDate: null, deathDate: null, sex: 'U', photoId: null, country: null });
@@ -123,6 +124,79 @@ describe('layoutTree', () => {
     expect(r.bounds.minY).toBeLessThan(0);
     expect(r.bounds.maxY).toBeGreaterThan(0);
     expect(r.bounds.minX).toBeLessThan(r.bounds.maxX);
+  });
+
+  describe('grenfärger', () => {
+    it('färgar förfäderna som antavlan och solfjädern gör', () => {
+      expect(byId('F')[0]!.branch).toBe('focus');
+      expect(byId('far')[0]!.branch).toBe('ff');
+      expect(byId('mor')[0]!.branch).toBe('mm');
+      expect(byId('farfar')[0]!.branch).toBe('ff');
+    });
+
+    it('lämnar ättlingarna ofärgade — de tillhör ingen mor-/farföräldragren', () => {
+      expect(byId('barn1')[0]!.branch).toBe('focus');
+      expect(byId('barnbarn')[0]!.branch).toBe('focus');
+    });
+
+    it('placerar en ensam förälder efter kön, precis som anfarsnumreringen', () => {
+      // bara modern känd: hon hör till mödernet, inte fädernet
+      const motherOnly: TreeData = {
+        focus: P('F'),
+        ancestors: { person: P('F'), parents: [{ person: { ...P('mor'), sex: 'F' }, parents: [
+          { person: { ...P('mormor'), sex: 'F' }, parents: [] },
+        ] }] },
+        descendants: D('F'),
+      };
+      const m = layoutTree(motherOnly);
+      expect(m.nodes.find(n => n.person.id === 'mor')!.branch).toBe('mm');
+      expect(m.nodes.find(n => n.person.id === 'mormor')!.branch).toBe('mm');
+    });
+
+    it('ger samma gren som antavlan för samma person', () => {
+      // Vyerna räknar ut grenen var för sig; går de isär färgas samma
+      // förfader olika beroende på vilken vy man råkar titta i.
+      const mixed: TreeData = {
+        focus: P('F'),
+        ancestors: { person: P('F'), parents: [
+          { person: { ...P('far'), sex: 'M' }, parents: [
+            { person: { ...P('farmor'), sex: 'F' }, parents: [] },   // ensam mor i sin tur
+          ] },
+          { person: { ...P('mor'), sex: 'F' }, parents: [
+            { person: { ...P('morfar'), sex: 'M' }, parents: [] },
+            { person: { ...P('mormor'), sex: 'F' }, parents: [] },
+          ] },
+        ] },
+        descendants: D('F'),
+      };
+      const fromTree = new Map(layoutTree(mixed).nodes.map(n => [n.person.id, n.branch]));
+      const fromPedigree = new Map(
+        flattenAncestors(mixed.ancestors, 5).map(s => [s.person.id, branchOf(s.ahnentafel)]),
+      );
+      for (const [id, branch] of fromPedigree) expect([id, fromTree.get(id)]).toEqual([id, branch]);
+      expect(fromTree.get('farmor')).toBe('fm');     // placerad efter kön, inte position
+    });
+
+    it('skiljer de fyra mor-/farföräldragrenarna åt', () => {
+      const four: TreeData = {
+        focus: P('F'),
+        ancestors: { person: P('F'), parents: [
+          { person: { ...P('far'), sex: 'M' }, parents: [
+            { person: { ...P('farfar'), sex: 'M' }, parents: [] },
+            { person: { ...P('farmor'), sex: 'F' }, parents: [] },
+          ] },
+          { person: { ...P('mor'), sex: 'F' }, parents: [
+            { person: { ...P('morfar'), sex: 'M' }, parents: [] },
+            { person: { ...P('mormor'), sex: 'F' }, parents: [] },
+          ] },
+        ] },
+        descendants: D('F'),
+      };
+      const r4 = layoutTree(four);
+      const branchOfId = (id: string) => r4.nodes.find(n => n.person.id === id)!.branch;
+      expect([branchOfId('farfar'), branchOfId('farmor'), branchOfId('morfar'), branchOfId('mormor')])
+        .toEqual(['ff', 'fm', 'mf', 'mm']);
+    });
   });
 
   it('ger inga knappar där ingen har flaggat att släkten fortsätter', () => {

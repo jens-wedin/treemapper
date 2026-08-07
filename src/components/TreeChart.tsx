@@ -168,6 +168,7 @@ export default function TreeChart({ data, onSelect, selectedId }: {
                       variant="compact"
                       showFlag={showFlags}
                       isFocus={n.isFocus}
+                      branch={n.branch}
                       idKey={`ghost-${n.key}`}
                     />
                   </g>
@@ -205,6 +206,7 @@ export default function TreeChart({ data, onSelect, selectedId }: {
                   isFocus={n.isFocus}
                   active={n.key === activeKey}
                   selected={n.person.id === selectedId}
+                  branch={n.branch}
                   idKey={n.key}
                 />
               </g>

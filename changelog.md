@@ -4,6 +4,9 @@
 
 ### Added
 
+**Tema**
+- shadcn-temat `radix-luma` med basfärgen `olive` (preset `b2bkjK7NVw`) applicerat: nya färgtokens för ljust och mörkt läge, Roboto Slab som brödtext och Public Sans för rubriker, samt handpekare på knappar. Diagrammens egna färger står utanför temat — grenfärgerna och den grå bottnen är avsiktligt fasta värden, så träden ser likadana ut som förut.
+
 **Familjevyn färgar grenarna**
 - Familjevyns förfäder får samma fyra grenfärger som antavlan och solfjädern, uträknade ur samma anfarsnumrering — en ensam förälder placeras alltså efter kön, inte efter sin plats i listan, så samma person får samma färg oavsett vy (ett test jämför de två uträkningarna). Ättlingar och partner lämnas ofärgade: de tillhör ingen mor-/farföräldragren.
 

@@ -73,6 +73,11 @@ the buttons double as a map of where there is more to find. Both are reachable
 from the keyboard: right-arrow from a card stops at its button on the way to
 its parents.
 
+Unfolding re-flows the rows, so it is animated: cards already on screen glide
+to their new places, new ones fade in, folded-away ones fade out, and the chart
+eases across if the new branch would otherwise open off-screen. All of it is
+disabled under `prefers-reduced-motion`.
+
 All charts share the same pan/zoom, the same person panel on click, portraits,
 flags and keyboard model.
 

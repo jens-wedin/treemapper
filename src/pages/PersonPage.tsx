@@ -9,6 +9,7 @@ import { fetchJson } from '../lib/api';
 import PersonEditForm from '../components/edit/PersonEditForm';
 import EventEditor from '../components/edit/EventEditor';
 import RelationDialog from '../components/edit/RelationDialog';
+import RichText from '../components/RichText';
 
 function MemberLinks({ people }: { people: FamilyMember[] }) {
   if (!people.length) return <span className="text-gray-500">–</span>;
@@ -42,7 +43,7 @@ function Citations({ items }: { items: CitationView[] }) {
               ? <> · <a href={c.page} className="underline-offset-2 hover:underline" target="_blank" rel="noreferrer">{new URL(c.page).hostname}</a></>
               : <> · {c.page}</>
           )}
-          {c.text && <div className="whitespace-pre-line text-gray-500">{c.text}</div>}
+          <RichText text={c.text} className="text-gray-500" />
         </li>
       ))}
     </ul>
@@ -183,7 +184,7 @@ export default function PersonPage() {
       {person.note && (
         <section className="mt-8">
           <h2 className="text-xl font-semibold">{t('person.note')}</h2>
-          <p className="mt-2 whitespace-pre-line text-gray-700">{person.note}</p>
+          <RichText text={person.note} className="mt-2 text-gray-700" />
         </section>
       )}
 

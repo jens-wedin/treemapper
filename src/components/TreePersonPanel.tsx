@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { PersonFull, FamilyMember } from '../../lib/queries';
 import { t, eventLabel, eventDescription, formatGedcomDate, lifespan, displayName } from '../lib/i18n';
 import { fetchJson } from '../lib/api';
+import RichText from './RichText';
 
 function MemberLinks({ people, onSelect }: { people: FamilyMember[]; onSelect: (id: string) => void }) {
   if (!people.length) return <span className="text-gray-500">–</span>;
@@ -178,7 +179,7 @@ export default function TreePersonPanel({ personId, onClose, onFocusTree, onSele
           {person.note && (
             <section className="mt-5">
               <h3 className="font-medium">{t('person.note')}</h3>
-              <p className="mt-1 whitespace-pre-line text-sm text-gray-700">{person.note}</p>
+              <RichText text={person.note} className="mt-1 text-sm text-gray-700" />
             </section>
           )}
         </>

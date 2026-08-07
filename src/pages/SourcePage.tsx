@@ -8,6 +8,7 @@ import type { SourceFull } from '../../lib/sources';
 import { sourceUpdateSchema } from '../../lib/schemas';
 import { t } from '../lib/i18n';
 import { fetchJson, mutateJson } from '../lib/api';
+import RichText from '../components/RichText';
 
 const emptyToNull = (v: string) => (v.trim() === '' ? null : v.trim());
 
@@ -131,7 +132,7 @@ export default function SourcePage() {
       {source.note && !editing && (
         <section className="mt-6">
           <h2 className="text-lg font-semibold">{t('edit.note')}</h2>
-          <p className="mt-2 whitespace-pre-line text-gray-700">{source.note}</p>
+          <RichText text={source.note} className="mt-2 text-gray-700" />
         </section>
       )}
 
@@ -150,7 +151,7 @@ export default function SourcePage() {
                     : <span>{c.label}</span>}
                   {c.page && <span className="ml-2 text-sm text-gray-600">{t('sources.page')}: {c.page}</span>}
                   {c.quality != null && <span className="ml-2 text-sm text-gray-500">{t('person.quality')} {c.quality}</span>}
-                  {c.text && <div className="mt-1 whitespace-pre-line text-sm text-gray-500">{c.text}</div>}
+                  <RichText text={c.text} className="mt-1 text-sm text-gray-500" />
                 </li>
               ))}
             </ul>

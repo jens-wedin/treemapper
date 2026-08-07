@@ -42,6 +42,23 @@ its event labels, month names and qualifiers.
   timeline with citations, notes
 - `/trad/:id` — the interactive family tree (see below)
 
+### Notes from the import
+
+MyHeritage stores notes as HTML, and most of it is escaped — often twice over.
+Left alone it shows up as `<p>` tags and `&auml;` in the middle of a sentence.
+`src/lib/richText.ts` turns that into readable paragraphs at display time:
+entities are decoded until they settle, `<br>` and block tags become line and
+paragraph breaks, and the remaining tags are dropped.
+
+Two things it deliberately does **not** do. It never renders the note as live
+HTML — this is third-party content containing anchors and images, and there is
+nothing in it worth executing. And it only strips *known* tag names, because
+these notes are full of angle brackets that are not markup: `<Privat>` stands
+in for a living relative and must survive.
+
+The stored value is never rewritten, so the edit forms show the original markup
+and GEDCOM export stays byte-for-byte lossless.
+
 ## Träd
 
 `/trad/:id` has four views, switched in the toolbar and remembered in the URL

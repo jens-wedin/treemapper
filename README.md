@@ -50,8 +50,8 @@ its event labels, month names and qualifiers.
 | Vy | Visar |
 |---|---|
 | **Familj** | Ancestors up and descendants down around one person, with partners as couples |
-| **Antavla** | Classic left-to-right pedigree — ancestors only, up to 8 generations |
-| **Solfjäder** | Circular fan chart — ancestors only, up to 8 generations |
+| **Antavla** | Classic left-to-right pedigree — ancestors only, 1–5 generations, with buttons to follow one line further back |
+| **Solfjäder** | Circular fan chart — ancestors only, 1–5 generations |
 | **Lista** | Nested lists; the accessible equivalent of all three charts |
 
 The two ancestor views colour the four grandparent lines (father's father,
@@ -61,6 +61,13 @@ a missing ancestor leaves an empty slot rather than shifting the rest of the
 chart. In the fan, names run along the arc where there is room and radially
 where there is not — and are turned around on the lower and left sides so
 nothing reads upside down.
+
+Five generations is the limit because it is as much as stays readable at once;
+past that the whole chart shrinks rather than showing you more. Instead, cards
+at the edge of the pedigree whose parents are on record but off the chart get a
+**▸ button**: it redraws the pedigree with that ancestor in the middle, so you
+walk one line further back rather than doubling the whole thing. Cards without
+the button are where the line genuinely ends in our data.
 
 All charts share the same pan/zoom, the same person panel on click, portraits,
 flags and keyboard model.

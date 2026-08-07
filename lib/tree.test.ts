@@ -54,6 +54,20 @@ describe('getTree', () => {
     expect(tree.ancestors.parents).toEqual([]);
   });
 
+  it('säger till när släktlinjen fortsätter bortom djupgränsen', () => {
+    // I3 har föräldrarna I1 och I2, men vi frågar inte efter dem
+    const stopped = getTree(db, 'I3', 0, 0)!;
+    expect(stopped.ancestors.hasMoreAncestors).toBe(true);
+
+    // I1 saknar registrerade föräldrar — där tar linjen faktiskt slut
+    expect(getTree(db, 'I1', 0, 0)!.ancestors.hasMoreAncestors).toBe(false);
+
+    // och när föräldrarna ritas ut behövs ingen fortsättningsmarkering
+    const shown = getTree(db, 'I3', 1, 0)!;
+    expect(shown.ancestors.hasMoreAncestors).toBeFalsy();
+    expect(shown.ancestors.parents.every(p => p.hasMoreAncestors === false)).toBe(true);
+  });
+
   it('väljer porträtt: primärt foto först, hoppar över ej nedladdade', () => {
     const pdb = createDb(path.join(dir, 'photos.db'));
     pdb.insert(persons).values([

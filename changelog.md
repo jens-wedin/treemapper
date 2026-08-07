@@ -4,6 +4,9 @@
 
 ### Added
 
+**Antavlan går vidare bakåt**
+- Kort vars föräldrar finns i databasen men ligger utanför tavlan får en **▸-knapp**. Den ritar om antavlan med den förfadern i mitten, så att man följer en enskild linje längre bak i stället för att fördubbla hela diagrammet. Knappen syns bara där släkten faktiskt fortsätter — saknas den tar linjen slut i vårt material. Den nås med högerpil från kortet (där ingen förälder är utritad) och aktiveras med Enter.
+
 **Språk**
 - Gränssnittet finns nu på **svenska, engelska, tyska och spanska**. Språkväljare i sidhuvudet, valet minns mellan besök och sätter även `<html lang>`. Svenska är källspråk och reserv för nycklar som saknas i en översättning (ett test kontrollerar att alla fyra ordlistor har samma nyckeluppsättning). Översättningen omfattar gränssnittet, GEDCOM-händelsernas namn, datumformatering (månadsnamn och ABT/BEF/AFT) och förkortningarna för född/död. Personuppgifter — namn, platser, anteckningar — står kvar som de är registrerade, och konsekvensproblemens kategorier och beskrivningar är kvar på svenska (sidan säger till när ett annat språk är valt).
 
@@ -25,11 +28,13 @@
 - `npm run refresh-media` — laddar om döda signerade CDN-länkar från en färsk MyHeritage-export.
 
 ### Changed
+- Antavlan reserverar inte längre plats för grenar som saknas helt. Rutnätet var alltid 2^generationer rader högt, så en gles linje spreds ut över en nästan tom tavla — elva kort hamnade på 28 % zoom. Nu kostar en okänd förälder en tom rad (så att en ensam mor stannar under sin saknade make i stället för att glida upp i hans plats), medan en gren som är borta i sin helhet inte kostar något: samma elva kort visas nu på 82 %.
+- Antavla och solfjäder visar 1–5 generationer i stället för 1–8. Åtta generationer krympte tavlan till några få procent — bortom fem följer man i stället en linje i taget med ▸-knappen.
 - Smalare kort i trädet (150×106 i stället för 210×66): porträttet ligger överst och centrerat, förnamn och efternamn på var sin centrerade rad, årtalen under. Fler personer får plats i bredd och färre namn behöver kortas.
 - Sidbredden följer innehållet: träddiagrammet tar hela fönstret (fäst vid fönsterhöjden, ingen sidscroll), tabellsidor (personer, källor, konsekvens) fick bredare yta för sina kolumner, och löptext behåller läsbar radlängd. Trädets verktygsrad kortades från tre rader till två.
 
 ### Fixed
-- Antavla och solfjäder tar emot fler än fem generationer: sidan klämde fortfarande `upp` till 5 trots att API:et och rullgardinen höjts till 8, så 6–8 studsade tillbaka. Samtidigt krymper solfjäderns yttre ringar textstorleken och utelämnar årtal och flaggor där skivorna blir för tunna — den överlappningen går inte att zooma bort.
+- Generationsvalet studsade inte tillbaka: sidan klämde `upp` till ett annat tak än rullgardinen erbjöd. Båda utgår nu från samma lista. Solfjäderns yttre ringar krymper dessutom textstorleken och utelämnar årtal och flaggor där skivorna blir för tunna — den överlappningen går inte att zooma bort.
 - Trädets zoom är nu absolut: 100 % betyder kort i verklig storlek oavsett hur brett trädet är (tidigare skalades hela trädet in i vyn först, så breda generationer gick inte att zooma till läsbar storlek). Zoomområde 4–300 %, vyn anpassas till trädet vid inladdning, +/− utgår från fokuspersonen och piltangentsnavigering panorerar så att det aktiva kortet syns.
 - GEDCOM-flaggan `Y` (som i `1 DEAT Y`, "händelsen har inträffat") visas inte längre som beskrivningstext på personsidan eller i trädpanelen. Värdet finns kvar i databasen så att exporten förblir förlustfri.
 - Nya person-id:n utgår inte längre från MyHeritages platshållarpost `I88888888` ("Unassociated photos") — de fortsätter den riktiga numreringen.

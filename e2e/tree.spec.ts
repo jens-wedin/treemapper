@@ -69,22 +69,63 @@ test('antavlan visar förfäder men inga ättlingar', async ({ page }) => {
   await expect(page.getByText('Antavla och solfjäder visar bara förfäder.')).toBeVisible();
 });
 
-test('antavlan kan visa fler än fem generationer', async ({ page }) => {
-  await page.goto('/trad/I500003?upp=3&vy=pedigree');
+test('generationsvalet håller i sig och gäller genast', async ({ page }) => {
+  await page.goto('/trad/I500003?upp=2&vy=pedigree');
   await expect(page.locator('[data-tree-node]').first()).toBeVisible();
-  const atFive = await page.locator('[data-tree-node]').count();
+  const atTwo = await page.locator('[data-tree-node]').count();
 
   const generations = page.getByLabel('Generationer uppåt');
-  await generations.selectOption('7');
-  await expect(generations).toHaveValue('7');        // får inte studsa tillbaka
-  await expect(page).toHaveURL(/upp=7/);
+  await generations.selectOption('5');
+  await expect(generations).toHaveValue('5');        // får inte studsa tillbaka
+  await expect(page).toHaveURL(/upp=5/);
   await expect
     .poll(() => page.locator('[data-tree-node]').count())
-    .toBeGreaterThan(atFive);
+    .toBeGreaterThan(atTwo);
 
   // och valet överlever en omladdning
   await page.reload();
-  await expect(page.getByLabel('Generationer uppåt')).toHaveValue('7');
+  await expect(page.getByLabel('Generationer uppåt')).toHaveValue('5');
+});
+
+test('fortsättningsknappen öppnar antavlan vidare bakåt', async ({ page }) => {
+  // två generationer: förfäder bortom farföräldrarna ligger utanför tavlan
+  await page.goto('/trad/I500003?upp=2&vy=pedigree');
+  await expect(page.locator('[data-tree-node]').first()).toBeVisible();
+
+  const expander = page.locator('[data-expander]').first();
+  await expect(expander).toBeVisible();
+  const ancestorId = await expander.getAttribute('data-expander');
+
+  await expander.click();
+
+  // tavlan ritas om med den förfadern i mitten, och hans egna förfäder syns nu
+  await expect(page).toHaveURL(new RegExp(`/trad/${ancestorId}\\?upp=2`));
+  await expect(page).toHaveURL(/vy=pedigree/);
+  await expect(page.locator(`[data-tree-node="${ancestorId}"]`)).toBeVisible();
+  const parents = await (await page.request.get(`/api/tree/${ancestorId}?up=1&down=0`)).json();
+  const parentIds: string[] = parents.ancestors.parents.map((p: { person: { id: string } }) => p.person.id);
+  expect(parentIds.length).toBeGreaterThan(0);
+  for (const id of parentIds) {
+    await expect(page.locator(`[data-tree-node="${id}"]`)).toBeVisible();
+  }
+});
+
+test('fortsättningsknappen nås med tangentbordet', async ({ page }) => {
+  await page.goto('/trad/I500003?upp=2&vy=pedigree');
+  const expander = page.locator('[data-expander]').first();
+  await expect(expander).toBeVisible();
+  const ancestorId = await expander.getAttribute('data-expander');
+
+  // fokusera förfaderns kort och gå höger — där finns ingen förälder utritad,
+  // så högerpilen ska landa på fortsättningsknappen
+  await page.locator(`[data-tree-node="${ancestorId}"]`).first().focus();
+  await page.keyboard.press('ArrowRight');
+  await expect
+    .poll(() => page.evaluate(() => document.activeElement?.getAttribute('data-expander')))
+    .toBe(ancestorId);
+
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(new RegExp(`/trad/${ancestorId}`));
 });
 
 test('solfjädern renderas och kan navigeras med tangentbord', async ({ page }) => {

@@ -10,6 +10,8 @@ export type Branch = 'focus' | 'ff' | 'fm' | 'mf' | 'mm';
 export interface AncestorSlot {
   ahnentafel: number;
   person: TreePerson;
+  /** The chart stops here but the person has parents on record. */
+  hasMoreAncestors?: boolean;
 }
 
 export function generationOf(ahnentafel: number): number {
@@ -48,8 +50,14 @@ export function flattenAncestors(root: AncestorNode, maxGenerations: number): An
   const slots: AncestorSlot[] = [];
 
   const walk = (node: AncestorNode, ahnentafel: number) => {
-    slots.push({ ahnentafel, person: node.person });
-    if (generationOf(ahnentafel) >= maxGenerations) return;
+    const atEdge = generationOf(ahnentafel) >= maxGenerations;
+    slots.push({
+      ahnentafel,
+      person: node.person,
+      // Either the payload stopped here, or we are trimming it ourselves.
+      hasMoreAncestors: atEdge ? (node.hasMoreAncestors ?? node.parents.length > 0) : node.hasMoreAncestors,
+    });
+    if (atEdge) return;
 
     const parents = node.parents ?? [];
     if (parents.length === 1) {

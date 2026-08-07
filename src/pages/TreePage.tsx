@@ -13,8 +13,10 @@ import FanChart from '../components/FanChart';
 
 // Tree owner — the natural default root for /trad without an id.
 const DEFAULT_FOCUS = 'I500001';
+// Five generations is as much as stays readable at once; beyond that the
+// pedigree's expander buttons continue a single line instead.
 const DEPTHS = [1, 2, 3, 4, 5];
-const UP_DEPTHS = [1, 2, 3, 4, 5, 6, 7, 8];
+const UP_DEPTHS = [1, 2, 3, 4, 5];
 const VIEWS = ['family', 'pedigree', 'fan', 'list'] as const;
 type View = (typeof VIEWS)[number];
 
@@ -27,8 +29,8 @@ function clamp(raw: string | null, allowed: readonly number[]): number {
 export default function TreePage() {
   const { id = DEFAULT_FOCUS } = useParams<{ id: string }>();
   const [params, setParams] = useSearchParams();
-  // Ancestors go deeper than descendants — keep these in step with UP_DEPTHS,
-  // DEPTHS and the zod limits in api/tree.ts.
+  // The API accepts deeper requests than the page offers; these clamps are
+  // what the dropdowns promise.
   const upp = clamp(params.get('upp'), UP_DEPTHS);
   const ned = clamp(params.get('ned'), DEPTHS);
   const depthQuery = `?upp=${upp}&ned=${ned}`;
@@ -40,6 +42,12 @@ export default function TreePage() {
   const [state, setState] = useState<'loading' | 'ok' | 'error'>('loading');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  /** Re-roots the chart on someone, keeping the current view and depths. */
+  function focusOn(personId: string) {
+    setSelectedId(null);
+    navigate(`/trad/${personId}${depthQuery}&vy=${view}`);
+  }
 
   useEffect(() => {
     setState('loading');
@@ -121,7 +129,13 @@ export default function TreePage() {
                 <TreeChart layout={layout} onSelect={setSelectedId} selectedId={selectedId} />
               )}
               {view === 'pedigree' && (
-                <PedigreeChart data={data} generations={upp} onSelect={setSelectedId} selectedId={selectedId} />
+                <PedigreeChart
+                  data={data}
+                  generations={upp}
+                  onSelect={setSelectedId}
+                  onExpand={focusOn}
+                  selectedId={selectedId}
+                />
               )}
               {view === 'fan' && (
                 <FanChart data={data} generations={upp} onSelect={setSelectedId} selectedId={selectedId} />
@@ -132,7 +146,7 @@ export default function TreePage() {
                 personId={selectedId}
                 onClose={() => setSelectedId(null)}
                 onSelect={setSelectedId}
-                onFocusTree={id => { setSelectedId(null); navigate(`/trad/${id}${depthQuery}&vy=${view}`); }}
+                onFocusTree={focusOn}
               />
             )}
           </div>

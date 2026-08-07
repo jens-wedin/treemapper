@@ -2,16 +2,19 @@ import { useEffect, useMemo, useState } from 'react';
 import type { TreeData } from '../../lib/tree';
 import { t } from '../lib/i18n';
 import { flattenAncestors } from '../lib/ahnentafel';
-import { layoutPedigree, PED_W, PED_H } from '../lib/pedigreeLayout';
+import { layoutPedigree, PED_W, PED_H, EXPANDER_R } from '../lib/pedigreeLayout';
 import { useChartViewport } from '../lib/useChartViewport';
 import { useFlagPreference } from '../lib/flagPreference';
 import PersonCard, { cardLabel } from './PersonCard';
 import ChartToolbar from './ChartToolbar';
+import { displayName } from '../lib/i18n';
 
-export default function PedigreeChart({ data, generations, onSelect, selectedId }: {
+export default function PedigreeChart({ data, generations, onSelect, onExpand, selectedId }: {
   data: TreeData;
   generations: number;
   onSelect: (personId: string) => void;
+  /** Re-roots the chart on an ancestor whose own parents are off the edge. */
+  onExpand: (personId: string) => void;
   selectedId: string | null;
 }) {
   const layout = useMemo(
@@ -26,21 +29,22 @@ export default function PedigreeChart({ data, generations, onSelect, selectedId 
 
   function moveFocus(key: string | undefined) {
     if (!key) return;
-    const node = layout.nodes.find(n => n.key === key);
+    const target = layout.nodes.find(n => n.key === key) ?? layout.expanders.find(x => x.key === key);
     setActiveKey(key);
     viewport.svgRef.current?.querySelector<SVGGElement>(`[data-node-key="${CSS.escape(key)}"]`)?.focus();
-    if (node) viewport.ensureVisible(node.x, node.y);
+    if (target) viewport.ensureVisible(target.x, target.y);
   }
 
-  function onNodeKeyDown(e: React.KeyboardEvent, key: string, personId: string) {
+  /** `activate` is what Enter and Space do: open a card, or follow a handle. */
+  function onNodeKeyDown(e: React.KeyboardEvent, key: string, activate: () => void) {
     const nav = layout.nav[key] ?? {};
     const actions: Record<string, () => void> = {
       ArrowUp: () => moveFocus(nav.up),
       ArrowDown: () => moveFocus(nav.down),
       ArrowLeft: () => moveFocus(nav.left),
       ArrowRight: () => moveFocus(nav.right),
-      Enter: () => onSelect(personId),
-      ' ': () => onSelect(personId),
+      Enter: activate,
+      ' ': activate,
     };
     const action = actions[e.key];
     if (action) {
@@ -59,7 +63,7 @@ export default function PedigreeChart({ data, generations, onSelect, selectedId 
         onReset={viewport.reset}
         showFlags={showFlags}
         onFlagsChange={setShowFlags}
-        hint={t('tree.instructionsAncestors')}
+        hint={`${t('tree.instructionsAncestors')} ${t('tree.expandHint')}`}
       />
       <div ref={viewport.wrapRef} className="mt-2 min-h-[320px] w-full flex-1 overflow-hidden rounded-lg border bg-white">
         <svg
@@ -86,7 +90,7 @@ export default function PedigreeChart({ data, generations, onSelect, selectedId 
                 className="cursor-pointer outline-none"
                 onClick={() => onSelect(n.person.id)}
                 onFocus={() => setActiveKey(n.key)}
-                onKeyDown={e => onNodeKeyDown(e, n.key, n.person.id)}
+                onKeyDown={e => onNodeKeyDown(e, n.key, () => onSelect(n.person.id))}
               >
                 <PersonCard
                   person={n.person}
@@ -99,6 +103,38 @@ export default function PedigreeChart({ data, generations, onSelect, selectedId 
                   idKey={n.key}
                   born={n.person.birthDate ?? (n.person.birthYear != null ? String(n.person.birthYear) : null)}
                   died={n.person.deathDate ?? (n.person.deathYear != null ? String(n.person.deathYear) : null)}
+                />
+              </g>
+            ))}
+
+            {/* the line continues past the edge of the chart — click to follow it */}
+            {layout.expanders.map(x => (
+              <g
+                key={x.key}
+                data-expander={x.person.id}
+                data-node-key={x.key}
+                tabIndex={x.key === activeKey ? 0 : -1}
+                role="button"
+                aria-label={t('tree.expandLine').replace('{name}', displayName(x.person))}
+                transform={`translate(${x.x} ${x.y})`}
+                className="group cursor-pointer outline-none"
+                onClick={() => onExpand(x.person.id)}
+                onFocus={() => setActiveKey(x.key)}
+                onKeyDown={e => onNodeKeyDown(e, x.key, () => onExpand(x.person.id))}
+              >
+                <circle
+                  r={EXPANDER_R}
+                  strokeWidth={x.key === activeKey ? 2.5 : 1.25}
+                  className={`fill-white group-hover:fill-blue-50 ${
+                    x.key === activeKey ? 'stroke-amber-500' : 'stroke-gray-400 group-hover:stroke-blue-600'
+                  }`}
+                />
+                <path
+                  d="M -3 -5 L 3 0 L -3 5"
+                  className="fill-none stroke-gray-600 group-hover:stroke-blue-700"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
               </g>
             ))}

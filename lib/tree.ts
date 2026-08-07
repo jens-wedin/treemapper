@@ -18,7 +18,16 @@ export interface TreePerson {
   /** Country of birth, only when the birth place explicitly names one. */
   country: string | null;
 }
-export interface AncestorNode { person: TreePerson; parents: AncestorNode[] }
+export interface AncestorNode {
+  person: TreePerson;
+  parents: AncestorNode[];
+  /**
+   * True when the chart stopped here but the database holds parents further
+   * back — lets a view offer "continue from this person" instead of implying
+   * the line ends.
+   */
+  hasMoreAncestors?: boolean;
+}
 export interface DescendantNode {
   person: TreePerson;
   /** Partners shown beside the person; their shared children hang below. */
@@ -147,7 +156,10 @@ export function getTree(db: Db, id: string, up = 3, down = 3): TreeData | null {
   if (!focus) return null;
 
   const ancestors = (person: TreePerson, depth: number, pathIds: Set<string>): AncestorNode => {
-    if (depth <= 0) return { person, parents: [] };
+    if (depth <= 0) {
+      const beyond = parentIdsOf(db, person.id).filter(p => !pathIds.has(p));
+      return { person, parents: [], hasMoreAncestors: beyond.length > 0 };
+    }
     const ids = parentIdsOf(db, person.id).filter(p => !pathIds.has(p));
     const byId = fetchPersons(db, ids);
     return {

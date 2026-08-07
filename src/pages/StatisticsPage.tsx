@@ -5,6 +5,8 @@ import type { StatisticsData } from '../../lib/statistics';
 import { t, displayName } from '../lib/i18n';
 import { fetchJson } from '../lib/api';
 import PersonSearch from '../components/PersonSearch';
+import LivesSection from '../components/statistics/LivesSection';
+import NamesSection from '../components/statistics/NamesSection';
 
 export default function StatisticsPage() {
   const [params, setParams] = useSearchParams();
@@ -50,8 +52,8 @@ export default function StatisticsPage() {
       {state === 'loading' && !data && <p className="mt-4">{t('common.loading')}</p>}
       {data && (
         <div className="mt-8 space-y-12">
-          <h2 className="text-xl font-semibold">{t('statistics.lives')}</h2>
-          <h2 className="text-xl font-semibold">{t('statistics.names')}</h2>
+          <LivesSection stats={data.lives} />
+          <NamesSection stats={data.names} />
           <h2 className="text-xl font-semibold">{t('statistics.families')}</h2>
           <h2 className="text-xl font-semibold">{t('statistics.places')}</h2>
         </div>

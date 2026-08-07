@@ -59,7 +59,9 @@ export function mapGedcom(records: GedcomNode[]): MappedData {
       for (const c of s.children) {
         if (c.tag === 'PAGE' || c.tag === 'QUAY') continue;
         if (c.tag === 'DATA') {
-          text = childValue(c, 'TEXT') ?? null;
+          // First TEXT wins: some writers spread DATA over several nodes, and
+          // letting a later empty one overwrite would drop the text entirely.
+          text ??= childValue(c, 'TEXT') ?? null;
           // DATA can carry more than TEXT (e.g. DATE) — keep the rest lossless
           const dataLeft = c.children.filter(x => x.tag !== 'TEXT');
           if (dataLeft.length) raw.push({ ...c, children: dataLeft });

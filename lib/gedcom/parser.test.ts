@@ -74,6 +74,14 @@ describe('parseGedcom', () => {
     expect(note.value).not.toContain('\n');
   });
 
+  it('drops a stray carriage return left on the end of a line', () => {
+    // A few lines in the export end "\r\r\n"; splitting on CRLF leaves the
+    // extra CR inside the value. It is invisible on screen, and the exporter
+    // refuses to write one, so keeping it only made the round trip inexact.
+    const [note] = parseGedcom('0 @N1@ NOTE Rad ett\r\n1 CONT Rad två\r');
+    expect(note!.value).toBe('Rad ett\nRad två');
+  });
+
   it('strips BOM and skips blank lines', () => {
     const text = '﻿0 HEAD\n\n0 TRLR\n';
     expect(parseGedcom(text)).toHaveLength(2);

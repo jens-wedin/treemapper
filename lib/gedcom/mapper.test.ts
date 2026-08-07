@@ -54,6 +54,22 @@ describe('mapGedcom', () => {
     expect(personCit).toMatchObject({ ownerId: 'I3', sourceId: 'S1', page: 'Sida 99' });
   });
 
+  it('håller kvar texten även om en andra DATA följer utan TEXT', () => {
+    // Ett par program delar upp DATA i flera noder. Sist-vinner gjorde att den
+    // tomma nollställde texten — samma fälla som vår egen export gick i.
+    const [rec] = parseGedcom([
+      '0 @I9@ INDI',
+      '1 SOUR @S1@',
+      '2 DATA',
+      '3 TEXT Utdrag ur kyrkbok',
+      '2 DATA',
+      '3 DATE 12 JAN 2020',
+    ].join('\n'));
+    const cit = mapGedcom([rec!]).citations[0]!;
+    expect(cit.text).toBe('Utdrag ur kyrkbok');
+    expect(cit.rawTags).toContain('12 JAN 2020');
+  });
+
   it('maps media as pending downloads with _PHOTO_RIN preserved in raw_tags', () => {
     expect(mapped.media).toHaveLength(1);
     expect(mapped.media[0]).toMatchObject({

@@ -47,7 +47,7 @@ type Row = Record<string, string | number | null>;
  * otherwise the JSON columns look like they changed in some other way and get
  * skipped, leaving the export writing the old run-on text.
  */
-const withoutBreaks = (value: string | null) => (value ?? '').replace(/\\n|\n/g, '');
+const withoutBreaks = (value: string | null) => (value ?? '').replace(/\\r|\\n|[\r\n]/g, '');
 const sameIgnoringBreaks = (a: string | null, b: string | null) => withoutBreaks(a) === withoutBreaks(b);
 
 /** Rows in insertion order, grouped by their natural key, so ids need not match. */

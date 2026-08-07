@@ -58,22 +58,25 @@ function splitValue(value: string): Chunk[] {
   return chunks;
 }
 
-function writeRawTags(w: Writer, level: number, json: string | null | undefined) {
-  if (!json) return;
-  let tags: RawTag[];
+function parseRawTags(json: string | null | undefined): RawTag[] {
+  if (!json) return [];
   try {
-    tags = JSON.parse(json) as RawTag[];
+    return JSON.parse(json) as RawTag[];
   } catch {
-    return;
+    return [];
   }
-  const walk = (nodes: RawTag[], lvl: number) => {
-    for (const node of nodes) {
-      const value = node.pointer ? `@${node.pointer}@` : node.value;
-      w.line(lvl, node.tag, value ?? null);
-      if (node.children?.length) walk(node.children, lvl + 1);
-    }
-  };
-  walk(tags, level);
+}
+
+function writeRawNodes(w: Writer, level: number, nodes: RawTag[]) {
+  for (const node of nodes) {
+    const value = node.pointer ? `@${node.pointer}@` : node.value;
+    w.line(level, node.tag, value ?? null);
+    if (node.children?.length) writeRawNodes(w, level + 1, node.children);
+  }
+}
+
+function writeRawTags(w: Writer, level: number, json: string | null | undefined) {
+  writeRawNodes(w, level, parseRawTags(json));
 }
 
 function writeCitations(w: Writer, level: number, rows: typeof citations.$inferSelect[]) {
@@ -81,11 +84,21 @@ function writeCitations(w: Writer, level: number, rows: typeof citations.$inferS
     w.line(level, 'SOUR', `@${c.sourceId}@`);
     if (c.page) w.line(level + 1, 'PAGE', c.page);
     if (c.quality != null) w.line(level + 1, 'QUAY', String(c.quality));
+
+    /**
+     * The mapper lifted TEXT out of DATA and kept DATA's other children (a
+     * DATE, usually) in raw_tags. Writing those as two separate DATA nodes
+     * loses the text on the way back in: a reader takes the last DATA it sees,
+     * and that one has no TEXT. So the text goes back inside the DATA it came
+     * from, and only a citation without one gets a DATA of its own.
+     */
+    const raw = parseRawTags(c.rawTags);
     if (c.text) {
-      w.line(level + 1, 'DATA');
-      w.line(level + 2, 'TEXT', c.text);
+      const data = raw.find(t => t.tag === 'DATA');
+      if (data) data.children = [{ tag: 'TEXT', value: c.text }, ...(data.children ?? [])];
+      else raw.unshift({ tag: 'DATA', children: [{ tag: 'TEXT', value: c.text }] });
     }
-    writeRawTags(w, level + 1, c.rawTags);
+    writeRawNodes(w, level + 1, raw);
   }
 }
 

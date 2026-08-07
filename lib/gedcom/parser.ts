@@ -36,7 +36,10 @@ export function parseGedcom(text: string, warnings?: string[]): GedcomNode[] {
   let lineNo = 0;
   for (const rawLine of text.split(/\r?\n/)) {
     lineNo++;
-    const line = rawLine.replace(/^﻿/, '');
+    // A trailing CR survives splitting when a line ends "\r\r\n"; it is
+    // invisible, and the exporter never writes one, so drop it here rather
+    // than carry a character the round trip cannot reproduce.
+    const line = rawLine.replace(/^﻿/, '').replace(/\r+$/, '');
     if (!line.trim()) continue;
     const m = line.match(LINE_RE);
     const level = m ? Number(m[1]) : -1;

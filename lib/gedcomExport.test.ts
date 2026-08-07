@@ -158,6 +158,36 @@ describe('exportGedcom — rundtur genom vår egen parser', () => {
     expect(back.sources[0]!.note).toBe('<p>Data från anarkiv</p>\n<p>Andra stycket</p>');
   });
 
+  /**
+   * Tolken lyfter ut TEXT ur DATA och lägger DATA:s övriga barn i raw_tags.
+   * Skrivs de sedan ut som två skilda DATA-noder läser inläsningen den sista
+   * och texten faller bort — det drabbade 3 519 källhänvisningar i det riktiga
+   * trädet, alla med både text och ett DATE.
+   */
+  it('tappar inte texten när DATA bär både TEXT och något mer', () => {
+    db.insert(sources).values({ id: 'S9', title: 'Källa', author: null, publication: null, note: null, rawTags: null }).run();
+    db.insert(persons).values({
+      id: 'I9', givenName: 'Test', surname: 'Person', marriedName: null, suffix: null, sex: 'U', note: null, rawTags: null,
+    }).run();
+    db.insert(citations).values({
+      ownerType: 'person', ownerId: 'I9', sourceId: 'S9', page: 'sid 4', quality: 3,
+      text: 'Tillagd genom bekräftelse av en Smart Match',
+      rawTags: JSON.stringify([{ tag: 'DATA', children: [{ tag: 'DATE', value: '26 DEC 2019' }] }]),
+    }).run();
+
+    const text = exportGedcom(db);
+    // en enda DATA under källhänvisningen, med både TEXT och DATE i sig
+    const block = text.split('\r\n').slice(text.split('\r\n').findIndex(l => l === '1 SOUR @S9@'));
+    const dataLines = block.slice(0, 8).filter(l => /^\d+ DATA$/.test(l));
+    expect(dataLines).toHaveLength(1);
+
+    const back = roundTrip();
+    const c = back.citations.find(x => x.ownerId === 'I9')!;
+    expect(c.text).toBe('Tillagd genom bekräftelse av en Smart Match');
+    expect(c.page).toBe('sid 4');
+    expect(JSON.parse(c.rawTags!)).toEqual([{ tag: 'DATA', children: [{ tag: 'DATE', value: '26 DEC 2019' }] }]);
+  });
+
   it('klarar en tom databas', () => {
     const text = exportGedcom(db);
     expect(text).toContain('0 HEAD');

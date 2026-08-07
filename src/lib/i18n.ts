@@ -118,3 +118,24 @@ export function displayName(p: { givenName?: string | null; surname?: string | n
  */
 export const eventDescription = (description: string | null | undefined): string | null =>
   !description || description.trim() === 'Y' ? null : description;
+
+const MONTHS_SV: Record<string, string> = {
+  JAN: 'jan', FEB: 'feb', MAR: 'mar', APR: 'apr', MAY: 'maj', JUN: 'jun',
+  JUL: 'jul', AUG: 'aug', SEP: 'sep', OCT: 'okt', NOV: 'nov', DEC: 'dec',
+};
+const QUALIFIERS_SV: Record<string, string> = {
+  ABT: 'ca', EST: 'ca', CAL: 'ca', BEF: 'före', AFT: 'efter',
+};
+
+/** GEDCOM date → readable Swedish, e.g. "15 APR 1942" → "15 apr 1942". */
+export function formatGedcomDate(raw: string | null | undefined): string {
+  if (!raw) return '';
+  return raw
+    .trim()
+    .split(/\s+/)
+    .map(token => {
+      const upper = token.toUpperCase();
+      return MONTHS_SV[upper] ?? QUALIFIERS_SV[upper] ?? (upper === 'AND' ? 'och' : token);
+    })
+    .join(' ');
+}

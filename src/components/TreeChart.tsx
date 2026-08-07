@@ -1,44 +1,10 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { t, displayName, lifespan } from '../lib/i18n';
-import { NODE_W, NODE_H, AVATAR_R, AVATAR_CX, AVATAR_CY, type TreeLayoutResult } from '../lib/treeLayout';
-import type { TreePerson } from '../../lib/tree';
-import CountryFlag from './CountryFlag';
-
-/** Up to two initials, for people without a downloaded photo. */
-function initials(person: TreePerson): string {
-  return [person.givenName, person.surname]
-    .map(part => part.trim()[0] ?? '')
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-}
-
-// A hard cut mid-name reads like broken data — mark it with an ellipsis
-// instead. The full name is always in the node's aria-label.
-const MAX_NAME = 17;
-const truncate = (name: string) =>
-  name.length > MAX_NAME ? `${name.slice(0, MAX_NAME - 1).trimEnd()}…` : name;
-
-// The viewBox is the container in CSS pixels, so scale 1 means "cards at their
-// designed size" no matter how wide the tree is. A viewBox spanning the whole
-// tree would shrink a wide generation to unreadable and cap zoom far too low.
-const MIN_K = 0.04;
-const MAX_K = 3;
-const ZOOM_STEP = 1.25;
-const EDGE_MARGIN = 70;
-const FLAG_R = 8;
-const FLAGS_KEY = 'wedin-tree-visa-flaggor';
-
-function readFlagPreference(): boolean {
-  try {
-    return localStorage.getItem(FLAGS_KEY) !== '0';   // på som standard
-  } catch {
-    return true;
-  }
-}
-
-interface View { x: number; y: number; k: number }
+import { useEffect, useState } from 'react';
+import { t } from '../lib/i18n';
+import { NODE_W, NODE_H, type TreeLayoutResult } from '../lib/treeLayout';
+import { useChartViewport } from '../lib/useChartViewport';
+import { useFlagPreference } from '../lib/flagPreference';
+import PersonCard, { cardLabel } from './PersonCard';
+import ChartToolbar from './ChartToolbar';
 
 export default function TreeChart({ layout, onSelect, selectedId }: {
   layout: TreeLayoutResult;
@@ -46,103 +12,20 @@ export default function TreeChart({ layout, onSelect, selectedId }: {
   onSelect: (personId: string) => void;
   selectedId: string | null;
 }) {
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const svgRef = useRef<SVGSVGElement>(null);
-  const drag = useRef<{ px: number; py: number } | null>(null);
-  const adjusted = useRef(false);   // has the user panned/zoomed since the last fit?
-
-  const [size, setSize] = useState({ w: 900, h: 600 });
-  const [view, setView] = useState<View>({ x: 450, y: 300, k: 1 });
+  const viewport = useChartViewport(layout.bounds);
+  const [showFlags, setShowFlags] = useFlagPreference();
   const [activeKey, setActiveKey] = useState(() => layout.nodes.find(n => n.isFocus)!.key);
-  const [showFlags, setShowFlags] = useState(readFlagPreference);
 
-  function toggleFlags(next: boolean) {
-    setShowFlags(next);
-    try {
-      localStorage.setItem(FLAGS_KEY, next ? '1' : '0');
-    } catch {
-      /* preference is a nicety — ignore storage failures */
-    }
-  }
-
-  useLayoutEffect(() => {
-    const el = wrapRef.current;
-    if (!el) return;
-    const observer = new ResizeObserver(entries => {
-      const rect = entries[0]?.contentRect;
-      if (rect && rect.width > 0) setSize({ w: rect.width, h: rect.height });
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  /** Scale and offset that bring the whole tree into view. */
-  const fit = useMemo((): View => {
-    const { bounds } = layout;
-    const contentW = Math.max(bounds.maxX - bounds.minX, 1);
-    const contentH = Math.max(bounds.maxY - bounds.minY, 1);
-    const k = Math.min(MAX_K, Math.max(MIN_K, Math.min(size.w / contentW, size.h / contentH, 1)));
-    const centerX = (bounds.minX + bounds.maxX) / 2;
-    const centerY = (bounds.minY + bounds.maxY) / 2;
-    return { k, x: size.w / 2 - centerX * k, y: size.h / 2 - centerY * k };
-  }, [layout, size]);
-
-  // Fit on a new tree or a resize, but never yank the view out from under
-  // someone who has already zoomed or panned.
   useEffect(() => {
-    adjusted.current = false;
     setActiveKey(layout.nodes.find(n => n.isFocus)!.key);
   }, [layout]);
 
-  useEffect(() => {
-    if (!adjusted.current) setView(fit);
-  }, [fit]);
-
-  const zoomAround = useCallback((factor: number, px: number, py: number) => {
-    adjusted.current = true;
-    setView(v => {
-      const k = Math.min(MAX_K, Math.max(MIN_K, v.k * factor));
-      if (k === v.k) return v;
-      return { k, x: px - (px - v.x) * (k / v.k), y: py - (py - v.y) * (k / v.k) };
-    });
-  }, []);
-
-  // React's synthetic wheel handler is passive — attach a real one to preventDefault.
-  useEffect(() => {
-    const svg = svgRef.current;
-    if (!svg) return;
-    const onWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      const rect = svg.getBoundingClientRect();
-      zoomAround(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.clientX - rect.left, e.clientY - rect.top);
-    };
-    svg.addEventListener('wheel', onWheel, { passive: false });
-    return () => svg.removeEventListener('wheel', onWheel);
-  }, [zoomAround]);
-
-  /** Keeps the keyboard-focused card inside the viewport on big trees. */
-  const ensureVisible = useCallback((key: string) => {
-    const node = layout.nodes.find(n => n.key === key);
-    if (!node) return;
-    setView(v => {
-      const sx = node.x * v.k + v.x;
-      const sy = node.y * v.k + v.y;
-      let { x, y } = v;
-      if (sx < EDGE_MARGIN) x += EDGE_MARGIN - sx;
-      else if (sx > size.w - EDGE_MARGIN) x -= sx - (size.w - EDGE_MARGIN);
-      if (sy < EDGE_MARGIN) y += EDGE_MARGIN - sy;
-      else if (sy > size.h - EDGE_MARGIN) y -= sy - (size.h - EDGE_MARGIN);
-      if (x === v.x && y === v.y) return v;
-      adjusted.current = true;
-      return { ...v, x, y };
-    });
-  }, [layout, size]);
-
   function moveFocus(key: string | undefined) {
     if (!key) return;
+    const node = layout.nodes.find(n => n.key === key);
     setActiveKey(key);
-    svgRef.current?.querySelector<SVGGElement>(`[data-node-key="${CSS.escape(key)}"]`)?.focus();
-    ensureVisible(key);
+    viewport.svgRef.current?.querySelector<SVGGElement>(`[data-node-key="${CSS.escape(key)}"]`)?.focus();
+    if (node) viewport.ensureVisible(node.x, node.y);
   }
 
   function onNodeKeyDown(e: React.KeyboardEvent, key: string, personId: string) {
@@ -162,80 +45,27 @@ export default function TreeChart({ layout, onSelect, selectedId }: {
     }
   }
 
-  const zoomPercent = Math.round(view.k * 100);
-
-  // Buttons zoom around the focus person (kept on screen), not the viewport
-  // centre — on a wide tree centre-zoom pushes them straight out of view.
-  // The wheel still zooms at the pointer, which is what people expect.
-  function zoomWithButton(factor: number) {
-    const focus = layout.nodes.find(n => n.isFocus);
-    const sx = focus ? focus.x * view.k + view.x : size.w / 2;
-    const sy = focus ? focus.y * view.k + view.y : size.h / 2;
-    const inside = sx >= 0 && sx <= size.w && sy >= 0 && sy <= size.h;
-    zoomAround(factor, inside ? sx : size.w / 2, inside ? sy : size.h / 2);
-  }
+  const focusNode = layout.nodes.find(n => n.isFocus);
 
   return (
     <div className="mt-3 flex min-h-0 flex-1 flex-col">
-      <div className="flex flex-wrap items-center gap-1">
-        <Button
-          variant="outline" size="sm" aria-label={t('tree.zoomIn')}
-          onClick={() => zoomWithButton(ZOOM_STEP)}
-        >
-          +
-        </Button>
-        <Button
-          variant="outline" size="sm" aria-label={t('tree.zoomOut')}
-          onClick={() => zoomWithButton(1 / ZOOM_STEP)}
-        >
-          −
-        </Button>
-        <Button
-          variant="outline" size="sm"
-          onClick={() => { adjusted.current = false; setView(fit); }}
-        >
-          {t('tree.zoomReset')}
-        </Button>
-        <span aria-live="polite" className="ml-2 text-sm tabular-nums text-gray-500">
-          {zoomPercent}%
-        </span>
-        <label className="ml-3 flex items-center gap-2 text-sm text-gray-700">
-          <input
-            type="checkbox"
-            checked={showFlags}
-            onChange={e => toggleFlags(e.target.checked)}
-          />
-          {t('tree.showFlags')}
-        </label>
-        <p id="trad-instruktioner" className="ml-3 text-sm text-gray-500">
-          {t('tree.instructionsPanel')}
-        </p>
-      </div>
-      <div ref={wrapRef} className="mt-2 min-h-[320px] w-full flex-1 overflow-hidden rounded-lg border bg-white">
+      <ChartToolbar
+        zoomPercent={viewport.zoomPercent}
+        onZoom={factor => viewport.zoomBy(factor, focusNode)}
+        onReset={viewport.reset}
+        showFlags={showFlags}
+        onFlagsChange={setShowFlags}
+      />
+      <div ref={viewport.wrapRef} className="mt-2 min-h-[320px] w-full flex-1 overflow-hidden rounded-lg border bg-white">
         <svg
-          ref={svgRef}
+          ref={viewport.svgRef}
           role="group"
           aria-label={t('tree.chartLabel')}
           aria-describedby="trad-instruktioner"
-          viewBox={`0 0 ${size.w} ${size.h}`}
-          width={size.w}
-          height={size.h}
           className="cursor-grab touch-none active:cursor-grabbing"
-          onPointerDown={e => {
-            drag.current = { px: e.clientX, py: e.clientY };
-            (e.target as Element).setPointerCapture?.(e.pointerId);
-          }}
-          onPointerMove={e => {
-            if (!drag.current) return;
-            const dx = e.clientX - drag.current.px;
-            const dy = e.clientY - drag.current.py;
-            drag.current = { px: e.clientX, py: e.clientY };
-            adjusted.current = true;
-            setView(v => ({ ...v, x: v.x + dx, y: v.y + dy }));
-          }}
-          onPointerUp={() => { drag.current = null; }}
+          {...viewport.svgProps}
         >
-          <g transform={`translate(${view.x} ${view.y}) scale(${view.k})`}>
+          <g transform={viewport.transform}>
             {layout.links.map((l, i) => (
               <path
                 key={i}
@@ -255,75 +85,22 @@ export default function TreeChart({ layout, onSelect, selectedId }: {
                 data-node-key={n.key}
                 tabIndex={n.key === activeKey ? 0 : -1}
                 role="button"
-                aria-label={`${displayName(n.person)}, ${lifespan(n.person.birthYear, n.person.deathYear) || '?'}`}
+                aria-label={cardLabel(n.person)}
                 transform={`translate(${n.x - NODE_W / 2} ${n.y - NODE_H / 2})`}
                 className="cursor-pointer outline-none"
                 onClick={() => onSelect(n.person.id)}
                 onFocus={() => setActiveKey(n.key)}
                 onKeyDown={e => onNodeKeyDown(e, n.key, n.person.id)}
               >
-                <rect
-                  width={NODE_W}
-                  height={NODE_H}
-                  rx={10}
-                  className={`${n.person.id === selectedId ? 'fill-amber-50' : 'fill-white'} ${
-                    n.key === activeKey ? 'stroke-amber-500'
-                      : n.person.id === selectedId ? 'stroke-amber-400'
-                        : n.isFocus ? 'stroke-blue-700' : 'stroke-gray-300'
-                  }`}
-                  strokeWidth={n.isFocus || n.key === activeKey || n.person.id === selectedId ? 2.5 : 1.5}
+                <PersonCard
+                  person={n.person}
+                  variant="compact"
+                  showFlag={showFlags}
+                  isFocus={n.isFocus}
+                  active={n.key === activeKey}
+                  selected={n.person.id === selectedId}
+                  idKey={n.key}
                 />
-                {n.person.photoId != null ? (
-                  <>
-                    <clipPath id={`avatar-${n.key}`}>
-                      <circle cx={AVATAR_CX} cy={AVATAR_CY} r={AVATAR_R} />
-                    </clipPath>
-                    <image
-                      href={`/api/media/${n.person.photoId}`}
-                      x={AVATAR_CX - AVATAR_R}
-                      y={AVATAR_CY - AVATAR_R}
-                      width={AVATAR_R * 2}
-                      height={AVATAR_R * 2}
-                      preserveAspectRatio="xMidYMid slice"
-                      clipPath={`url(#avatar-${n.key})`}
-                    />
-                    <circle
-                      cx={AVATAR_CX} cy={AVATAR_CY} r={AVATAR_R}
-                      className="fill-none stroke-gray-200"
-                      strokeWidth={1}
-                    />
-                  </>
-                ) : (
-                  <>
-                    <circle cx={AVATAR_CX} cy={AVATAR_CY} r={AVATAR_R} className="fill-gray-100 stroke-gray-200" strokeWidth={1} />
-                    <text
-                      x={AVATAR_CX} y={AVATAR_CY + 5}
-                      textAnchor="middle"
-                      className="fill-gray-400 text-[14px] font-medium"
-                    >
-                      {initials(n.person)}
-                    </text>
-                  </>
-                )}
-                {/* Given names and surname on their own lines, the way a name
-                    reads on a family chart. */}
-                <text x={NODE_W / 2} y={72} textAnchor="middle" className="fill-gray-900 text-[13px] font-medium">
-                  {truncate(n.person.givenName.trim())}
-                </text>
-                <text x={NODE_W / 2} y={87} textAnchor="middle" className="fill-gray-900 text-[13px] font-medium">
-                  {truncate(n.person.surname.trim())}
-                </text>
-                <text x={NODE_W / 2} y={101} textAnchor="middle" className="fill-gray-500 text-[12px]">
-                  {lifespan(n.person.birthYear, n.person.deathYear)}
-                </text>
-                {showFlags && (
-                  <CountryFlag
-                    code={n.person.country}
-                    cx={AVATAR_CX + AVATAR_R - 4}
-                    cy={AVATAR_CY + AVATAR_R - 4}
-                    r={FLAG_R}
-                  />
-                )}
               </g>
             ))}
           </g>

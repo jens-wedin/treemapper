@@ -23,9 +23,32 @@ npm run test:e2e # Playwright browse flow (needs wedin.db)
 - `/personer` — searchable person list (namn, födelseår, födelseort) with pagination
 - `/person/:id` — read-only Personsida: photos, family box (clickable), event
   timeline with citations, notes
-- `/trad/:id` — interactive SVG family tree (ancestors up, descendants down,
-  1–5 generations each way): pan/zoom, click or Enter refocuses, arrow keys walk
-  relatives, and a fully equivalent "Lista" view for screen readers/keyboard
+- `/trad/:id` — the interactive family tree (see below)
+
+## Träd
+
+`/trad/:id` draws an SVG chart around one person: ancestors up, descendants
+down, 1–5 generations each way (d3-hierarchy does the layout maths only).
+
+- **Cards** carry the person's portrait on top — MyHeritage's primary photo when
+  one is marked, otherwise the first downloaded one, with initials as fallback —
+  then given name and surname on separate centred lines, then the years.
+- **Couples**: anyone whose descendants are drawn appears beside their partner,
+  joined by a marriage bar, and their children hang from that bar. Children of a
+  second marriage hang from the right couple.
+- **Flags** show the country of birth, but only when the birth place actually
+  names a country (a bare parish is left unflagged rather than assumed Swedish).
+  Toggle with "Visa flaggor"; the choice is remembered.
+- **Clicking a card opens a details panel** — portrait, dates and places, family,
+  events, notes — with buttons to re-centre the tree there or open the full
+  Personsida. Relatives in the panel are clickable, so you can read around a
+  family without moving the chart. Escape closes it.
+- **Zoom is absolute**: 100 % means cards at their real size no matter how wide
+  the tree is, range 4–300 %. The view fits the tree on load, "Återställ vy"
+  returns to that fit, and the +/− buttons zoom around the focus person.
+- **Keyboard**: arrow keys walk between relatives (the view pans to follow),
+  Enter opens the panel. The "Lista" view is a fully equivalent path for screen
+  readers.
 
 ## Källor och export
 
@@ -91,28 +114,46 @@ Note: `npm run test:e2e` mutates data, so it runs against a **copy**
 (`.e2e.db`, recreated from `wedin.db` at the start of each run) on ports
 5199/3199 — the real database is never touched by tests.
 
-API: `GET /api/stats`, `GET /api/persons`, `GET /api/persons/:id/full`,
-`GET /api/media/:id`, `GET /api/tree/:id?up=&down=`. All UI copy lives in
-`src/lib/i18n.ts` (Swedish).
+API: `GET /api/stats` · `GET /api/persons` · `GET /api/persons/:id/full` ·
+`PATCH /api/persons/:id` · `POST|PATCH|DELETE /api/events[/:id]` ·
+`POST /api/relations` · `GET /api/media/:id` · `GET /api/tree/:id?up=&down=` ·
+`GET /api/issues` + dismissals · `POST /api/merge` · `GET /api/sources`,
+`GET /api/sources/:id/full`, `PATCH /api/sources/:id` ·
+`GET /api/export/gedcom`. All UI copy lives in `src/lib/i18n.ts` (Swedish).
 
-## Photos: the CDN links in the July 2026 export are dead
+## Photos
 
-The media URLs in `Wedin_Family_Tree_CLEANED.ged` are signed MyHeritage CDN
-links that expired ~2026-07-15; `npm run media` gets HTTP 403 on all 985 of
-them (details in `data/media-report.md`). To rescue the photos while the
-MyHeritage account is still active:
+**All 985 photos are downloaded** (425 MB in `media/`, done 2026-08-06).
 
-1. Make a **fresh** GEDCOM export (with media links) in MyHeritage and put it
-   in `data/`.
-2. `npm run refresh-media -- data/<färsk-export>.ged` — re-arms the URLs on
-   the existing database (matches photos by `_PHOTO_RIN`, then owner+filesize,
-   then owner+title; already-downloaded photos are untouched).
+MyHeritage's media URLs are *signed links that expire* — the ones in the July
+2026 export were already dead (HTTP 403) and had to be re-armed from a fresh
+export. If links ever need refreshing again:
+
+1. Make a **fresh** GEDCOM export (with media links) in MyHeritage, put it in
+   `data/`.
+2. `npm run refresh-media -- data/<färsk-export>.ged` — re-arms the URLs on the
+   existing database (matches photos by `_PHOTO_RIN`, then owner+filesize, then
+   owner+title; already-downloaded photos are untouched).
 3. `npm run media` — downloads with the fresh links; safe to re-run, it only
    retries what isn't done.
 
-## Data
+## Data and backups
 
-`data/` (gitignored) holds the MyHeritage GEDCOM export and reports
+`data/` (gitignored) holds the MyHeritage GEDCOM exports and reports
 (`import-report.md`, `media-report.md` are written here).
-`wedin.db` and `media/` (both gitignored) are the live database and photos —
-back them up separately; the repo holds code only.
+`wedin.db` and `media/` (both gitignored) are the live database and photos.
+
+**The repo holds code, never family data.** A complete backup is:
+
+1. `npm run export` — the whole tree as GEDCOM 5.5.1, and
+2. a copy of the `media/` folder (photos are not inside the GEDCOM).
+
+Copying `wedin.db` itself also works and additionally preserves the audit log
+and dismissed Konsekvens issues, which the GEDCOM does not carry.
+
+## Project state
+
+All six phases of the design spec are built: import + photos, browse, tree,
+editing, Konsekvensbänken, and sources + export. Plans for each phase live in
+`docs/superpowers/plans/`. `MEMORY.md` records where the work stands and the
+gotchas worth knowing before picking it up again.

@@ -100,16 +100,18 @@ export default function FanChart({ data, generations, onSelect, selectedId }: {
                   {s.labelPath ? (
                     <>
                       <path id={`lbl-${s.key}`} d={s.labelPath} fill="none" />
-                      <text className="fill-gray-800 text-[12px]" dy={-2}>
+                      <text className="fill-gray-800" fontSize={s.fontSize} dy={s.showYears ? -2 : 4}>
                         <textPath href={`#lbl-${s.key}`} startOffset="50%" textAnchor="middle">
                           {shorten(displayName(s.person), s.labelMaxChars)}
                         </textPath>
                       </text>
-                      <text className="fill-gray-500 text-[10px]" dy={13}>
-                        <textPath href={`#lbl-${s.key}`} startOffset="50%" textAnchor="middle">
-                          {lifespan(s.person.birthYear, s.person.deathYear)}
-                        </textPath>
-                      </text>
+                      {s.showYears && (
+                        <text className="fill-gray-500" fontSize={s.fontSize - 2} dy={13}>
+                          <textPath href={`#lbl-${s.key}`} startOffset="50%" textAnchor="middle">
+                            {lifespan(s.person.birthYear, s.person.deathYear)}
+                          </textPath>
+                        </text>
+                      )}
                     </>
                   ) : s.labelRadial && (
                     <text
@@ -118,16 +120,21 @@ export default function FanChart({ data, generations, onSelect, selectedId }: {
                       transform={`rotate(${s.labelRadial.rotate} ${s.labelRadial.x} ${s.labelRadial.y})`}
                       textAnchor={s.labelRadial.anchor}
                       dominantBaseline="middle"
-                      className="fill-gray-800 text-[11px]"
+                      fontSize={s.fontSize}
+                      className="fill-gray-800"
                     >
                       {shorten(displayName(s.person), s.labelMaxChars)}
-                      <tspan className="fill-gray-500 text-[10px]">
-                        {'  '}{lifespan(s.person.birthYear, s.person.deathYear)}
-                      </tspan>
+                      {s.showYears && (
+                        <tspan className="fill-gray-500" fontSize={s.fontSize - 2}>
+                          {'  '}{lifespan(s.person.birthYear, s.person.deathYear)}
+                        </tspan>
+                      )}
                     </text>
                   )}
 
-                  {showFlags && <CountryFlag code={s.person.country} cx={s.flag.cx} cy={s.flag.cy} r={7} />}
+                  {showFlags && s.showFlag && (
+                    <CountryFlag code={s.person.country} cx={s.flag.cx} cy={s.flag.cy} r={7} />
+                  )}
                 </g>
               );
             })}

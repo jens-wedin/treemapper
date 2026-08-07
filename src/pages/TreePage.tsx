@@ -18,11 +18,19 @@ const UP_DEPTHS = [1, 2, 3, 4, 5, 6, 7, 8];
 const VIEWS = ['family', 'pedigree', 'fan', 'list'] as const;
 type View = (typeof VIEWS)[number];
 
+/** Reads a generation count from the URL, held to the options we offer. */
+function clamp(raw: string | null, allowed: readonly number[]): number {
+  const value = Number(raw ?? 3) || 3;
+  return Math.min(allowed[allowed.length - 1]!, Math.max(allowed[0]!, value));
+}
+
 export default function TreePage() {
   const { id = DEFAULT_FOCUS } = useParams<{ id: string }>();
   const [params, setParams] = useSearchParams();
-  const upp = Math.min(5, Math.max(1, Number(params.get('upp') ?? 3) || 3));
-  const ned = Math.min(5, Math.max(1, Number(params.get('ned') ?? 3) || 3));
+  // Ancestors go deeper than descendants — keep these in step with UP_DEPTHS,
+  // DEPTHS and the zod limits in api/tree.ts.
+  const upp = clamp(params.get('upp'), UP_DEPTHS);
+  const ned = clamp(params.get('ned'), DEPTHS);
   const depthQuery = `?upp=${upp}&ned=${ned}`;
 
   const viewParam = params.get('vy') as View | null;

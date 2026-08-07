@@ -29,6 +29,11 @@ export interface FanSlice {
   labelPath?: string;
   /** How many characters fit in the space this label has. */
   labelMaxChars: number;
+  /** Label size for this ring — outer rings get less room per person. */
+  fontSize: number;
+  /** Years and flags are dropped where the slice is too thin for them. */
+  showYears: boolean;
+  showFlag: boolean;
   /**
    * Otherwise the name runs radially. On the fan's left half that direction
    * would read upside down, so the text is turned around and anchored at its
@@ -131,6 +136,13 @@ export function layoutFan(slots: AncestorSlot[], generations: number): FanLayout
       labelMaxChars = charsThatFit(RING - 22);
     }
 
+    // How much room a slice has across its width decides what still fits.
+    // Overlap here cannot be zoomed away — zoom scales text and spacing alike.
+    const thickness = sliceAngle * innerR;
+    const fontSize = thickness >= 26 ? 12 : thickness >= 18 ? 11 : 9;
+    const showYears = thickness >= 26;
+    const showFlag = thickness >= 22;
+
     const flagPoint = pointAt(midAngle, innerR + FLAG_INSET);
 
     slices.push({
@@ -145,6 +157,9 @@ export function layoutFan(slots: AncestorSlot[], generations: number): FanLayout
       labelPath,
       labelRadial,
       labelMaxChars,
+      fontSize,
+      showYears,
+      showFlag,
       flag: { cx: flagPoint.x, cy: flagPoint.y },
     });
   }

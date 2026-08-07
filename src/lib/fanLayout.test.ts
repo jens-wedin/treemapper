@@ -103,6 +103,27 @@ describe('layoutFan', () => {
     expect(gen1.labelMaxChars).toBeGreaterThan(gen2.labelMaxChars);
   });
 
+  it('drar ned etiketterna där skivorna blir för tunna', () => {
+    // 8 generationer: yttre ringen har 256 skivor på 270°
+    const deep = layoutFan(
+      Array.from({ length: 511 }, (_, i) => slot(i + 1, `p${i + 1}`)),
+      8,
+    );
+    const inner = deep.slices.find(s => s.generation === 1)!;
+    const outer = deep.slices.find(s => s.generation === 8)!;
+
+    expect(inner.fontSize).toBeGreaterThan(outer.fontSize);
+    expect(inner.showYears).toBe(true);
+    expect(outer.showYears).toBe(false);   // årtal får inte plats
+    expect(outer.showFlag).toBe(false);    // flaggan skulle krocka med grannen
+
+    // texthöjden måste rymmas i skivans bredd, annars överlappar raderna
+    for (const s of deep.slices) {
+      const thickness = (s.endAngle - s.startAngle) * s.innerR;
+      expect(s.fontSize).toBeLessThanOrEqual(Math.max(9, thickness));
+    }
+  });
+
   it('täcker hela solfjädern med sina gränser', () => {
     const outer = Math.max(...r.slices.map(s => s.outerR));
     expect(r.bounds.maxX).toBeGreaterThanOrEqual(outer);

@@ -69,6 +69,24 @@ test('antavlan visar förfäder men inga ättlingar', async ({ page }) => {
   await expect(page.getByText('Antavla och solfjäder visar bara förfäder.')).toBeVisible();
 });
 
+test('antavlan kan visa fler än fem generationer', async ({ page }) => {
+  await page.goto('/trad/I500003?upp=3&vy=pedigree');
+  await expect(page.locator('[data-tree-node]').first()).toBeVisible();
+  const atFive = await page.locator('[data-tree-node]').count();
+
+  const generations = page.getByLabel('Generationer uppåt');
+  await generations.selectOption('7');
+  await expect(generations).toHaveValue('7');        // får inte studsa tillbaka
+  await expect(page).toHaveURL(/upp=7/);
+  await expect
+    .poll(() => page.locator('[data-tree-node]').count())
+    .toBeGreaterThan(atFive);
+
+  // och valet överlever en omladdning
+  await page.reload();
+  await expect(page.getByLabel('Generationer uppåt')).toHaveValue('7');
+});
+
 test('solfjädern renderas och kan navigeras med tangentbord', async ({ page }) => {
   await page.goto('/trad/I500003?upp=4&vy=fan');
   await expect(page.getByRole('group', { name: 'Solfjäder' })).toBeVisible();

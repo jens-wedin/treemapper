@@ -3,11 +3,26 @@
 _Last updated: 2026-08-07. All six spec phases are built; the tree view has had
 a round of UX work on top._
 
+## Tree views (2026-08-07)
+
+Four views on `/trad/:id`, chosen in the toolbar and stored in `?vy=`:
+**Familj** (the original), **Antavla** (pedigree), **Solfjäder** (fan) and
+**Lista**. The two ancestor views are built on `src/lib/ahnentafel.ts`
+(numbering + the four branch colours) and share `useChartViewport`,
+`PersonCard`, `ChartToolbar`, the flag preference and `TreePersonPanel`.
+Layout maths lives in `pedigreeLayout.ts` and `fanLayout.ts`, both pure and
+unit-tested. Plan: `docs/superpowers/plans/2026-08-07-pedigree-and-fan-views.md`.
+
+Fan gotchas that took a fix: `<textPath>` follows the path direction, so arc
+labels on the lower half need the arc drawn backwards; radial labels on the
+left half need a 180° flip and `text-anchor: end`; and labels must be truncated
+to the arc length their slice actually has, or they bleed into neighbours.
+
 ## Current state
 
 - **Data**: 4 561 personer, 983 familjer, 3 616 barnlänkar, 14 588 händelser,
   5 804 källhänvisningar, 520 källor, 985 foton (alla nedladdade, 425 MB).
-- **Tests**: 179 vitest + 21 Playwright e2e, all green. `tsc -b` clean,
+- **Tests**: 213 vitest + 24 Playwright e2e, all green. `tsc -b` clean,
   `npm run build` clean.
 - **Konsekvens**: 2 831 problem över 2 275 personer (171 fel, 518 dubbletter,
   1 868 varningar, 251 övrigt, 23 småfel), 241 dubblettgrupper.

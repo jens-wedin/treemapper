@@ -27,8 +27,31 @@ npm run test:e2e # Playwright browse flow (needs wedin.db)
 
 ## Träd
 
-`/trad/:id` draws an SVG chart around one person: ancestors up, descendants
-down, 1–5 generations each way (d3-hierarchy does the layout maths only).
+`/trad/:id` has four views, switched in the toolbar and remembered in the URL
+(`?vy=family|pedigree|fan|list`):
+
+| Vy | Visar |
+|---|---|
+| **Familj** | Ancestors up and descendants down around one person, with partners as couples |
+| **Antavla** | Classic left-to-right pedigree — ancestors only, up to 8 generations |
+| **Solfjäder** | Circular fan chart — ancestors only, up to 8 generations |
+| **Lista** | Nested lists; the accessible equivalent of all three charts |
+
+The two ancestor views colour the four grandparent lines (father's father,
+father's mother, mother's father, mother's mother) so you can see at a glance
+which branch a person belongs to. Positions come from Ahnentafel numbering, so
+a missing ancestor leaves an empty slot rather than shifting the rest of the
+chart. In the fan, names run along the arc where there is room and radially
+where there is not — and are turned around on the lower and left sides so
+nothing reads upside down.
+
+All charts share the same pan/zoom, the same person panel on click, portraits,
+flags and keyboard model.
+
+### Familjevyn
+
+Ancestors up, descendants down, 1–5 generations each way (d3-hierarchy does the
+layout maths only).
 
 - **Cards** carry the person's portrait on top — MyHeritage's primary photo when
   one is marked, otherwise the first downloaded one, with initials as fallback —

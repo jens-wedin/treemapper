@@ -36,6 +36,7 @@
 - `npm run refresh-media` — laddar om döda signerade CDN-länkar från en färsk MyHeritage-export.
 
 ### Changed
+- Diagrammen ligger på en mjuk grå botten i stället för vitt, så korten läser sig som kort, och det kort man håller pekaren över lyfts med en mjuk skugga. SVG har ingen box-shadow, så skuggan är ett `filter` — vilket gör att den följer solfjäderns kilar lika bra som de fyrkantiga korten. Släktlinjerna mörknades ett steg för att inte tappa i läsbarhet mot den gråa bottnen.
 - Trädet blinkar inte längre när man byter person eller djup: sidan tömde diagrammet innan den hämtade nästa, så vyn hann bli tom och passades sedan in på nytt. Nu står det gamla diagrammet kvar tills det nya är hämtat (och ett svar som hinner bli omkört kastas).
 - Antavlan reserverar inte längre plats för grenar som saknas helt. Rutnätet var alltid 2^generationer rader högt, så en gles linje spreds ut över en nästan tom tavla — elva kort hamnade på 28 % zoom. Nu kostar en okänd förälder en tom rad (så att en ensam mor stannar under sin saknade make i stället för att glida upp i hans plats), medan en gren som är borta i sin helhet inte kostar något: samma elva kort visas nu på 82 %.
 - Antavla och solfjäder visar 1–5 generationer i stället för 1–8. Åtta generationer krympte tavlan till några få procent — bortom fem följer man i stället en linje i taget med ▸-knappen.

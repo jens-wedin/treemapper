@@ -120,7 +120,10 @@ eases across if the new branch would otherwise open off-screen. All of it is
 disabled under `prefers-reduced-motion`.
 
 All charts share the same pan/zoom, the same person panel on click, portraits,
-flags and keyboard model.
+flags and keyboard model. They sit on a soft grey canvas so the cards read as
+cards, and the one under the pointer lifts on a drop shadow — SVG has no
+box-shadow, so it is a `filter`, which follows the fan's wedges just as well
+as the rectangular cards.
 
 ### Familjevyn
 

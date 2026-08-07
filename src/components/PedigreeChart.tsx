@@ -145,7 +145,7 @@ export default function PedigreeChart({ data, generations, onSelect, selectedId 
         onFlagsChange={setShowFlags}
         hint={`${t('tree.instructionsAncestors')} ${t('tree.expandHint')}`}
       />
-      <div ref={viewport.wrapRef} className="mt-2 min-h-[320px] w-full flex-1 overflow-hidden rounded-lg border bg-white">
+      <div ref={viewport.wrapRef} className="mt-2 min-h-[320px] w-full flex-1 overflow-hidden rounded-lg border bg-gray-100">
         <svg
           ref={viewport.svgRef}
           role="group"
@@ -164,7 +164,7 @@ export default function PedigreeChart({ data, generations, onSelect, selectedId 
             {hasGhosts && (
             <g aria-hidden className="chart-node-leave">
               {ghosts.links.map(l => (
-                <path key={l.path} d={l.path} className="fill-none stroke-gray-300" strokeWidth={1.25} />
+                <path key={l.path} d={l.path} className="fill-none stroke-gray-400" strokeWidth={1.25} />
               ))}
               {ghosts.nodes.map(n => (
                 <g key={n.key} transform={`translate(${n.x - PED_W / 2} ${n.y - PED_H / 2})`}>
@@ -184,7 +184,7 @@ export default function PedigreeChart({ data, generations, onSelect, selectedId 
             )}
 
             {layout.links.map(l => (
-              <path key={l.path} aria-hidden d={l.path} className="fill-none stroke-gray-300" strokeWidth={1.25} />
+              <path key={l.path} aria-hidden d={l.path} className="fill-none stroke-gray-400" strokeWidth={1.25} />
             ))}
             {layout.nodes.map(n => (
               <g
@@ -195,7 +195,7 @@ export default function PedigreeChart({ data, generations, onSelect, selectedId 
                 role="button"
                 aria-label={cardLabel(n.person)}
                 transform={`translate(${n.x - PED_W / 2} ${n.y - PED_H / 2})`}
-                className={`chart-node cursor-pointer outline-none ${entering.has(n.key) ? 'chart-node-enter' : ''}`}
+                className={`chart-node chart-card cursor-pointer outline-none ${entering.has(n.key) ? 'chart-node-enter' : ''}`}
                 onClick={() => onSelect(n.person.id)}
                 onFocus={() => setActiveKey(n.key)}
                 onKeyDown={e => onNodeKeyDown(e, n.key, () => onSelect(n.person.id))}
@@ -246,7 +246,7 @@ export default function PedigreeChart({ data, generations, onSelect, selectedId 
                   />
                   <path
                     d={h.action === 'expand' ? 'M -3 -5 L 3 0 L -3 5' : 'M 3 -5 L -3 0 L 3 5'}
-                    className={`fill-none group-hover:stroke-blue-700 ${isPending ? 'stroke-gray-300' : 'stroke-gray-600'}`}
+                    className={`fill-none group-hover:stroke-blue-700 ${isPending ? 'stroke-gray-400' : 'stroke-gray-600'}`}
                     strokeWidth={2}
                     strokeLinecap="round"
                     strokeLinejoin="round"

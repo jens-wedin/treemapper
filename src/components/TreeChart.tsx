@@ -135,7 +135,7 @@ export default function TreeChart({ data, onSelect, selectedId }: {
         onFlagsChange={setShowFlags}
         hint={`${t('tree.instructionsPanel')} ${t('tree.expandHintFamily')}`}
       />
-      <div ref={viewport.wrapRef} className="mt-2 min-h-[320px] w-full flex-1 overflow-hidden rounded-lg border bg-white">
+      <div ref={viewport.wrapRef} className="mt-2 min-h-[320px] w-full flex-1 overflow-hidden rounded-lg border bg-gray-100">
         <svg
           ref={viewport.svgRef}
           role="group"
@@ -157,7 +157,7 @@ export default function TreeChart({ data, onSelect, selectedId }: {
                   <path
                     key={linkKey(l)}
                     d={edgePath(l)}
-                    className={l.type === 'marriage' ? 'fill-none stroke-gray-400' : 'fill-none stroke-gray-300'}
+                    className={l.type === 'marriage' ? 'fill-none stroke-gray-400' : 'fill-none stroke-gray-400'}
                     strokeWidth={l.type === 'marriage' ? 1.5 : 1}
                   />
                 ))}
@@ -181,7 +181,7 @@ export default function TreeChart({ data, onSelect, selectedId }: {
                 key={linkKey(l)}
                 aria-hidden
                 d={edgePath(l)}
-                className={l.type === 'marriage' ? 'fill-none stroke-gray-400' : 'fill-none stroke-gray-300'}
+                className={l.type === 'marriage' ? 'fill-none stroke-gray-400' : 'fill-none stroke-gray-400'}
                 strokeWidth={l.type === 'marriage' ? 1.5 : 1}
               />
             ))}
@@ -194,7 +194,7 @@ export default function TreeChart({ data, onSelect, selectedId }: {
                 role="button"
                 aria-label={cardLabel(n.person)}
                 transform={`translate(${n.x - NODE_W / 2} ${n.y - NODE_H / 2})`}
-                className={`chart-node cursor-pointer outline-none ${entering.has(n.key) ? 'chart-node-enter' : ''}`}
+                className={`chart-node chart-card cursor-pointer outline-none ${entering.has(n.key) ? 'chart-node-enter' : ''}`}
                 onClick={() => onSelect(n.person.id)}
                 onFocus={() => setActiveKey(n.key)}
                 onKeyDown={e => onNodeKeyDown(e, n.key, () => onSelect(n.person.id))}
@@ -247,7 +247,7 @@ export default function TreeChart({ data, onSelect, selectedId }: {
                   <path
                     d={pointsUp ? 'M -4.5 2.5 L 0 -2.5 L 4.5 2.5' : 'M -4.5 -2.5 L 0 2.5 L 4.5 -2.5'}
                     className={`fill-none group-hover:stroke-blue-700 ${
-                      pending === h.key ? 'stroke-gray-300' : 'stroke-gray-600'
+                      pending === h.key ? 'stroke-gray-400' : 'stroke-gray-600'
                     }`}
                     strokeWidth={2}
                     strokeLinecap="round"

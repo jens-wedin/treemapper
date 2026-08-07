@@ -61,7 +61,7 @@ export default function FanChart({ data, generations, onSelect, selectedId }: {
         onFlagsChange={setShowFlags}
         hint={t('tree.instructionsAncestors')}
       />
-      <div ref={viewport.wrapRef} className="mt-2 min-h-[320px] w-full flex-1 overflow-hidden rounded-lg border bg-white">
+      <div ref={viewport.wrapRef} className="mt-2 min-h-[320px] w-full flex-1 overflow-hidden rounded-lg border bg-gray-100">
         <svg
           ref={viewport.svgRef}
           role="group"
@@ -83,7 +83,7 @@ export default function FanChart({ data, generations, onSelect, selectedId }: {
                   tabIndex={isActive ? 0 : -1}
                   role="button"
                   aria-label={`${displayName(s.person)}, ${lifespan(s.person.birthYear, s.person.deathYear) || '?'}`}
-                  className="cursor-pointer outline-none"
+                  className="chart-card cursor-pointer outline-none"
                   onClick={() => onSelect(s.person.id)}
                   onFocus={() => setActiveKey(s.key)}
                   onKeyDown={e => onKeyDown(e, s.key, s.person.id)}
@@ -146,7 +146,7 @@ export default function FanChart({ data, generations, onSelect, selectedId }: {
               tabIndex={-1}
               role="button"
               aria-label={`${displayName(centre.person)}, ${lifespan(centre.person.birthYear, centre.person.deathYear) || '?'}`}
-              className="cursor-pointer outline-none"
+              className="chart-card cursor-pointer outline-none"
               onClick={() => onSelect(centre.person.id)}
             >
               <circle r={centre.r} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1.5} />

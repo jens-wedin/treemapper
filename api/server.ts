@@ -10,6 +10,7 @@ import { createIssuesApi } from './issues';
 import { createMergeApi } from './merge';
 import { createSourcesApi } from './sources';
 import { createExportApi } from './export';
+import { createStatisticsApi } from './statistics';
 
 const db = createDb();
 const app = new Hono();
@@ -22,6 +23,7 @@ app.route('/', createIssuesApi(db));
 app.route('/', createMergeApi(db));
 app.route('/', createSourcesApi(db));
 app.route('/', createExportApi(db));
+app.route('/', createStatisticsApi(db));
 
 const port = Number(process.env.API_PORT ?? 3001);
 serve({ fetch: app.fetch, port });

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { layoutTree } from './treeLayout';
 import type { TreeData, TreePerson } from '../../lib/tree';
 
-const P = (id: string): TreePerson => ({ id, givenName: id, surname: 'X', birthYear: null, deathYear: null, sex: 'U', photoId: null });
+const P = (id: string): TreePerson => ({ id, givenName: id, surname: 'X', birthYear: null, deathYear: null, sex: 'U', photoId: null, country: null });
 const data: TreeData = {
   focus: P('F'),
   ancestors: { person: P('F'), parents: [

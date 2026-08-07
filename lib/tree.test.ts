@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runImport } from '../scripts/import';
 import { createDb, type Db } from '../db/client';
-import { families, familyChildren, persons, media } from '../db/schema';
+import { families, familyChildren, persons, media, events } from '../db/schema';
 import { getTree } from './tree';
 
 let dir: string;
@@ -62,6 +62,28 @@ describe('getTree', () => {
     expect(getTree(pdb, 'P1')!.focus.photoId).toBe(2);   // primärt vinner över lägre id
     expect(getTree(pdb, 'P2')!.focus.photoId).toBe(4);   // hoppar över failed
     expect(getTree(pdb, 'P3')!.focus.photoId).toBeNull();
+  });
+
+  it('sätter land bara när födelseplatsen namnger ett', () => {
+    const cdb = createDb(path.join(dir, 'countries.db'));
+    cdb.insert(persons).values([
+      { id: 'C1', givenName: 'Med', surname: 'Land', sex: 'M' },
+      { id: 'C2', givenName: 'Bara', surname: 'Socken', sex: 'F' },
+      { id: 'C3', givenName: 'Dop', surname: 'Land', sex: 'U' },
+      { id: 'C4', givenName: 'Bara', surname: 'Bosatt', sex: 'U' },
+    ]).run();
+    cdb.insert(events).values([
+      { id: 1, ownerType: 'person', ownerId: 'C1', type: 'BIRT', place: 'Alnön, Västernorrland, Sverige' },
+      { id: 2, ownerType: 'person', ownerId: 'C2', type: 'BIRT', place: 'Bjuråker' },
+      { id: 3, ownerType: 'person', ownerId: 'C3', type: 'CHR', place: 'Vasa, Finland' },
+      // bosättning i USA ska INTE ge flagga — säger inget om var personen föddes
+      { id: 4, ownerType: 'person', ownerId: 'C4', type: 'RESI', place: 'Chicago, Illinois, USA' },
+    ]).run();
+
+    expect(getTree(cdb, 'C1')!.focus.country).toBe('SE');
+    expect(getTree(cdb, 'C2')!.focus.country).toBeNull();
+    expect(getTree(cdb, 'C3')!.focus.country).toBe('FI');
+    expect(getTree(cdb, 'C4')!.focus.country).toBeNull();
   });
 
   it('survives ancestry cycles', () => {

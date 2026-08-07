@@ -72,6 +72,7 @@ const sv = {
     generationsUp: 'Generationer uppåt', generationsDown: 'Generationer nedåt',
     zoomIn: 'Zooma in', zoomOut: 'Zooma ut', zoomReset: 'Återställ vy',
     goToPerson: 'Gå till personsida', focusOn: 'Fokusera trädet på',
+    showFlags: 'Visa flaggor',
     chartLabel: 'Släktträdsdiagram',
     instructions: 'Piltangenter flyttar mellan släktingar, Enter fokuserar trädet på vald person.',
   },

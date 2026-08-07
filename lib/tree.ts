@@ -1,6 +1,7 @@
 import { and, asc, eq, inArray, or, sql } from 'drizzle-orm';
 import type { Db } from '../db/client';
-import { persons, families, familyChildren, media } from '../db/schema';
+import { persons, families, familyChildren, media, events } from '../db/schema';
+import { countryFromPlace } from './places';
 
 export interface TreePerson {
   id: string;
@@ -11,6 +12,8 @@ export interface TreePerson {
   sex: 'M' | 'F' | 'U';
   /** Downloaded photo to show on the chart card, if the person has one. */
   photoId: number | null;
+  /** Country of birth, only when the birth place explicitly names one. */
+  country: string | null;
 }
 export interface AncestorNode { person: TreePerson; parents: AncestorNode[] }
 export interface DescendantNode { person: TreePerson; children: DescendantNode[] }
@@ -47,6 +50,36 @@ function fetchPhotoIds(db: Db, ids: string[]): Map<string, number> {
   return new Map([...best].map(([ownerId, v]) => [ownerId, v.id]));
 }
 
+/**
+ * Country per person, from the birth place only — christening and baptism
+ * count as birth-locale events when there is no birth place. Later events
+ * (residence, death) are deliberately ignored: they can name a different
+ * country than the person was born in.
+ */
+const BIRTH_LOCALE_TAGS = ['BIRT', 'CHR', 'BAPM'];
+
+function fetchCountries(db: Db, ids: string[]): Map<string, string> {
+  const rows = db.select({ ownerId: events.ownerId, type: events.type, place: events.place })
+    .from(events)
+    .where(and(
+      eq(events.ownerType, 'person'),
+      inArray(events.ownerId, ids),
+      inArray(events.type, BIRTH_LOCALE_TAGS),
+    ))
+    .orderBy(asc(events.id))
+    .all();
+
+  const byPerson = new Map<string, string>();
+  for (const tag of BIRTH_LOCALE_TAGS) {
+    for (const row of rows) {
+      if (row.type !== tag || byPerson.has(row.ownerId)) continue;
+      const country = countryFromPlace(row.place);
+      if (country) byPerson.set(row.ownerId, country);
+    }
+  }
+  return byPerson;
+}
+
 function fetchPersons(db: Db, ids: string[]): Map<string, TreePerson> {
   if (!ids.length) return new Map();
   const rows = db.select({
@@ -54,7 +87,12 @@ function fetchPersons(db: Db, ids: string[]): Map<string, TreePerson> {
     birthYear: birthYearSql, deathYear: deathYearSql, sex: persons.sex,
   }).from(persons).where(inArray(persons.id, ids)).all();
   const photos = fetchPhotoIds(db, ids);
-  return new Map(rows.map(r => [r.id, { ...r, photoId: photos.get(r.id) ?? null }]));
+  const countries = fetchCountries(db, ids);
+  return new Map(rows.map(r => [r.id, {
+    ...r,
+    photoId: photos.get(r.id) ?? null,
+    country: countries.get(r.id) ?? null,
+  }]));
 }
 
 function parentIdsOf(db: Db, id: string): string[] {

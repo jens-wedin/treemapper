@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { t, displayName, lifespan } from '../lib/i18n';
 import { NODE_W, NODE_H, AVATAR_R, AVATAR_CX, type TreeLayoutResult } from '../lib/treeLayout';
 import type { TreePerson } from '../../lib/tree';
+import CountryFlag from './CountryFlag';
 
 /** Up to two initials, for people without a downloaded photo. */
 function initials(person: TreePerson): string {
@@ -27,6 +28,16 @@ const MIN_K = 0.04;
 const MAX_K = 3;
 const ZOOM_STEP = 1.25;
 const EDGE_MARGIN = 70;
+const FLAG_R = 8;
+const FLAGS_KEY = 'wedin-tree-visa-flaggor';
+
+function readFlagPreference(): boolean {
+  try {
+    return localStorage.getItem(FLAGS_KEY) !== '0';   // på som standard
+  } catch {
+    return true;
+  }
+}
 
 interface View { x: number; y: number; k: number }
 
@@ -40,6 +51,16 @@ export default function TreeChart({ layout, depthQuery }: { layout: TreeLayoutRe
   const [size, setSize] = useState({ w: 900, h: 600 });
   const [view, setView] = useState<View>({ x: 450, y: 300, k: 1 });
   const [activeKey, setActiveKey] = useState(() => layout.nodes.find(n => n.isFocus)!.key);
+  const [showFlags, setShowFlags] = useState(readFlagPreference);
+
+  function toggleFlags(next: boolean) {
+    setShowFlags(next);
+    try {
+      localStorage.setItem(FLAGS_KEY, next ? '1' : '0');
+    } catch {
+      /* preference is a nicety — ignore storage failures */
+    }
+  }
 
   useLayoutEffect(() => {
     const el = wrapRef.current;
@@ -175,6 +196,14 @@ export default function TreeChart({ layout, depthQuery }: { layout: TreeLayoutRe
         <span aria-live="polite" className="ml-2 text-sm tabular-nums text-gray-500">
           {zoomPercent}%
         </span>
+        <label className="ml-3 flex items-center gap-2 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            checked={showFlags}
+            onChange={e => toggleFlags(e.target.checked)}
+          />
+          {t('tree.showFlags')}
+        </label>
         <p id="trad-instruktioner" className="ml-3 text-sm text-gray-500">
           {t('tree.instructions')}
         </p>
@@ -271,6 +300,14 @@ export default function TreeChart({ layout, depthQuery }: { layout: TreeLayoutRe
                 <text x={AVATAR_CX + AVATAR_R + 12} y={NODE_H / 2 + 15} className="fill-gray-500 text-[12px]">
                   {lifespan(n.person.birthYear, n.person.deathYear)}
                 </text>
+                {showFlags && (
+                  <CountryFlag
+                    code={n.person.country}
+                    cx={AVATAR_CX + AVATAR_R - 4}
+                    cy={NODE_H / 2 + AVATAR_R - 4}
+                    r={FLAG_R}
+                  />
+                )}
               </g>
             ))}
           </g>

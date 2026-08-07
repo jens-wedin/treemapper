@@ -33,6 +33,8 @@ export interface DescendantNode {
   /** Partners shown beside the person; their shared children hang below. */
   spouses: TreePerson[];
   children: DescendantNode[];
+  /** The chart stopped here, but the person has children on record. */
+  hasMoreDescendants?: boolean;
   /**
    * Which of the parent's families this person came from (index into the
    * parent's `spouses`). Keeps children of a second marriage hanging from the
@@ -171,7 +173,10 @@ export function getTree(db: Db, id: string, up = 3, down = 3): TreeData | null {
   const descendants = (person: TreePerson, depth: number, pathIds: Set<string>, familyIndex = 0): DescendantNode => {
     // Partners are shown beside a person we are expanding — at the deepest
     // generation we stop, otherwise the chart doubles in width for no gain.
-    if (depth <= 0) return { person, spouses: [], children: [], familyIndex };
+    if (depth <= 0) {
+      const beyond = familiesOf(db, person.id).flatMap(f => f.childIds).filter(c => !pathIds.has(c));
+      return { person, spouses: [], children: [], familyIndex, hasMoreDescendants: beyond.length > 0 };
+    }
 
     const fams = familiesOf(db, person.id);
     const childIds = fams.flatMap(f => f.childIds).filter(c => !pathIds.has(c));

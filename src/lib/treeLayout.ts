@@ -25,12 +25,36 @@ export interface PositionedNode {
 }
 export interface TreeEdge { x1: number; y1: number; x2: number; y2: number; type?: 'parent' | 'marriage' }
 export interface NavMap { [key: string]: { up?: string; down?: string; left?: string; right?: string } }
+
+/**
+ * The button above the topmost ancestors and below the outermost descendants:
+ * ⌃ unfolds two more generations of parents, ⌄ two more of children, and both
+ * turn into the opposite arrow once opened.
+ */
+export interface TreeHandle {
+  key: string;
+  /** Card the handle belongs to. */
+  nodeKey: string;
+  person: TreePerson;
+  x: number;
+  y: number;
+  direction: 'up' | 'down';
+  action: 'expand' | 'collapse';
+  /** Where in the ancestor or descendant tree an unfold gets spliced in. */
+  path: number[];
+}
+
 export interface TreeLayoutResult {
   nodes: PositionedNode[];
   links: TreeEdge[];
+  handles: TreeHandle[];
   nav: NavMap;
   bounds: { minX: number; maxX: number; minY: number; maxY: number };
 }
+
+/** Gap between a card's edge and the centre of its handle. */
+const HANDLE_GAP = 20;
+export const TREE_HANDLE_R = 12;
 
 /**
  * Pure layout math (spec: d3-hierarchy for layout only). Nodes are keyed by
@@ -38,10 +62,40 @@ export interface TreeLayoutResult {
  * under pedigree collapse (cousin marriages) and each occurrence needs its own
  * DOM node and nav entry.
  */
-export function layoutTree(data: TreeData): TreeLayoutResult {
+export function layoutTree(data: TreeData, expanded: ReadonlySet<string> = new Set()): TreeLayoutResult {
   const nodes: PositionedNode[] = [];
   const links: TreeEdge[] = [];
+  const handles: TreeHandle[] = [];
   const nav: NavMap = {};
+
+  /** Child indices from the root down to this node — where a graft goes. */
+  const pathOf = <T,>(node: HierarchyNode<T>): number[] => {
+    const steps: number[] = [];
+    let cur = node;
+    while (cur.parent) {
+      steps.unshift((cur.parent.children ?? []).indexOf(cur));
+      cur = cur.parent;
+    }
+    return steps;
+  };
+
+  const addHandle = (
+    node: PositionedNode, direction: 'up' | 'down', path: number[], hasMore: boolean | undefined, x = node.x,
+  ) => {
+    const key = `h${direction}:${node.key}`;
+    const isOpen = expanded.has(key);
+    if (!isOpen && !hasMore) return;
+    handles.push({
+      key,
+      nodeKey: node.key,
+      person: node.person,
+      x,
+      y: node.y + (direction === 'up' ? -(NODE_H / 2 + HANDLE_GAP) : NODE_H / 2 + HANDLE_GAP),
+      direction,
+      action: isOpen ? 'collapse' : 'expand',
+      path,
+    });
+  };
   const setNav = (key: string, dir: 'up' | 'down' | 'left' | 'right', target: string) => {
     nav[key] = { ...nav[key] };
     if (!nav[key][dir]) nav[key][dir] = target;
@@ -66,7 +120,11 @@ export function layoutTree(data: TreeData): TreeLayoutResult {
   const ancKey = keyOf<AncestorNode>('a');
   anc.each(n => {
     const y = n.depth === 0 ? 0 : -n.depth * STEP_Y;
-    nodes.push({ key: ancKey(n), person: n.data.person, x: n.x!, y, isFocus: n.depth === 0 });
+    const node: PositionedNode = { key: ancKey(n), person: n.data.person, x: n.x!, y, isFocus: n.depth === 0 };
+    nodes.push(node);
+    // Parents already on screen continue the line themselves; the handle is
+    // for where the chart stops but the family does not.
+    addHandle(node, 'up', pathOf(n), !n.children?.length && n.data.hasMoreAncestors);
     if (n.parent) {
       links.push({ x1: n.parent.x!, y1: -(n.depth - 1) * STEP_Y, x2: n.x!, y2: y });
       setNav(ancKey(n.parent), 'up', ancKey(n));
@@ -95,12 +153,21 @@ export function layoutTree(data: TreeData): TreeLayoutResult {
   desc.each(n => {
     const y = n.depth * STEP_Y;
     const key = n.depth === 0 ? 'focus' : descKey(n);
+    // The focus card was emitted by the ancestor pass; reuse it so the handle
+    // hangs under the card that is actually drawn.
+    let node = nodes.find(m => m.key === key)!;
     if (n.depth > 0) {
-      nodes.push({ key, person: n.data.person, x: n.x!, y, isFocus: false });
+      node = { key, person: n.data.person, x: n.x!, y, isFocus: false };
+      nodes.push(node);
       links.push({ x1: familyAnchor(n.parent!, n.data.familyIndex ?? 0), y1: (n.depth - 1) * STEP_Y, x2: n.x!, y2: y });
       setNav(n.parent!.depth === 0 ? 'focus' : descKey(n.parent!), 'down', key);
       setNav(key, 'up', n.parent!.depth === 0 ? 'focus' : descKey(n.parent!));
     }
+    // Children hang from the marriage bar, so the handle sits under it too.
+    addHandle(
+      node, 'down', pathOf(n), !n.children?.length && n.data.hasMoreDescendants,
+      node.x + (n.data.spouses?.length ? COUPLE_STEP / 2 : 0),
+    );
     (n.data.spouses ?? []).forEach((spouse, i) => {
       const spouseKey = `p${key}.${i}`;
       const x = n.x! + COUPLE_STEP * (i + 1);
@@ -128,15 +195,28 @@ export function layoutTree(data: TreeData): TreeLayoutResult {
     });
   }
 
+  // A handle is drawn between its card and the generation it opens, so that is
+  // where it sits in the keyboard order too.
+  for (const handle of handles) {
+    const card = nav[handle.nodeKey] ?? {};
+    if (handle.direction === 'up') {
+      nav[handle.key] = { down: handle.nodeKey, up: card.up };
+      nav[handle.nodeKey] = { ...card, up: handle.key };
+    } else {
+      nav[handle.key] = { up: handle.nodeKey, down: card.down };
+      nav[handle.nodeKey] = { ...card, down: handle.key };
+    }
+  }
+
   const xs = nodes.map(n => n.x);
   const ys = nodes.map(n => n.y);
   return {
-    nodes, links, nav,
+    nodes, links, handles, nav,
     bounds: {
-      minX: Math.min(...xs) - NODE_W / 2 - 20,
-      maxX: Math.max(...xs) + NODE_W / 2 + 20,
-      minY: Math.min(...ys) - NODE_H - 20,
-      maxY: Math.max(...ys) + NODE_H + 20,
+      minX: Math.min(...xs, ...handles.map(h => h.x)) - NODE_W / 2 - 20,
+      maxX: Math.max(...xs, ...handles.map(h => h.x)) + NODE_W / 2 + 20,
+      minY: Math.min(...ys, ...handles.map(h => h.y)) - NODE_H - 20,
+      maxY: Math.max(...ys, ...handles.map(h => h.y)) + NODE_H + 20,
     },
   };
 }

@@ -49,6 +49,55 @@ test('panelen kan fokusera om trädet och öppna personsidan', async ({ page }) 
   await expect(page).toHaveURL(/\/person\/I\d+/);
 });
 
+// Uppåt och nedåt körs var för sig: den första utfällningen panorerar vyn, och
+// då hamnar knappen i andra änden av trädet utanför den synliga ytan.
+for (const direction of ['up', 'down'] as const) {
+  test(`familjevyn fäller ut generationer på plats (${direction})`, async ({ page }) => {
+    await page.goto('/trad/I502603?upp=2&ned=2&vy=family');
+    await expect(page.locator('[data-tree-node]').first()).toBeVisible();
+    const before = await page.locator('[data-tree-node]').count();
+    const url = page.url();
+
+    const handle = page
+      .locator(`[data-handle][data-handle-direction="${direction}"][data-handle-action="expand"]`)
+      .first();
+    await expect(handle).toBeVisible();
+    const personId = await handle.getAttribute('data-handle');
+
+    await handle.click();
+    await expect
+      .poll(() => page.locator('[data-tree-node]').count())
+      .toBeGreaterThan(before);
+    expect(page.url()).toBe(url);                  // ingen omnavigering, ingen blink
+
+    // knappen vänder, och fäller ihop grenen igen
+    const fold = page.locator(`[data-handle="${personId}"][data-handle-direction="${direction}"]`);
+    await expect(fold).toHaveAttribute('data-handle-action', 'collapse');
+    await fold.click();
+    await expect
+      .poll(() => page.locator('[data-tree-node]').count())
+      .toBe(before);
+  });
+}
+
+test('familjevyns utfällningsknapp nås med tangentbordet', async ({ page }) => {
+  await page.goto('/trad/I502603?upp=2&ned=2&vy=family');
+  const up = page.locator('[data-handle][data-handle-direction="up"]').first();
+  await expect(up).toBeVisible();
+  const personId = await up.getAttribute('data-handle');
+
+  // uppåtpilen från det översta kortet ska stanna vid knappen
+  await page.locator(`[data-tree-node="${personId}"]`).first().focus();
+  await page.keyboard.press('ArrowUp');
+  await expect
+    .poll(() => page.evaluate(() => document.activeElement?.getAttribute('data-handle')))
+    .toBe(personId);
+
+  await page.keyboard.press('Enter');
+  await expect(page.locator(`[data-handle="${personId}"][data-handle-direction="up"]`))
+    .toHaveAttribute('data-handle-action', 'collapse');
+});
+
 test('antavlan visar förfäder men inga ättlingar', async ({ page }) => {
   await page.goto('/trad/I500003?upp=3&ned=2');
   await page.getByRole('button', { name: 'Antavla', exact: true }).click();

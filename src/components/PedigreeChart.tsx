@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { AncestorNode, TreeData } from '../../lib/tree';
 import { t, displayName } from '../lib/i18n';
 import { fetchJson } from '../lib/api';
 import { flattenAncestors, graftAt, type AncestorSlot } from '../lib/ahnentafel';
 import {
-  layoutPedigree, PED_W, PED_H, HANDLE_R,
-  type PedigreeLayout, type PedigreeNode,
+  layoutPedigree, PED_W, PED_H, HANDLE_R, type PedigreeLink, type PedigreeNode,
 } from '../lib/pedigreeLayout';
 import { useChartViewport } from '../lib/useChartViewport';
+import { useChartTransitions } from '../lib/useChartTransitions';
 import { useFlagPreference } from '../lib/flagPreference';
 import PersonCard, { cardLabel } from './PersonCard';
 import ChartToolbar from './ChartToolbar';
@@ -15,11 +15,7 @@ import ChartToolbar from './ChartToolbar';
 /** Generations added by one ▸ click: the parents and their parents. */
 const EXPAND_BY = 2;
 
-/** Keep in step with the durations in index.css. */
-const GLIDE_MS = 340;
-const FADE_OUT_MS = 200;
-
-const EMPTY_LAYOUT: Pick<PedigreeLayout, 'nodes' | 'links'> = { nodes: [], links: [] };
+const linkKey = (link: PedigreeLink) => link.path;
 
 /** Is this slot somewhere above `host` in the chart — i.e. inside its branch? */
 function isAbove(slot: number, host: number): boolean {
@@ -66,40 +62,8 @@ export default function PedigreeChart({ data, generations, onSelect, selectedId 
   const [showFlags, setShowFlags] = useFlagPreference();
   const [activeKey, setActiveKey] = useState('a1');
 
-  // Unfolding re-flows the rows, so the chart is animated in three parts: cards
-  // that stay glide to their new places (a CSS transition on the group), new
-  // ones fade in, and folded-away ones linger for a moment as ghosts.
-  const previous = useRef<Pick<PedigreeLayout, 'nodes' | 'links'>>(EMPTY_LAYOUT);
-  const folding = useRef(false);
-  const [ghosts, setGhosts] = useState<Pick<PedigreeLayout, 'nodes' | 'links'>>(EMPTY_LAYOUT);
-  const [smoothPan, setSmoothPan] = useState(false);
-
-  const entering = useMemo(
-    () => new Set(layout.nodes.filter(n => !previous.current.nodes.some(p => p.key === n.key)).map(n => n.key)),
-    [layout],
-  );
-
-  useEffect(() => {
-    const before = previous.current;
-    previous.current = { nodes: layout.nodes, links: layout.links };
-    if (!folding.current) return;
-    folding.current = false;
-
-    const gone = {
-      nodes: before.nodes.filter(n => !layout.nodes.some(m => m.key === n.key)),
-      links: before.links.filter(l => !layout.links.some(m => m.path === l.path)),
-    };
-    if (!gone.nodes.length && !gone.links.length) return;
-    setGhosts(gone);
-    const timer = setTimeout(() => setGhosts(EMPTY_LAYOUT), FADE_OUT_MS);
-    return () => clearTimeout(timer);
-  }, [layout]);
-
-  useEffect(() => {
-    if (!smoothPan) return;
-    const timer = setTimeout(() => setSmoothPan(false), GLIDE_MS);
-    return () => clearTimeout(timer);
-  }, [smoothPan]);
+  const { entering, ghosts, hasGhosts, markFolding, smoothPan, panSmoothly, cancelPan } =
+    useChartTransitions(layout.nodes, layout.links, linkKey);
 
   // Only a genuinely different chart resets the keyboard position — expanding a
   // branch should leave you where you were.
@@ -119,28 +83,29 @@ export default function PedigreeChart({ data, generations, onSelect, selectedId 
   }, [holdView]);
 
   // Keep the zoom, but pan far enough that the branch you just opened is on
-  // screen — it can otherwise unfold past the right edge, out of sight.
+  // screen — it can otherwise unfold past the right edge, out of sight. The
+  // target is the nearest new column, so the card you clicked stays in view.
   useEffect(() => {
     if (justOpened == null) return;
     setJustOpened(null);
     const revealed = layout.nodes.filter(n => isAbove(n.ahnentafel, justOpened));
-    const outermost = revealed.reduce<PedigreeNode | undefined>(
-      (far, n) => (!far || n.x > far.x ? n : far), undefined,
+    const nearest = revealed.reduce<PedigreeNode | undefined>(
+      (near, n) => (!near || n.x < near.x ? n : near), undefined,
     );
-    if (!outermost) return;
-    setSmoothPan(true);
-    ensureVisible(outermost.x + PED_W / 2, outermost.y);
-  }, [justOpened, layout, ensureVisible]);
+    if (!nearest) return;
+    panSmoothly();
+    ensureVisible(nearest.x + PED_W / 2, nearest.y);
+  }, [justOpened, layout, ensureVisible, panSmoothly]);
 
   const collapse = useCallback((ahnentafel: number) => {
     holdView();
-    folding.current = true;
+    markFolding();
     setOpened(prev => {
       const next = new Map(prev);
       next.delete(ahnentafel);
       return next;
     });
-  }, [holdView]);
+  }, [holdView, markFolding]);
 
   function moveFocus(key: string | undefined) {
     if (!key) return;
@@ -189,14 +154,14 @@ export default function PedigreeChart({ data, generations, onSelect, selectedId 
           className="cursor-grab touch-none active:cursor-grabbing"
           {...viewport.svgProps}
           onPointerDown={e => {
-            setSmoothPan(false);          // dragging must not lag behind the pointer
+            cancelPan();                  // dragging must not lag behind the pointer
             viewport.svgProps.onPointerDown(e);
           }}
         >
           <g transform={viewport.transform} className={smoothPan ? 'chart-pan' : undefined}>
             {/* Cards and elbows folded away a moment ago, on their way out.
                 Mounted only while they exist, so the fade starts when they do. */}
-            {(ghosts.nodes.length > 0 || ghosts.links.length > 0) && (
+            {hasGhosts && (
             <g aria-hidden className="chart-node-leave">
               {ghosts.links.map(l => (
                 <path key={l.path} d={l.path} className="fill-none stroke-gray-300" strokeWidth={1.25} />

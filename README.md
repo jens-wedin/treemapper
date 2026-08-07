@@ -86,6 +86,14 @@ flags and keyboard model.
 Ancestors up, descendants down, 1–5 generations each way (d3-hierarchy does the
 layout maths only).
 
+- **Unfolding** works like the pedigree's, but in both directions: a **⌃** above
+  the topmost ancestors opens two more generations of parents, a **⌄** below the
+  outermost descendants opens two more of children, and each turns into the
+  opposite arrow to fold the branch away again. As in the pedigree it happens in
+  place — nothing else moves, the zoom is kept, and the same glide/fade
+  animations run. A ⌄ under a couple sits below their marriage bar, since that
+  is where their children hang from.
+
 - **Cards** carry the person's portrait on top — MyHeritage's primary photo when
   one is marked, otherwise the first downloaded one, with initials as fallback —
   then given name and surname on separate centred lines, then the years.

@@ -4,6 +4,10 @@
 
 ### Added
 
+**Familjevyn fälls ut åt båda hållen**
+- Samma utfällning som i antavlan, fast i två riktningar: **⌃** över de översta förfäderna öppnar två generationer föräldrar till, **⌄** under de yttersta ättlingarna öppnar två generationer barn, och båda vänder till motsatt pil för att fälla ihop grenen igen. Knapparna syns bara där släkten faktiskt fortsätter (`hasMoreAncestors` respektive `hasMoreDescendants` från API:et). En ⌄ under ett par hamnar under vigselstrecket, eftersom det är därifrån barnen hänger. Utfällningen sker på plats med samma glidning, intoning och mjuka panorering som antavlan — vyn panorerar till den *närmaste* nya generationen, inte den yttersta, så att den man klickade på stannar kvar i bild.
+- Familjeträdets kort numreras efter sin väg genom trädet, så en hämtad gren sätts in på sin plats utan att röra de andra grenarnas nycklar — det är det som gör att korten kan glida i stället för att ritas om.
+
 **Antavlan fälls ut gren för gren**
 - Kort vars föräldrar finns i databasen men ligger utanför tavlan får en **▸-knapp** som fäller ut två generationer till **på plats**: resten av tavlan står kvar och zoomen behålls, så man följer en enskild linje längre bak i stället för att fördubbla hela diagrammet. Knappen blir sedan ett **‹** som fäller ihop grenen igen — och tar med sig det som öppnats inuti den. Knappen syns bara där släkten faktiskt fortsätter, så den visar samtidigt var det finns mer att hämta. Utfällda grenar behåller sin anfarsnumrering och därmed sin grenfärg. Tavlan panorerar precis så mycket som behövs för att den nyöppnade grenen ska synas. Med tangentbord: högerpilen stannar vid knappen på väg mot föräldrarna, Enter fäller ut och ihop.
 - Mjuk animering när en gren fälls ut eller ihop: eftersom raderna räknas om glider korten som redan syns till sina nya platser, de nya tonas in, de hopfällda tonas ut, och tavlan panorerar mjukt om grenen annars hade öppnats utanför bild. Allt stängs av vid `prefers-reduced-motion`, och panoreringen slås av så fort man tar tag i tavlan så att dragning inte släpar efter.

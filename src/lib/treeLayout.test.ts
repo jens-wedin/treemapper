@@ -124,4 +124,88 @@ describe('layoutTree', () => {
     expect(r.bounds.maxY).toBeGreaterThan(0);
     expect(r.bounds.minX).toBeLessThan(r.bounds.maxX);
   });
+
+  it('ger inga knappar där ingen har flaggat att släkten fortsätter', () => {
+    expect(r.handles).toEqual([]);
+  });
+
+  describe('utfällningsknappar', () => {
+    const edges: TreeData = {
+      focus: P('F'),
+      ancestors: { person: P('F'), parents: [
+        { person: P('far'), parents: [], hasMoreAncestors: true },
+        { person: P('mor'), parents: [] },
+      ] },
+      descendants: D('F', { children: [
+        D('barn1', { hasMoreDescendants: true }),
+        D('barn2'),
+      ] }),
+    };
+    const e = layoutTree(edges);
+    const handleFor = (id: string) => e.handles.find(h => h.person.id === id);
+    const nodeFor = (id: string) => e.nodes.find(n => n.person.id === id)!;
+
+    it('sätter en knapp uppåt över förfäder och nedåt under ättlingar', () => {
+      expect(handleFor('far')).toMatchObject({ direction: 'up', action: 'expand' });
+      expect(handleFor('barn1')).toMatchObject({ direction: 'down', action: 'expand' });
+      expect(handleFor('mor')).toBeUndefined();       // ingen flagga, ingen knapp
+      expect(handleFor('barn2')).toBeUndefined();
+    });
+
+    it('lägger knappen ovanför respektive nedanför sitt kort', () => {
+      expect(handleFor('far')!.y).toBeLessThan(nodeFor('far').y);
+      expect(handleFor('far')!.x).toBe(nodeFor('far').x);
+      expect(handleFor('barn1')!.y).toBeGreaterThan(nodeFor('barn1').y);
+    });
+
+    it('pekar ut var i trädet en hämtad gren ska sättas in', () => {
+      expect(handleFor('far')!.path).toEqual([0]);        // första föräldern
+      expect(handleFor('barn1')!.path).toEqual([0]);      // första barnet
+    });
+
+    it('gör knappen till en anhalt på tangentbordsvägen', () => {
+      const far = nodeFor('far');
+      const barn1 = nodeFor('barn1');
+      expect(e.nav[far.key]?.up).toBe(handleFor('far')!.key);
+      expect(e.nav[handleFor('far')!.key]?.down).toBe(far.key);
+      expect(e.nav[barn1.key]?.down).toBe(handleFor('barn1')!.key);
+      expect(e.nav[handleFor('barn1')!.key]?.up).toBe(barn1.key);
+    });
+
+    it('byter till hopfällning för den gren som öppnats, och släpper vidare pilen', () => {
+      const opened: TreeData = {
+        ...edges,
+        ancestors: { person: P('F'), parents: [
+          { person: P('far'), parents: [{ person: P('farfar'), parents: [] }] },
+          { person: P('mor'), parents: [] },
+        ] },
+      };
+      const o = layoutTree(opened, new Set(['hup:afocus.0']));
+      const handle = o.handles.find(h => h.person.id === 'far')!;
+      const far = o.nodes.find(n => n.person.id === 'far')!;
+      const farfar = o.nodes.find(n => n.person.id === 'farfar')!;
+      expect(handle.action).toBe('collapse');
+      expect(handle.y).toBeLessThan(far.y);
+      expect(handle.y).toBeGreaterThan(farfar.y);
+      expect(o.nav[far.key]?.up).toBe(handle.key);
+      expect(o.nav[handle.key]?.up).toBe(farfar.key);
+    });
+
+    it('sätter knappen under vigselstrecket när personen har partner', () => {
+      const couple: TreeData = {
+        focus: P('F'),
+        ancestors: { person: P('F'), parents: [] },
+        descendants: D('F', { spouses: [P('make')], hasMoreDescendants: true }),
+      };
+      const c = layoutTree(couple);
+      const focusNode = c.nodes.find(n => n.person.id === 'F')!;
+      const spouse = c.nodes.find(n => n.person.id === 'make')!;
+      expect(c.handles[0]!.x).toBeCloseTo((focusNode.x + spouse.x) / 2, 5);
+    });
+
+    it('täcker knapparna med sina gränser', () => {
+      expect(e.bounds.minY).toBeLessThanOrEqual(Math.min(...e.handles.map(h => h.y)));
+      expect(e.bounds.maxY).toBeGreaterThanOrEqual(Math.max(...e.handles.map(h => h.y)));
+    });
+  });
 });

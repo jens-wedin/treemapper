@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { Button } from '@/components/ui/button';
 import type { TreeData } from '../../lib/tree';
 import { t, displayName, lifespan } from '../lib/i18n';
 import { fetchJson } from '../lib/api';
-import { layoutTree } from '../lib/treeLayout';
 import TreeChart from '../components/TreeChart';
 import TreeList from '../components/TreeList';
 import TreePersonPanel from '../components/TreePersonPanel';
@@ -66,8 +65,6 @@ export default function TreePage() {
     return () => { stale = true; };
   }, [id, upp, ned]);
 
-  const layout = useMemo(() => (data ? layoutTree(data) : null), [data]);
-
   function setParam(key: string, value: string) {
     const next = new URLSearchParams(params);
     next.set(key, value);
@@ -125,14 +122,14 @@ export default function TreePage() {
 
       {/* only the very first load has nothing to show; a reload keeps the chart */}
       {state === 'loading' && !data && <p className="mt-4 text-gray-600">{t('common.loading')}</p>}
-      {data && layout && (
+      {data && (
         view === 'list' ? (
           <TreeList ancestors={data.ancestors} descendants={data.descendants} depthQuery={depthQuery} />
         ) : (
           <div className="flex min-h-0 flex-1 gap-3">
             <div className="flex min-w-0 flex-1 flex-col">
               {view === 'family' && (
-                <TreeChart layout={layout} onSelect={setSelectedId} selectedId={selectedId} />
+                <TreeChart data={data} onSelect={setSelectedId} selectedId={selectedId} />
               )}
               {view === 'pedigree' && (
                 <PedigreeChart data={data} generations={upp} onSelect={setSelectedId} selectedId={selectedId} />

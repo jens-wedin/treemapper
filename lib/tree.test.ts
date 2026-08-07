@@ -54,6 +54,19 @@ describe('getTree', () => {
     expect(tree.ancestors.parents).toEqual([]);
   });
 
+  it('säger till när ättlingarna fortsätter bortom djupgränsen', () => {
+    // I1 har barnet I3, men vi frågar inte efter honom
+    const stopped = getTree(db, 'I1', 0, 0)!;
+    expect(stopped.descendants.hasMoreDescendants).toBe(true);
+
+    // I3 saknar egna barn
+    expect(getTree(db, 'I3', 0, 0)!.descendants.hasMoreDescendants).toBe(false);
+
+    // och när barnen ritas ut behövs ingen fortsättningsmarkering
+    const shown = getTree(db, 'I1', 0, 1)!;
+    expect(shown.descendants.hasMoreDescendants).toBeFalsy();
+  });
+
   it('säger till när släktlinjen fortsätter bortom djupgränsen', () => {
     // I3 har föräldrarna I1 och I2, men vi frågar inte efter dem
     const stopped = getTree(db, 'I3', 0, 0)!;

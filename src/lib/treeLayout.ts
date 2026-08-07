@@ -10,9 +10,20 @@ export const AVATAR_CX = NODE_W / 2;
 export const AVATAR_CY = 12 + AVATAR_R;
 const STEP_X = NODE_W + 22;
 const STEP_Y = NODE_H + 48;
+/** Gap between the two cards of a couple. */
+export const COUPLE_GAP = 14;
+const COUPLE_STEP = NODE_W + COUPLE_GAP;
 
-export interface PositionedNode { key: string; person: TreePerson; x: number; y: number; isFocus: boolean }
-export interface TreeEdge { x1: number; y1: number; x2: number; y2: number }
+export interface PositionedNode {
+  key: string;
+  person: TreePerson;
+  x: number;
+  y: number;
+  isFocus: boolean;
+  /** Partner card placed beside the person it belongs to. */
+  isSpouse?: boolean;
+}
+export interface TreeEdge { x1: number; y1: number; x2: number; y2: number; type?: 'parent' | 'marriage' }
 export interface NavMap { [key: string]: { up?: string; down?: string; left?: string; right?: string } }
 export interface TreeLayoutResult {
   nodes: PositionedNode[];
@@ -65,15 +76,41 @@ export function layoutTree(data: TreeData): TreeLayoutResult {
 
   // Descendants: rendered downward; depth 0 (focus) already emitted above.
   const desc = hierarchy<DescendantNode>(data.descendants, d => d.children);
-  tree<DescendantNode>().nodeSize([STEP_X, STEP_Y])(desc);
+  tree<DescendantNode>()
+    .nodeSize([STEP_X, STEP_Y])
+    // A person with partners occupies their own card plus one per partner, so
+    // neighbouring siblings have to stand that much further apart.
+    .separation((a, b) => (1 + (a.data.spouses?.length ?? 0)) + (a.parent === b.parent ? 0.12 : 0.5))(desc);
   const descKey = keyOf<DescendantNode>('d');
+  /**
+   * Where a child's line starts on the parent row: the marriage bar of the
+   * family the child actually belongs to, so children of a second marriage
+   * hang from that couple rather than the first one.
+   */
+  const familyAnchor = (parent: { x?: number; data: DescendantNode }, familyIndex: number) =>
+    parent.data.spouses?.length
+      ? parent.x! + COUPLE_STEP * (Math.min(familyIndex, parent.data.spouses.length - 1) + 0.5)
+      : parent.x!;
+
   desc.each(n => {
-    if (n.depth === 0) return;
     const y = n.depth * STEP_Y;
-    nodes.push({ key: descKey(n), person: n.data.person, x: n.x!, y, isFocus: false });
-    links.push({ x1: n.parent!.x!, y1: (n.depth - 1) * STEP_Y, x2: n.x!, y2: y });
-    setNav(n.parent!.depth === 0 ? 'focus' : descKey(n.parent!), 'down', descKey(n));
-    setNav(descKey(n), 'up', n.parent!.depth === 0 ? 'focus' : descKey(n.parent!));
+    const key = n.depth === 0 ? 'focus' : descKey(n);
+    if (n.depth > 0) {
+      nodes.push({ key, person: n.data.person, x: n.x!, y, isFocus: false });
+      links.push({ x1: familyAnchor(n.parent!, n.data.familyIndex ?? 0), y1: (n.depth - 1) * STEP_Y, x2: n.x!, y2: y });
+      setNav(n.parent!.depth === 0 ? 'focus' : descKey(n.parent!), 'down', key);
+      setNav(key, 'up', n.parent!.depth === 0 ? 'focus' : descKey(n.parent!));
+    }
+    (n.data.spouses ?? []).forEach((spouse, i) => {
+      const spouseKey = `p${key}.${i}`;
+      const x = n.x! + COUPLE_STEP * (i + 1);
+      nodes.push({ key: spouseKey, person: spouse, x, y, isSpouse: true, isFocus: false });
+      // marriage bar between the previous card and this one
+      links.push({ x1: n.x! + COUPLE_STEP * i, y1: y, x2: x, y2: y, type: 'marriage' });
+      // the partner shares the couple's children for keyboard navigation
+      const firstChild = n.children?.[0];
+      if (firstChild) setNav(spouseKey, 'down', descKey(firstChild));
+    });
   });
 
   // Left/right: adjacency within each generation row.

@@ -16,7 +16,18 @@ export interface TreePerson {
   country: string | null;
 }
 export interface AncestorNode { person: TreePerson; parents: AncestorNode[] }
-export interface DescendantNode { person: TreePerson; children: DescendantNode[] }
+export interface DescendantNode {
+  person: TreePerson;
+  /** Partners shown beside the person; their shared children hang below. */
+  spouses: TreePerson[];
+  children: DescendantNode[];
+  /**
+   * Which of the parent's families this person came from (index into the
+   * parent's `spouses`). Keeps children of a second marriage hanging from the
+   * right couple instead of the first one.
+   */
+  familyIndex: number;
+}
 export interface TreeData { focus: TreePerson; ancestors: AncestorNode; descendants: DescendantNode }
 
 // Raw persons.id qualifier — see the drizzle-rendering gotcha in lib/queries.ts.
@@ -102,13 +113,20 @@ function parentIdsOf(db: Db, id: string): string[] {
   return fams.flatMap(f => [f.husbandId, f.wifeId]).filter((x): x is string => !!x);
 }
 
-function childIdsOf(db: Db, id: string): string[] {
+/** Each family the person is a spouse in: the partner and that family's children. */
+function familiesOf(db: Db, id: string): { spouseId: string | null; childIds: string[] }[] {
   const fams = db.select().from(families)
     .where(or(eq(families.husbandId, id), eq(families.wifeId, id))).all()
     .sort((a, b) => a.id.localeCompare(b.id));
   if (!fams.length) return [];
   const links = db.select().from(familyChildren).where(inArray(familyChildren.familyId, fams.map(f => f.id))).all();
-  return fams.flatMap(f => links.filter(l => l.familyId === f.id).sort((a, b) => a.seq - b.seq).map(l => l.childId));
+  return fams.map(f => {
+    const spouseId = f.husbandId === id ? f.wifeId : f.husbandId;
+    return {
+      spouseId: spouseId && spouseId !== id ? spouseId : null,
+      childIds: links.filter(l => l.familyId === f.id).sort((a, b) => a.seq - b.seq).map(l => l.childId),
+    };
+  });
 }
 
 /**
@@ -131,14 +149,31 @@ export function getTree(db: Db, id: string, up = 3, down = 3): TreeData | null {
         .map(p => ancestors(p, depth - 1, new Set([...pathIds, person.id]))),
     };
   };
-  const descendants = (person: TreePerson, depth: number, pathIds: Set<string>): DescendantNode => {
-    if (depth <= 0) return { person, children: [] };
-    const ids = childIdsOf(db, person.id).filter(c => !pathIds.has(c));
-    const byId = fetchPersons(db, ids);
+  const descendants = (person: TreePerson, depth: number, pathIds: Set<string>, familyIndex = 0): DescendantNode => {
+    // Partners are shown beside a person we are expanding — at the deepest
+    // generation we stop, otherwise the chart doubles in width for no gain.
+    if (depth <= 0) return { person, spouses: [], children: [], familyIndex };
+
+    const fams = familiesOf(db, person.id);
+    const childIds = fams.flatMap(f => f.childIds).filter(c => !pathIds.has(c));
+    const spouseIds = fams.map(f => f.spouseId).filter((s): s is string => !!s);
+    const byId = fetchPersons(db, [...childIds, ...spouseIds]);
+    const nextPath = new Set([...pathIds, person.id]);
+
+    const children: DescendantNode[] = [];
+    fams.forEach((fam, i) => {
+      for (const cid of fam.childIds) {
+        const child = pathIds.has(cid) ? undefined : byId.get(cid);
+        if (child) children.push(descendants(child, depth - 1, nextPath, i));
+      }
+    });
+
     return {
       person,
-      children: ids.map(cid => byId.get(cid)).filter((c): c is TreePerson => !!c)
-        .map(c => descendants(c, depth - 1, new Set([...pathIds, person.id]))),
+      spouses: fams.map(f => (f.spouseId ? byId.get(f.spouseId) : undefined))
+        .filter((s): s is TreePerson => !!s),
+      children,
+      familyIndex,
     };
   };
 

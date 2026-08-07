@@ -37,6 +37,12 @@ function DescendantList({ node, depthQuery }: { node: DescendantNode; depthQuery
       {node.children.map((c, i) => (
         <li key={i}>
           <PersonLine person={c.person} depthQuery={depthQuery} />
+          {c.spouses.map(s => (
+            <span key={s.id}>
+              {' '}<span className="text-sm text-gray-500">{t('tree.with')}</span>{' '}
+              <PersonLine person={s} depthQuery={depthQuery} />
+            </span>
+          ))}
           <DescendantList node={c} depthQuery={depthQuery} />
         </li>
       ))}

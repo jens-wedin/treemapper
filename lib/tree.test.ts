@@ -35,6 +35,20 @@ describe('getTree', () => {
     expect(i1.descendants.children.map(c => c.person.id)).toEqual(['I3']);
   });
 
+  it('tar med partner till personer vars ättlingar visas', () => {
+    // I1 + I2 är gifta i F1 med barnet I3
+    const tree = getTree(db, 'I1', 0, 2)!;
+    expect(tree.descendants.spouses.map(s => s.id)).toEqual(['I2']);
+    expect(tree.descendants.children.map(c => c.person.id)).toEqual(['I3']);
+    // I3 saknar egen familj → ingen partner
+    expect(tree.descendants.children[0]!.spouses).toEqual([]);
+  });
+
+  it('visar inte partner på den understa generationen', () => {
+    const shallow = getTree(db, 'I1', 0, 0)!;
+    expect(shallow.descendants.spouses).toEqual([]);
+  });
+
   it('respects depth limits', () => {
     const tree = getTree(db, 'I3', 0, 0)!;
     expect(tree.ancestors.parents).toEqual([]);

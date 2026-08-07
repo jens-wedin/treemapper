@@ -237,8 +237,12 @@ export default function TreeChart({ layout, depthQuery }: { layout: TreeLayoutRe
               <path
                 key={i}
                 aria-hidden
-                d={`M ${l.x1} ${l.y1} C ${l.x1} ${(l.y1 + l.y2) / 2}, ${l.x2} ${(l.y1 + l.y2) / 2}, ${l.x2} ${l.y2}`}
-                className="fill-none stroke-gray-300"
+                d={l.type === 'marriage'
+                  // straight bar joining the two cards of a couple
+                  ? `M ${l.x1} ${l.y1} L ${l.x2} ${l.y2}`
+                  : `M ${l.x1} ${l.y1} C ${l.x1} ${(l.y1 + l.y2) / 2}, ${l.x2} ${(l.y1 + l.y2) / 2}, ${l.x2} ${l.y2}`}
+                className={l.type === 'marriage' ? 'fill-none stroke-gray-400' : 'fill-none stroke-gray-300'}
+                strokeWidth={l.type === 'marriage' ? 1.5 : 1}
               />
             ))}
             {layout.nodes.map(n => (

@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+- Personpanel i trädet: klick (eller Enter) på ett kort öppnar en panel med porträtt, datum, familj och händelser. Att fokusera om trädet är nu en egen knapp i panelen i stället för något som händer vid varje klick, och släktingarna i panelen går att klicka på för att läsa vidare utan att diagrammet flyttar sig. Escape stänger.
 - Partner visas i trädet: personer vars ättlingar ritas ut får sin make/maka bredvid sig med ett vigselstreck emellan, och barnen hänger från strecket i stället för från ena föräldern. Barn från ett andra äktenskap hänger från rätt par. Partnerkorten nås med tangentbordet och finns med i listvyn.
 
 ### Changed
@@ -15,6 +16,7 @@
 - Sidbredden följer innehållet: träddiagrammet tar hela fönstret (fäst vid fönsterhöjden, ingen sidscroll), tabellsidor (personer, källor, konsekvens) fick bredare yta för sina kolumner, och löptext behåller läsbar radlängd. Trädets verktygsrad kortades från tre rader till två.
 
 ### Fixed
+- GEDCOM-flaggan `Y` (som i `1 DEAT Y`, "händelsen har inträffat") visas inte längre som beskrivningstext på personsidan eller i trädpanelen. Värdet finns kvar i databasen så att exporten förblir förlustfri.
 - Trädets zoom är nu absolut: 100 % betyder kort i verklig storlek oavsett hur brett trädet är (tidigare skalades hela trädet in i vyn först, så breda generationer gick inte att zooma till läsbar storlek). Zoomområde 4–300 %, vyn anpassas till trädet vid inladdning, +/- utgår från fokuspersonen och piltangentsnavigering panorerar så att det aktiva kortet syns.
 
 ### Added

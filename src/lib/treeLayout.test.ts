@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { layoutTree } from './treeLayout';
+import { layoutTree, NODE_W } from './treeLayout';
 import { branchOf, flattenAncestors } from './ahnentafel';
 import type { DescendantNode, TreeData, TreePerson } from '../../lib/tree';
 
@@ -92,6 +92,58 @@ describe('layoutTree', () => {
 
     // partnern kan nås med tangentbordet och leder ned till barnet
     expect(r2.nav[spouseNode.key]?.down).toBe(child.key);
+  });
+
+  /**
+   * Partner cards sit to the right of the person, so the gap to the next
+   * sibling has to cover them. d3 calls separation(a, b) with the current node
+   * and its *previous* sibling in one place and the other way round in
+   * another, so a rule that reads only `a` reserved the space on the wrong
+   * side — and a partner card landed 121 px inside the next sibling.
+   */
+  describe('kort krockar inte', () => {
+    const rowOverlap = (children: DescendantNode[]) => {
+      const r2 = layoutTree({
+        focus: P('F'), ancestors: { person: P('F'), parents: [] }, descendants: D('F', { children }),
+      });
+      const row = r2.nodes.filter(n => n.y > 0).sort((a, b) => a.x - b.x);
+      let worst = 0;
+      for (let i = 0; i + 1 < row.length; i++) {
+        worst = Math.min(worst, (row[i + 1]!.x - NODE_W / 2) - (row[i]!.x + NODE_W / 2));
+      }
+      return worst;
+    };
+
+    it('lämnar plats för partnern oavsett vilket syskon som har den', () => {
+      expect(rowOverlap([D('a', { spouses: [P('make') ] }), D('b')])).toBeGreaterThanOrEqual(0);
+      expect(rowOverlap([D('a'), D('b', { spouses: [P('make')] })])).toBeGreaterThanOrEqual(0);
+    });
+
+    it('lämnar plats även för flera partner och flera syskon', () => {
+      expect(rowOverlap([
+        D('a', { spouses: [P('m1'), P('m2')] }),
+        D('b', { spouses: [P('m3')] }),
+        D('c'),
+        D('d', { spouses: [P('m4')] }),
+      ])).toBeGreaterThanOrEqual(0);
+    });
+
+    it('lämnar plats för kusiner i olika familjer', () => {
+      // syskonen ligger i skilda undergrenar — d3 jämför då konturer, inte syskon
+      const r2 = layoutTree({
+        focus: P('F'),
+        ancestors: { person: P('F'), parents: [] },
+        descendants: D('F', { children: [
+          D('gren1', { children: [D('x', { spouses: [P('mx')] })] }),
+          D('gren2', { children: [D('y')] }),
+        ] }),
+      });
+      const deepest = Math.max(...r2.nodes.map(n => n.y));
+      const row = r2.nodes.filter(n => n.y === deepest).sort((a, b) => a.x - b.x);
+      for (let i = 0; i + 1 < row.length; i++) {
+        expect((row[i + 1]!.x - NODE_W / 2) - (row[i]!.x + NODE_W / 2)).toBeGreaterThanOrEqual(0);
+      }
+    });
   });
 
   it('hänger barn från rätt äktenskap när personen har flera partner', () => {

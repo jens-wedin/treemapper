@@ -165,9 +165,22 @@ export function layoutTree(data: TreeData, expanded: ReadonlySet<string> = new S
   const desc = hierarchy<DescendantNode>(data.descendants, d => d.children);
   tree<DescendantNode>()
     .nodeSize([STEP_X, STEP_Y])
-    // A person with partners occupies their own card plus one per partner, so
-    // neighbouring siblings have to stand that much further apart.
-    .separation((a, b) => (1 + (a.data.spouses?.length ?? 0)) + (a.parent === b.parent ? 0.12 : 0.5))(desc);
+    /**
+     * A person with partners occupies their own card plus one per partner, so
+     * neighbours have to stand that much further apart.
+     *
+     * The width is taken from whichever of the two is wider, because the
+     * partners sit to the *right* of their person and only the left-hand node
+     * needs the extra room — and d3 does not say which argument that is. It
+     * passes (node, previous sibling) when placing siblings and (left, right)
+     * when comparing subtree contours. Reading one side alone reserved the
+     * space on the wrong side half the time, and partner cards ended up 121 px
+     * inside the next sibling.
+     */
+    .separation((a, b) => {
+      const widest = Math.max(a.data.spouses?.length ?? 0, b.data.spouses?.length ?? 0);
+      return 1 + widest + (a.parent === b.parent ? 0.12 : 0.5);
+    })(desc);
   const descKey = keyOf<DescendantNode>('d');
   /**
    * Where a child's line starts on the parent row: the marriage bar of the

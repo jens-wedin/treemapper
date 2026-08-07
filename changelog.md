@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Added
+- Partner visas i trädet: personer vars ättlingar ritas ut får sin make/maka bredvid sig med ett vigselstreck emellan, och barnen hänger från strecket i stället för från ena föräldern. Barn från ett andra äktenskap hänger från rätt par. Partnerkorten nås med tangentbordet och finns med i listvyn.
+
 ### Changed
 - Smalare kort i trädet (150×106 i stället för 210×66): porträttet ligger överst och centrerat, förnamn och efternamn på var sin centrerad rad, årtalen under. Fler personer får plats i bredd och färre namn behöver kortas.
 

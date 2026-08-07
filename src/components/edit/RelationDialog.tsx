@@ -4,10 +4,11 @@ import { Input } from '@/components/ui/input';
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
-import type { FamilyView, PersonFull, PersonListItem } from '../../../lib/queries';
+import type { FamilyView, PersonFull } from '../../../lib/queries';
 import { relationSchema } from '../../../lib/schemas';
-import { t, displayName, lifespan } from '../../lib/i18n';
-import { fetchJson, mutateJson } from '../../lib/api';
+import { t, displayName } from '../../lib/i18n';
+import { mutateJson } from '../../lib/api';
+import PersonSearch from '../PersonSearch';
 
 type RelationType = 'child' | 'spouse' | 'parent';
 const LABEL: Record<RelationType, string> = {
@@ -22,8 +23,6 @@ export default function RelationDialog({ type, person, families, onSaved }: {
 }) {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<'existing' | 'new'>('existing');
-  const [query, setQuery] = useState('');
-  const [hits, setHits] = useState<PersonListItem[] | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
   const [newPerson, setNewPerson] = useState({ givenName: '', surname: '', sex: 'U' as 'M' | 'F' | 'U' });
   const [familyId, setFamilyId] = useState<string>(families[0]?.familyId ?? '');
@@ -32,17 +31,6 @@ export default function RelationDialog({ type, person, families, onSaved }: {
 
   // Only 'child' is ambiguous when the person has several families.
   const needsFamilyChoice = type === 'child' && families.length > 1;
-
-  async function search(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    try {
-      const res = await fetchJson<{ items: PersonListItem[] }>(`/api/persons?q=${encodeURIComponent(query)}&limit=10`);
-      setHits(res.items);
-    } catch {
-      setError(t('common.error'));
-    }
-  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -62,8 +50,6 @@ export default function RelationDialog({ type, person, families, onSaved }: {
     try {
       await mutateJson('/api/relations', 'POST', parsed.data);
       setOpen(false);
-      setQuery('');
-      setHits(null);
       setPicked(null);
       setNewPerson({ givenName: '', surname: '', sex: 'U' });
       onSaved();
@@ -105,29 +91,12 @@ export default function RelationDialog({ type, person, families, onSaved }: {
 
         {mode === 'existing' ? (
           <div className="mt-4">
-            <label htmlFor={`rel-sok-${type}`} className="block text-sm font-medium">{t('search.name')}</label>
-            <div className="mt-1 flex gap-2">
-              <Input id={`rel-sok-${type}`} value={query} onChange={e => setQuery(e.target.value)} />
-              <Button type="button" variant="outline" onClick={search}>{t('search.button')}</Button>
-            </div>
-            {hits && (
-              <ul className="mt-3 max-h-48 space-y-1 overflow-y-auto">
-                {hits.length === 0 && <li className="text-gray-500">{t('edit.noHits')}</li>}
-                {hits.map(h => (
-                  <li key={h.id}>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name={`rel-pick-${type}`}
-                        checked={picked === h.id}
-                        onChange={() => setPicked(h.id)}
-                      />
-                      {displayName(h)} <span className="text-sm text-gray-500">{lifespan(h.birthYear, h.deathYear)}</span>
-                    </label>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <PersonSearch
+              id={`rel-sok-${type}`}
+              label={t('search.name')}
+              picked={picked}
+              onPick={h => setPicked(h.id)}
+            />
           </div>
         ) : (
           <div className="mt-4 flex flex-wrap gap-3">

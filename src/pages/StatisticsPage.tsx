@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
+import { Button } from '@/components/ui/button';
 import type { StatisticsData } from '../../lib/statistics';
 import { t, displayName } from '../lib/i18n';
 import { fetchJson } from '../lib/api';
+import PersonSearch from '../components/PersonSearch';
 
 export default function StatisticsPage() {
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const person = params.get('person');
   const [data, setData] = useState<StatisticsData | null>(null);
   const [state, setState] = useState<'loading' | 'ok' | 'error'>('loading');
@@ -31,6 +33,20 @@ export default function StatisticsPage() {
           ? t('statistics.scopedTo').replace('{name}', displayName(data.scope.person))
           : t('statistics.lead')}
       </p>
+      <div className="mt-6 max-w-md">
+        <PersonSearch
+          id="stat-person"
+          label={t('statistics.pickPerson')}
+          picked={person}
+          onPick={p => setParams({ person: p.id })}
+        />
+        {person && (
+          <Button variant="outline" className="mt-3" onClick={() => setParams({})}>
+            {t('statistics.showEveryone')}
+          </Button>
+        )}
+      </div>
+
       {state === 'loading' && !data && <p className="mt-4">{t('common.loading')}</p>}
       {data && (
         <div className="mt-8 space-y-12">

@@ -42,6 +42,26 @@ its event labels, month names and qualifiers.
   timeline with citations, notes
 - `/trad/:id` — the interactive family tree (see below)
 
+### Line breaks in imported text
+
+GEDCOM has two continuation tags: `CONT` starts a new line, `CONC` joins with no
+separator and exists only so a long value can be split across lines. MyHeritage
+never writes `CONT` — all 10 190 continuations in our export are `CONC`,
+including the ones that mean "new line". Read literally, that turns a citation
+into `Sven-Erik WedinKön: ManHemvist: Sundsvall`.
+
+A writer only has to continue a line once it is full, so `lib/gedcom/parser.ts`
+treats a `CONC` after a line that never reached the limit as the line break it
+was meant to be, and joins the rest silently. **The limit is counted in bytes**
+— "ö" costs two, so a full line can be 196 characters, and measuring characters
+put breaks in the middle of words.
+
+`npm run repair-conc` applied this to the existing database without re-importing
+(which would have discarded hand-made edits): it re-imports to a scratch copy
+and only rewrites a field when the *sole* difference is where line breaks fall,
+skipping anything named in `audit_log`. Add `--apply` to write; it backs the
+database up first.
+
 ### Notes from the import
 
 MyHeritage stores notes as HTML, and most of it is escaped — often twice over.

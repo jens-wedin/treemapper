@@ -23,14 +23,55 @@ describe('parseGedcom', () => {
     expect(indi.children[1].children[0].value).toBe('15 APR 1942');
   });
 
-  it('folds CONC (no separator) and CONT (newline) into the parent value', () => {
+  it('folds a CONC that continues a full line straight on, and CONT as a newline', () => {
+    const full = 'x'.repeat(200);                 // the writer's line limit
     const text = [
-      '0 @N1@ NOTE Det var en',
+      `0 @N1@ NOTE ${full}`,
       '1 CONC  lång text',
       '1 CONT Ny rad',
     ].join('\n');
     const [note] = parseGedcom(text);
-    expect(note.value).toBe('Det var en lång text\nNy rad');
+    expect(note.value).toBe(`${full} lång text\nNy rad`);
+  });
+
+  /**
+   * MyHeritage never emits CONT — in the real export all 10 190 continuations
+   * are CONC, including the ones that mean "new line". A CONC after a line
+   * that never reached the limit could not have been a length split, so it is
+   * read as the line break it was meant to be. Without this, citation texts
+   * arrive as "Sven-Erik WedinKön: ManHemvist: Sundsvall".
+   */
+  it('reads a CONC that continues a short line as a line break', () => {
+    const text = [
+      '0 @S1@ SOUR',
+      '1 DATA',
+      '2 TEXT Sven-Erik Wedin',
+      '3 CONC Kön: Man',
+      '3 CONC Hemvist: Sundsvall, Sverige',
+    ].join('\n');
+    const [sour] = parseGedcom(text);
+    expect(sour.children[0]!.children[0]!.value)
+      .toBe('Sven-Erik Wedin\nKön: Man\nHemvist: Sundsvall, Sverige');
+  });
+
+  it('measures the line limit in bytes, not characters', () => {
+    // MyHeritage fills a line to 200 bytes; "ö" costs two, so a full line can
+    // be 196 characters long. Counting characters made it look short, and a
+    // break got inserted in the middle of a word — right inside "&lt;br&gt;".
+    const full = `${'x'.repeat(192)}öööö`;          // 196 characters, 200 bytes
+    expect(full.length).toBe(196);
+    expect(new TextEncoder().encode(full).length).toBe(200);
+    const text = [`0 @N1@ NOTE ${full}`, '1 CONC rest'].join('\n');
+    expect(parseGedcom(text)[0]!.value).toBe(`${full}rest`);
+  });
+
+  it('keeps a value that was split purely for length in one piece', () => {
+    // three full lines then a short tail: one long run-on sentence, no breaks
+    const a = 'a'.repeat(200), b = 'b'.repeat(200), c = 'c'.repeat(200);
+    const text = [`0 @N1@ NOTE ${a}`, `1 CONC ${b}`, `1 CONC ${c}`, '1 CONC slut'].join('\n');
+    const [note] = parseGedcom(text);
+    expect(note.value).toBe(`${a}${b}${c}slut`);
+    expect(note.value).not.toContain('\n');
   });
 
   it('strips BOM and skips blank lines', () => {

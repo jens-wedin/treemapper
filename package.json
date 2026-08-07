@@ -13,7 +13,8 @@
     "import": "tsx scripts/import.ts",
     "media": "tsx scripts/download-media.ts",
     "refresh-media": "tsx scripts/refresh-media-urls.ts",
-    "export": "tsx scripts/export.ts"
+    "export": "tsx scripts/export.ts",
+    "repair-conc": "tsx scripts/repair-conc.ts"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.0",

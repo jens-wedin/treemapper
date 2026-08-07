@@ -4,7 +4,8 @@ import type { Db } from '../db/client';
 import { getTree } from '../lib/tree';
 
 const querySchema = z.object({
-  up: z.coerce.number().int().min(0).max(5).default(3),
+  // Ancestors go deeper than descendants: the fan chart wants 6–8 generations.
+  up: z.coerce.number().int().min(0).max(8).default(3),
   down: z.coerce.number().int().min(0).max(5).default(3),
 });
 

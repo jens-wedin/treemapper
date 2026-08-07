@@ -29,7 +29,12 @@ describe('GET /api/tree/:id', () => {
   });
 
   it('validates and 404s', async () => {
-    expect((await api.request('/api/tree/I3?up=9')).status).toBe(400);
+    expect((await api.request('/api/tree/I3?up=9')).status).toBe(400);   // förfäder max 8
+    expect((await api.request('/api/tree/I3?down=6')).status).toBe(400); // ättlingar max 5
     expect((await api.request('/api/tree/I999')).status).toBe(404);
+  });
+
+  it('tillåter djupa förfäder för solfjädern', async () => {
+    expect((await api.request('/api/tree/I3?up=8&down=0')).status).toBe(200);
   });
 });

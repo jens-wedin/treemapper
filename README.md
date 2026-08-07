@@ -162,6 +162,39 @@ layout maths only).
   Enter opens the panel. The "Lista" view is a fully equivalent path for screen
   readers.
 
+## Statistik
+
+`/statistik` tells the family's story in numbers rather than reporting on data
+quality — completeness and errors belong to Konsekvensbänken.
+
+Four sections: **lives and lifespans** (sex split, longest lives, average
+lifespan and births by century), **names** (most common given names by sex and
+surnames), **families** (largest families, children per family, age at marriage,
+spouse age gaps) and **places and work** (birth places, countries, migration,
+occupations).
+
+**Scope.** The whole tree by default; `?person=I500001` narrows every section to
+that person's **own ancestors and own descendants** — 251 people for Sven-Erik,
+492 for Erik Anders. Deliberately not "everyone related", which spreads through
+cousins and in-laws to 4 070 of 4 561 people and would make the scoped view
+indistinguishable from the unscoped one. The walk is breadth-first in JS over
+the preloaded links; the recursive-CTE version took 4.5 s against 0 ms.
+
+**Honesty rules.** Every figure states the population it rests on, because null
+years are everywhere. Two guards keep data errors out of the story: lifespans
+ignore ages over 110 (three people, topping out at 118) and spouse age gaps
+ignore differences over 50 years (two couples, at 61 and 111). Both are things
+Konsekvensbänken already flags.
+
+**Approximate by design.** Birth places group on the first comma-separated part,
+so "Alnö, Västernorrland, Sundsvall, Sverige" counts with a bare "Alnö". Across
+1 795 distinct strings no rule is clean — the same rule also reduces a farm name
+to itself and a county to a county — so the heading says "birth places", not
+"parishes".
+
+**Accessibility.** Every chart also renders its numbers as a table, the way the
+tree has its list view.
+
 ## Källor och export
 
 `/kallor` lists all 520 sources with how many citations each carries; a source

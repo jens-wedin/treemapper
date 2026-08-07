@@ -4,6 +4,13 @@
 
 ### Added
 
+**Statistik**
+- Ny sida `/statistik` som berättar släktens historia i siffror: liv och livslängd, namn, familjer samt orter och arbete. Hela trädet som standard, eller en persons **egna förfäder och ättlingar** via `?person=` (251 personer för Sven-Erik mot 4 070 om man räknat alla släktband — då hade den avgränsade vyn varit likadan som den oavgränsade). Avgränsningen är en bredden-först-vandring i JS: 8 ms att läsa in släktbanden, 0 ms att gå igenom dem, mot 4,5 sekunder för samma fråga som rekursiv CTE.
+- Varje siffra anger vad den vilar på, eftersom tomma årtal finns överallt. Två spärrar håller datafel utanför berättelsen: livslängder över 110 år (tre personer, som mest 118) och åldersskillnader mellan makar över 50 år (två par, 61 och 111) räknas bort — sådant flaggar Konsekvensbänken redan.
+- Födelseorter grupperas på ortsnamnets första led, så "Alnö, Västernorrland, Sundsvall, Sverige" hamnar tillsammans med bara "Alnö". Bland 1 795 olika ortssträngar finns ingen ren regel, så rubriken lovar "födelseorter" och inte "socknar".
+- Varje diagram visar samma siffror som tabell, precis som trädet har sin listvy.
+- Personsökningen som låg inbakad i relationsdialogen är nu en delad komponent som både dialogen och statistiksidan använder.
+
 **Tema**
 - shadcn-temat `radix-luma` med basfärgen `olive` (preset `b2bkjK7NVw`) applicerat: nya färgtokens för ljust och mörkt läge, Roboto Slab som brödtext och Public Sans för rubriker, samt handpekare på knappar. Diagrammens egna färger står utanför temat — grenfärgerna och den grå bottnen är avsiktligt fasta värden, så träden ser likadana ut som förut.
 

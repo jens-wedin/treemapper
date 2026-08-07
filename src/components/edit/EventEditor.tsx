@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import type { CitationView, EventView } from '../../../lib/queries';
-import { t, eventLabel, eventDescription } from '../../lib/i18n';
+import { t, eventLabel, eventDescription, formatGedcomDate } from '../../lib/i18n';
 import { mutateJson } from '../../lib/api';
 import EventForm from './EventForm';
 
@@ -49,7 +49,7 @@ export default function EventEditor({ events, ownerId, citations: Citations, onC
               <>
                 <div className="font-medium">
                   {eventLabel(e.type)}
-                  {e.dateRaw && <span className="ml-2 font-normal text-gray-600">{e.dateRaw}</span>}
+                  {e.dateRaw && <span className="ml-2 font-normal text-gray-600">{formatGedcomDate(e.dateRaw)}</span>}
                   {e.age && <span className="ml-2 text-sm font-normal text-gray-500">({t('person.age')} {e.age})</span>}
                   <span className="ml-3 inline-flex gap-1 align-middle">
                     <Button variant="outline" size="sm" onClick={() => setEditingId(e.id)}>

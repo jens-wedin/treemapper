@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { PersonFull, FamilyMember } from '../../lib/queries';
-import { t, eventLabel, eventDescription, lifespan, displayName } from '../lib/i18n';
+import { t, eventLabel, eventDescription, formatGedcomDate, lifespan, displayName } from '../lib/i18n';
 import { fetchJson } from '../lib/api';
 
 function MemberLinks({ people, onSelect }: { people: FamilyMember[]; onSelect: (id: string) => void }) {
@@ -117,13 +117,13 @@ export default function TreePersonPanel({ personId, onClose, onFocusTree, onSele
             {birth && (
               <div>
                 <dt className="inline font-medium">{t('person.born')}: </dt>
-                <dd className="inline">{[birth.dateRaw, birth.place].filter(Boolean).join(', ') || '–'}</dd>
+                <dd className="inline">{[formatGedcomDate(birth.dateRaw), birth.place].filter(Boolean).join(', ') || '–'}</dd>
               </div>
             )}
             {death && (
               <div>
                 <dt className="inline font-medium">{t('person.died')}: </dt>
-                <dd className="inline">{[death.dateRaw, death.place].filter(Boolean).join(', ') || '–'}</dd>
+                <dd className="inline">{[formatGedcomDate(death.dateRaw), death.place].filter(Boolean).join(', ') || '–'}</dd>
               </div>
             )}
           </dl>
@@ -163,7 +163,7 @@ export default function TreePersonPanel({ personId, onClose, onFocusTree, onSele
                 {data.events.map(e => (
                   <li key={e.id}>
                     <span className="font-medium">{eventLabel(e.type)}</span>
-                    {e.dateRaw && <span className="ml-2 text-gray-600">{e.dateRaw}</span>}
+                    {e.dateRaw && <span className="ml-2 text-gray-600">{formatGedcomDate(e.dateRaw)}</span>}
                     {(e.place || eventDescription(e.description)) && (
                       <div className="text-gray-600">
                         {[eventDescription(e.description), e.place].filter(Boolean).join(' — ')}

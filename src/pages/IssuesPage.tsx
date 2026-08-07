@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import type { Severity } from '../../lib/issues';
-import { t } from '../lib/i18n';
+import { t, getLanguage } from '../lib/i18n';
 import { fetchJson } from '../lib/api';
 import IssueCard, { type IssueListItem } from '../components/issues/IssueCard';
 
@@ -56,6 +56,11 @@ export default function IssuesPage() {
     <section>
       <h1 className="text-2xl font-bold">{t('issues.title')}</h1>
       <p className="mt-1 text-gray-600">{t('issues.lead')}</p>
+      {/* Category names and problem sentences are produced by the detectors in
+          Swedish; say so rather than showing a half-translated page. */}
+      {getLanguage() !== 'sv' && (
+        <p className="mt-1 text-sm text-gray-500">{t('issues.detailsInSwedish')}</p>
+      )}
 
       {data && (
         <p className="mt-4 rounded-lg border bg-gray-50 p-4 text-lg">

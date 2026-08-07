@@ -1,5 +1,6 @@
+import { useEffect } from 'react';
 import { NavLink, Route, Routes, useLocation } from 'react-router';
-import { t } from './lib/i18n';
+import { t, useLanguage, setLanguage, LANGUAGES, type Lang } from './lib/i18n';
 import Hem from './pages/Hem';
 import PersonList from './pages/PersonList';
 import PersonPage from './pages/PersonPage';
@@ -23,6 +24,12 @@ export default function App() {
   const { pathname } = useLocation();
   const container = containerClass(pathname);
   const isTree = pathname.startsWith('/trad');
+  // Subscribing here re-renders the whole app when the language changes.
+  const lang = useLanguage();
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
 
   return (
     // The chart page is pinned to the viewport so the SVG can fill it; every
@@ -36,7 +43,7 @@ export default function App() {
       </a>
       <header className="border-b">
         <nav aria-label={t('appTitle')} className={`${container} flex items-center gap-6 py-3`}>
-          <span className="font-semibold">{t('appTitle')}</span>
+          <span className="shrink-0 whitespace-nowrap font-semibold">{t('appTitle')}</span>
           {(
             [
               ['/', t('nav.home')],
@@ -58,6 +65,19 @@ export default function App() {
               {label}
             </NavLink>
           ))}
+          <label className="ml-auto flex items-center gap-2 text-sm">
+            <span className="sr-only">{t('language')}</span>
+            <select
+              aria-label={t('language')}
+              value={lang}
+              onChange={e => setLanguage(e.target.value as Lang)}
+              className="rounded-md border px-2 py-1"
+            >
+              {LANGUAGES.map(l => (
+                <option key={l.code} value={l.code}>{l.label}</option>
+              ))}
+            </select>
+          </label>
         </nav>
       </header>
       <main

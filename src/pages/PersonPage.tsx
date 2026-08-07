@@ -99,7 +99,11 @@ export default function PersonPage() {
         <p className="mt-1 text-gray-600">
           {lifespan(birth?.dateYear ?? null, death?.dateYear ?? null)}
           {birth?.place && <> · {birth.place}</>}
-          {person.sex !== 'U' && <Badge variant="outline" className="ml-2">{person.sex === 'M' ? 'Man' : 'Kvinna'}</Badge>}
+          {person.sex !== 'U' && (
+            <Badge variant="outline" className="ml-2">
+              {t(person.sex === 'M' ? 'edit.sexM' : 'edit.sexF')}
+            </Badge>
+          )}
         </p>
         <p className="mt-2 flex items-center gap-3">
           <Link to={`/trad/${person.id}`} className="text-blue-700 underline-offset-2 hover:underline">

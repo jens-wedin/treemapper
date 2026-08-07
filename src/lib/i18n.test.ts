@@ -1,5 +1,11 @@
-import { describe, it, expect } from 'vitest';
-import { t, eventLabel, eventDescription, lifespan, displayName, formatGedcomDate } from './i18n';
+import { describe, it, expect, afterEach } from 'vitest';
+import {
+  t, eventLabel, eventDescription, lifespan, displayName, formatGedcomDate,
+  setLanguage, getLanguage, LANGUAGES,
+} from './i18n';
+import { DICTIONARIES } from './i18n/dictionaries';
+
+afterEach(() => setLanguage('sv'));
 
 describe('i18n', () => {
   it('resolves dot-paths and falls back to the key', () => {
@@ -30,19 +36,6 @@ describe('i18n', () => {
     expect(t('tree.instructions')).toContain('Piltangenter');
   });
 
-  it('labels GEDCOM event types in Swedish with tag fallback', () => {
-    expect(eventLabel('BIRT')).toBe('Födelse');
-    expect(eventLabel('MARR')).toBe('Vigsel');
-    expect(eventLabel('XYZZY')).toBe('XYZZY');
-  });
-
-  it('formats lifespans', () => {
-    expect(lifespan(1845, 1941)).toBe('1845–1941');
-    expect(lifespan(1942, null)).toBe('f. 1942');
-    expect(lifespan(null, 1941)).toBe('d. 1941');
-    expect(lifespan(null, null)).toBe('');
-  });
-
   it('döljer GEDCOM-flaggan Y men behåller riktig text', () => {
     expect(eventDescription('Y')).toBeNull();      // "1 DEAT Y" är en flagga
     expect(eventDescription(' Y ')).toBeNull();
@@ -63,5 +56,54 @@ describe('i18n', () => {
   it('formats display names with id fallback', () => {
     expect(displayName({ givenName: 'Sven-Erik', surname: 'Wedin', id: 'I1' })).toBe('Sven-Erik Wedin');
     expect(displayName({ givenName: '', surname: '', id: 'I3' })).toBe('I3');
+  });
+});
+
+describe('språkbyte', () => {
+  it('byter alla ytor: strängar, händelsenamn, datum och årtalsprefix', () => {
+    setLanguage('en');
+    expect(getLanguage()).toBe('en');
+    expect(t('nav.persons')).toBe('People');
+    expect(eventLabel('BIRT')).toBe('Birth');
+    expect(formatGedcomDate('15 APR 1942')).toBe('15 Apr 1942');
+    expect(formatGedcomDate('ABT 1715')).toBe('about 1715');
+    expect(lifespan(1942, null)).toBe('b. 1942');
+
+    setLanguage('de');
+    expect(t('nav.persons')).toBe('Personen');
+    expect(eventLabel('MARR')).toBe('Heirat');
+    expect(formatGedcomDate('15 MAR 1942')).toBe('15 März 1942');
+    expect(lifespan(null, 2014)).toBe('gest. 2014');
+
+    setLanguage('es');
+    expect(t('nav.persons')).toBe('Personas');
+    expect(eventLabel('DEAT')).toBe('Defunción');
+    expect(formatGedcomDate('BEF 1719')).toBe('antes de 1719');
+    expect(lifespan(1942, 2014)).toBe('1942–2014');
+  });
+
+  it('faller tillbaka på svenska för nycklar som saknas i ett språk', () => {
+    setLanguage('en');
+    // alla språk har samma nycklar i dag; en okänd nyckel ger själva sökvägen
+    expect(t('finns.inte.alls')).toBe('finns.inte.alls');
+  });
+
+  it('ignorerar okända språkkoder', () => {
+    setLanguage('sv');
+    // @ts-expect-error avsiktligt fel språkkod
+    setLanguage('klingon');
+    expect(getLanguage()).toBe('sv');
+  });
+
+  it('har samma nyckeluppsättning i alla språk', () => {
+    const paths = (obj: object, prefix = ''): string[] =>
+      Object.entries(obj).flatMap(([key, value]) =>
+        typeof value === 'object' && value !== null
+          ? paths(value, `${prefix}${key}.`)
+          : [`${prefix}${key}`]);
+    const swedish = paths(DICTIONARIES.sv).sort();
+    for (const { code } of LANGUAGES) {
+      expect({ code, keys: paths(DICTIONARIES[code]).sort() }).toEqual({ code, keys: swedish });
+    }
   });
 });

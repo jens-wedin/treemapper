@@ -11,8 +11,9 @@ test('trädet renderas och piltangenter flyttar fokus', async ({ page }) => {
   await focusNode.focus();
   await expect(focusNode).toBeFocused();   // vänta in renderingen innan tangenttryck
   await page.keyboard.press('ArrowUp');    // I500001 har 2 föräldrar
-  const active = page.locator('[data-tree-node][tabindex="0"]');
-  await expect(active).not.toHaveAttribute('data-tree-node', 'I500001');
+  await expect
+    .poll(() => page.evaluate(() => document.activeElement?.getAttribute('data-tree-node')))
+    .not.toBe('I500001');
 });
 
 test('klick på ett kort öppnar personpanelen', async ({ page }) => {
@@ -75,13 +76,15 @@ test('solfjädern renderas och kan navigeras med tangentbord', async ({ page }) 
   await expect(slices.first()).toBeVisible();
   expect(await slices.count()).toBeGreaterThan(5);
 
-  // piltangent flyttar fokus mellan skivor
+  // piltangent flyttar fokus mellan skivor — fråga DOM:en var fokus hamnade
+  // i stället för att läsa tabindex, som släpar en rendering efter
   const first = page.locator('[data-tree-node="I500001"]');
   await first.focus();
   await expect(first).toBeFocused();
   await page.keyboard.press('ArrowRight');
-  const active = page.locator('[data-tree-node][tabindex="0"]');
-  await expect(active).not.toHaveAttribute('data-tree-node', 'I500001');
+  await expect
+    .poll(() => page.evaluate(() => document.activeElement?.getAttribute('data-tree-node')))
+    .not.toBe('I500001');
 });
 
 test('personpanelen fungerar i både antavla och solfjäder', async ({ page }) => {

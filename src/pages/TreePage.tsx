@@ -167,7 +167,9 @@ export default function TreePage() {
           id={PANEL_ID}
           role="tabpanel"
           aria-labelledby={`tab-${view}`}
-          className="flex min-h-0 flex-1 gap-3"
+          // The gap below the tabs lives here, on the row, so the chart and the
+          // person panel share one top edge.
+          className="mt-4 flex min-h-0 flex-1 gap-3"
         >
           {/* One switcher across all four views, so every combination fades —
               including to and from the list, which is HTML rather than SVG. */}

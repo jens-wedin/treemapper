@@ -72,7 +72,7 @@ export default function FanChart({ data, generations, onSelect, selectedId }: {
           className="cursor-grab touch-none active:cursor-grabbing"
           {...viewport.svgProps}
         >
-          <g transform={viewport.transform}>
+          <g transform={viewport.transform} className={viewport.transformClass}>
             {layout.slices.map(s => {
               const colors = BRANCH_COLORS[s.branch];
               const isSelected = s.person.id === selectedId;

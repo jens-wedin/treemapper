@@ -11,6 +11,24 @@ export const MAX_K = 3;
 export const ZOOM_STEP = 1.25;
 const EDGE_MARGIN = 70;
 
+/**
+ * Wheel zoom, in proportion to how far the wheel actually turned.
+ *
+ * A fixed factor per event is what makes a trackpad feel wild: two fingers
+ * produce a stream of tiny events, and each one used to count as much as a full
+ * notch of a mouse wheel. Scaling by the distance instead means a nudge zooms a
+ * little and a shove zooms a lot.
+ */
+const WHEEL_STRENGTH = 0.0022;
+/** A pinch is a deliberate gesture and may move faster. */
+const PINCH_STRENGTH = 0.01;
+/** However violent one event is, it cannot leap more than this. */
+const MAX_WHEEL_STEP = 1.1;
+/** A line of scrolling in pixels, for mice that report lines rather than pixels. */
+const LINE_HEIGHT = 16;
+/** How long the eased transform lasts after a button press. */
+export const ZOOM_EASE_MS = 220;
+
 /** Scale and offset that bring the whole chart into view, centred. */
 export function computeFit(bounds: ChartBounds, size: { w: number; h: number }, minK = MIN_K, maxK = MAX_K): Viewport {
   const contentW = Math.max(bounds.maxX - bounds.minX, 1);
@@ -33,6 +51,17 @@ export function useChartViewport(bounds: ChartBounds) {
 
   const [size, setSize] = useState({ w: 900, h: 600 });
   const [view, setView] = useState<Viewport>({ x: 450, y: 300, k: 1 });
+  // A button press is one jump, so it glides. Wheel and drag are continuous and
+  // must not: a transition would leave the chart lagging behind the pointer.
+  const [eased, setEased] = useState(false);
+  const easeTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const glide = useCallback(() => {
+    clearTimeout(easeTimer.current);
+    setEased(true);
+    easeTimer.current = setTimeout(() => setEased(false), ZOOM_EASE_MS);
+  }, []);
+  useEffect(() => () => clearTimeout(easeTimer.current), []);
 
   useLayoutEffect(() => {
     const el = wrapRef.current;
@@ -78,7 +107,14 @@ export function useChartViewport(bounds: ChartBounds) {
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       const rect = svg.getBoundingClientRect();
-      zoomAround(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.clientX - rect.left, e.clientY - rect.top);
+      // deltaMode says what the numbers mean: 0 pixels, 1 lines, 2 pages.
+      const distance = e.deltaY * (e.deltaMode === 1 ? LINE_HEIGHT : e.deltaMode === 2 ? rect.height : 1);
+      // A trackpad pinch arrives as ctrl+wheel, and should feel direct.
+      const factor = Math.exp(-distance * (e.ctrlKey ? PINCH_STRENGTH : WHEEL_STRENGTH));
+      const step = Math.min(MAX_WHEEL_STEP, Math.max(1 / MAX_WHEEL_STEP, factor));
+      // No easing here: continuous input has to track the fingers exactly, and
+      // a transition would always be chasing the last event.
+      zoomAround(step, e.clientX - rect.left, e.clientY - rect.top);
     };
     svg.addEventListener('wheel', onWheel, { passive: false });
     return () => svg.removeEventListener('wheel', onWheel);
@@ -86,6 +122,7 @@ export function useChartViewport(bounds: ChartBounds) {
 
   /** Zoom by a step, keeping a content-space point (default: the centre) still. */
   const zoomBy = useCallback((factor: number, anchor?: { x: number; y: number }) => {
+    glide();
     setView(v => {
       const sx = anchor ? anchor.x * v.k + v.x : size.w / 2;
       const sy = anchor ? anchor.y * v.k + v.y : size.h / 2;
@@ -101,8 +138,9 @@ export function useChartViewport(bounds: ChartBounds) {
 
   const reset = useCallback(() => {
     adjusted.current = false;
+    glide();
     setView(fit);
-  }, [fit]);
+  }, [fit, glide]);
 
   /** Keeps a content-space point inside the viewport (keyboard navigation). */
   const ensureVisible = useCallback((x: number, y: number) => {
@@ -126,6 +164,8 @@ export function useChartViewport(bounds: ChartBounds) {
     width: size.w,
     height: size.h,
     onPointerDown: (e: React.PointerEvent) => {
+      clearTimeout(easeTimer.current);
+      setEased(false);            // dragging must stay glued to the pointer
       drag.current = { px: e.clientX, py: e.clientY };
       (e.target as Element).setPointerCapture?.(e.pointerId);
     },
@@ -145,5 +185,7 @@ export function useChartViewport(bounds: ChartBounds) {
     zoomPercent: Math.round(view.k * 100),
     zoomBy, reset, ensureVisible, markFresh, holdView, svgProps,
     transform: `translate(${view.x} ${view.y}) scale(${view.k})`,
+    /** Put on the transformed <g>: glides a button's jump, nothing else. */
+    transformClass: eased ? 'chart-zoom' : undefined,
   };
 }

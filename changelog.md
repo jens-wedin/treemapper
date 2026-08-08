@@ -4,6 +4,11 @@
 
 ### Added
 
+**Lugnare zoom i trädet**
+- Hjulet zoomar nu **i proportion till hur långt man faktiskt rullar**. En fast faktor per händelse är vad som gjorde styrplattan vild: två fingrar ger en ström av små händelser, och var och en räknades förut lika mycket som ett helt hjulklick. En knuff zoomar lite, ett tag zoomar mycket, och ingen enskild händelse får ta mer än 10 %.
+- Rader och sidor räknas om till bildpunkter (`deltaMode`), och en styrplattas nyp — som kommer som ctrl+hjul — får vara snabbare, eftersom det är en avsiktlig gest.
+- **Zoomknapparna glider** i stället för att hoppa. Hjul och dragning gör det inte: en övergång skulle alltid ligga en händelse efter fingret.
+
 **Personpanelen glider in**
 - Panelen tonar och glider in från höger, och **ligger kvar medan den glider ut** i stället för att blinka bort. Det senare kräver att den personen den visade hålls kvar en stund efter att markeringen släppts — `useLingering` gör just det, och gör ingenting alls när `prefers-reduced-motion` är satt.
 - Bara panelen rör sig; diagrammet tar sin nya bredd direkt. Att animera bredden hade räknat om diagrammets passning varje bildruta, vilket både hackar och är onödigt — blicken följer panelen, inte springan.

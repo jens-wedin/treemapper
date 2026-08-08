@@ -144,7 +144,7 @@ export default function TreeChart({ data, onSelect, selectedId }: {
             viewport.svgProps.onPointerDown(e);
           }}
         >
-          <g transform={viewport.transform} className={smoothPan ? 'chart-pan' : undefined}>
+          <g transform={viewport.transform} className={smoothPan ? 'chart-pan' : viewport.transformClass}>
             {/* Cards and lines folded away a moment ago, on their way out.
                 Mounted only while they exist, so the fade starts when they do. */}
             {hasGhosts && (

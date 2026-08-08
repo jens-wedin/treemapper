@@ -404,3 +404,28 @@ test.describe('personpanelen glider in', () => {
     await expect(panel).toHaveCount(0, { timeout: 150 });
   });
 });
+
+test.describe('zoomen', () => {
+  const percent = (page: import('@playwright/test').Page) =>
+    page.locator('text=/^\\d+%$/').first().innerText().then(s => Number(s.replace('%', '')));
+
+  const wheel = (page: import('@playwright/test').Page, deltaY: number) =>
+    page.locator('svg[role="group"]').first().dispatchEvent('wheel', { deltaY, deltaMode: 0, bubbles: true });
+
+  test('hjulet zoomar i proportion till hur långt man rullar', async ({ page }) => {
+    await page.goto('/trad/I500001?upp=2&ned=1&vy=family');
+    await page.locator('[data-tree-node]').first().waitFor();
+
+    // en liten knuff — som en styrplatta ger — ska knappt märkas
+    const start = await percent(page);
+    await wheel(page, -6);
+    const afterNudge = await percent(page);
+    expect(afterNudge - start).toBeLessThanOrEqual(2);
+
+    // en hel hjulklick tar större kliv, men aldrig mer än ett tak
+    await wheel(page, -120);
+    const afterNotch = await percent(page);
+    expect(afterNotch - afterNudge).toBeGreaterThan(afterNudge - start);
+    expect(afterNotch).toBeLessThanOrEqual(Math.round(afterNudge * 1.1) + 1);
+  });
+});

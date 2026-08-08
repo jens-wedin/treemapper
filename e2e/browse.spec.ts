@@ -90,6 +90,17 @@ test('ett foto öppnas i större format och går att bläddra i', async ({ page 
   const large = (await dialog.getByRole('img').boundingBox())!;
   expect(large.width).toBeGreaterThan(thumb.width);
 
+  // Allt håller sig innanför rutan: bilden vägrar annars krympa och knuffar
+  // ut bläddringspilarna ur dialogen.
+  const box = (await dialog.boundingBox())!;
+  expect(large.x + large.width).toBeLessThanOrEqual(box.x + box.width);
+  for (const name of ['Föregående foto', 'Nästa foto']) {
+    const arrow = await dialog.getByRole('button', { name }).boundingBox();
+    if (!arrow) continue;                       // bara ett foto: inga pilar
+    expect(arrow.x, `${name} utanför vänsterkanten`).toBeGreaterThanOrEqual(box.x);
+    expect(arrow.x + arrow.width, `${name} utanför högerkanten`).toBeLessThanOrEqual(box.x + box.width);
+  }
+
   // piltangenter bläddrar när det finns fler än ett
   const heading = dialog.getByRole('heading');
   const first = await heading.innerText();

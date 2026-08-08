@@ -66,17 +66,22 @@ export default function PhotoLightbox({ photos, openAt, fallbackAlt, onClose }: 
 
         <div className="flex items-center gap-2">
           {many && (
-            <Button variant="outline" size="sm" aria-label={t('person.photoPrev')} onClick={() => move(-1)}>
+            <Button variant="outline" size="sm" className="shrink-0" aria-label={t('person.photoPrev')} onClick={() => move(-1)}>
               <ChevronLeft aria-hidden="true" className="size-4" />
             </Button>
           )}
-          <img
-            src={apiUrl(`/api/media/${photo.id}`)}
-            alt={photo.title ?? fallbackAlt}
-            className="max-h-[75vh] w-full rounded-md object-contain"
-          />
+          {/* min-w-0 is what keeps the arrows inside the dialog: an image's
+              own min-width is its intrinsic width, so without this the photo
+              refuses to shrink and pushes them out of the box. */}
+          <div className="flex min-w-0 flex-1 justify-center">
+            <img
+              src={apiUrl(`/api/media/${photo.id}`)}
+              alt={photo.title ?? fallbackAlt}
+              className="max-h-[75vh] max-w-full rounded-md object-contain"
+            />
+          </div>
           {many && (
-            <Button variant="outline" size="sm" aria-label={t('person.photoNext')} onClick={() => move(1)}>
+            <Button variant="outline" size="sm" className="shrink-0" aria-label={t('person.photoNext')} onClick={() => move(1)}>
               <ChevronRight aria-hidden="true" className="size-4" />
             </Button>
           )}

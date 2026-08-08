@@ -4,6 +4,13 @@
 
 ### Added
 
+**Trädvyerna övergår i varandra**
+- Att byta mellan Familj, Antavla, Solfjäder och Lista är inte längre ett klipp. Vyn som lämnar ligger kvar över den som kommer under övergången, med `aria-hidden` och `inert`: en skärmläsare ska aldrig hitta två träd, tangentbordsfokus ska aldrig hamna i det som är på väg bort, och ett test som letar efter "trädet" ska fortsätta hitta exakt ett.
+- **Antavlan lindar ihop sig till solfjädern.** De två vyerna ritar samma människor under samma anortal, så varje person har en verklig start och ett verkligt mål — vilket är det som gör en morf meningsfull just där och ingen annanstans i appen. Familjevyn ritar dessutom ättlingar, och de flesta av dess kort har ingenstans att färdas.
+- Rörelsen räknas i **polära koordinater kring solfjäderns mitt**, inte i x och y. Räta linjer hade sett ut som lådor som glider in i en cirkel; att i stället flytta radie och vinkel får varje bana att böja sig utåt av sig själv, och kolumnerna lindar ihop sig till ringar.
+- Bara läget färdas. En rektangel kan inte bli en tårtbit, och att morfa formerna hade krävt en enda parameteriserad geometri — på bekostnad av antavlans porträtt och solfjäderns etiketter längs bågar. Under övergången bär en liten markör per ana grenens färg.
+- `prefers-reduced-motion: reduce` hoppar över både korsfade och morf.
+
 **GEDCOM-import skapar ett nytt släktträd**
 - **Inställningar → Importera släktträd** läser en GEDCOM-fil till ett helt nytt träd. Det träd som redan finns rörs inte: ingenting matchas, slås ihop eller skrivs över. En trädväljare i sidhuvudet byter mellan dem, och den som aldrig öppnat en terminal klarar hela vägen själv.
 - **En SQLite-fil per träd, inte en `treeId`-kolumn.** GEDCOM-id är bara unika inom en fil — det här trädets `I500097` och en kusins `I500097` är olika människor. Delade tabeller hade krävt antingen omskrivna id:n eller ett filter på ett fyrtiotal frågeställen, där ett enda glömt filter tyst blandar ihop två släkter.

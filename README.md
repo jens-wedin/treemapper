@@ -18,6 +18,26 @@ npm test         # vitest unit tests
 npm run test:e2e # Playwright browse flow (needs wedin.db)
 ```
 
+## Övergångar mellan trädvyerna
+
+Switching view cross-fades rather than cuts, and **Antavla → Solfjäder morphs**:
+each ancestor travels from their column to their ring. The two views draw the
+same people under the same Ahnentafel numbers, which is what makes a morph
+meaningful there and nowhere else — the family view also draws descendants, and
+most of its cards have nowhere to travel to.
+
+The motion is interpolated in **polar coordinates about the fan's centre**
+(`src/lib/ancestorMorph.ts`, pure and unit-tested). Straight x/y lines would
+look like boxes sliding into a circle; moving along radius and angle makes each
+path curve outward on its own. Only the position travels — a rectangle cannot
+become a wedge, so during the morph each ancestor is a small marker in their
+branch colour, with the cards fading out and the wedges fading in either side.
+
+The easing is ease-in-out rather than the ease-out used for the fold glides: the
+markers have to sit still on their cards while the antavla fades, and settle
+before the solfjäder appears. `prefers-reduced-motion: reduce` skips both the
+cross-fade and the morph.
+
 ## Flera släktträd
 
 The app holds **several unconnected family trees**, one SQLite file each, and a

@@ -31,7 +31,7 @@ type View = (typeof VIEWS)[number];
 /** What the tabs point at: one panel, whichever view is showing. */
 const PANEL_ID = 'trad-vy';
 /** Keep in step with .panel-leaving in index.css. */
-const PANEL_OUT_MS = 200;
+const PANEL_OUT_MS = 320;
 
 /** Reads a generation count from the URL, held to the options we offer. */
 function clamp(raw: string | null, allowed: readonly number[]): number {

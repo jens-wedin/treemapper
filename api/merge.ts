@@ -1,13 +1,14 @@
 import { Hono } from 'hono';
-import type { Db } from '../db/client';
 import { mergeSchema } from '../lib/schemas';
 import { MutationError } from '../lib/mutations';
 import { mergePersons } from '../lib/merge';
+import type { TreeResolver } from './trees';
 
-export function createMergeApi(db: Db) {
+export function createMergeApi(tree: TreeResolver) {
   const api = new Hono();
 
   api.post('/api/merge', async c => {
+    const { db } = tree(c);
     const parsed = mergeSchema.safeParse(await c.req.json().catch(() => ({})));
     if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? 'Ogiltiga fält' }, 400);
     try {

@@ -1,9 +1,9 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import type { Db } from '../db/client';
 import { listSources, getSourceFull } from '../lib/sources';
 import { sourceUpdateSchema } from '../lib/schemas';
 import { MutationError, updateSource } from '../lib/mutations';
+import type { TreeResolver } from './trees';
 
 const querySchema = z.object({
   q: z.string().trim().max(100).optional(),
@@ -11,10 +11,11 @@ const querySchema = z.object({
   limit: z.coerce.number().int().min(1).max(200).default(50),
 });
 
-export function createSourcesApi(db: Db) {
+export function createSourcesApi(tree: TreeResolver) {
   const api = new Hono();
 
   api.get('/api/sources', c => {
+    const { db } = tree(c);
     const parsed = querySchema.safeParse(c.req.query());
     if (!parsed.success) return c.json({ error: 'Ogiltiga sökparametrar' }, 400);
     const { q, limit, offset } = parsed.data;
@@ -22,11 +23,13 @@ export function createSourcesApi(db: Db) {
   });
 
   api.get('/api/sources/:id/full', c => {
+    const { db } = tree(c);
     const full = getSourceFull(db, c.req.param('id'));
     return full ? c.json(full) : c.json({ error: 'Källan finns inte' }, 404);
   });
 
   api.patch('/api/sources/:id', async c => {
+    const { db } = tree(c);
     const parsed = sourceUpdateSchema.safeParse(await c.req.json().catch(() => ({})));
     if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? 'Ogiltiga fält' }, 400);
     try {

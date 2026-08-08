@@ -5,6 +5,7 @@ import { createIssuesApi } from './issues';
 import { updatePerson } from '../lib/mutations';
 import { createMergeApi } from './merge';
 import type { Hono } from 'hono';
+import { fixedTree } from './trees';
 
 let db: Db;
 let api: Hono;
@@ -12,8 +13,8 @@ let mergeApi: Hono;
 
 beforeEach(() => {
   db = createDb(':memory:');
-  api = createIssuesApi(db);
-  mergeApi = createMergeApi(db);
+  api = createIssuesApi(fixedTree(db));
+  mergeApi = createMergeApi(fixedTree(db));
   // två personer med tydliga problem
   db.insert(persons).values([
     { id: 'I1', givenName: 'Fel', surname: 'Person', sex: 'M' },

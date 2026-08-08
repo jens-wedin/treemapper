@@ -7,6 +7,7 @@ import { runImport } from '../scripts/import';
 import { createDb } from '../db/client';
 import { createTreeApi } from './tree';
 import type { Hono } from 'hono';
+import { fixedTree } from './trees';
 
 let dir: string;
 let api: Hono;
@@ -15,7 +16,7 @@ beforeAll(() => {
   dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wedin-tree-api-'));
   const dbPath = path.join(dir, 'a.db');
   runImport(fileURLToPath(new URL('../lib/gedcom/fixtures/mini.ged', import.meta.url)), dbPath);
-  api = createTreeApi(createDb(dbPath));
+  api = createTreeApi(fixedTree(createDb(dbPath)));
 });
 afterAll(() => fs.rmSync(dir, { recursive: true, force: true }));
 

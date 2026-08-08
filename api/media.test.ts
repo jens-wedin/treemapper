@@ -6,6 +6,7 @@ import { createDb } from '../db/client';
 import { media } from '../db/schema';
 import { createMediaApi } from './media';
 import type { Hono } from 'hono';
+import { fixedTree } from './trees';
 
 let dir: string;
 let api: Hono;
@@ -20,7 +21,7 @@ beforeAll(() => {
     { id: 1, ownerType: 'person', ownerId: 'I1', originalUrl: 'https://x/1.jpg', form: 'jpg', downloadStatus: 'done', localPath: 'media/1.jpg' },
     { id: 2, ownerType: 'person', ownerId: 'I1', originalUrl: 'https://x/2.jpg', downloadStatus: 'failed' },
   ]).run();
-  api = createMediaApi(db, mediaDir);
+  api = createMediaApi(fixedTree(db), () => mediaDir);
 });
 afterAll(() => fs.rmSync(dir, { recursive: true, force: true }));
 

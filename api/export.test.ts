@@ -3,6 +3,7 @@ import { createDb, type Db } from '../db/client';
 import { persons } from '../db/schema';
 import { createExportApi } from './export';
 import type { Hono } from 'hono';
+import { fixedTree } from './trees';
 
 let db: Db;
 let api: Hono;
@@ -10,7 +11,7 @@ let api: Hono;
 beforeEach(() => {
   db = createDb(':memory:');
   db.insert(persons).values({ id: 'I1', givenName: 'Anders', surname: 'Testsson', sex: 'M' }).run();
-  api = createExportApi(db);
+  api = createExportApi(fixedTree(db));
 });
 
 describe('GET /api/export/gedcom', () => {

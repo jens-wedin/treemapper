@@ -8,6 +8,7 @@ import { createDb, type Db } from '../db/client';
 import { auditLog } from '../db/schema';
 import { createSourcesApi } from './sources';
 import type { Hono } from 'hono';
+import { fixedTree } from './trees';
 
 let dir: string;
 let db: Db;
@@ -18,7 +19,7 @@ beforeEach(() => {
   const dbPath = path.join(dir, 'a.db');
   runImport(fileURLToPath(new URL('../lib/gedcom/fixtures/mini.ged', import.meta.url)), dbPath);
   db = createDb(dbPath);
-  api = createSourcesApi(db);
+  api = createSourcesApi(fixedTree(db));
 });
 
 const patch = (url: string, body: unknown) =>

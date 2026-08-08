@@ -1,0 +1,130 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { createTreesApi, treeResolver } from './trees';
+import { createPersonsApi } from './persons';
+import { closeTrees, listTrees, openTree } from '../lib/trees';
+
+const MINI = fs.readFileSync(path.resolve('lib/gedcom/fixtures/mini.ged'), 'utf-8');
+
+let workDir: string;
+let api: ReturnType<typeof createTreesApi>;
+
+const upload = (contents: string, filename = 'mini.ged', name?: string) => {
+  const form = new FormData();
+  form.append('file', new File([contents], filename));
+  if (name !== undefined) form.append('name', name);
+  return api.request('/api/trees/import', { method: 'POST', body: form });
+};
+
+beforeEach(() => {
+  workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'wedin-api-trees-'));
+  process.env.WEDIN_DB = path.join(workDir, 'wedin.db');
+  process.env.WEDIN_TREES_DIR = path.join(workDir, 'trees');
+  process.env.WEDIN_MEDIA_DIR = path.join(workDir, 'media');
+  closeTrees();
+  api = createTreesApi();
+});
+
+afterEach(() => {
+  closeTrees();
+  fs.rmSync(workDir, { recursive: true, force: true });
+  delete process.env.WEDIN_DB;
+  delete process.env.WEDIN_TREES_DIR;
+  delete process.env.WEDIN_MEDIA_DIR;
+});
+
+describe('GET /api/trees', () => {
+  it('always lists the tree that was already here', async () => {
+    const body = await (await api.request('/api/trees')).json();
+    expect(body.trees).toHaveLength(1);
+    expect(body.trees[0]).toMatchObject({ id: 'default', isDefault: true });
+  });
+});
+
+describe('POST /api/trees/import', () => {
+  it('creates a new tree and reports what it read', async () => {
+    const res = await upload(MINI, 'mini.ged', 'Släkten Larsson');
+    expect(res.status).toBe(200);
+
+    const body = await res.json();
+    expect(body.tree).toMatchObject({ id: 'slakten-larsson', name: 'Släkten Larsson', persons: 3, sourceFile: 'mini.ged' });
+    expect(body.summary.inserted).toMatchObject({ persons: 3, families: 1, sources: 1, media: 1 });
+    expect(listTrees().map(t => t.id)).toEqual(['default', 'slakten-larsson']);
+  });
+
+  it('names the tree after the file when no name is given', async () => {
+    const body = await (await upload(MINI, 'Farmors släkt.ged')).json();
+    expect(body.tree.name).toBe('Farmors släkt');
+  });
+
+  it('leaves the existing tree alone', async () => {
+    openTree('default');
+    await upload(MINI);
+    expect(listTrees()[0]).toMatchObject({ id: 'default', persons: 0 });
+  });
+
+  it('refuses a file that is not a GEDCOM, without creating anything', async () => {
+    const res = await upload('det här är inte en gedcom-fil', 'anteckningar.txt');
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toContain('GEDCOM');
+    expect(listTrees().map(t => t.id)).toEqual(['default']);
+    expect(fs.existsSync(path.join(workDir, 'trees'))).toBe(false);
+  });
+
+  it('refuses an empty submission', async () => {
+    const res = await upload('', 'tom.ged');
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('renaming and deleting', () => {
+  it('renames a tree', async () => {
+    await upload(MINI, 'mini.ged', 'Fel namn');
+    const res = await api.request('/api/trees/fel-namn', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Rätt namn' }),
+    });
+    expect(res.status).toBe(200);
+    expect((await res.json()).tree.name).toBe('Rätt namn');
+  });
+
+  it('deletes a tree', async () => {
+    await upload(MINI, 'mini.ged', 'Larsson');
+    expect((await api.request('/api/trees/larsson', { method: 'DELETE' })).status).toBe(200);
+    expect(listTrees().map(t => t.id)).toEqual(['default']);
+  });
+
+  it('refuses to delete the tree the CLI owns', async () => {
+    const res = await api.request('/api/trees/default', { method: 'DELETE' });
+    expect(res.status).toBe(400);
+    expect(listTrees()).toHaveLength(1);
+  });
+
+  it('reports a tree that is not there', async () => {
+    expect((await api.request('/api/trees/finns-inte', { method: 'DELETE' })).status).toBe(404);
+  });
+});
+
+describe('?tree= on an ordinary request', () => {
+  it('reads the tree it names', async () => {
+    await upload(MINI, 'mini.ged', 'Larsson');
+    const persons = createPersonsApi(treeResolver());
+
+    const fromImported = await (await persons.request('/api/persons?tree=larsson')).json();
+    expect(fromImported.total).toBe(3);
+
+    const fromDefault = await (await persons.request('/api/persons')).json();
+    expect(fromDefault.total).toBe(0);
+  });
+
+  it('answers 404 for an unknown tree instead of inventing an empty one', async () => {
+    const persons = createPersonsApi(treeResolver());
+    const res = await persons.request('/api/persons?tree=finns-inte');
+    expect(res.status).toBe(404);
+    expect((await res.json()).unknownTree).toBe('finns-inte');
+    expect(fs.existsSync(path.join(workDir, 'trees', 'finns-inte.db'))).toBe(false);
+  });
+});

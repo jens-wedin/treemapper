@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import type { Db } from '../db/client';
 import { searchPersons, getPersonFull } from '../lib/queries';
+import type { TreeResolver } from './trees';
 
 const querySchema = z.object({
   q: z.string().trim().max(100).optional(),
@@ -11,10 +11,11 @@ const querySchema = z.object({
   limit: z.coerce.number().int().min(1).max(200).default(50),
 });
 
-export function createPersonsApi(db: Db) {
+export function createPersonsApi(tree: TreeResolver) {
   const api = new Hono();
 
   api.get('/api/persons', c => {
+    const { db } = tree(c);
     const parsed = querySchema.safeParse(c.req.query());
     if (!parsed.success) return c.json({ error: 'Ogiltiga sökparametrar' }, 400);
     const { q, birthYear, place, limit, offset } = parsed.data;
@@ -22,6 +23,7 @@ export function createPersonsApi(db: Db) {
   });
 
   api.get('/api/persons/:id/full', c => {
+    const { db } = tree(c);
     const full = getPersonFull(db, c.req.param('id'));
     return full ? c.json(full) : c.json({ error: 'Personen finns inte' }, 404);
   });

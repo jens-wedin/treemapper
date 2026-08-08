@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createDb, type Db } from '../db/client';
 import { persons, families, familyChildren, events } from '../db/schema';
 import { createStatisticsApi } from './statistics';
+import { fixedTree } from './trees';
 
 let db: Db;
 let api: ReturnType<typeof createStatisticsApi>;
@@ -20,7 +21,7 @@ beforeEach(() => {
     { ownerType: 'person', ownerId: 'jag', type: 'BIRT', dateYear: 1830 },
     { ownerType: 'person', ownerId: 'utom', type: 'BIRT', dateYear: 1840 },
   ]).run();
-  api = createStatisticsApi(db);
+  api = createStatisticsApi(fixedTree(db));
 });
 
 const get = (url: string) => api.request(url);

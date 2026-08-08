@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
-import type { Db } from '../db/client';
 import { issueDismissals } from '../db/schema';
 import { detectIssues, summarizeByPerson, SEVERITY_ORDER, type Issue } from '../lib/issues';
 import { buildIssueLog } from '../lib/issueLog';
+import type { TreeResolver } from './trees';
 
 const MAX_ITEMS = 500;
 const MAX_LOG = 50;
@@ -21,10 +21,11 @@ const dismissSchema = z.object({
   note: z.string().trim().max(500).optional(),
 });
 
-export function createIssuesApi(db: Db) {
+export function createIssuesApi(tree: TreeResolver) {
   const api = new Hono();
 
   api.get('/api/issues', c => {
+    const { db } = tree(c);
     const parsed = querySchema.safeParse(c.req.query());
     if (!parsed.success) return c.json({ error: 'Ogiltiga parametrar' }, 400);
     const { category, severity, includeDismissed, limit } = parsed.data;
@@ -68,6 +69,7 @@ export function createIssuesApi(db: Db) {
   // The same detection and the same dismissals as the queue above, folded to
   // one entry per person: the tree charts mark cards from this.
   api.get('/api/issues/persons', c => {
+    const { db } = tree(c);
     const dismissed = new Set(db.select().from(issueDismissals).all().map(d => d.fingerprint));
     const outstanding = detectIssues(db).filter(i => !dismissed.has(i.fingerprint));
     const persons = summarizeByPerson(outstanding);
@@ -75,6 +77,7 @@ export function createIssuesApi(db: Db) {
   });
 
   api.post('/api/issues/dismiss', async c => {
+    const { db } = tree(c);
     const parsed = dismissSchema.safeParse(await c.req.json().catch(() => ({})));
     if (!parsed.success) return c.json({ error: 'Ogiltigt fingeravtryck' }, 400);
     const { fingerprint, note } = parsed.data;
@@ -86,6 +89,7 @@ export function createIssuesApi(db: Db) {
   });
 
   api.delete('/api/issues/dismiss/:fingerprint', c => {
+    const { db } = tree(c);
     db.delete(issueDismissals).where(eq(issueDismissals.fingerprint, c.req.param('fingerprint'))).run();
     return c.json({ ok: true });
   });

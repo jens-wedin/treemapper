@@ -8,7 +8,7 @@ import { useFlagPreference, useIssueMarkPreference } from '../lib/chartPreferenc
 import { useIssueMarks } from '../lib/issueMarks';
 import ChartToolbar from './ChartToolbar';
 import CountryFlag from './CountryFlag';
-import IssueBadge, { issueColor } from './IssueBadge';
+import IssueBadge, { issueCategories, issueColor } from './IssueBadge';
 import { issueLabel } from './PersonCard';
 
 const shorten = (s: string, max = 22) => (s.length > max ? `${s.slice(0, max - 1).trimEnd()}…` : s);
@@ -101,7 +101,7 @@ export default function FanChart({ data, generations, onSelect, selectedId }: {
                   onFocus={() => setActiveKey(s.key)}
                   onKeyDown={e => onKeyDown(e, s.key, s.person.id)}
                 >
-                  {mark && <title>{mark.categories.join(', ')}</title>}
+                  {mark && <title>{issueCategories(mark).join(', ')}</title>}
                   <path
                     d={s.wedgePath}
                     style={{

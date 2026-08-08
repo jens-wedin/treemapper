@@ -153,6 +153,13 @@ the card's aria-label says the same in words. A fan wedge has no corner to put
 a badge in, so it gets a plain dot in the same colour at its inner edge — the
 one spot free of the name, the flag and the generation band at every ring.
 
+Clicking the card opens the person panel, which lists the problems in the
+queue's own wording, under the person's dates and above their family. Repeats
+of one category are gathered under a single heading with a count: four children
+born after the same father died is one fact told four times, not four headings.
+The setting is a module-level store rather than component state, so ticking the
+box in the toolbar fills in the panel beside it without a reload.
+
 Nothing new is detected here: `/api/issues/persons` runs the same detectors as
 the queue and folds them per person, so dismissing something there stops
 marking it here. Everyone named by a problem is marked, not just the person who

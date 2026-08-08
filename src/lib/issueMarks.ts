@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { PersonIssueMark } from '../../lib/issues';
+import type { PersonIssueMark, Severity } from '../../lib/issues';
 import { fetchJson } from './api';
 
 export type IssueMarks = Record<string, PersonIssueMark>;
@@ -19,6 +19,24 @@ function load(): Promise<IssueMarks> {
       return NONE;
     });
   return cached;
+}
+
+/**
+ * The same problems arranged for reading: one heading per category, the
+ * wordings under it. Four children born after the same father's death is one
+ * fact told four times, not four headings.
+ *
+ * Client-side on purpose — `lib/issues.ts` reaches for node:crypto and the
+ * database schema, and importing a value from it drags both into the bundle.
+ */
+export function groupProblems(mark: PersonIssueMark): { severity: Severity; category: string; texts: string[] }[] {
+  const groups: { severity: Severity; category: string; texts: string[] }[] = [];
+  for (const problem of mark.problems) {
+    const group = groups.find(g => g.category === problem.category)
+      ?? (groups.push({ severity: problem.severity, category: problem.category, texts: [] }), groups[groups.length - 1]!);
+    if (problem.text) group.texts.push(problem.text);
+  }
+  return groups;
 }
 
 /** Called after dismissing, restoring or merging: the register has moved on. */

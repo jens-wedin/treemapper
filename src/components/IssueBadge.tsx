@@ -15,6 +15,10 @@ export const issueColor = (severity: Severity): string => FILL[severity];
 /** Every problem is counted, but the circle only has room for one digit. */
 const shortCount = (count: number) => (count > 9 ? '9+' : String(count));
 
+/** The tooltip names each kind once, however many of that kind there are. */
+export const issueCategories = (mark: PersonIssueMark): string[] =>
+  [...new Set(mark.problems.map(p => p.category))];
+
 /**
  * The mark a chart card wears when someone has outstanding inconsistencies:
  * a dot in the colour of their worst one, with how many. Hidden from screen
@@ -26,9 +30,10 @@ export default function IssueBadge({ mark, cx, cy, r = 9 }: {
   cy: number;
   r?: number;
 }) {
+  const count = mark.problems.length;
   return (
-    <g aria-hidden data-issue-severity={mark.severity} data-issue-count={mark.count}>
-      <title>{mark.categories.join(', ')}</title>
+    <g aria-hidden data-issue-severity={mark.severity} data-issue-count={count}>
+      <title>{issueCategories(mark).join(', ')}</title>
       <circle
         cx={cx}
         cy={cy}
@@ -38,12 +43,12 @@ export default function IssueBadge({ mark, cx, cy, r = 9 }: {
       />
       <text
         x={cx}
-        y={cy + (mark.count > 9 ? 3 : 3.5)}
+        y={cy + (count > 9 ? 3 : 3.5)}
         textAnchor="middle"
         style={{ fill: 'var(--issue-ink)' }}
-        className={mark.count > 9 ? 'text-[8px] font-bold' : 'text-[10px] font-bold'}
+        className={count > 9 ? 'text-[8px] font-bold' : 'text-[10px] font-bold'}
       >
-        {shortCount(mark.count)}
+        {shortCount(count)}
       </text>
     </g>
   );

@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import type { TreeData } from '../../lib/tree';
 import { t, displayName, lifespan } from '../lib/i18n';
 import { fetchJson } from '../lib/api';
+import { useIssueMarkPreference } from '../lib/chartPreferences';
+import { useIssueMarks } from '../lib/issueMarks';
 import TreeChart from '../components/TreeChart';
 import TreeList from '../components/TreeList';
 import TreePersonPanel from '../components/TreePersonPanel';
@@ -41,6 +43,11 @@ export default function TreePage() {
   const [state, setState] = useState<'loading' | 'ok' | 'error'>('loading');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  // The charts own the "Visa konsekvenser" checkbox; the panel reads the same
+  // register, so a person's problems appear beside their details as well.
+  const [showIssues] = useIssueMarkPreference();
+  const issueMarks = useIssueMarks(showIssues);
 
   /** Re-roots the chart on someone, keeping the current view and depths. */
   function focusOn(personId: string) {
@@ -141,6 +148,7 @@ export default function TreePage() {
             {selectedId && (
               <TreePersonPanel
                 personId={selectedId}
+                issue={issueMarks[selectedId]}
                 onClose={() => setSelectedId(null)}
                 onSelect={setSelectedId}
                 onFocusTree={focusOn}

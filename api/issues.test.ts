@@ -117,9 +117,14 @@ describe('GET /api/issues/persons', () => {
     const res = await api.request('/api/issues/persons');
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.persons.I1).toMatchObject({ severity: 'error' });
-    expect(body.persons.I1.categories).toContain('Födsel efter bortgång');
-    expect(body.persons.I2).toMatchObject({ count: 1, severity: 'warning' });
+    expect(body.persons.I1.severity).toBe('error');
+    const birthAfterDeath = body.persons.I1.problems
+      .find((p: { category: string }) => p.category === 'Födsel efter bortgång');
+    // problemets egen formulering följer med, den som panelen visar
+    expect(birthAfterDeath.text).toContain('1801');
+    expect(birthAfterDeath.severity).toBe('error');
+    expect(body.persons.I2.problems).toHaveLength(1);
+    expect(body.persons.I2.severity).toBe('warning');
     expect(body.total).toBe(2);
   });
 

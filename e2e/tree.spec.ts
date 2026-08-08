@@ -279,6 +279,30 @@ test.describe('konsekvensmärken', () => {
     await expect(page.locator('[data-issue-severity]')).toHaveCount(0);
   });
 
+  test('panelen berättar vad som är fel, med köns egna ord', async ({ page }) => {
+    await page.goto(url);
+    const panel = page.getByRole('complementary', { name: 'Personuppgifter' });
+
+    // avstängd: panelen är sig lik
+    await card(page).click();
+    await expect(panel).toBeVisible();
+    await expect(panel.getByRole('heading', { name: 'Konsekvenser' })).toHaveCount(0);
+
+    await page.getByLabel('Visa konsekvenser').check();
+    await expect(panel.getByRole('heading', { name: 'Konsekvenser' })).toBeVisible();
+    // samma kategori en gång, med antalet, och problemets egen formulering
+    const group = panel.getByRole('listitem').filter({ hasText: 'Barn fött efter förälders bortgång' });
+    await expect(group).toHaveCount(1);
+    await expect(group).toContainText('(4)');
+    await expect(group).toContainText('efter faderns Abraham Abrahamsson död 1800');
+
+    // en person utan problem får inget avsnitt
+    await page.goto('/trad/I500001?upp=1&ned=1&vy=family');
+    await page.locator('[data-tree-node="I500001"]').click();
+    await expect(panel.getByRole('heading', { level: 2 })).toContainText('Sven-Erik');
+    await expect(panel.getByRole('heading', { name: 'Konsekvenser' })).toHaveCount(0);
+  });
+
   test('det som avfärdats i Konsekvensbänken räknas inte i trädet', async ({ page }) => {
     await page.goto(url);
     await page.getByLabel('Visa konsekvenser').check();

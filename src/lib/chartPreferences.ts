@@ -1,31 +1,48 @@
-import { useCallback, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 
-/** A checkbox in the chart toolbar that outlives the page it was ticked on. */
-function useStoredToggle(key: string, fallback: boolean): [boolean, (next: boolean) => void] {
-  const [on, setOn] = useState(() => {
+/**
+ * A checkbox in the chart toolbar that outlives the page it was ticked on.
+ * Module-level rather than component state: the chart owns the checkbox but
+ * the person panel reads the same setting, and both must move together.
+ */
+function createToggle(key: string, fallback: boolean) {
+  const listeners = new Set<() => void>();
+  let value = read();
+
+  function read(): boolean {
     try {
       const stored = localStorage.getItem(key);
       return stored == null ? fallback : stored === '1';
     } catch {
-      return fallback;
+      return fallback;   // storage unavailable — the default still works
     }
-  });
-  const set = useCallback((next: boolean) => {
-    setOn(next);
+  }
+
+  const get = () => value;
+  const subscribe = (onChange: () => void) => {
+    listeners.add(onChange);
+    return () => { listeners.delete(onChange); };
+  };
+
+  function set(next: boolean): void {
+    if (next === value) return;
+    value = next;
     try {
       localStorage.setItem(key, next ? '1' : '0');
     } catch {
       /* a preference is a nicety — ignore storage failures */
     }
-  }, [key]);
-  return [on, set];
+    listeners.forEach(notify => notify());
+  }
+
+  return (): [boolean, (next: boolean) => void] => [useSyncExternalStore(subscribe, get, get), set];
 }
 
 /** "Visa flaggor" — one setting shared by every chart view, remembered. */
-export const useFlagPreference = () => useStoredToggle('wedin-tree-visa-flaggor', true);
+export const useFlagPreference = createToggle('wedin-tree-visa-flaggor', true);
 
 /**
  * "Visa konsekvenser" — off until asked for. It costs a scan of the whole
  * database, and most sittings at the tree are not about fixing data.
  */
-export const useIssueMarkPreference = () => useStoredToggle('wedin-tree-visa-konsekvenser', false);
+export const useIssueMarkPreference = createToggle('wedin-tree-visa-konsekvenser', false);

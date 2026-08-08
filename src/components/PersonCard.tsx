@@ -3,7 +3,7 @@ import type { PersonIssueMark } from '../../lib/issues';
 import { displayName, lifespan, formatGedcomDate, t } from '../lib/i18n';
 import { BRANCH_COLORS, type Branch } from '../lib/ahnentafel';
 import CountryFlag from './CountryFlag';
-import IssueBadge from './IssueBadge';
+import IssueBadge, { issueCategories } from './IssueBadge';
 
 /** Up to two initials, for people without a downloaded photo. */
 function initials(person: TreePerson): string {
@@ -149,5 +149,8 @@ export const cardLabel = (person: TreePerson, issue?: PersonIssueMark): string =
 };
 
 /** "3 konsekvenser: Saknar födelse, Dödsfall utan datum" — for aria-labels. */
-export const issueLabel = (issue: PersonIssueMark): string =>
-  `${t(issue.count === 1 ? 'tree.issueOne' : 'tree.issueMany').replace('{n}', String(issue.count))}: ${issue.categories.join(', ')}`;
+export function issueLabel(issue: PersonIssueMark): string {
+  const count = issue.problems.length;
+  const heading = t(count === 1 ? 'tree.issueOne' : 'tree.issueMany').replace('{n}', String(count));
+  return `${heading}: ${issueCategories(issue).join(', ')}`;
+}

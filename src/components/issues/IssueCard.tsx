@@ -1,22 +1,14 @@
 import { Link } from 'react-router';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import type { Issue, Severity } from '../../../lib/issues';
+import type { Issue } from '../../../lib/issues';
 import { t } from '../../lib/i18n';
 import { mutateJson } from '../../lib/api';
 import { clearIssueMarks } from '../../lib/issueMarks';
 import DuplicateMerge from './DuplicateMerge';
+import { SEVERITY_STYLE } from './severityStyle';
 
 export type IssueListItem = Issue & { dismissed: boolean };
-
-/** Each severity keeps its hue in both themes: pale wash light, deep wash dark. */
-const SEVERITY_STYLE: Record<Severity, string> = {
-  error: 'border-red-300 bg-red-50 text-red-900 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200',
-  dup: 'border-purple-300 bg-purple-50 text-purple-900 dark:border-purple-900 dark:bg-purple-950/50 dark:text-purple-200',
-  warning: 'border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-200',
-  info: 'border-blue-300 bg-blue-50 text-blue-900 dark:border-blue-900 dark:bg-blue-950/50 dark:text-blue-200',
-  minor: 'border-border bg-muted/50 text-foreground',
-};
 
 export default function IssueCard({ issue, onChanged }: { issue: IssueListItem; onChanged: () => void }) {
   // The tree charts mark cards from the same register — it has moved on.

@@ -2,10 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 import type { PersonFull, FamilyMember } from '../../lib/queries';
+import type { PersonIssueMark } from '../../lib/issues';
 import { t, eventLabel, eventDescription, formatGedcomDate, lifespan, displayName } from '../lib/i18n';
 import { fetchJson } from '../lib/api';
+import { groupProblems } from '../lib/issueMarks';
 import RichText from './RichText';
+import { SEVERITY_STYLE } from './issues/severityStyle';
 
 function MemberLinks({ people, onSelect }: { people: FamilyMember[]; onSelect: (id: string) => void }) {
   if (!people.length) return <span className="text-muted-foreground">–</span>;
@@ -28,12 +32,44 @@ function MemberLinks({ people, onSelect }: { people: FamilyMember[]; onSelect: (
 }
 
 /**
+ * The problems behind the card's badge, in the queue's own words. Shown high
+ * up: if a card is marked, that is usually why it was clicked.
+ */
+function Problems({ mark }: { mark: PersonIssueMark }) {
+  return (
+    <section className="mt-5">
+      <h3 className="font-medium">{t('tree.issuesSection')}</h3>
+      <ul className="mt-2 space-y-2">
+        {groupProblems(mark).map(group => (
+          <li key={group.category} className="rounded-md border p-2 text-sm">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="outline" className={SEVERITY_STYLE[group.severity]}>
+                {t(`issues.sev.${group.severity}`)}
+              </Badge>
+              <span className="font-medium">{group.category}</span>
+              {group.texts.length > 1 && (
+                <span className="text-muted-foreground">({group.texts.length})</span>
+              )}
+            </div>
+            <ul className="mt-1 space-y-1 text-muted-foreground">
+              {group.texts.map((text, i) => <li key={i}>{text}</li>)}
+            </ul>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+/**
  * Details for the card the user clicked. Non-modal on purpose: the chart stays
  * usable beside it, so this is a labelled region rather than a dialog that
  * traps focus.
  */
-export default function TreePersonPanel({ personId, onClose, onFocusTree, onSelect }: {
+export default function TreePersonPanel({ personId, issue, onClose, onFocusTree, onSelect }: {
   personId: string;
+  /** Their outstanding problems, when "Visa konsekvenser" is on. */
+  issue?: PersonIssueMark;
   onClose: () => void;
   onFocusTree: (id: string) => void;
   onSelect: (id: string) => void;
@@ -128,6 +164,8 @@ export default function TreePersonPanel({ personId, onClose, onFocusTree, onSele
               </div>
             )}
           </dl>
+
+          {issue && <Problems mark={issue} />}
 
           <section className="mt-5">
             <h3 className="font-medium">{t('person.family')}</h3>

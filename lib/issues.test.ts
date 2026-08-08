@@ -308,35 +308,42 @@ describe('detectIssues — fingeravtryck och undantag', () => {
 });
 
 describe('summarizeByPerson', () => {
-  it('räknar problem per person och behåller den värsta allvarlighetsgraden', () => {
+  it('samlar varje persons problem, värst först', () => {
     const issues: Issue[] = [
-      { fingerprint: 'a', category: 'Saknar födelse', severity: 'warning', text: '', personIds: ['I1'] },
-      { fingerprint: 'b', category: 'Födsel efter bortgång', severity: 'error', text: '', personIds: ['I1'] },
-      { fingerprint: 'c', category: 'Syskon med samma förnamn', severity: 'info', text: '', personIds: ['I2'] },
+      { fingerprint: 'a', category: 'Saknar födelse', severity: 'warning', text: 'Ingen födelse alls.', personIds: ['I1'] },
+      { fingerprint: 'b', category: 'Födsel efter bortgång', severity: 'error', text: 'Född 1801, död 1800.', personIds: ['I1'] },
+      { fingerprint: 'c', category: 'Syskon med samma förnamn', severity: 'info', text: 'Två Anders.', personIds: ['I2'] },
     ];
     expect(summarizeByPerson(issues)).toEqual({
-      I1: { count: 2, severity: 'error', categories: ['Födsel efter bortgång', 'Saknar födelse'] },
-      I2: { count: 1, severity: 'info', categories: ['Syskon med samma förnamn'] },
+      I1: {
+        severity: 'error',
+        problems: [
+          { severity: 'error', category: 'Födsel efter bortgång', text: 'Född 1801, död 1800.' },
+          { severity: 'warning', category: 'Saknar födelse', text: 'Ingen födelse alls.' },
+        ],
+      },
+      I2: {
+        severity: 'info',
+        problems: [{ severity: 'info', category: 'Syskon med samma förnamn', text: 'Två Anders.' }],
+      },
     });
   });
 
-  it('märker alla inblandade, inte bara den som äger kön', () => {
+  it('märker alla inblandade, inte bara den som äger köposten', () => {
     const issues: Issue[] = [
-      { fingerprint: 'a', category: 'Barnet äldre än föräldrarna', severity: 'error', text: '', personIds: ['C', 'P'] },
+      { fingerprint: 'a', category: 'Barnet äldre än föräldrarna', severity: 'error', text: 'Barnet är äldst.', personIds: ['C', 'P'] },
     ];
     const marks = summarizeByPerson(issues);
     expect(Object.keys(marks).sort()).toEqual(['C', 'P']);
-    expect(marks.P).toEqual({ count: 1, severity: 'error', categories: ['Barnet äldre än föräldrarna'] });
+    expect(marks.P!.problems).toEqual([{ severity: 'error', category: 'Barnet äldre än föräldrarna', text: 'Barnet är äldst.' }]);
   });
 
-  it('räknar samma kategori två gånger men listar den en gång', () => {
+  it('behåller båda problemen när kategorin är densamma', () => {
     const issues: Issue[] = [
-      { fingerprint: 'a', category: 'Dödsfall utan datum', severity: 'warning', text: '', personIds: ['I1'] },
-      { fingerprint: 'b', category: 'Dödsfall utan datum', severity: 'warning', text: '', personIds: ['I1'] },
+      { fingerprint: 'a', category: 'Dödsfall utan datum', severity: 'warning', text: 'Första.', personIds: ['I1'] },
+      { fingerprint: 'b', category: 'Dödsfall utan datum', severity: 'warning', text: 'Andra.', personIds: ['I1'] },
     ];
-    expect(summarizeByPerson(issues).I1).toEqual({
-      count: 2, severity: 'warning', categories: ['Dödsfall utan datum'],
-    });
+    expect(summarizeByPerson(issues).I1!.problems).toHaveLength(2);
   });
 
   it('ger ett tomt register när inget är fel', () => {

@@ -26,13 +26,19 @@ export interface Issue {
 
 export interface DetectOptions { referenceYear?: number }
 
+/** One problem as the tree shows it — the queue's own wording, per person. */
+export interface PersonProblem {
+  severity: Severity;
+  category: string;
+  text: string;
+}
+
 /** What the tree charts draw on a card to say "look here". */
 export interface PersonIssueMark {
-  count: number;
   /** The worst of them — the badge takes its colour from this. */
   severity: Severity;
-  /** Distinct categories, worst first, for the card's tooltip. */
-  categories: string[];
+  /** Worst first; the badge counts them, the person panel reads them out. */
+  problems: PersonProblem[];
 }
 
 /**
@@ -44,11 +50,10 @@ export function summarizeByPerson(issues: Issue[]): Record<string, PersonIssueMa
   const worstFirst = [...issues].sort((a, b) =>
     SEVERITY_ORDER.indexOf(a.severity) - SEVERITY_ORDER.indexOf(b.severity));
   const marks: Record<string, PersonIssueMark> = {};
-  for (const issue of worstFirst) {
-    for (const id of issue.personIds) {
-      const mark = marks[id] ?? (marks[id] = { count: 0, severity: issue.severity, categories: [] });
-      mark.count++;
-      if (!mark.categories.includes(issue.category)) mark.categories.push(issue.category);
+  for (const { severity, category, text, personIds } of worstFirst) {
+    for (const id of personIds) {
+      const mark = marks[id] ?? (marks[id] = { severity, problems: [] });
+      mark.problems.push({ severity, category, text });
     }
   }
   return marks;

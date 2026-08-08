@@ -4,6 +4,11 @@
 
 ### Added
 
+**Zoomen kastas också**
+- Slutar man rulla mitt i en zoomning fortsätter den en kort stund och ebbar ut. Farten mäts i **logaritmiska enheter per millisekund**, eftersom skala är multiplikativ — det är vad som gör att utzoomning rullar precis lika långt som inzoomning i stället för att kärva vid den lilla änden.
+- Svansen börjar först när hjulhändelserna upphört. En styrplatta skickar redan sina egna avtagande händelser efter att fingrarna lyfts; att börja medan de fortfarande kommer hade lagt en svans på en annan.
+- Taket på farten gör att svansen förblir en svans: som mest omkring 40 %, oavsett hur hårt hjulet snurras.
+
 **Trädet går att kasta**
 - Släpper man taget medan man drar rullar duken vidare och saktar in, som en lista på en telefon. Farten mäts över **slutet** av draget, inte hela — en paus på vägen ska inte bromsa ett kast som avslutas snabbt — och avtar exponentiellt: ett linjärt stopp har ett synligt ögonblick där rörelsen bara upphör.
 - Att ta tag i duken mitt i kastet stoppar den tvärt. Zoom, återställning och piltangenter tar också över direkt.

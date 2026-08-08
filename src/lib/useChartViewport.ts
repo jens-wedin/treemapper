@@ -49,7 +49,32 @@ const FLING_SAMPLE_MS = 90;
 /** One slow frame must not be read as one huge step. */
 const MAX_FRAME_MS = 32;
 
+/**
+ * The same throw, applied to zoom.
+ *
+ * Scale is multiplicative, so the speed is measured in **log units per
+ * millisecond** — that is what makes zooming out coast exactly as far as
+ * zooming in, instead of stalling near the small end where a linear rate would
+ * have almost nothing left to subtract.
+ *
+ * The coast starts only once wheel events stop arriving. A trackpad already
+ * sends its own decaying events after the fingers lift; beginning while those
+ * are still coming would put one tail on top of another.
+ */
+const ZOOM_FLING_TAU = 60;
+const ZOOM_GESTURE_END_MS = 80;
+/** Below this the wheel was nudged, not spun (log units per ms). */
+const ZOOM_MIN_RATE = 0.0012;
+const ZOOM_STOP_RATE = 0.00005;
+/**
+ * However hard the wheel is spun, the tail stays a tail. Uncapped, a fast spin
+ * coasts further than the gesture itself — at 0.006 the most it can add is
+ * about 40 %, which reads as easing to a stop rather than carrying on zooming.
+ */
+const ZOOM_MAX_RATE = 0.006;
+
 interface Sample { t: number; x: number; y: number }
+interface ZoomSample { t: number; logK: number }
 
 /** Pixels per millisecond over the last few moves, or null if barely moving. */
 function velocityOf(samples: Sample[]): { x: number; y: number } | null {
@@ -92,9 +117,18 @@ export function useChartViewport(bounds: ChartBounds) {
 
   const fling = useRef(0);                 // rAF id while the canvas coasts
   const samples = useRef<Sample[]>([]);
+  const zoomFling = useRef(0);             // rAF id while the zoom coasts
+  const zoomSamples = useRef<ZoomSample[]>([]);
+  const zoomEnd = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const zoomAnchor = useRef({ x: 0, y: 0 });
+
   const stopFling = useCallback(() => {
     cancelAnimationFrame(fling.current);
     fling.current = 0;
+    cancelAnimationFrame(zoomFling.current);
+    zoomFling.current = 0;
+    clearTimeout(zoomEnd.current);
+    zoomSamples.current = [];
   }, []);
   useEffect(() => stopFling, [stopFling]);
 
@@ -156,7 +190,6 @@ export function useChartViewport(bounds: ChartBounds) {
   }, [reduced]);
 
   const zoomAround = useCallback((factor: number, px: number, py: number) => {
-    stopFling();
     adjusted.current = true;
     setView(v => {
       const k = Math.min(MAX_K, Math.max(MIN_K, v.k * factor));
@@ -164,6 +197,29 @@ export function useChartViewport(bounds: ChartBounds) {
       return { k, x: px - (px - v.x) * (k / v.k), y: py - (py - v.y) * (k / v.k) };
     });
   }, []);
+
+  /** Carry the zoom on from the rate the wheel had when it stopped. */
+  const throwZoom = useCallback((rate: number) => {
+    if (reduced) return;
+    let r = Math.sign(rate) * Math.min(Math.abs(rate), ZOOM_MAX_RATE);
+    let last = performance.now();
+    const step = (now: number) => {
+      const dt = Math.min(MAX_FRAME_MS, now - last);
+      last = now;
+      setView(v => {
+        const k = Math.min(MAX_K, Math.max(MIN_K, v.k * Math.exp(r * dt)));
+        if (k === v.k) return v;                 // sitting against a zoom limit
+        const { x, y } = zoomAnchor.current;
+        return { k, x: x - (x - v.x) * (k / v.k), y: y - (y - v.y) * (k / v.k) };
+      });
+      r *= Math.exp(-dt / ZOOM_FLING_TAU);
+      // The decaying rate alone decides when to stop. Asking whether the last
+      // frame actually moved cannot work here — that is only known once React
+      // runs the updater, which happens after this line.
+      zoomFling.current = Math.abs(r) > ZOOM_STOP_RATE ? requestAnimationFrame(step) : 0;
+    };
+    zoomFling.current = requestAnimationFrame(step);
+  }, [reduced]);
 
   // React's synthetic wheel handler is passive — attach a real one to preventDefault.
   useEffect(() => {
@@ -179,11 +235,36 @@ export function useChartViewport(bounds: ChartBounds) {
       const step = Math.min(MAX_WHEEL_STEP, Math.max(1 / MAX_WHEEL_STEP, factor));
       // No easing here: continuous input has to track the fingers exactly, and
       // a transition would always be chasing the last event.
-      zoomAround(step, e.clientX - rect.left, e.clientY - rect.top);
+      const px = e.clientX - rect.left;
+      const py = e.clientY - rect.top;
+      cancelAnimationFrame(zoomFling.current);   // a new turn takes over from the coast
+      zoomFling.current = 0;
+      zoomAnchor.current = { x: px, y: py };
+      zoomAround(step, px, py);
+
+      // Rate over the tail of the gesture, in log units per millisecond.
+      const now = e.timeStamp;
+      const previous = zoomSamples.current[zoomSamples.current.length - 1];
+      zoomSamples.current.push({ t: now, logK: (previous?.logK ?? 0) + Math.log(step) });
+      zoomSamples.current = zoomSamples.current.filter(s => now - s.t <= FLING_SAMPLE_MS * 2);
+
+      clearTimeout(zoomEnd.current);
+      zoomEnd.current = setTimeout(() => {
+        const list = zoomSamples.current;
+        zoomSamples.current = [];
+        const last = list[list.length - 1];
+        const first = list.find(s => last && last.t - s.t <= FLING_SAMPLE_MS) ?? list[0];
+        if (!last || !first) return;
+        const dt = last.t - first.t;
+        if (dt < 8) return;
+        const rate = (last.logK - first.logK) / dt;
+        console.log('DIAG rate', rate, 'samples', list.length, 'dt', dt);
+        if (Math.abs(rate) >= ZOOM_MIN_RATE) throwZoom(rate);
+      }, ZOOM_GESTURE_END_MS);
     };
     svg.addEventListener('wheel', onWheel, { passive: false });
     return () => svg.removeEventListener('wheel', onWheel);
-  }, [zoomAround]);
+  }, [zoomAround, throwZoom]);
 
   /** Zoom by a step, keeping a content-space point (default: the centre) still. */
   const zoomBy = useCallback((factor: number, anchor?: { x: number; y: number }) => {

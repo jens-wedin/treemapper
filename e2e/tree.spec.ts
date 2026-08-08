@@ -482,3 +482,42 @@ test.describe('att kasta trädet', () => {
     expect(await panX(page)).toBe(atRelease);
   });
 });
+
+test.describe('att kasta zoomen', () => {
+  const zoom = (page: import('@playwright/test').Page) =>
+    page.locator('text=/^\\d+%$/').first().innerText().then(s => Number(s.replace('%', '')));
+
+  const spin = async (page: import('@playwright/test').Page) => {
+    const svg = page.locator('svg[role="group"]').first();
+    for (let i = 0; i < 5; i++) {
+      await svg.dispatchEvent('wheel', { deltaY: -60, deltaMode: 0, bubbles: true });
+      await page.waitForTimeout(16);
+    }
+  };
+
+  test('zoomen rullar vidare en stund efter att hjulet stannat', async ({ page }) => {
+    await page.goto('/trad/I500001?upp=2&ned=1&vy=family');
+    await page.locator('[data-tree-node]').first().waitFor();
+
+    await spin(page);
+    const atStop = await zoom(page);
+    await page.waitForTimeout(400);
+    const coasted = await zoom(page);
+    await page.waitForTimeout(500);
+    const settled = await zoom(page);
+
+    expect(coasted).toBeGreaterThan(atStop);      // fortsätter av sig självt
+    expect(settled).toBe(coasted);                // och stannar
+  });
+
+  test('mindre rörelse zoomar utan svans', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/trad/I500001?upp=2&ned=1&vy=family');
+    await page.locator('[data-tree-node]').first().waitFor();
+
+    await spin(page);
+    const atStop = await zoom(page);
+    await page.waitForTimeout(400);
+    expect(await zoom(page)).toBe(atStop);
+  });
+});

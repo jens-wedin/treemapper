@@ -20,7 +20,7 @@ test('importera en GEDCOM till ett nytt släktträd, byt till det och ta bort de
   await page.getByRole('button', { name: 'Importera', exact: true }).click();
 
   // The summary is announced, not just drawn.
-  await expect(page.getByText('Testsläkten: 3 personer, 1 familjer, 1 källor')).toBeVisible();
+  await expect(page.getByText('Testsläkten: 3 personer, 1 familj, 1 källa')).toBeVisible();
 
   // The new tree is selectable, and the original is still first in the list.
   const picker = page.getByRole('combobox', { name: 'Släktträd' });

@@ -5,7 +5,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { t, useLanguage } from '../../lib/i18n';
+import { plural, t, useLanguage } from '../../lib/i18n';
 import { refreshTrees, useActiveTree, useTrees, type TreeSummary } from '../../lib/activeTree';
 
 const when = (iso: string, lang: string) => {
@@ -72,7 +72,7 @@ function Row({ tree, onChanged }: { tree: TreeSummary; onChanged: () => void }) 
           </p>
         )}
         <p className="text-sm text-muted-foreground">
-          {t('trees.persons').replace('{n}', String(tree.persons))} · {t('trees.created').replace('{date}', when(tree.createdAt, lang))}
+          {plural(tree.persons, 'trees.unitPerson', 'trees.unitPersons')} · {t('trees.created').replace('{date}', when(tree.createdAt, lang))}
         </p>
         {/* Photos are links in a GEDCOM, not files: a fresh tree has none. */}
         {tree.photosPending > 0 && (

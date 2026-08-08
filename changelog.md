@@ -4,6 +4,21 @@
 
 ### Added
 
+**GEDCOM-import skapar ett nytt släktträd**
+- **Inställningar → Importera släktträd** läser en GEDCOM-fil till ett helt nytt träd. Det träd som redan finns rörs inte: ingenting matchas, slås ihop eller skrivs över. En trädväljare i sidhuvudet byter mellan dem, och den som aldrig öppnat en terminal klarar hela vägen själv.
+- **En SQLite-fil per träd, inte en `treeId`-kolumn.** GEDCOM-id är bara unika inom en fil — det här trädets `I500097` och en kusins `I500097` är olika människor. Delade tabeller hade krävt antingen omskrivna id:n eller ett filter på ett fyrtiotal frågeställen, där ett enda glömt filter tyst blandar ihop två släkter.
+- Trädets namn bor i en `tree_meta`-rad **inne i trädet**. Inget centralt register som kan komma ur synk, gå sönder eller tappas bort när en `.db` kopieras: att lista träden är en katalogläsning plus en rad per fil. En databas utan rad får sitt filnamn och kan döpas om i gränssnittet.
+- **Det ursprungliga trädet flyttas aldrig.** `wedin.db` (`WEDIN_DB`) är kvar precis som det är och heter `default` i listan, så alla CLI-skript och e2e-isoleringen fungerar oförändrat. Det kan inte tas bort från gränssnittet — skripten äger den filen.
+- Varje förfrågan bär med sig `?tree=<id>`, tillagt på ett enda ställe i `src/lib/api.ts`. Frågeparameter och inte header, eftersom GEDCOM-exporten är en vanlig nedladdningslänk och länkar inte kan sätta headers. Att valet ligger i webbläsaren och inte i servern är vad som gör att en omladdning, en andra flik och den seriella e2e-sviten alla beter sig.
+- **En trasig fil skapar ingenting.** Uppladdningen läses och kontrolleras innan något träd finns: en fil utan personer avvisas med 400, och skulle importen ändå fela raderas den halvskrivna databasen. Uppladdningar över 50 MB stoppas innan de buffras.
+- Foton laddas inte ner för importerade träd — en GEDCOM innehåller länkar, inte filer. Nya träd visar platshållarna som redan finns, och trädlistan säger hur många som saknas. `npm run media` är fortfarande vägen dit.
+- `runImport` flyttad från `scripts/` till `lib/`: ett träd skapat i webbläsaren och ett skapat i terminalen måste vara samma sak. `npm run import` är oförändrat.
+
+### Fixed
+
+- `fetchJson` kastar nu `ApiError` med statuskod. Personsidan och källsidan jämförde felmeddelandet med strängen `'HTTP 404'` för att skilja "finns inte" från "något gick sönder" — ett kontrakt som gick sönder tyst så fort meddelandet förbättrades, vilket e2e-sviten fångade.
+- Namnfältet i trädlistan har ett eget etikettnamn. Det delade annars tillgängligt namn med importformulärets namnfält på samma sida, vilket gör dem omöjliga att skilja åt med skärmläsare.
+
 **Konsekvensbänken grupperas efter allvarlighetsgrad**
 - Kön har nu en rubrik per grad (logiskt fel → dubblett → varning → övrigt → småfel) i stället för en enda lång lista, och ett gradfilter vid sidan av kategorifiltret. Eftersom listan är kapad vid 500 problem var de mildare graderna annars omöjliga att nå — man såg bara fel och dubbletter. Graden står i rubriken, så korten upprepar den inte längre.
 - **Rättat: filtret bytte inte ut listan.** Valde man en varningskategori låg de logiska felen kvar överst. Samma problem rapporterades flera gånger när data innehåller samma faktum flera gånger (en person har fyra identiska "Bosatt" efter sin död), korten fick då samma React-nyckel, och React behöll gamla kort vid omritningen. Nu viks problem med samma fingeravtryck *och* samma ägare ihop till ett (7 av 2 826). Ägaren måste ingå i identiteten: en dubblettgrupp delar med flit ett fingeravtryck mellan sina medlemmar, och var och en behöver ändå sitt eget kort.

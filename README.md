@@ -11,11 +11,44 @@ Design spec: `docs/superpowers/specs/2026-08-05-wedin-tree-design.md`.
 ```bash
 npm install
 npm run import   # one-time: data/Wedin_Family_Tree_CLEANED.ged → wedin.db
+                 # (further trees are imported in the app, see Flera släktträd)
 npm run media    # download photos from MyHeritage CDN → media/
 npm run dev      # http://localhost:5173 (API on :3001)
 npm test         # vitest unit tests
 npm run test:e2e # Playwright browse flow (needs wedin.db)
 ```
+
+## Flera släktträd
+
+The app holds **several unconnected family trees**, one SQLite file each, and a
+picker in the header chooses which one is on screen. Importing a GEDCOM from
+**Inställningar → Importera släktträd** creates a *new* tree; nothing existing
+is touched, matched or merged.
+
+One file per tree rather than a `treeId` column, because **GEDCOM xrefs are only
+unique inside one file** — this tree's `I500097` and a cousin's `I500097` are
+different people. Separate files make that mix-up impossible and reduce deleting
+a tree to deleting a file.
+
+| Where | What |
+|---|---|
+| `wedin.db` (`WEDIN_DB`) | The tree that was here first, id `default`. Owned by the CLI scripts, and not deletable from the UI. |
+| `trees/<id>.db` (`WEDIN_TREES_DIR`) | One file per imported tree. |
+| `media/`, `media/<id>/` | Photos, per tree. |
+
+A tree's name lives in a `tree_meta` row **inside** the tree, so there is no
+central registry to drift out of sync or lose when a `.db` is copied. A database
+opened without one is named after its file and can be renamed in the UI.
+
+Every request carries the tree as `?tree=<id>`, added centrally in
+`src/lib/api.ts`. A query parameter rather than a header because the GEDCOM
+export is a plain download link, and links cannot set headers. Keeping the
+choice in the browser rather than on the server is what makes a reload, a second
+tab and the serial e2e suite each behave.
+
+**Photos are not downloaded for imported trees.** A GEDCOM stores CDN links, not
+files; new trees show the usual placeholders and the tree list says how many are
+pending. `npm run media` remains the way to fetch them.
 
 ## Språk / Language
 

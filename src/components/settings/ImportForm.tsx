@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { t } from '../../lib/i18n';
+import { plural, t } from '../../lib/i18n';
 import { refreshTrees, setActiveTree, type TreeSummary } from '../../lib/activeTree';
 
 interface ImportSummary {
@@ -87,13 +87,14 @@ export default function ImportForm({ onImported }: { onImported?: (tree: TreeSum
         {result && (
           <>
             <p className="font-medium">
-              {result.tree.name}: {t('trees.imported')
-                .replace('{persons}', String(result.summary.inserted.persons))
-                .replace('{families}', String(result.summary.inserted.families))
-                .replace('{sources}', String(result.summary.inserted.sources))}
+              {result.tree.name}: {[
+                plural(result.summary.inserted.persons, 'trees.unitPerson', 'trees.unitPersons'),
+                plural(result.summary.inserted.families, 'trees.unitFamily', 'trees.unitFamilies'),
+                plural(result.summary.inserted.sources, 'trees.unitSource', 'trees.unitSources'),
+              ].join(', ')}
             </p>
             <Button type="button" variant="secondary" onClick={() => setActiveTree(result.tree.id)}>
-              {result.tree.name}
+              {t('trees.open').replace('{name}', result.tree.name)}
             </Button>
             {result.summary.warnings.length ? (
               <details>

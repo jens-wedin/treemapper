@@ -8,6 +8,7 @@ export type Lang = 'sv' | 'en' | 'de' | 'es';
 const sv = {
   appTitle: 'Wedin släktträd',
   language: 'Språk',
+  theme: { label: 'Utseende', system: 'Följ systemet', light: 'Ljust', dark: 'Mörkt' },
   nav: {
     home: 'Hem', persons: 'Personer', tree: 'Träd', statistics: 'Statistik', issues: 'Konsekvens',
     sources: 'Källor', settings: 'Inställningar', skip: 'Hoppa till innehåll',
@@ -142,6 +143,7 @@ type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]>
 const en: DeepPartial<Dict> = {
   appTitle: 'Wedin Family Tree',
   language: 'Language',
+  theme: { label: 'Appearance', system: 'Follow system', light: 'Light', dark: 'Dark' },
   nav: {
     home: 'Home', persons: 'People', tree: 'Tree', statistics: 'Statistics', issues: 'Consistency',
     sources: 'Sources', settings: 'Settings', skip: 'Skip to content',
@@ -273,6 +275,7 @@ const en: DeepPartial<Dict> = {
 const de: DeepPartial<Dict> = {
   appTitle: 'Wedin Stammbaum',
   language: 'Sprache',
+  theme: { label: 'Darstellung', system: 'System folgen', light: 'Hell', dark: 'Dunkel' },
   nav: {
     home: 'Start', persons: 'Personen', tree: 'Baum', statistics: 'Statistik', issues: 'Konsistenz',
     sources: 'Quellen', settings: 'Einstellungen', skip: 'Zum Inhalt springen',
@@ -404,6 +407,7 @@ const de: DeepPartial<Dict> = {
 const es: DeepPartial<Dict> = {
   appTitle: 'Árbol genealógico Wedin',
   language: 'Idioma',
+  theme: { label: 'Apariencia', system: 'Seguir el sistema', light: 'Claro', dark: 'Oscuro' },
   nav: {
     home: 'Inicio', persons: 'Personas', tree: 'Árbol', statistics: 'Estadísticas', issues: 'Consistencia',
     sources: 'Fuentes', settings: 'Ajustes', skip: 'Saltar al contenido',

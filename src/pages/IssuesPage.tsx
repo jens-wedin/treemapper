@@ -55,20 +55,20 @@ export default function IssuesPage() {
   return (
     <section>
       <h1 className="text-2xl font-bold">{t('issues.title')}</h1>
-      <p className="mt-1 text-gray-600">{t('issues.lead')}</p>
+      <p className="mt-1 text-muted-foreground">{t('issues.lead')}</p>
       {/* Category names and problem sentences are produced by the detectors in
           Swedish; say so rather than showing a half-translated page. */}
       {getLanguage() !== 'sv' && (
-        <p className="mt-1 text-sm text-gray-500">{t('issues.detailsInSwedish')}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{t('issues.detailsInSwedish')}</p>
       )}
 
       {data && (
-        <p className="mt-4 rounded-lg border bg-gray-50 p-4 text-lg">
+        <p className="mt-4 rounded-lg border bg-muted/50 p-4 text-lg">
           {t('issues.remaining')
             .replace('{n}', data.total.toLocaleString('sv-SE'))
             .replace('{total}', data.totalAll.toLocaleString('sv-SE'))}
           {data.dismissed > 0 && (
-            <span className="ml-2 text-sm text-gray-600">
+            <span className="ml-2 text-sm text-muted-foreground">
               ({data.dismissed.toLocaleString('sv-SE')} {t('issues.dismissedBadge').toLowerCase()})
             </span>
           )}
@@ -100,14 +100,14 @@ export default function IssuesPage() {
         </label>
       </div>
 
-      <p aria-live="polite" className="mt-4 text-sm text-gray-600">
+      <p aria-live="polite" className="mt-4 text-sm text-muted-foreground">
         {state === 'loading' ? t('common.loading') : data?.truncated
           ? t('issues.truncated').replace('{n}', String(data.items.length))
           : ''}
       </p>
 
       {data && data.items.length === 0 && state === 'ok' && (
-        <p className="mt-4 text-gray-600">{t('issues.noIssues')}</p>
+        <p className="mt-4 text-muted-foreground">{t('issues.noIssues')}</p>
       )}
 
       {data && data.items.length > 0 && (

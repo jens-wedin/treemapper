@@ -61,7 +61,7 @@ export default function FanChart({ data, generations, onSelect, selectedId }: {
         onFlagsChange={setShowFlags}
         hint={t('tree.instructionsAncestors')}
       />
-      <div ref={viewport.wrapRef} className="mt-2 min-h-[320px] w-full flex-1 overflow-hidden rounded-lg border bg-gray-100">
+      <div ref={viewport.wrapRef} className="mt-2 min-h-[320px] w-full flex-1 overflow-hidden rounded-lg border bg-[var(--chart-canvas)]">
         <svg
           ref={viewport.svgRef}
           role="group"
@@ -90,23 +90,25 @@ export default function FanChart({ data, generations, onSelect, selectedId }: {
                 >
                   <path
                     d={s.wedgePath}
-                    fill={isSelected ? '#fef3c7' : colors.fill}
-                    stroke={isActive ? '#f59e0b' : '#e5e7eb'}
+                    style={{
+                      fill: isSelected ? 'var(--card-fill-selected)' : colors.fill,
+                      stroke: isActive ? 'var(--card-stroke-active)' : 'var(--card-stroke)',
+                    }}
                     strokeWidth={isActive ? 2.5 : 1}
                   />
                   {/* the coloured band marking each generation's outer edge */}
-                  <path d={s.bandPath} fill="none" stroke={colors.band} strokeWidth={3} />
+                  <path d={s.bandPath} fill="none" style={{ stroke: colors.band }} strokeWidth={3} />
 
                   {s.labelPath ? (
                     <>
                       <path id={`lbl-${s.key}`} d={s.labelPath} fill="none" />
-                      <text className="fill-gray-800" fontSize={s.fontSize} dy={s.showYears ? -2 : 4}>
+                      <text className="fill-foreground" fontSize={s.fontSize} dy={s.showYears ? -2 : 4}>
                         <textPath href={`#lbl-${s.key}`} startOffset="50%" textAnchor="middle">
                           {shorten(displayName(s.person), s.labelMaxChars)}
                         </textPath>
                       </text>
                       {s.showYears && (
-                        <text className="fill-gray-500" fontSize={s.fontSize - 2} dy={13}>
+                        <text className="fill-muted-foreground" fontSize={s.fontSize - 2} dy={13}>
                           <textPath href={`#lbl-${s.key}`} startOffset="50%" textAnchor="middle">
                             {lifespan(s.person.birthYear, s.person.deathYear)}
                           </textPath>
@@ -121,11 +123,11 @@ export default function FanChart({ data, generations, onSelect, selectedId }: {
                       textAnchor={s.labelRadial.anchor}
                       dominantBaseline="middle"
                       fontSize={s.fontSize}
-                      className="fill-gray-800"
+                      className="fill-foreground"
                     >
                       {shorten(displayName(s.person), s.labelMaxChars)}
                       {s.showYears && (
-                        <tspan className="fill-gray-500" fontSize={s.fontSize - 2}>
+                        <tspan className="fill-muted-foreground" fontSize={s.fontSize - 2}>
                           {'  '}{lifespan(s.person.birthYear, s.person.deathYear)}
                         </tspan>
                       )}
@@ -149,7 +151,7 @@ export default function FanChart({ data, generations, onSelect, selectedId }: {
               className="chart-card cursor-pointer outline-none"
               onClick={() => onSelect(centre.person.id)}
             >
-              <circle r={centre.r} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1.5} />
+              <circle r={centre.r} style={{ fill: 'var(--card-fill)', stroke: 'var(--branch-focus-stroke)' }} strokeWidth={1.5} />
               {centre.person.photoId != null ? (
                 <>
                   <clipPath id="fan-centre-photo">
@@ -166,12 +168,12 @@ export default function FanChart({ data, generations, onSelect, selectedId }: {
                   />
                 </>
               ) : (
-                <circle r={centre.r * 0.52} cy={-10} className="fill-gray-100" />
+                <circle r={centre.r * 0.52} cy={-10} style={{ fill: 'var(--card-avatar)' }} />
               )}
-              <text y={centre.r * 0.55} textAnchor="middle" className="fill-gray-900 text-[12px] font-medium">
+              <text y={centre.r * 0.55} textAnchor="middle" className="fill-foreground text-[12px] font-medium">
                 {shorten(displayName(centre.person))}
               </text>
-              <text y={centre.r * 0.55 + 15} textAnchor="middle" className="fill-gray-500 text-[11px]">
+              <text y={centre.r * 0.55 + 15} textAnchor="middle" className="fill-muted-foreground text-[11px]">
                 {lifespan(centre.person.birthYear, centre.person.deathYear)}
               </text>
             </g>

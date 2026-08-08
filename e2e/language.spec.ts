@@ -7,7 +7,7 @@ test('gränssnittet kan bytas till engelska, tyska och spanska', async ({ page }
   await page.goto('/personer');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Personer');
 
-  const picker = page.locator('header select');
+  const picker = page.getByRole('combobox', { name: /Språk|Language|Sprache|Idioma/ });
 
   await picker.selectOption('en');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('People');
@@ -25,7 +25,7 @@ test('gränssnittet kan bytas till engelska, tyska och spanska', async ({ page }
 
 test('språkvalet minns mellan besök och gäller alla sidor', async ({ page }) => {
   await page.goto('/');
-  await page.locator('header select').selectOption('en');
+  await page.getByRole('combobox', { name: /Språk|Language|Sprache|Idioma/ }).selectOption('en');
   await expect(page.getByRole('link', { name: 'Tree' })).toBeVisible();
 
   await page.reload();
@@ -48,10 +48,10 @@ test('händelser och datum översätts på personsidan', async ({ page }) => {
   await expect(timeline.getByText('Födelse').first()).toBeVisible();
   await expect(timeline.getByText('15 apr 1942').first()).toBeVisible();
 
-  await page.locator('header select').selectOption('en');
+  await page.getByRole('combobox', { name: /Språk|Language|Sprache|Idioma/ }).selectOption('en');
   await expect(timeline.getByText('Birth').first()).toBeVisible();
   await expect(timeline.getByText('15 Apr 1942').first()).toBeVisible();
 
-  await page.locator('header select').selectOption('de');
+  await page.getByRole('combobox', { name: /Språk|Language|Sprache|Idioma/ }).selectOption('de');
   await expect(timeline.getByText('Geburt').first()).toBeVisible();
 });

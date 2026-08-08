@@ -34,6 +34,26 @@ page says so when another language is selected.
 Adding a language means one dictionary in `src/lib/i18n/dictionaries.ts` plus
 its event labels, month names and qualifiers.
 
+## Ljust och mörkt läge
+
+A picker in the header: **Follow system / Light / Dark**, remembered between
+visits and applied before the first paint so there is no light flash. While the
+choice is "follow system" the app keeps tracking the OS — switching your laptop
+to night mode changes it without a reload.
+
+The theme's own colours come from the shadcn preset's `:root` and `.dark`
+blocks. The charts could not use Tailwind's `dark:` variant, because their
+colours are SVG fills and strokes set from JavaScript, so `src/index.css`
+defines them as variables (`--branch-*`, `--card-*`, `--chart-canvas`,
+`--chart-link`) that the `.dark` block swaps. They must be applied through
+`style`, not as `fill`/`stroke` attributes — `fill="var(--x)"` does not resolve
+as a presentation attribute.
+
+The four branch hues keep their identity in both themes: pale tints on a light
+canvas, deep tints on a dark one. **National flag colours are deliberately not
+themed** — a Swedish flag is blue and yellow whatever the mode — and an e2e test
+asserts exactly that while the cards around it do change.
+
 ## Browse
 
 - `/` — Hem: search front and center + tree stats

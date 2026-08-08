@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { NavLink, Route, Routes, useLocation } from 'react-router';
 import { t, useLanguage, setLanguage, LANGUAGES, type Lang } from './lib/i18n';
+import { useTheme, setTheme, THEMES, type Theme } from './lib/theme';
 import Hem from './pages/Hem';
 import PersonList from './pages/PersonList';
 import PersonPage from './pages/PersonPage';
@@ -27,6 +28,7 @@ export default function App() {
   const isTree = pathname.startsWith('/trad');
   // Subscribing here re-renders the whole app when the language changes.
   const lang = useLanguage();
+  const theme = useTheme();
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -38,7 +40,7 @@ export default function App() {
     <div className={`flex flex-col ${isTree ? 'h-dvh overflow-hidden' : 'min-h-dvh'}`}>
       <a
         href="#innehall"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-white focus:p-2 focus:shadow"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-background focus:p-2 focus:shadow"
       >
         {t('nav.skip')}
       </a>
@@ -68,6 +70,19 @@ export default function App() {
             </NavLink>
           ))}
           <label className="ml-auto flex items-center gap-2 text-sm">
+            <span className="sr-only">{t('theme.label')}</span>
+            <select
+              aria-label={t('theme.label')}
+              value={theme}
+              onChange={e => setTheme(e.target.value as Theme)}
+              className="rounded-md border px-2 py-1"
+            >
+              {THEMES.map(mode => (
+                <option key={mode} value={mode}>{t(`theme.${mode}`)}</option>
+              ))}
+            </select>
+          </label>
+          <label className="flex items-center gap-2 text-sm">
             <span className="sr-only">{t('language')}</span>
             <select
               aria-label={t('language')}

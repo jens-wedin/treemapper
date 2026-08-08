@@ -30,13 +30,20 @@ export function branchOf(ahnentafel: number): Branch {
   return second ? 'mm' : 'mf';
 }
 
-/** The four branch hues used by both ancestor views. */
+/**
+ * The four branch hues used by both ancestor views.
+ *
+ * These are CSS variables rather than literals so the charts follow light and
+ * dark mode; index.css holds both palettes. They must be applied through
+ * `style`, not as SVG presentation attributes — `fill="var(--x)"` does not
+ * resolve as an attribute.
+ */
 export const BRANCH_COLORS: Record<Branch, { stroke: string; fill: string; band: string }> = {
-  focus: { stroke: '#334155', fill: '#ffffff', band: '#94a3b8' },
-  ff: { stroke: '#38bdf8', fill: '#f0f9ff', band: '#38bdf8' },
-  fm: { stroke: '#4ade80', fill: '#f0fdf4', band: '#4ade80' },
-  mf: { stroke: '#fb7185', fill: '#fff1f2', band: '#fb7185' },
-  mm: { stroke: '#fbbf24', fill: '#fffbeb', band: '#fbbf24' },
+  focus: { stroke: 'var(--branch-focus-stroke)', fill: 'var(--branch-focus-fill)', band: 'var(--branch-focus-band)' },
+  ff: { stroke: 'var(--branch-ff-stroke)', fill: 'var(--branch-ff-fill)', band: 'var(--branch-ff-stroke)' },
+  fm: { stroke: 'var(--branch-fm-stroke)', fill: 'var(--branch-fm-fill)', band: 'var(--branch-fm-stroke)' },
+  mf: { stroke: 'var(--branch-mf-stroke)', fill: 'var(--branch-mf-fill)', band: 'var(--branch-mf-stroke)' },
+  mm: { stroke: 'var(--branch-mm-stroke)', fill: 'var(--branch-mm-fill)', band: 'var(--branch-mm-stroke)' },
 };
 
 /**

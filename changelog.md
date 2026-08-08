@@ -4,6 +4,12 @@
 
 ### Added
 
+**Ljust och mörkt läge**
+- Väljare i sidhuvudet: **Följ systemet / Ljust / Mörkt**, ihågkommen mellan besök och applicerad före första målningen så att sidan inte blinkar ljus. Så länge valet är "följ systemet" fortsätter appen lyssna på operativsystemet — byter man till nattläge följer appen med utan omladdning. Strängarna finns på alla fyra språken.
+- Diagrammen kunde inte använda Tailwinds `dark:`-variant, eftersom deras färger är SVG-fill och -stroke satta från JavaScript. De ligger nu som CSS-variabler (`--branch-*`, `--card-*`, `--chart-canvas`, `--chart-link`) som `.dark` byter ut, och appliceras via `style` — `fill="var(--x)"` fungerar inte som presentationsattribut. De fyra grenfärgerna behåller sin identitet i båda lägena: bleka toner mot ljus botten, djupa mot mörk.
+- Flaggornas färger är medvetet inte tematiserade — en svensk flagga är blå och gul oavsett läge. Ett e2e-test kontrollerar just det, samtidigt som korten runt omkring byter färg.
+- Resten av gränssnittet gick från hårdkodade gråskalor till temats egna tokens (`text-muted-foreground`, `bg-muted`, `text-primary`, `text-destructive`); konsekvensproblemens färgkodade allvarlighetsgrader fick mörka varianter som behåller sin kulör.
+
 **Statistik**
 - Ny sida `/statistik` som berättar släktens historia i siffror: liv och livslängd, namn, familjer samt orter och arbete. Hela trädet som standard, eller en persons **egna förfäder och ättlingar** via `?person=` (251 personer för Sven-Erik mot 4 070 om man räknat alla släktband — då hade den avgränsade vyn varit likadan som den oavgränsade). Avgränsningen är en bredden-först-vandring i JS: 8 ms att läsa in släktbanden, 0 ms att gå igenom dem, mot 4,5 sekunder för samma fråga som rekursiv CTE.
 - Varje siffra anger vad den vilar på, eftersom tomma årtal finns överallt. Två spärrar håller datafel utanför berättelsen: livslängder över 110 år (tre personer, som mest 118) och åldersskillnader mellan makar över 50 år (två par, 61 och 111) räknas bort — sådant flaggar Konsekvensbänken redan.

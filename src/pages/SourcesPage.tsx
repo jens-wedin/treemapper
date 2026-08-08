@@ -54,7 +54,7 @@ export default function SourcesPage() {
         <Button type="submit">{t('search.button')}</Button>
       </form>
 
-      <p aria-live="polite" className="mt-4 text-sm text-gray-600">
+      <p aria-live="polite" className="mt-4 text-sm text-muted-foreground">
         {error ? t('common.error') : result ? t('search.hits').replace('{n}', String(result.total)) : t('common.loading')}
       </p>
 
@@ -72,7 +72,7 @@ export default function SourcesPage() {
             {result.items.map(s => (
               <tr key={s.id} className="border-b">
                 <td className="py-2 pr-4">
-                  <Link to={`/kalla/${s.id}`} className="text-blue-700 underline-offset-2 hover:underline">
+                  <Link to={`/kalla/${s.id}`} className="text-primary underline-offset-2 hover:underline">
                     {s.title ?? s.id}
                   </Link>
                 </td>

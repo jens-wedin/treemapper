@@ -68,7 +68,7 @@ export default function EventForm({ event, ownerId, onDone, onCancel }: {
             value={form.type}
             disabled={!!event}
             onChange={e => setForm({ ...form, type: e.target.value })}
-            className="mt-1 rounded-md border px-2 py-1.5 disabled:bg-gray-100"
+            className="mt-1 rounded-md border px-2 py-1.5 disabled:bg-muted"
           >
             {(event && !TYPES.includes(event.type) ? [event.type, ...TYPES] : TYPES).map(ty => (
               <option key={ty} value={ty}>{eventLabel(ty)}</option>
@@ -92,7 +92,7 @@ export default function EventForm({ event, ownerId, onDone, onCancel }: {
           <Input id={`${idp}-alder`} value={form.age} onChange={e => setForm({ ...form, age: e.target.value })} className="mt-1 w-24" />
         </div>
       </div>
-      {error && <p role="alert" className="mt-3 text-red-700">{error}</p>}
+      {error && <p role="alert" className="mt-3 text-destructive">{error}</p>}
       <div className="mt-4 flex gap-2">
         <Button type="submit" disabled={saving}>{t('edit.save')}</Button>
         <Button type="button" variant="outline" onClick={onCancel}>{t('edit.cancel')}</Button>

@@ -12,7 +12,7 @@ export default function SettingsPage() {
 
       <section className="mt-6 rounded-lg border p-4">
         <h2 className="text-lg font-semibold">{t('export.gedcom')}</h2>
-        <p className="mt-2 text-gray-700">{t('export.gedcomHelp')}</p>
+        <p className="mt-2 text-foreground">{t('export.gedcomHelp')}</p>
         {/* A plain link, not fetch(): let the browser handle the download. */}
         <a
           href="/api/export/gedcom"
@@ -21,8 +21,8 @@ export default function SettingsPage() {
         >
           {t('export.download')}
         </a>
-        <p className="mt-4 text-sm text-gray-600">{t('export.backupNote')}</p>
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-4 text-sm text-muted-foreground">{t('export.backupNote')}</p>
+        <p className="mt-1 text-sm text-muted-foreground">
           <code>{t('export.cliNote')}</code>
         </p>
       </section>

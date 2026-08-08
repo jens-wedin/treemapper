@@ -37,9 +37,9 @@ export default function EventEditor({ events, ownerId, citations: Citations, onC
   return (
     <>
       {warnings.length > 0 && (
-        <p role="status" className="mt-2 text-sm text-amber-700">{warnings.join(' ')}</p>
+        <p role="status" className="mt-2 text-sm text-amber-700 dark:text-amber-400">{warnings.join(' ')}</p>
       )}
-      {error && <p role="alert" className="mt-2 text-red-700">{error}</p>}
+      {error && <p role="alert" className="mt-2 text-destructive">{error}</p>}
       <ol className="mt-3 space-y-4 border-l pl-4">
         {events.map(e => (
           <li key={e.id}>
@@ -49,8 +49,8 @@ export default function EventEditor({ events, ownerId, citations: Citations, onC
               <>
                 <div className="font-medium">
                   {eventLabel(e.type)}
-                  {e.dateRaw && <span className="ml-2 font-normal text-gray-600">{formatGedcomDate(e.dateRaw)}</span>}
-                  {e.age && <span className="ml-2 text-sm font-normal text-gray-500">({t('person.age')} {e.age})</span>}
+                  {e.dateRaw && <span className="ml-2 font-normal text-muted-foreground">{formatGedcomDate(e.dateRaw)}</span>}
+                  {e.age && <span className="ml-2 text-sm font-normal text-muted-foreground">({t('person.age')} {e.age})</span>}
                   <span className="ml-3 inline-flex gap-1 align-middle">
                     <Button variant="outline" size="sm" onClick={() => setEditingId(e.id)}>
                       {t('edit.edit')}
@@ -61,7 +61,7 @@ export default function EventEditor({ events, ownerId, citations: Citations, onC
                   </span>
                 </div>
                 {(e.place || eventDescription(e.description)) && (
-                  <div className="text-gray-700">
+                  <div className="text-foreground">
                     {[eventDescription(e.description), e.place].filter(Boolean).join(' — ')}
                   </div>
                 )}

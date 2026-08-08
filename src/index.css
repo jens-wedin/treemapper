@@ -190,6 +190,70 @@
 /*
  ---break---
  */
+
+/*
+ * Chart colours.
+ *
+ * The tree charts set these as SVG fills and strokes, so they cannot use
+ * Tailwind's dark: variant — they are variables instead, and the .dark block
+ * below swaps them. National flag colours in CountryFlag.tsx stay hard-coded:
+ * a Swedish flag is blue and yellow whatever the theme.
+ */
+:root {
+  --chart-canvas: oklch(0.955 0.004 106.5);
+  --chart-link: oklch(0.72 0.02 106.9);
+  --chart-link-strong: oklch(0.62 0.02 106.9);
+
+  --card-fill: oklch(1 0 0);
+  --card-fill-selected: oklch(0.98 0.03 95);
+  --card-stroke: oklch(0.87 0.008 106.5);
+  --card-stroke-focus: oklch(0.51 0.19 264);
+  --card-stroke-active: oklch(0.77 0.16 70);
+  --card-stroke-selected: oklch(0.83 0.15 85);
+  --card-avatar: oklch(0.96 0.004 106.5);
+  --card-avatar-ring: oklch(0.9 0.006 106.5);
+
+  --branch-focus-stroke: oklch(0.42 0.03 258);
+  --branch-focus-fill: oklch(1 0 0);
+  --branch-focus-band: oklch(0.68 0.03 258);
+  --branch-ff-stroke: oklch(0.75 0.13 233);
+  --branch-ff-fill: oklch(0.98 0.02 233);
+  --branch-fm-stroke: oklch(0.79 0.16 152);
+  --branch-fm-fill: oklch(0.98 0.02 152);
+  --branch-mf-stroke: oklch(0.71 0.15 12);
+  --branch-mf-fill: oklch(0.97 0.015 12);
+  --branch-mm-stroke: oklch(0.82 0.15 82);
+  --branch-mm-fill: oklch(0.98 0.03 82);
+}
+
+.dark {
+  --chart-canvas: oklch(0.19 0.008 107.1);
+  --chart-link: oklch(0.42 0.015 106.9);
+  --chart-link-strong: oklch(0.55 0.02 106.9);
+
+  --card-fill: oklch(0.26 0.012 107.4);
+  --card-fill-selected: oklch(0.32 0.05 85);
+  --card-stroke: oklch(0.38 0.012 107.4);
+  --card-stroke-focus: oklch(0.65 0.17 264);
+  --card-stroke-active: oklch(0.8 0.16 70);
+  --card-stroke-selected: oklch(0.83 0.15 85);
+  --card-avatar: oklch(0.32 0.012 107.4);
+  --card-avatar-ring: oklch(0.4 0.012 107.4);
+
+  /* Dark tints keep each branch's hue while staying behind white text. */
+  --branch-focus-stroke: oklch(0.72 0.02 258);
+  --branch-focus-fill: oklch(0.28 0.015 258);
+  --branch-focus-band: oklch(0.6 0.03 258);
+  --branch-ff-stroke: oklch(0.78 0.12 233);
+  --branch-ff-fill: oklch(0.29 0.05 233);
+  --branch-fm-stroke: oklch(0.8 0.14 152);
+  --branch-fm-fill: oklch(0.29 0.05 152);
+  --branch-mf-stroke: oklch(0.75 0.13 12);
+  --branch-mf-fill: oklch(0.29 0.05 12);
+  --branch-mm-stroke: oklch(0.83 0.13 82);
+  --branch-mm-fill: oklch(0.3 0.05 82);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

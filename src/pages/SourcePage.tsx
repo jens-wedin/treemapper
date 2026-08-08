@@ -68,7 +68,7 @@ function SourceEditForm({ source, onSaved, onCancel }: {
         <label htmlFor="kalla-anteckning" className="block text-sm font-medium">{t('edit.note')}</label>
         <Textarea id="kalla-anteckning" value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} className="mt-1" rows={5} />
       </div>
-      {error && <p role="alert" className="mt-3 text-red-700">{error}</p>}
+      {error && <p role="alert" className="mt-3 text-destructive">{error}</p>}
       <div className="mt-4 flex gap-2">
         <Button type="submit" disabled={saving}>{t('edit.save')}</Button>
         <Button type="button" variant="outline" onClick={onCancel}>{t('edit.cancel')}</Button>
@@ -112,7 +112,7 @@ export default function SourcePage() {
     <article>
       <header>
         <h1 className="text-2xl font-bold">{source.title ?? source.id}</h1>
-        <p className="mt-1 text-gray-600">
+        <p className="mt-1 text-muted-foreground">
           {[source.author, source.publication].filter(Boolean).join(' · ') || '–'}
         </p>
         <p className="mt-2">
@@ -132,31 +132,31 @@ export default function SourcePage() {
       {source.note && !editing && (
         <section className="mt-6">
           <h2 className="text-lg font-semibold">{t('edit.note')}</h2>
-          <RichText text={source.note} className="mt-2 text-gray-700" />
+          <RichText text={source.note} className="mt-2 text-foreground" />
         </section>
       )}
 
       <section className="mt-8">
         <h2 className="text-lg font-semibold">
-          {t('sources.citations')} <span className="font-normal text-gray-500">({citationTotal})</span>
+          {t('sources.citations')} <span className="font-normal text-muted-foreground">({citationTotal})</span>
         </h2>
-        {citations.length === 0 && <p className="mt-2 text-gray-600">{t('sources.none')}</p>}
+        {citations.length === 0 && <p className="mt-2 text-muted-foreground">{t('sources.none')}</p>}
         {citations.length > 0 && (
           <>
             <ul className="mt-3 space-y-2">
               {citations.map(c => (
                 <li key={c.id} className="border-b pb-2">
                   {c.personId
-                    ? <Link to={`/person/${c.personId}`} className="text-blue-700 underline-offset-2 hover:underline">{c.label}</Link>
+                    ? <Link to={`/person/${c.personId}`} className="text-primary underline-offset-2 hover:underline">{c.label}</Link>
                     : <span>{c.label}</span>}
-                  {c.page && <span className="ml-2 text-sm text-gray-600">{t('sources.page')}: {c.page}</span>}
-                  {c.quality != null && <span className="ml-2 text-sm text-gray-500">{t('person.quality')} {c.quality}</span>}
-                  <RichText text={c.text} className="mt-1 text-sm text-gray-500" />
+                  {c.page && <span className="ml-2 text-sm text-muted-foreground">{t('sources.page')}: {c.page}</span>}
+                  {c.quality != null && <span className="ml-2 text-sm text-muted-foreground">{t('person.quality')} {c.quality}</span>}
+                  <RichText text={c.text} className="mt-1 text-sm text-muted-foreground" />
                 </li>
               ))}
             </ul>
             {citationTotal > citations.length && (
-              <p className="mt-3 text-sm text-gray-600">
+              <p className="mt-3 text-sm text-muted-foreground">
                 {t('sources.truncated').replace('{n}', String(citations.length))}
               </p>
             )}

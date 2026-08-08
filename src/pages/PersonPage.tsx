@@ -12,15 +12,15 @@ import RelationDialog from '../components/edit/RelationDialog';
 import RichText from '../components/RichText';
 
 function MemberLinks({ people }: { people: FamilyMember[] }) {
-  if (!people.length) return <span className="text-gray-500">–</span>;
+  if (!people.length) return <span className="text-muted-foreground">–</span>;
   return (
     <ul className="inline-flex flex-wrap gap-x-3 gap-y-1">
       {people.map(p => (
         <li key={p.id}>
-          <Link to={`/person/${p.id}`} className="text-blue-700 underline-offset-2 hover:underline">
+          <Link to={`/person/${p.id}`} className="text-primary underline-offset-2 hover:underline">
             {displayName(p)}
           </Link>{' '}
-          <span className="text-sm text-gray-500">{lifespan(p.birthYear, p.deathYear)}</span>
+          <span className="text-sm text-muted-foreground">{lifespan(p.birthYear, p.deathYear)}</span>
         </li>
       ))}
     </ul>
@@ -30,7 +30,7 @@ function MemberLinks({ people }: { people: FamilyMember[] }) {
 function Citations({ items }: { items: CitationView[] }) {
   if (!items.length) return null;
   return (
-    <ul className="mt-1 space-y-1 text-sm text-gray-600">
+    <ul className="mt-1 space-y-1 text-sm text-muted-foreground">
       {items.map(c => (
         <li key={c.id}>
           {t('person.source')}:{' '}
@@ -43,7 +43,7 @@ function Citations({ items }: { items: CitationView[] }) {
               ? <> · <a href={c.page} className="underline-offset-2 hover:underline" target="_blank" rel="noreferrer">{new URL(c.page).hostname}</a></>
               : <> · {c.page}</>
           )}
-          <RichText text={c.text} className="text-gray-500" />
+          <RichText text={c.text} className="text-muted-foreground" />
         </li>
       ))}
     </ul>
@@ -94,10 +94,10 @@ export default function PersonPage() {
         <h1 className="text-3xl font-bold">
           {displayName(person)}
           {person.marriedName && (
-            <span className="ml-2 text-xl font-normal text-gray-600">({t('person.marriedName')} {person.marriedName})</span>
+            <span className="ml-2 text-xl font-normal text-muted-foreground">({t('person.marriedName')} {person.marriedName})</span>
           )}
         </h1>
-        <p className="mt-1 text-gray-600">
+        <p className="mt-1 text-muted-foreground">
           {lifespan(birth?.dateYear ?? null, death?.dateYear ?? null)}
           {birth?.place && <> · {birth.place}</>}
           {person.sex !== 'U' && (
@@ -107,7 +107,7 @@ export default function PersonPage() {
           )}
         </p>
         <p className="mt-2 flex items-center gap-3">
-          <Link to={`/trad/${person.id}`} className="text-blue-700 underline-offset-2 hover:underline">
+          <Link to={`/trad/${person.id}`} className="text-primary underline-offset-2 hover:underline">
             {t('tree.showInTree')}
           </Link>
           <Button variant="outline" size="sm" aria-expanded={editing} onClick={() => setEditing(v => !v)}>
@@ -115,7 +115,7 @@ export default function PersonPage() {
           </Button>
         </p>
         {warnings.length > 0 && (
-          <p role="status" className="mt-2 text-sm text-amber-700">{warnings.join(' ')}</p>
+          <p role="status" className="mt-2 text-sm text-amber-700 dark:text-amber-400">{warnings.join(' ')}</p>
         )}
         {editing && (
           <PersonEditForm
@@ -162,7 +162,7 @@ export default function PersonPage() {
                 <dt className="inline font-medium">{t('person.spouse')}: </dt>
                 <dd className="inline"><MemberLinks people={f.spouse ? [f.spouse] : []} /></dd>
                 {f.marriage && (
-                  <span className="text-sm text-gray-600"> · {t('person.marriage')} {f.marriage.dateRaw ?? f.marriage.dateYear}{f.marriage.place && `, ${f.marriage.place}`}</span>
+                  <span className="text-sm text-muted-foreground"> · {t('person.marriage')} {f.marriage.dateRaw ?? f.marriage.dateYear}{f.marriage.place && `, ${f.marriage.place}`}</span>
                 )}
               </div>
               <div><dt className="inline font-medium">{t('person.children')}: </dt><dd className="inline"><MemberLinks people={f.children} /></dd></div>
@@ -184,7 +184,7 @@ export default function PersonPage() {
       {person.note && (
         <section className="mt-8">
           <h2 className="text-xl font-semibold">{t('person.note')}</h2>
-          <RichText text={person.note} className="mt-2 text-gray-700" />
+          <RichText text={person.note} className="mt-2 text-foreground" />
         </section>
       )}
 

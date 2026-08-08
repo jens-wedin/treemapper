@@ -113,12 +113,12 @@ export default function DuplicateMerge({ group, onMerged }: { group: DuplicateGr
                         />
                         <span>
                           {displayName(details[id]!.person)}{' '}
-                          <span className="font-normal text-gray-500">
+                          <span className="font-normal text-muted-foreground">
                             {id} · {survivorId === id ? t('issues.survivor') : t('issues.duplicate')}
                           </span>
                         </span>
                       </label>
-                      <span className="block font-normal text-gray-500">{counts(details[id])}</span>
+                      <span className="block font-normal text-muted-foreground">{counts(details[id])}</span>
                     </th>
                   ))}
                 </tr>
@@ -149,7 +149,7 @@ export default function DuplicateMerge({ group, onMerged }: { group: DuplicateGr
                                 <span className={picked ? 'font-medium' : ''}>{show(value)}</span>
                               </label>
                             ) : (
-                              <span className="text-gray-600">{show(value)}</span>
+                              <span className="text-muted-foreground">{show(value)}</span>
                             )}
                           </td>
                         );
@@ -165,10 +165,10 @@ export default function DuplicateMerge({ group, onMerged }: { group: DuplicateGr
             </p>
           </>
         ) : (
-          <p className="mt-4 text-gray-600">{t('common.loading')}</p>
+          <p className="mt-4 text-muted-foreground">{t('common.loading')}</p>
         )}
 
-        {error && <p role="alert" className="mt-3 text-red-700">{error}</p>}
+        {error && <p role="alert" className="mt-3 text-destructive">{error}</p>}
 
         <div className="mt-4 flex gap-2">
           <Button type="button" onClick={merge} disabled={saving || !a || !b}>

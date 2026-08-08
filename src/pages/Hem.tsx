@@ -45,7 +45,7 @@ export default function Hem() {
             ] as const
           ).map(([label, value]) => (
             <div key={label} className="rounded-lg border p-4">
-              <dt className="text-sm text-gray-600">{label}</dt>
+              <dt className="text-sm text-muted-foreground">{label}</dt>
               <dd className="text-2xl font-semibold">{value}</dd>
             </div>
           ))}
@@ -55,12 +55,12 @@ export default function Hem() {
       {issues && (
         <section className="mt-8 rounded-lg border p-4">
           <h2 className="text-lg font-semibold">{t('issues.scoreboard')}</h2>
-          <p className="mt-1 text-gray-700">
+          <p className="mt-1 text-foreground">
             {t('issues.remaining')
               .replace('{n}', issues.total.toLocaleString('sv-SE'))
               .replace('{total}', issues.totalAll.toLocaleString('sv-SE'))}
           </p>
-          <Link to="/konsekvens" className="mt-2 inline-block text-blue-700 underline-offset-2 hover:underline">
+          <Link to="/konsekvens" className="mt-2 inline-block text-primary underline-offset-2 hover:underline">
             {t('issues.title')}
           </Link>
         </section>

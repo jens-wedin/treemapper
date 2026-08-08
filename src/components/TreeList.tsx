@@ -5,11 +5,11 @@ import { t, displayName, lifespan } from '../lib/i18n';
 function PersonLine({ person, depthQuery }: { person: TreePerson; depthQuery: string }) {
   return (
     <>
-      <Link to={`/trad/${person.id}${depthQuery}`} className="text-blue-700 underline-offset-2 hover:underline">
+      <Link to={`/trad/${person.id}${depthQuery}`} className="text-primary underline-offset-2 hover:underline">
         {displayName(person)}
       </Link>{' '}
-      <span className="text-sm text-gray-500">{lifespan(person.birthYear, person.deathYear)}</span>{' '}
-      <Link to={`/person/${person.id}`} className="text-sm text-gray-600 underline-offset-2 hover:underline">
+      <span className="text-sm text-muted-foreground">{lifespan(person.birthYear, person.deathYear)}</span>{' '}
+      <Link to={`/person/${person.id}`} className="text-sm text-muted-foreground underline-offset-2 hover:underline">
         ({t('tree.goToPerson')})
       </Link>
     </>
@@ -39,7 +39,7 @@ function DescendantList({ node, depthQuery }: { node: DescendantNode; depthQuery
           <PersonLine person={c.person} depthQuery={depthQuery} />
           {c.spouses.map(s => (
             <span key={s.id}>
-              {' '}<span className="text-sm text-gray-500">{t('tree.with')}</span>{' '}
+              {' '}<span className="text-sm text-muted-foreground">{t('tree.with')}</span>{' '}
               <PersonLine person={s} depthQuery={depthQuery} />
             </span>
           ))}
@@ -59,13 +59,13 @@ export default function TreeList({ ancestors, descendants, depthQuery }: {
         <h2 className="text-lg font-semibold">{t('tree.ancestors')}</h2>
         {ancestors.parents.length
           ? <AncestorList node={ancestors} depthQuery={depthQuery} />
-          : <p className="text-gray-500">–</p>}
+          : <p className="text-muted-foreground">–</p>}
       </section>
       <section>
         <h2 className="text-lg font-semibold">{t('tree.descendants')}</h2>
         {descendants.children.length
           ? <DescendantList node={descendants} depthQuery={depthQuery} />
-          : <p className="text-gray-500">–</p>}
+          : <p className="text-muted-foreground">–</p>}
       </section>
     </div>
   );

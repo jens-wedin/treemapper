@@ -145,7 +145,7 @@ export default function PedigreeChart({ data, generations, onSelect, selectedId 
         onFlagsChange={setShowFlags}
         hint={`${t('tree.instructionsAncestors')} ${t('tree.expandHint')}`}
       />
-      <div ref={viewport.wrapRef} className="mt-2 min-h-[320px] w-full flex-1 overflow-hidden rounded-lg border bg-gray-100">
+      <div ref={viewport.wrapRef} className="mt-2 min-h-[320px] w-full flex-1 overflow-hidden rounded-lg border bg-[var(--chart-canvas)]">
         <svg
           ref={viewport.svgRef}
           role="group"
@@ -164,7 +164,7 @@ export default function PedigreeChart({ data, generations, onSelect, selectedId 
             {hasGhosts && (
             <g aria-hidden className="chart-node-leave">
               {ghosts.links.map(l => (
-                <path key={l.path} d={l.path} className="fill-none stroke-gray-400" strokeWidth={1.25} />
+                <path key={l.path} d={l.path} className="fill-none" style={{ stroke: 'var(--chart-link)' }} strokeWidth={1.25} />
               ))}
               {ghosts.nodes.map(n => (
                 <g key={n.key} transform={`translate(${n.x - PED_W / 2} ${n.y - PED_H / 2})`}>
@@ -184,7 +184,7 @@ export default function PedigreeChart({ data, generations, onSelect, selectedId 
             )}
 
             {layout.links.map(l => (
-              <path key={l.path} aria-hidden d={l.path} className="fill-none stroke-gray-400" strokeWidth={1.25} />
+              <path key={l.path} aria-hidden d={l.path} className="fill-none" style={{ stroke: 'var(--chart-link)' }} strokeWidth={1.25} />
             ))}
             {layout.nodes.map(n => (
               <g
@@ -240,13 +240,13 @@ export default function PedigreeChart({ data, generations, onSelect, selectedId 
                   <circle
                     r={HANDLE_R}
                     strokeWidth={h.key === activeKey ? 2.5 : 1.25}
-                    className={`fill-white group-hover:fill-blue-50 ${
-                      h.key === activeKey ? 'stroke-amber-500' : 'stroke-gray-400 group-hover:stroke-blue-600'
+                    className={`fill-[var(--card-fill)] group-hover:fill-blue-500/15 ${
+                      h.key === activeKey ? 'stroke-amber-500' : 'stroke-[var(--chart-link-strong)] group-hover:stroke-blue-500'
                     }`}
                   />
                   <path
                     d={h.action === 'expand' ? 'M -3 -5 L 3 0 L -3 5' : 'M 3 -5 L -3 0 L 3 5'}
-                    className={`fill-none group-hover:stroke-blue-700 ${isPending ? 'stroke-gray-400' : 'stroke-gray-600'}`}
+                    className={`fill-none group-hover:stroke-blue-500 ${isPending ? 'stroke-muted-foreground/40' : 'stroke-foreground/70'}`}
                     strokeWidth={2}
                     strokeLinecap="round"
                     strokeLinejoin="round"

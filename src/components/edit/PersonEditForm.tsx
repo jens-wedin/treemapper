@@ -85,7 +85,7 @@ export default function PersonEditForm({ person, onSaved, onCancel }: {
         <label htmlFor="red-anteckning" className="block text-sm font-medium">{t('edit.note')}</label>
         <Textarea id="red-anteckning" value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} className="mt-1" rows={4} />
       </div>
-      {error && <p role="alert" className="mt-3 text-red-700">{error}</p>}
+      {error && <p role="alert" className="mt-3 text-destructive">{error}</p>}
       <div className="mt-4 flex gap-2">
         <Button type="submit" disabled={saving}>{t('edit.save')}</Button>
         <Button type="button" variant="outline" onClick={onCancel}>{t('edit.cancel')}</Button>

@@ -142,7 +142,7 @@ export default function RelationDialog({ type, person, families, onSaved }: {
           </div>
         )}
 
-        {error && <p role="alert" className="mt-3 text-red-700">{error}</p>}
+        {error && <p role="alert" className="mt-3 text-destructive">{error}</p>}
 
         <div className="mt-4 flex gap-2">
           <Button type="button" onClick={submit} disabled={saving}>{t('edit.save')}</Button>

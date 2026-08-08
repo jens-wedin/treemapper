@@ -8,7 +8,7 @@ import { fetchJson } from '../lib/api';
 import RichText from './RichText';
 
 function MemberLinks({ people, onSelect }: { people: FamilyMember[]; onSelect: (id: string) => void }) {
-  if (!people.length) return <span className="text-gray-500">–</span>;
+  if (!people.length) return <span className="text-muted-foreground">–</span>;
   return (
     <ul className="inline-flex flex-wrap gap-x-3 gap-y-1">
       {people.map(p => (
@@ -16,11 +16,11 @@ function MemberLinks({ people, onSelect }: { people: FamilyMember[]; onSelect: (
           <button
             type="button"
             onClick={() => onSelect(p.id)}
-            className="text-blue-700 underline-offset-2 hover:underline"
+            className="text-primary underline-offset-2 hover:underline"
           >
             {displayName(p)}
           </button>{' '}
-          <span className="text-sm text-gray-500">{lifespan(p.birthYear, p.deathYear)}</span>
+          <span className="text-sm text-muted-foreground">{lifespan(p.birthYear, p.deathYear)}</span>
         </li>
       ))}
     </ul>
@@ -69,7 +69,7 @@ export default function TreePersonPanel({ personId, onClose, onFocusTree, onSele
   return (
     <aside
       aria-label={t('tree.panelTitle')}
-      className="flex w-[340px] shrink-0 flex-col overflow-y-auto rounded-lg border bg-white p-4"
+      className="flex w-[340px] shrink-0 flex-col overflow-y-auto rounded-lg border bg-background p-4"
     >
       <div className="flex items-start justify-between gap-2">
         <h2 ref={headingRef} tabIndex={-1} className="text-lg font-semibold outline-none">
@@ -87,7 +87,7 @@ export default function TreePersonPanel({ personId, onClose, onFocusTree, onSele
           <Skeleton className="h-24 w-full" />
         </div>
       )}
-      {state === 'error' && <p role="alert" className="mt-4 text-red-700">{t('common.error')}</p>}
+      {state === 'error' && <p role="alert" className="mt-4 text-destructive">{t('common.error')}</p>}
 
       {data && person && (
         <>
@@ -100,9 +100,9 @@ export default function TreePersonPanel({ personId, onClose, onFocusTree, onSele
               />
             )}
             <div>
-              <p className="text-gray-700">{lifespan(birth?.dateYear ?? null, death?.dateYear ?? null)}</p>
+              <p className="text-foreground">{lifespan(birth?.dateYear ?? null, death?.dateYear ?? null)}</p>
               {person.marriedName && (
-                <p className="text-sm text-gray-500">{t('person.marriedName')} {person.marriedName}</p>
+                <p className="text-sm text-muted-foreground">{t('person.marriedName')} {person.marriedName}</p>
               )}
             </div>
           </div>
@@ -164,9 +164,9 @@ export default function TreePersonPanel({ personId, onClose, onFocusTree, onSele
                 {data.events.map(e => (
                   <li key={e.id}>
                     <span className="font-medium">{eventLabel(e.type)}</span>
-                    {e.dateRaw && <span className="ml-2 text-gray-600">{formatGedcomDate(e.dateRaw)}</span>}
+                    {e.dateRaw && <span className="ml-2 text-muted-foreground">{formatGedcomDate(e.dateRaw)}</span>}
                     {(e.place || eventDescription(e.description)) && (
-                      <div className="text-gray-600">
+                      <div className="text-muted-foreground">
                         {[eventDescription(e.description), e.place].filter(Boolean).join(' — ')}
                       </div>
                     )}
@@ -179,7 +179,7 @@ export default function TreePersonPanel({ personId, onClose, onFocusTree, onSele
           {person.note && (
             <section className="mt-5">
               <h3 className="font-medium">{t('person.note')}</h3>
-              <RichText text={person.note} className="mt-1 text-sm text-gray-700" />
+              <RichText text={person.note} className="mt-1 text-sm text-foreground" />
             </section>
           )}
         </>

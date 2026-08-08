@@ -135,7 +135,7 @@ export default function TreeChart({ data, onSelect, selectedId }: {
         onFlagsChange={setShowFlags}
         hint={`${t('tree.instructionsPanel')} ${t('tree.expandHintFamily')}`}
       />
-      <div ref={viewport.wrapRef} className="mt-2 min-h-[320px] w-full flex-1 overflow-hidden rounded-lg border bg-gray-100">
+      <div ref={viewport.wrapRef} className="mt-2 min-h-[320px] w-full flex-1 overflow-hidden rounded-lg border bg-[var(--chart-canvas)]">
         <svg
           ref={viewport.svgRef}
           role="group"
@@ -157,7 +157,8 @@ export default function TreeChart({ data, onSelect, selectedId }: {
                   <path
                     key={linkKey(l)}
                     d={edgePath(l)}
-                    className={l.type === 'marriage' ? 'fill-none stroke-gray-400' : 'fill-none stroke-gray-400'}
+                    className="fill-none"
+                    style={{ stroke: l.type === 'marriage' ? 'var(--chart-link-strong)' : 'var(--chart-link)' }}
                     strokeWidth={l.type === 'marriage' ? 1.5 : 1}
                   />
                 ))}
@@ -181,7 +182,8 @@ export default function TreeChart({ data, onSelect, selectedId }: {
                 key={linkKey(l)}
                 aria-hidden
                 d={edgePath(l)}
-                className={l.type === 'marriage' ? 'fill-none stroke-gray-400' : 'fill-none stroke-gray-400'}
+                className="fill-none"
+                    style={{ stroke: l.type === 'marriage' ? 'var(--chart-link-strong)' : 'var(--chart-link)' }}
                 strokeWidth={l.type === 'marriage' ? 1.5 : 1}
               />
             ))}
@@ -240,14 +242,14 @@ export default function TreeChart({ data, onSelect, selectedId }: {
                   <circle
                     r={TREE_HANDLE_R}
                     strokeWidth={h.key === activeKey ? 2.5 : 1.25}
-                    className={`fill-white group-hover:fill-blue-50 ${
-                      h.key === activeKey ? 'stroke-amber-500' : 'stroke-gray-400 group-hover:stroke-blue-600'
+                    className={`fill-[var(--card-fill)] group-hover:fill-blue-500/15 ${
+                      h.key === activeKey ? 'stroke-amber-500' : 'stroke-[var(--chart-link-strong)] group-hover:stroke-blue-500'
                     }`}
                   />
                   <path
                     d={pointsUp ? 'M -4.5 2.5 L 0 -2.5 L 4.5 2.5' : 'M -4.5 -2.5 L 0 2.5 L 4.5 -2.5'}
-                    className={`fill-none group-hover:stroke-blue-700 ${
-                      pending === h.key ? 'stroke-gray-400' : 'stroke-gray-600'
+                    className={`fill-none group-hover:stroke-blue-500 ${
+                      pending === h.key ? 'stroke-muted-foreground/40' : 'stroke-foreground/70'
                     }`}
                     strokeWidth={2}
                     strokeLinecap="round"

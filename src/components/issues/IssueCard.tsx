@@ -8,12 +8,13 @@ import DuplicateMerge from './DuplicateMerge';
 
 export type IssueListItem = Issue & { dismissed: boolean };
 
+/** Each severity keeps its hue in both themes: pale wash light, deep wash dark. */
 const SEVERITY_STYLE: Record<Severity, string> = {
-  error: 'border-red-300 bg-red-50 text-red-900',
-  dup: 'border-purple-300 bg-purple-50 text-purple-900',
-  warning: 'border-amber-300 bg-amber-50 text-amber-900',
-  info: 'border-blue-300 bg-blue-50 text-blue-900',
-  minor: 'border-gray-300 bg-gray-50 text-gray-800',
+  error: 'border-red-300 bg-red-50 text-red-900 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200',
+  dup: 'border-purple-300 bg-purple-50 text-purple-900 dark:border-purple-900 dark:bg-purple-950/50 dark:text-purple-200',
+  warning: 'border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-200',
+  info: 'border-blue-300 bg-blue-50 text-blue-900 dark:border-blue-900 dark:bg-blue-950/50 dark:text-blue-200',
+  minor: 'border-border bg-muted/50 text-foreground',
 };
 
 export default function IssueCard({ issue, onChanged }: { issue: IssueListItem; onChanged: () => void }) {
@@ -36,7 +37,7 @@ export default function IssueCard({ issue, onChanged }: { issue: IssueListItem; 
         {issue.dismissed && <Badge variant="outline">{t('issues.dismissedBadge')}</Badge>}
       </div>
 
-      <p className="mt-2 text-gray-800">{issue.text}</p>
+      <p className="mt-2 text-foreground">{issue.text}</p>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <Button asChild variant="outline" size="sm">

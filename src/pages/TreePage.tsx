@@ -78,10 +78,10 @@ export default function TreePage() {
     <section className="flex min-h-0 flex-1 flex-col" aria-busy={state === 'loading' || undefined}>
       <h1 className="text-2xl font-bold">{t('tree.title')}</h1>
       {data && (
-        <p className="mt-1 text-gray-600">
+        <p className="mt-1 text-muted-foreground">
           {displayName(data.focus)} {lifespan(data.focus.birthYear, data.focus.deathYear)}
           {' · '}
-          <Link to={`/person/${data.focus.id}`} className="text-blue-700 underline-offset-2 hover:underline">
+          <Link to={`/person/${data.focus.id}`} className="text-primary underline-offset-2 hover:underline">
             {t('tree.goToPerson')}
           </Link>
         </p>
@@ -116,12 +116,12 @@ export default function TreePage() {
           </div>
         )}
         {(view === 'pedigree' || view === 'fan') && (
-          <p className="text-sm text-gray-500">{t('tree.ancestorsOnly')}</p>
+          <p className="text-sm text-muted-foreground">{t('tree.ancestorsOnly')}</p>
         )}
       </div>
 
       {/* only the very first load has nothing to show; a reload keeps the chart */}
-      {state === 'loading' && !data && <p className="mt-4 text-gray-600">{t('common.loading')}</p>}
+      {state === 'loading' && !data && <p className="mt-4 text-muted-foreground">{t('common.loading')}</p>}
       {data && (
         view === 'list' ? (
           <TreeList ancestors={data.ancestors} descendants={data.descendants} depthQuery={depthQuery} />

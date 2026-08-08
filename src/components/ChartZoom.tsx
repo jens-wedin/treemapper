@@ -1,3 +1,4 @@
+import { House } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { t } from '../lib/i18n';
 import { ZOOM_STEP } from '../lib/useChartViewport';
@@ -17,7 +18,11 @@ export default function ChartZoom({ zoomPercent, onZoom, onReset }: {
       <span aria-live="polite" className="px-2 text-sm tabular-nums text-muted-foreground">{zoomPercent}%</span>
       <Button variant="outline" size="sm" aria-label={t('tree.zoomOut')} onClick={() => onZoom(1 / ZOOM_STEP)}>−</Button>
       <Button variant="outline" size="sm" aria-label={t('tree.zoomIn')} onClick={() => onZoom(ZOOM_STEP)}>+</Button>
-      <Button variant="outline" size="sm" onClick={onReset}>{t('tree.zoomReset')}</Button>
+      {/* An icon, but never a nameless one: the label is what a screen reader
+          reads and what the tests look for. */}
+      <Button variant="outline" size="sm" aria-label={t('tree.zoomReset')} title={t('tree.zoomReset')} onClick={onReset}>
+        <House aria-hidden="true" className="size-4" />
+      </Button>
     </div>
   );
 }

@@ -139,6 +139,32 @@ to their new places, new ones fade in, folded-away ones fade out, and the chart
 eases across if the new branch would otherwise open off-screen. All of it is
 disabled under `prefers-reduced-motion`.
 
+### Visa konsekvenser
+
+The toolbar's second checkbox marks everyone the Konsekvensbänken still has
+something on, so you can see **where** in the tree the problems sit rather than
+working a flat queue. It is off until asked for, remembered like the flag
+toggle, and shared by all three charts.
+
+Cards wear a badge in the top-right corner: the colour is their worst severity
+(logiskt fel red, dubblett purple, varning amber, övrigt blue, småfel grey) and
+the number is how many problems they carry. Hovering names the categories, and
+the card's aria-label says the same in words. A fan wedge has no corner to put
+a badge in, so it gets a plain dot in the same colour at its inner edge — the
+one spot free of the name, the flag and the generation band at every ring.
+
+Nothing new is detected here: `/api/issues/persons` runs the same detectors as
+the queue and folds them per person, so dismissing something there stops
+marking it here. Everyone named by a problem is marked, not just the person who
+owns the queue entry — a child born after its father died is worth spotting
+from either card. The scan takes about half a second over the whole database,
+so the charts fetch the register once and share it.
+
+Be warned that **about half the tree carries at least one problem** (2 335 of
+4 561 people, mostly the bulk warnings "Dödsfall utan datum" and "Vid liv men
+för gammal"). The severity colours are what make the view usable: only 160
+people have an outright logiskt fel.
+
 All charts share the same pan/zoom, the same person panel on click, portraits,
 flags and keyboard model. They sit on a soft grey canvas so the cards read as
 cards, and the one under the pointer lifts on a drop shadow — SVG has no

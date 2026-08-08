@@ -26,6 +26,34 @@ export interface Issue {
 
 export interface DetectOptions { referenceYear?: number }
 
+/** What the tree charts draw on a card to say "look here". */
+export interface PersonIssueMark {
+  count: number;
+  /** The worst of them — the badge takes its colour from this. */
+  severity: Severity;
+  /** Distinct categories, worst first, for the card's tooltip. */
+  categories: string[];
+}
+
+/**
+ * Folds a list of issues into one entry per person involved. Everyone named
+ * is marked, not just `personIds[0]`: a child born after its father died is
+ * worth spotting from either card.
+ */
+export function summarizeByPerson(issues: Issue[]): Record<string, PersonIssueMark> {
+  const worstFirst = [...issues].sort((a, b) =>
+    SEVERITY_ORDER.indexOf(a.severity) - SEVERITY_ORDER.indexOf(b.severity));
+  const marks: Record<string, PersonIssueMark> = {};
+  for (const issue of worstFirst) {
+    for (const id of issue.personIds) {
+      const mark = marks[id] ?? (marks[id] = { count: 0, severity: issue.severity, categories: [] });
+      mark.count++;
+      if (!mark.categories.includes(issue.category)) mark.categories.push(issue.category);
+    }
+  }
+  return marks;
+}
+
 // Thresholds calibrated against MyHeritage's own "Konsekvenskontroll av träd"
 // (data/konsekvensproblem.pdf, 2026-07-09, 894 problems / 24 categories).
 const MAX_AGE = 110;              // vid liv / dog för gammal

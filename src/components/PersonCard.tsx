@@ -1,7 +1,9 @@
 import type { TreePerson } from '../../lib/tree';
+import type { PersonIssueMark } from '../../lib/issues';
 import { displayName, lifespan, formatGedcomDate, t } from '../lib/i18n';
 import { BRANCH_COLORS, type Branch } from '../lib/ahnentafel';
 import CountryFlag from './CountryFlag';
+import IssueBadge from './IssueBadge';
 
 /** Up to two initials, for people without a downloaded photo. */
 function initials(person: TreePerson): string {
@@ -35,6 +37,8 @@ export interface PersonCardProps {
   /** Birth/death dates instead of just years (pedigree cards). */
   born?: string | null;
   died?: string | null;
+  /** Outstanding Konsekvens problems, when "Visa konsekvenser" is on. */
+  issue?: PersonIssueMark;
 }
 
 /**
@@ -42,7 +46,7 @@ export interface PersonCardProps {
  * contents of a <g>; the caller positions it and owns the interaction props.
  */
 export default function PersonCard({
-  person, variant, showFlag, isFocus, active, selected, branch = 'focus', idKey, born, died,
+  person, variant, showFlag, isFocus, active, selected, branch = 'focus', idKey, born, died, issue,
 }: PersonCardProps) {
   const wide = variant === 'wide';
   const size = wide ? WIDE : COMPACT;
@@ -132,9 +136,18 @@ export default function PersonCard({
           r={FLAG_R}
         />
       )}
+
+      {/* top right corner, clear of the avatar and of the flag below it */}
+      {issue && <IssueBadge mark={issue} cx={size.w - 13} cy={13} />}
     </>
   );
 }
 
-export const cardLabel = (person: TreePerson): string =>
-  `${displayName(person)}, ${lifespan(person.birthYear, person.deathYear) || '?'}`;
+export const cardLabel = (person: TreePerson, issue?: PersonIssueMark): string => {
+  const who = `${displayName(person)}, ${lifespan(person.birthYear, person.deathYear) || '?'}`;
+  return issue ? `${who}. ${issueLabel(issue)}` : who;
+};
+
+/** "3 konsekvenser: Saknar födelse, Dödsfall utan datum" — for aria-labels. */
+export const issueLabel = (issue: PersonIssueMark): string =>
+  `${t(issue.count === 1 ? 'tree.issueOne' : 'tree.issueMany').replace('{n}', String(issue.count))}: ${issue.categories.join(', ')}`;

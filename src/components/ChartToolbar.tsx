@@ -2,13 +2,17 @@ import { Button } from '@/components/ui/button';
 import { t } from '../lib/i18n';
 import { ZOOM_STEP } from '../lib/useChartViewport';
 
-/** Zoom controls, zoom level, flag toggle and the keyboard hint. */
-export default function ChartToolbar({ zoomPercent, onZoom, onReset, showFlags, onFlagsChange, hint }: {
+/** Zoom controls, zoom level, the two card toggles and the keyboard hint. */
+export default function ChartToolbar({
+  zoomPercent, onZoom, onReset, showFlags, onFlagsChange, showIssues, onIssuesChange, hint,
+}: {
   zoomPercent: number;
   onZoom: (factor: number) => void;
   onReset: () => void;
   showFlags: boolean;
   onFlagsChange: (next: boolean) => void;
+  showIssues: boolean;
+  onIssuesChange: (next: boolean) => void;
   hint?: string;
 }) {
   return (
@@ -20,6 +24,10 @@ export default function ChartToolbar({ zoomPercent, onZoom, onReset, showFlags, 
       <label className="ml-3 flex items-center gap-2 text-sm text-foreground">
         <input type="checkbox" checked={showFlags} onChange={e => onFlagsChange(e.target.checked)} />
         {t('tree.showFlags')}
+      </label>
+      <label className="ml-3 flex items-center gap-2 text-sm text-foreground" title={t('tree.showIssuesHint')}>
+        <input type="checkbox" checked={showIssues} onChange={e => onIssuesChange(e.target.checked)} />
+        {t('tree.showIssues')}
       </label>
       <p id="trad-instruktioner" className="ml-3 text-sm text-muted-foreground">
         {hint ?? t('tree.instructionsPanel')}

@@ -13,6 +13,7 @@ export const CENTRE_R = 96;
 export const RING = 80;
 const LABEL_MIN_ARC = 96;      // px of arc needed before a name is set along it
 const FLAG_INSET = 15;
+const MARK_INSET = 11;         // konsekvensprickens avstånd från skivans hörn
 
 export interface FanSlice {
   key: string;
@@ -41,6 +42,12 @@ export interface FanSlice {
    */
   labelRadial?: { x: number; y: number; rotate: number; anchor: 'start' | 'end' };
   flag: { cx: number; cy: number };
+  /**
+   * Where a Konsekvens mark goes: the inner leading corner. The middle of a
+   * slice is taken by the name and the flag, and its outer edge by the band —
+   * the corner is the one spot free at every ring.
+   */
+  mark: { cx: number; cy: number };
   /** Outer edge arc, drawn in the branch colour. */
   bandPath: string;
 }
@@ -144,6 +151,10 @@ export function layoutFan(slots: AncestorSlot[], generations: number): FanLayout
     const showFlag = thickness >= 22;
 
     const flagPoint = pointAt(midAngle, innerR + FLAG_INSET);
+    // A thin slice has no corner to speak of; the mark slides to the middle
+    // rather than out into the neighbour.
+    const markAngle = startAngle + Math.min(MARK_INSET / (innerR + MARK_INSET), sliceAngle / 2);
+    const markPoint = pointAt(markAngle, innerR + MARK_INSET);
 
     slices.push({
       key: `f${slot.ahnentafel}`,
@@ -161,6 +172,7 @@ export function layoutFan(slots: AncestorSlot[], generations: number): FanLayout
       showYears,
       showFlag,
       flag: { cx: flagPoint.x, cy: flagPoint.y },
+      mark: { cx: markPoint.x, cy: markPoint.y },
     });
   }
 

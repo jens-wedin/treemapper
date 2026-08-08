@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import type { Issue, Severity } from '../../../lib/issues';
 import { t } from '../../lib/i18n';
 import { mutateJson } from '../../lib/api';
+import { clearIssueMarks } from '../../lib/issueMarks';
 import DuplicateMerge from './DuplicateMerge';
 
 export type IssueListItem = Issue & { dismissed: boolean };
@@ -18,12 +19,15 @@ const SEVERITY_STYLE: Record<Severity, string> = {
 };
 
 export default function IssueCard({ issue, onChanged }: { issue: IssueListItem; onChanged: () => void }) {
+  // The tree charts mark cards from the same register — it has moved on.
   async function dismiss() {
     await mutateJson('/api/issues/dismiss', 'POST', { fingerprint: issue.fingerprint });
+    clearIssueMarks();
     onChanged();
   }
   async function undismiss() {
     await mutateJson(`/api/issues/dismiss/${issue.fingerprint}`, 'DELETE');
+    clearIssueMarks();
     onChanged();
   }
 

@@ -7,6 +7,7 @@ import type { DuplicateGroup } from '../../../lib/issues';
 import type { PersonFull } from '../../../lib/queries';
 import { t, displayName } from '../../lib/i18n';
 import { fetchJson, mutateJson } from '../../lib/api';
+import { clearIssueMarks } from '../../lib/issueMarks';
 
 type Field = 'givenName' | 'surname' | 'marriedName' | 'suffix' | 'sex' | 'note';
 const FIELDS: { key: Field; label: string }[] = [
@@ -46,6 +47,7 @@ export default function DuplicateMerge({ group, onMerged }: { group: DuplicateGr
     setError(null);
     try {
       await mutateJson('/api/merge', 'POST', { survivorId, duplicateId, fieldChoices: choices });
+      clearIssueMarks();
       setOpen(false);
       onMerged();
     } catch (err) {

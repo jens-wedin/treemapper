@@ -111,3 +111,25 @@ describe('POST /api/merge', () => {
     expect((await post(mergeApi, '/api/merge', { survivorId: 'I1' })).status).toBe(400);
   });
 });
+
+describe('GET /api/issues/persons', () => {
+  it('ger ett register över vilka personer som har problem', async () => {
+    const res = await api.request('/api/issues/persons');
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.persons.I1).toMatchObject({ severity: 'error' });
+    expect(body.persons.I1.categories).toContain('Födsel efter bortgång');
+    expect(body.persons.I2).toMatchObject({ count: 1, severity: 'warning' });
+    expect(body.total).toBe(2);
+  });
+
+  it('räknar inte med det som avfärdats i Konsekvensbänken', async () => {
+    const missingBirth = (await (await api.request('/api/issues?category=' + encodeURIComponent('Saknar födelse'))).json()).items[0];
+    await post(api, '/api/issues/dismiss', { fingerprint: missingBirth.fingerprint });
+
+    const body = await (await api.request('/api/issues/persons')).json();
+    expect(body.persons.I2).toBeUndefined();
+    expect(body.persons.I1).toBeDefined();
+    expect(body.total).toBe(1);
+  });
+});

@@ -124,6 +124,30 @@ describe('layoutFan', () => {
     }
   });
 
+  it('sätter konsekvensmärket i skivans inre hörn, undan både namn och flagga', () => {
+    for (const s of r.slices) {
+      const radius = Math.hypot(s.mark.cx, s.mark.cy);
+      // innanför skivan i höjdled …
+      expect(radius).toBeGreaterThan(s.innerR);
+      expect(radius).toBeLessThan(s.outerR);
+      // … och undan mittlinjen där namnet och flaggan sitter
+      const mid = Math.hypot(s.flag.cx - s.mark.cx, s.flag.cy - s.mark.cy);
+      expect(mid).toBeGreaterThan(8);
+    }
+  });
+
+  it('håller märket inne i sin egen skiva även när den är tunn', () => {
+    const deep = layoutFan(
+      Array.from({ length: 511 }, (_, i) => slot(i + 1, `p${i + 1}`)),
+      8,
+    );
+    for (const s of deep.slices) {
+      const angle = Math.atan2(s.mark.cx, -s.mark.cy);
+      expect(angle).toBeGreaterThanOrEqual(s.startAngle);
+      expect(angle).toBeLessThanOrEqual(s.endAngle);
+    }
+  });
+
   it('täcker hela solfjädern med sina gränser', () => {
     const outer = Math.max(...r.slices.map(s => s.outerR));
     expect(r.bounds.maxX).toBeGreaterThanOrEqual(outer);

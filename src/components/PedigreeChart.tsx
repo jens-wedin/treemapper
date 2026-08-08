@@ -8,7 +8,8 @@ import {
 } from '../lib/pedigreeLayout';
 import { useChartViewport } from '../lib/useChartViewport';
 import { useChartTransitions } from '../lib/useChartTransitions';
-import { useFlagPreference } from '../lib/flagPreference';
+import { useFlagPreference, useIssueMarkPreference } from '../lib/chartPreferences';
+import { useIssueMarks } from '../lib/issueMarks';
 import PersonCard, { cardLabel } from './PersonCard';
 import ChartToolbar from './ChartToolbar';
 
@@ -60,6 +61,8 @@ export default function PedigreeChart({ data, generations, onSelect, selectedId 
 
   const viewport = useChartViewport(layout.bounds);
   const [showFlags, setShowFlags] = useFlagPreference();
+  const [showIssues, setShowIssues] = useIssueMarkPreference();
+  const issueMarks = useIssueMarks(showIssues);
   const [activeKey, setActiveKey] = useState('a1');
 
   const { entering, ghosts, hasGhosts, markFolding, smoothPan, panSmoothly, cancelPan } =
@@ -143,6 +146,8 @@ export default function PedigreeChart({ data, generations, onSelect, selectedId 
         onReset={viewport.reset}
         showFlags={showFlags}
         onFlagsChange={setShowFlags}
+        showIssues={showIssues}
+        onIssuesChange={setShowIssues}
         hint={`${t('tree.instructionsAncestors')} ${t('tree.expandHint')}`}
       />
       <div ref={viewport.wrapRef} className="mt-2 min-h-[320px] w-full flex-1 overflow-hidden rounded-lg border bg-[var(--chart-canvas)]">
@@ -175,6 +180,7 @@ export default function PedigreeChart({ data, generations, onSelect, selectedId 
                     isFocus={n.isFocus}
                     branch={n.branch}
                     idKey={`ghost-${n.key}`}
+                    issue={issueMarks[n.person.id]}
                     born={n.person.birthDate ?? (n.person.birthYear != null ? String(n.person.birthYear) : null)}
                     died={n.person.deathDate ?? (n.person.deathYear != null ? String(n.person.deathYear) : null)}
                   />
@@ -193,7 +199,7 @@ export default function PedigreeChart({ data, generations, onSelect, selectedId 
                 data-node-key={n.key}
                 tabIndex={n.key === activeKey ? 0 : -1}
                 role="button"
-                aria-label={cardLabel(n.person)}
+                aria-label={cardLabel(n.person, issueMarks[n.person.id])}
                 transform={`translate(${n.x - PED_W / 2} ${n.y - PED_H / 2})`}
                 className={`chart-node chart-card cursor-pointer outline-none ${entering.has(n.key) ? 'chart-node-enter' : ''}`}
                 onClick={() => onSelect(n.person.id)}
@@ -209,6 +215,7 @@ export default function PedigreeChart({ data, generations, onSelect, selectedId 
                   selected={n.person.id === selectedId}
                   branch={n.branch}
                   idKey={n.key}
+                  issue={issueMarks[n.person.id]}
                   born={n.person.birthDate ?? (n.person.birthYear != null ? String(n.person.birthYear) : null)}
                   died={n.person.deathDate ?? (n.person.deathYear != null ? String(n.person.deathYear) : null)}
                 />

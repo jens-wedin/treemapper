@@ -224,6 +224,14 @@
   --branch-mf-fill: oklch(0.97 0.015 12);
   --branch-mm-stroke: oklch(0.82 0.15 82);
   --branch-mm-fill: oklch(0.98 0.03 82);
+
+  /* Konsekvens badges — one hue per severity, matching the queue's cards. */
+  --issue-error: oklch(0.58 0.22 27);
+  --issue-dup: oklch(0.56 0.24 303);
+  --issue-warning: oklch(0.66 0.16 62);
+  --issue-info: oklch(0.55 0.21 261);
+  --issue-minor: oklch(0.6 0.02 106.9);
+  --issue-ink: oklch(1 0 0);
 }
 
 .dark {
@@ -252,6 +260,14 @@
   --branch-mf-fill: oklch(0.29 0.05 12);
   --branch-mm-stroke: oklch(0.83 0.13 82);
   --branch-mm-fill: oklch(0.3 0.05 82);
+
+  /* Lighter badges on the dark canvas, with dark ink to stay legible. */
+  --issue-error: oklch(0.7 0.19 27);
+  --issue-dup: oklch(0.72 0.18 303);
+  --issue-warning: oklch(0.78 0.15 70);
+  --issue-info: oklch(0.7 0.16 261);
+  --issue-minor: oklch(0.68 0.02 106.9);
+  --issue-ink: oklch(0.19 0.008 107.1);
 }
 
 @layer base {

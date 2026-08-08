@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 import type { Db } from '../db/client';
 import { issueDismissals } from '../db/schema';
-import { detectIssues, SEVERITY_ORDER, type Issue } from '../lib/issues';
+import { detectIssues, summarizeByPerson, SEVERITY_ORDER, type Issue } from '../lib/issues';
 
 const MAX_ITEMS = 500;
 
@@ -58,6 +58,15 @@ export function createIssuesApi(db: Db) {
       dismissed: dismissed.size,
       truncated: filtered.length > items.length,
     });
+  });
+
+  // The same detection and the same dismissals as the queue above, folded to
+  // one entry per person: the tree charts mark cards from this.
+  api.get('/api/issues/persons', c => {
+    const dismissed = new Set(db.select().from(issueDismissals).all().map(d => d.fingerprint));
+    const outstanding = detectIssues(db).filter(i => !dismissed.has(i.fingerprint));
+    const persons = summarizeByPerson(outstanding);
+    return c.json({ persons, total: Object.keys(persons).length });
   });
 
   api.post('/api/issues/dismiss', async c => {

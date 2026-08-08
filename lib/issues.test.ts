@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createDb, type Db } from '../db/client';
 import { persons, families, familyChildren, events } from '../db/schema';
-import { detectIssues, type Issue } from './issues';
+import { detectIssues, summarizeByPerson, type Issue } from './issues';
 
 let db: Db;
 let eventId = 0;
@@ -304,5 +304,42 @@ describe('detectIssues — fingeravtryck och undantag', () => {
   it('ger inga problem för en ren person', () => {
     human('I1', 1900, 1980, { given: 'Ren', surname: 'Person' });
     expect(cats(run())).toEqual([]);
+  });
+});
+
+describe('summarizeByPerson', () => {
+  it('räknar problem per person och behåller den värsta allvarlighetsgraden', () => {
+    const issues: Issue[] = [
+      { fingerprint: 'a', category: 'Saknar födelse', severity: 'warning', text: '', personIds: ['I1'] },
+      { fingerprint: 'b', category: 'Födsel efter bortgång', severity: 'error', text: '', personIds: ['I1'] },
+      { fingerprint: 'c', category: 'Syskon med samma förnamn', severity: 'info', text: '', personIds: ['I2'] },
+    ];
+    expect(summarizeByPerson(issues)).toEqual({
+      I1: { count: 2, severity: 'error', categories: ['Födsel efter bortgång', 'Saknar födelse'] },
+      I2: { count: 1, severity: 'info', categories: ['Syskon med samma förnamn'] },
+    });
+  });
+
+  it('märker alla inblandade, inte bara den som äger kön', () => {
+    const issues: Issue[] = [
+      { fingerprint: 'a', category: 'Barnet äldre än föräldrarna', severity: 'error', text: '', personIds: ['C', 'P'] },
+    ];
+    const marks = summarizeByPerson(issues);
+    expect(Object.keys(marks).sort()).toEqual(['C', 'P']);
+    expect(marks.P).toEqual({ count: 1, severity: 'error', categories: ['Barnet äldre än föräldrarna'] });
+  });
+
+  it('räknar samma kategori två gånger men listar den en gång', () => {
+    const issues: Issue[] = [
+      { fingerprint: 'a', category: 'Dödsfall utan datum', severity: 'warning', text: '', personIds: ['I1'] },
+      { fingerprint: 'b', category: 'Dödsfall utan datum', severity: 'warning', text: '', personIds: ['I1'] },
+    ];
+    expect(summarizeByPerson(issues).I1).toEqual({
+      count: 2, severity: 'warning', categories: ['Dödsfall utan datum'],
+    });
+  });
+
+  it('ger ett tomt register när inget är fel', () => {
+    expect(summarizeByPerson([])).toEqual({});
   });
 });

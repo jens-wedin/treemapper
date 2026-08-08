@@ -4,6 +4,13 @@
 
 ### Added
 
+**Konsekvenser i trädet**
+- Ny kryssruta **Visa konsekvenser** i diagrammens verktygsrad, delad av alla tre vyerna och ihågkommen som flaggvalet. Avstängd tills man ber om den: den kostar en genomsökning av hela databasen, och de flesta besök i trädet handlar inte om att rätta data. Strängarna finns på alla fyra språken.
+- Korten får en bricka i övre högra hörnet — färgen är personens värsta allvarlighetsgrad, siffran hur många problem hen bär på. Hovring namnger kategorierna och kortets `aria-label` säger samma sak i ord. Solfjäderns skivor har inget hörn att sätta brickan i, så de får en prick i samma färg i skivans inre hörn: den enda plats som är fri från namnet, flaggan och generationsbandet i varje ring (första försöket ramade in hela skivan i allvarlighetsfärgen, vilket fick solfjädern att se trasig ut snarare än kommenterad).
+- Inget nytt upptäcks: `/api/issues/persons` kör samma detektorer som Konsekvensbänken och viker ihop dem per person, så det man avfärdat i kön slutar märkas i trädet. Alla inblandade märks, inte bara den som äger köposten — ett barn fött efter faderns bortgång är värt att se från båda korten. Genomsökningen tar drygt en halv sekund över hela databasen, så diagrammen hämtar registret en gång och delar på svaret; att avfärda eller slå ihop tömmer det.
+- Värt att veta: **omkring halva trädet bär på minst ett problem** (2 335 av 4 561 personer), mest massvarningarna "Dödsfall utan datum" och "Vid liv men för gammal". Det är allvarlighetsfärgerna som gör vyn användbar — bara 160 personer har ett rent logiskt fel.
+- `flagPreference` blev `chartPreferences` med en gemensam `useStoredToggle`, eftersom det nu finns två inställningar som beter sig likadant.
+
 **Ljust och mörkt läge**
 - Väljare i sidhuvudet: **Följ systemet / Ljust / Mörkt**, ihågkommen mellan besök och applicerad före första målningen så att sidan inte blinkar ljus. Så länge valet är "följ systemet" fortsätter appen lyssna på operativsystemet — byter man till nattläge följer appen med utan omladdning. Strängarna finns på alla fyra språken.
 - Diagrammen kunde inte använda Tailwinds `dark:`-variant, eftersom deras färger är SVG-fill och -stroke satta från JavaScript. De ligger nu som CSS-variabler (`--branch-*`, `--card-*`, `--chart-canvas`, `--chart-link`) som `.dark` byter ut, och appliceras via `style` — `fill="var(--x)"` fungerar inte som presentationsattribut. De fyra grenfärgerna behåller sin identitet i båda lägena: bleka toner mot ljus botten, djupa mot mörk.

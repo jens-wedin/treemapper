@@ -239,3 +239,57 @@ test('personsidan länkar till trädet', async ({ page }) => {
   await expect(page).toHaveURL(/\/trad\/I500001/);
   await expect(page.locator('[data-tree-node="I500001"]')).toBeVisible();
 });
+
+test.describe('konsekvensmärken', () => {
+  // I500244 har åtta problem, varav ett fel — en tacksam startpunkt
+  const url = '/trad/I500244?upp=1&ned=1&vy=family';
+  const card = (page: import('@playwright/test').Page) => page.locator('[data-tree-node="I500244"]');
+
+  test('är avstängda tills man ber om dem, och minns valet', async ({ page }) => {
+    await page.goto(url);
+    await expect(card(page)).toBeVisible();
+    await expect(page.locator('[data-issue-severity]')).toHaveCount(0);
+
+    const toggle = page.getByLabel('Visa konsekvenser');
+    await toggle.check();
+    await expect(card(page).locator('[data-issue-severity="error"]')).toBeVisible();
+    await expect(card(page).locator('[data-issue-count="8"]')).toBeVisible();
+
+    // valet följer med till nästa besök och till de andra vyerna
+    await page.reload();
+    await expect(toggle).toBeChecked();
+    await expect(card(page).locator('[data-issue-severity]')).toBeVisible();
+
+    await page.goto('/trad/I500244?upp=2&vy=pedigree');
+    await expect(card(page).locator('[data-issue-severity]')).toBeVisible();
+
+    await page.goto('/trad/I500244?upp=2&vy=fan');
+    await expect(page.locator('[data-issue-severity]').first()).toBeVisible();
+  });
+
+  test('märket säger vad som är fel, och släcks när man stänger av', async ({ page }) => {
+    await page.goto(url);
+    await page.getByLabel('Visa konsekvenser').check();
+    await expect(card(page).locator('[data-issue-severity]')).toBeVisible();
+
+    // skärmläsare får samma besked som pricken ger ögat
+    await expect(card(page)).toHaveAttribute('aria-label', /8 konsekvenser: .+/);
+
+    await page.getByLabel('Visa konsekvenser').uncheck();
+    await expect(page.locator('[data-issue-severity]')).toHaveCount(0);
+  });
+
+  test('det som avfärdats i Konsekvensbänken räknas inte i trädet', async ({ page }) => {
+    await page.goto(url);
+    await page.getByLabel('Visa konsekvenser').check();
+    await expect(card(page).locator('[data-issue-count="8"]')).toBeVisible();
+
+    // avfärda ett av de åtta, som i kön
+    const queue = await (await page.request.get('/api/issues?limit=500')).json();
+    const mine = queue.items.find((i: { personIds: string[] }) => i.personIds.includes('I500244'));
+    await page.request.post('/api/issues/dismiss', { data: { fingerprint: mine.fingerprint } });
+
+    await page.reload();
+    await expect(card(page).locator('[data-issue-count="7"]')).toBeVisible();
+  });
+});

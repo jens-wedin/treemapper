@@ -158,3 +158,49 @@ export function buildIssueLog(db: Db, limit = 50): IssueLogEntry[] {
     .sort((a, b) => b.at.localeCompare(a.at))
     .slice(0, limit);
 }
+
+/**
+ * One person's own history: what has been changed about them, newest first.
+ *
+ * "About them" is wider than rows carrying their id. An event belongs to its
+ * owner, a child link to the child, a family to its spouses, and a merge to
+ * the record that stayed — so the snapshots have to be read, not just the
+ * entity ids. A deleted event exists only in the before-image, which is
+ * exactly when a log is worth having.
+ */
+export function buildPersonLog(db: Db, personId: string, limit = 25): IssueLogEntry[] {
+  const names = new Map(db.select({
+    id: persons.id, givenName: persons.givenName, surname: persons.surname,
+  }).from(persons).all().map(p => [p.id, [p.givenName, p.surname].filter(Boolean).join(' ').trim()]));
+  const nameOf = (id: string) => names.get(id) || id;
+
+  const mentions = (row: { action: string; entityType: string; entityId: string; before: string | null; after: string | null }) => {
+    if (row.action === 'import') return false;
+    if (row.entityType === 'person' || row.entityType === 'family') {
+      // a merge names the survivor; a family names its spouses
+      if (row.entityId === personId) return true;
+    }
+    if (row.entityType === 'familyChild') return row.entityId.endsWith(`/${personId}`);
+
+    const snapshot = parse(row.after) ?? parse(row.before);
+    if (!snapshot) return false;
+    if (row.entityType === 'event') return snapshot.ownerId === personId;
+    if (row.entityType === 'family') return snapshot.husbandId === personId || snapshot.wifeId === personId;
+    return false;
+  };
+
+  return db.select().from(auditLog)
+    .orderBy(desc(auditLog.timestamp), desc(auditLog.id))
+    .all()
+    .filter(mentions)
+    .slice(0, limit)
+    .map(row => ({
+      at: row.timestamp,
+      kind: 'changed' as const,
+      ...describeAudit(row, nameOf),
+      personId,
+      category: null,
+      severity: null,
+      note: null,
+    }));
+}

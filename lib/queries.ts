@@ -2,6 +2,7 @@ import { and, eq, inArray, like, or, sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 import type { Db } from '../db/client';
 import { persons, families, familyChildren, events, sources, citations, media } from '../db/schema';
+import { buildPersonLog, type IssueLogEntry } from './issueLog';
 
 export interface PersonListItem {
   id: string;
@@ -27,6 +28,8 @@ export interface PersonFull {
   parents: FamilyMember[];
   siblings: FamilyMember[];
   families: FamilyView[];
+  /** What has been changed about this person, newest first. */
+  log: IssueLogEntry[];
 }
 
 // Correlated scalar subqueries — avoid join-multiplication when a person has
@@ -99,6 +102,10 @@ export function getPersonFull(db: Db, id: string): PersonFull | null {
     .map(m => ({ id: m.id, title: m.title, available: m.downloadStatus === 'done' }));
 
   const members = (ids: string[]): FamilyMember[] => {
+    // One row per person, in the order asked for: a child of two families
+    // that share a parent would otherwise get that parent twice, and two
+    // React children with the same key make the list drop nodes.
+    ids = [...new Set(ids)];
     if (!ids.length) return [];
     const rows = db.select({
       id: persons.id, givenName: persons.givenName, surname: persons.surname,
@@ -146,5 +153,6 @@ export function getPersonFull(db: Db, id: string): PersonFull | null {
     },
     events: eventViews, personCitations: personCits, media: mediaViews,
     parents, siblings, families: familyViews,
+    log: buildPersonLog(db, id),
   };
 }

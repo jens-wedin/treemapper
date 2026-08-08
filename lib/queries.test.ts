@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runImport } from '../scripts/import';
 import { createDb, type Db } from '../db/client';
+import { persons, families, familyChildren } from '../db/schema';
 import { searchPersons, getPersonFull } from './queries';
 
 const fixture = fileURLToPath(new URL('./gedcom/fixtures/mini.ged', import.meta.url));
@@ -82,5 +83,31 @@ describe('getPersonFull', () => {
     expect(i3.siblings).toEqual([]);
     expect(i3.personCitations).toHaveLength(1);
     expect(i3.personCitations[0].page).toBe('Sida 99');
+  });
+});
+
+describe('getPersonFull — dubbla familjer', () => {
+  it('räknar en förälder en gång även när barnet står i två familjer med samma mor', () => {
+    // uppstår när en gren importerats två gånger: samma barn, två familjer,
+    // samma mor i båda. Dubbla nycklar får React att tappa bort noder.
+    db.insert(persons).values([
+      { id: 'DF1', givenName: 'Far', surname: 'Dubbel', sex: 'M' },
+      { id: 'DF2', givenName: 'Far2', surname: 'Dubbel', sex: 'M' },
+      { id: 'DM', givenName: 'Mor', surname: 'Dubbel', sex: 'F' },
+      { id: 'DC', givenName: 'Barn', surname: 'Dubbel', sex: 'U' },
+    ]).run();
+    db.insert(families).values([
+      { id: 'DFA', husbandId: 'DF1', wifeId: 'DM' },
+      { id: 'DFB', husbandId: 'DF2', wifeId: 'DM' },
+    ]).run();
+    db.insert(familyChildren).values([
+      { familyId: 'DFA', childId: 'DC', seq: 0 },
+      { familyId: 'DFB', childId: 'DC', seq: 0 },
+    ]).run();
+
+    const full = getPersonFull(db, 'DC')!;
+    const ids = full.parents.map(p => p.id);
+    expect(ids).toEqual([...new Set(ids)]);
+    expect(ids.sort()).toEqual(['DF1', 'DF2', 'DM']);
   });
 });

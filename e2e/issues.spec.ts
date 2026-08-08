@@ -104,9 +104,9 @@ test('personsidan avslutar med personens konsekvenser', async ({ page }) => {
   const section = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Konsekvenser' }) });
   await expect(section).toBeVisible();
 
-  // sist på sidan, efter källhänvisningarna
+  // längst ned: efter källhänvisningarna, precis före ändringshistoriken
   const headings = await page.getByRole('heading', { level: 2 }).allTextContents();
-  expect(headings[headings.length - 1]).toBe('Konsekvenser');
+  expect(headings.slice(-3)).toEqual(['Källhänvisningar', 'Konsekvenser', 'Ändringshistorik']);
 
   // samma gruppering som i trädets panel: en rubrik per kategori, med antal
   const group = section.getByRole('listitem').filter({ hasText: 'Barn fött efter förälders bortgång' });

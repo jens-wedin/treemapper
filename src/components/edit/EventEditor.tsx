@@ -1,5 +1,11 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { buttonVariants } from '@/components/ui/button';
 import type { CitationView, EventView } from '../../../lib/queries';
 import { t, eventLabel, eventDescription, formatGedcomDate } from '../../lib/i18n';
 import { mutateJson } from '../../lib/api';
@@ -24,7 +30,6 @@ export default function EventEditor({ events, ownerId, citations: Citations, onC
   }
 
   async function remove(id: number) {
-    if (!window.confirm(t('edit.confirmRemove'))) return;
     try {
       await mutateJson(`/api/events/${id}`, 'DELETE');
       setError(null);
@@ -55,9 +60,34 @@ export default function EventEditor({ events, ownerId, citations: Citations, onC
                     <Button variant="outline" size="sm" onClick={() => setEditingId(e.id)}>
                       {t('edit.edit')}
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => remove(e.id)}>
-                      {t('edit.remove')}
-                    </Button>
+                    {/* En egen dialog i stället för window.confirm: den
+                        följer temat, går att läsa på alla fyra språken och
+                        säger vad borttagningen faktiskt innebär. */}
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm">{t('edit.remove')}</Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>{t('edit.confirmRemoveTitle')}</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            {eventLabel(e.type)}
+                            {e.dateRaw ? ` ${formatGedcomDate(e.dateRaw)}` : ''}
+                            {e.place ? `, ${e.place}` : ''}
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <p className="text-sm text-muted-foreground">{t('edit.confirmRemove')}</p>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>{t('edit.cancel')}</AlertDialogCancel>
+                          <AlertDialogAction
+                            className={buttonVariants({ variant: 'destructive' })}
+                            onClick={() => remove(e.id)}
+                          >
+                            {t('edit.remove')}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </span>
                 </div>
                 {(e.place || eventDescription(e.description)) && (

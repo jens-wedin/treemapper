@@ -12,6 +12,11 @@
 **Personlistan öppnar trädet**
 - Varje sökträff har nu en **Visa i träd**-länk vid sidan av namnet, som leder till personen i trädvyn i stället för till personsidan. Två poster kan dela både namn och årtal — trädet är ofta det snabbaste sättet att se vilken av dem man har framför sig.
 
+**Ändringshistorik på personsidan**
+- Personsidan avslutas med vad som ändrats om just den personen, senast först, hämtat ur `audit_log`. Att avgränsa till en person kräver att ögonblicksbilderna läses, inte bara entitets-id:na: en händelse hör till sin ägare, en barnlänk till barnet, en familj till sina makar och en sammanslagning till den post som blev kvar. En borttagen händelse finns bara i före-bilden — vilket är precis när en logg gör nytta.
+- **Borttagning frågar nu i appens egen dialog** i stället för webbläsarens `window.confirm`. Den namnger händelsen det gäller, säger vad borttagningen innebär, följer temat och finns på alla fyra språken. Knappen som tar bort är röd, den som avbryter är det inte.
+- **Rättat:** en person som stod som barn i två familjer med samma mor fick modern två gånger i familjerutan, med dubbla React-nycklar som följd. `getPersonFull` räknar nu varje släkting en gång. Det uppstod just av grenarna som importerats flera gånger.
+
 **Grenar som importerats flera gånger**
 - `npm run merge-duplicates -- <person-id> ...` viker ihop en gren som finns i flera exemplar: den vandrar hela grenen, klustrar posterna som är samma människa och slår ihop varje klunga i den bäst underbyggda. Torrkörning som standard, säkerhetskopia före `--apply`.
 - Sammanslagning av två personer fäller nu också ihop **familjer som visar sig vara samma par två gånger** — barnen, vigseln och dess källor flyttas till den äldre familjen. Utan det blir resultatet av att städa en dubblerad gren ett par med fyra äktenskap och fyra uppsättningar barn.

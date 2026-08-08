@@ -8,6 +8,7 @@ import { t, lifespan, displayName } from '../lib/i18n';
 import { fetchJson } from '../lib/api';
 import { clearIssueMarks, useIssueMarks } from '../lib/issueMarks';
 import ProblemList from '../components/issues/ProblemList';
+import ChangeLog from '../components/issues/ChangeLog';
 import PersonEditForm from '../components/edit/PersonEditForm';
 import EventEditor from '../components/edit/EventEditor';
 import RelationDialog from '../components/edit/RelationDialog';
@@ -213,6 +214,12 @@ export default function PersonPage() {
           <ProblemList mark={marks[person.id]!} />
         </section>
       )}
+
+      {/* sist: vad som gjorts med posten, inte vad posten säger */}
+      <section className="mt-8">
+        <h2 className="text-xl font-semibold">{t('issues.changeLog')}</h2>
+        <ChangeLog entries={data.log} />
+      </section>
     </article>
   );
 }

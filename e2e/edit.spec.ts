@@ -34,3 +34,40 @@ test('lägg till ett barn via dialogen', async ({ page }) => {
   await dialog.getByRole('button', { name: 'Spara' }).click();
   await expect(page.getByRole('link', { name: /Testbarn/ })).toBeVisible();
 });
+
+test('borttagning frågar i appens egen dialog och går att ångra sig', async ({ page }) => {
+  await page.goto('/person/I500001');
+  await page.getByRole('button', { name: 'Lägg till händelse' }).click();
+  await page.getByLabel('Typ').selectOption('OCCU');
+  await page.getByLabel('Beskrivning').fill('Ska tas bort');
+  await page.getByRole('button', { name: 'Spara' }).click();
+  const row = page.locator('li').filter({ hasText: 'Ska tas bort' });
+  await expect(row).toBeVisible();
+
+  // Avbryt lämnar händelsen i fred
+  await row.getByRole('button', { name: 'Ta bort' }).click();
+  const confirm = page.getByRole('alertdialog');
+  await expect(confirm).toContainText('Ta bort händelsen?');
+  await expect(confirm).toContainText('Yrke');            // vilken händelse det gäller
+  await confirm.getByRole('button', { name: 'Avbryt' }).click();
+  await expect(confirm).toBeHidden();
+  await expect(row).toBeVisible();
+
+  await row.getByRole('button', { name: 'Ta bort' }).click();
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Ta bort' }).click();
+  await expect(row).toHaveCount(0);
+});
+
+test('personsidan avslutas med sin ändringshistorik', async ({ page }) => {
+  await page.goto('/person/I500001');
+  const log = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Ändringshistorik' }) });
+  await expect(log).toBeVisible();
+
+  // sist på sidan
+  const headings = await page.getByRole('heading', { level: 2 }).allTextContents();
+  expect(headings[headings.length - 1]).toBe('Ändringshistorik');
+
+  // de föregående testerna i den här filen har redan ändrat I500001
+  await expect(log.locator('ol > li').first()).toContainText(/20\d\d-\d\d-\d\d/);
+  await expect(log).toContainText('giftasnamn');
+});

@@ -350,9 +350,19 @@ record. It refuses to merge a person with themselves or two people in the same
 ancestry line, and the whole operation is one transaction — a failure anywhere
 leaves the tree untouched.
 
+The Personsida ends with **Ändringshistorik**: what has been changed about
+that person, newest first, read out of `audit_log`. Scoping it takes reading
+the snapshots rather than the entity ids — an event belongs to its owner, a
+child link to the child, a family to its spouses, a merge to the record that
+stayed. A deleted event exists only in the before-image, which is exactly when
+a log earns its keep.
+
 ## Editing
 
-All editing lives on the Personsida: **Redigera** for names/kön/anteckning,
+Removing something asks first, in the app's own dialog rather than the
+browser's: it names the event in question, says the removal goes to the change
+log, and follows the theme and the chosen language. All editing lives on the
+Personsida: **Redigera** for names/kön/anteckning,
 per-event **Redigera**/**Ta bort** plus **Lägg till händelse**, and guided
 dialogs for **Lägg till barn/partner/förälder** (pick an existing person or
 create a new one; family records are created and linked correctly).

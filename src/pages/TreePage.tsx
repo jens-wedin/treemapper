@@ -9,6 +9,7 @@ import { flattenAncestors } from '../lib/ahnentafel';
 import { layoutPedigree } from '../lib/pedigreeLayout';
 import { layoutFan } from '../lib/fanLayout';
 import { usePrefersReducedMotion } from '../lib/useReducedMotion';
+import { useLingering } from '../lib/useLingering';
 import AncestorMorph from '../components/AncestorMorph';
 import ChartSwitcher from '../components/ChartSwitcher';
 import TreeSettings from '../components/TreeSettings';
@@ -29,6 +30,8 @@ const VIEWS = ['family', 'pedigree', 'fan', 'list'] as const;
 type View = (typeof VIEWS)[number];
 /** What the tabs point at: one panel, whichever view is showing. */
 const PANEL_ID = 'trad-vy';
+/** Keep in step with .panel-leaving in index.css. */
+const PANEL_OUT_MS = 200;
 
 /** Reads a generation count from the URL, held to the options we offer. */
 function clamp(raw: string | null, allowed: readonly number[]): number {
@@ -57,6 +60,9 @@ export default function TreePage() {
   // register, so a person's problems appear beside their details as well.
   const [showIssues] = useIssueMarkPreference();
   const issueMarks = useIssueMarks(showIssues);
+
+  // The list view has no chart to sit beside, so it has no panel either.
+  const panel = useLingering(view === 'list' ? null : selectedId, PANEL_OUT_MS);
 
   /**
    * The antavla and the solfjäder draw the same people under the same
@@ -190,13 +196,18 @@ export default function TreePage() {
               <FanChart data={data} generations={upp} onSelect={setSelectedId} selectedId={selectedId} />
             )}
           </ChartSwitcher>
-          {view !== 'list' && selectedId && (
+          {/* Held for the length of its exit, so closing slides away instead
+              of blinking out — the panel still needs the person it was
+              showing while it leaves. */}
+          {panel.value && (
             <TreePersonPanel
-              personId={selectedId}
-              issue={issueMarks[selectedId]}
+              key={panel.value}
+              personId={panel.value}
+              issue={issueMarks[panel.value]}
               onClose={() => setSelectedId(null)}
               onSelect={setSelectedId}
               onFocusTree={focusOn}
+              className={panel.leaving ? 'panel-leaving' : 'panel-entering'}
             />
           )}
         </div>

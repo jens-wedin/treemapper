@@ -4,6 +4,10 @@
 
 ### Added
 
+**Personpanelen glider in**
+- Panelen tonar och glider in från höger, och **ligger kvar medan den glider ut** i stället för att blinka bort. Det senare kräver att den personen den visade hålls kvar en stund efter att markeringen släppts — `useLingering` gör just det, och gör ingenting alls när `prefers-reduced-motion` är satt.
+- Bara panelen rör sig; diagrammet tar sin nya bredd direkt. Att animera bredden hade räknat om diagrammets passning varje bildruta, vilket både hackar och är onödigt — blicken följer panelen, inte springan.
+
 **Det markerade kortet syns**
 - Kortet man valt får en **gloria som slår till och sedan andas** — långsamt och grunt, 2,8 sekunder per andetag. Insnärpningen lämnar över i samma ögonblick som den landar på viloläget, så de två läses som en enda rörelse. Solfjäderns skiva gör samma sak med sin kontur. `prefers-reduced-motion: reduce` ger glorian utan rörelsen, eftersom viloläget också är animationens utgångsläge.
 - **Rättat: personpanelen sköt rubriken och flikarna ut ur bilden.** Växlaren saknade `min-w-0`, så flexraden vägrade krympa och sidan fick vågrät rullning när panelen öppnades.

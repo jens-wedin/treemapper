@@ -48,6 +48,32 @@
 }
 
 /*
+ * The person panel sliding in from the right.
+ *
+ * Only the panel moves; the chart takes its new width straight away. Animating
+ * the width instead would re-fit the chart on every frame, which is both janky
+ * and pointless — the eye is following the panel, not the gap.
+ */
+.panel-entering {
+  animation: panel-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.panel-leaving {
+  animation: panel-out 200ms ease-in both;
+  pointer-events: none;
+}
+
+@keyframes panel-in {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes panel-out {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(24px); }
+}
+
+/*
  * The card you have picked.
  *
  * A one-shot snap rather than a pulse: something that never stops moving is
@@ -167,7 +193,9 @@
   .chart-leaving-morph,
   .chart-entering-morph,
   .chart-selected-ring,
-  .chart-selected-wedge {
+  .chart-selected-wedge,
+  .panel-entering,
+  .panel-leaving {
     animation: none;
   }
 }

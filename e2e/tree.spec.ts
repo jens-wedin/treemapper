@@ -377,3 +377,30 @@ test.describe('övergångar mellan vyerna', () => {
     await expect(page.getByRole('group', { name: 'Antavla' })).toBeVisible();
   });
 });
+
+test.describe('personpanelen glider in', () => {
+  const openPanel = async (page: import('@playwright/test').Page) => {
+    await page.goto('/trad/I500001?upp=2&ned=1&vy=family');
+    await page.locator('[data-tree-node="I500001"]').click();
+    return page.getByRole('complementary', { name: 'Personuppgifter' });
+  };
+
+  test('panelen animeras in och ligger kvar medan den glider ut', async ({ page }) => {
+    const panel = await openPanel(page);
+    // klassen sitter kvar så länge panelen är öppen — inget tidsberoende
+    await expect(panel).toHaveClass(/panel-entering/);
+
+    await panel.getByRole('button', { name: 'Stäng panelen' }).click();
+    await expect(panel).toHaveCount(0);
+  });
+
+  test('mindre rörelse stänger panelen på en gång', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    const panel = await openPanel(page);
+    await expect(panel).toBeVisible();
+
+    await panel.getByRole('button', { name: 'Stäng panelen' }).click();
+    // utan väntan på en utglidning som inte spelas
+    await expect(panel).toHaveCount(0, { timeout: 150 });
+  });
+});

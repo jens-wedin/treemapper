@@ -34,13 +34,15 @@ function MemberLinks({ people, onSelect }: { people: FamilyMember[]; onSelect: (
  * usable beside it, so this is a labelled region rather than a dialog that
  * traps focus.
  */
-export default function TreePersonPanel({ personId, issue, onClose, onFocusTree, onSelect }: {
+export default function TreePersonPanel({ personId, issue, onClose, onFocusTree, onSelect, className }: {
   personId: string;
   /** Their outstanding problems, when "Visa konsekvenser" is on. */
   issue?: PersonIssueMark;
   onClose: () => void;
   onFocusTree: (id: string) => void;
   onSelect: (id: string) => void;
+  /** The slide-in or slide-out animation; see TreePage. */
+  className?: string;
 }) {
   const [data, setData] = useState<PersonFull | null>(null);
   const [state, setState] = useState<'loading' | 'ok' | 'error'>('loading');
@@ -73,7 +75,7 @@ export default function TreePersonPanel({ personId, issue, onClose, onFocusTree,
   return (
     <aside
       aria-label={t('tree.panelTitle')}
-      className="flex w-[340px] shrink-0 flex-col overflow-y-auto rounded-lg border bg-background p-4"
+      className={`flex w-[340px] shrink-0 flex-col overflow-y-auto rounded-lg border bg-background p-4 ${className ?? ''}`}
     >
       <div className="flex items-start justify-between gap-2">
         <h2 ref={headingRef} tabIndex={-1} className="text-lg font-semibold outline-none">

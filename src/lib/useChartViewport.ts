@@ -39,9 +39,9 @@ export const ZOOM_EASE_MS = 220;
  * one keeps easing off to nothing — `TAU` is how long it takes to fall to about
  * a third, so a throw travels roughly `speed × TAU` pixels.
  */
-const FLING_TAU = 340;
+const FLING_TAU = 200;
 /** Below this the pointer was being placed, not thrown (px per ms). */
-const FLING_MIN_SPEED = 0.15;
+const FLING_MIN_SPEED = 0.22;
 /** Where the glide gives up rather than crawling to a mathematical halt. */
 const FLING_STOP_SPEED = 0.02;
 /** Velocity is measured over the tail of the drag, not the whole of it. */

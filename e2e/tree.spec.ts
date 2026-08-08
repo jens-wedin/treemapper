@@ -429,3 +429,56 @@ test.describe('zoomen', () => {
     expect(afterNotch).toBeLessThanOrEqual(Math.round(afterNudge * 1.1) + 1);
   });
 });
+
+test.describe('att kasta trädet', () => {
+  const panX = async (page: import('@playwright/test').Page) => {
+    const t = await page.locator('svg[role="group"] > g').first().getAttribute('transform');
+    return Number(/translate\(([-\d.]+)/.exec(t ?? '')?.[1] ?? NaN);
+  };
+
+  /** Drag with real pointer events so the browser records a velocity. */
+  const flick = async (page: import('@playwright/test').Page) => {
+    const svg = page.locator('svg[role="group"]').first();
+    const box = (await svg.boundingBox())!;
+    const y = box.y + box.height / 2;
+    await page.mouse.move(box.x + 200, y);
+    await page.mouse.down();
+    for (let i = 1; i <= 6; i++) await page.mouse.move(box.x + 200 + i * 40, y);
+    await page.mouse.up();
+  };
+
+  test('kastet rullar vidare efter att man släppt, och saktar in', async ({ page }) => {
+    await page.goto('/trad/I500001?upp=2&ned=1&vy=family');
+    await page.locator('[data-tree-node]').first().waitFor();
+
+    await flick(page);
+    const atRelease = await panX(page);
+    await page.waitForTimeout(150);
+    const first = await panX(page);
+    await page.waitForTimeout(150);
+    const second = await panX(page);
+
+    // Lika långa fönster, annars säger jämförelsen ingenting: ett längre
+    // fönster hinner längre även medan farten avtar.
+    expect(first - atRelease).toBeGreaterThan(0);                  // rullar vidare av sig självt
+    expect(second - first).toBeGreaterThan(0);                     // fortsätter
+    expect(second - first).toBeLessThan(first - atRelease);        // men saktar in
+
+    // och stannar av sig självt
+    await page.waitForTimeout(1500);
+    const stopped = await panX(page);
+    await page.waitForTimeout(250);
+    expect(await panX(page)).toBeCloseTo(stopped, 1);
+  });
+
+  test('mindre rörelse stannar där fingret släppte', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/trad/I500001?upp=2&ned=1&vy=family');
+    await page.locator('[data-tree-node]').first().waitFor();
+
+    await flick(page);
+    const atRelease = await panX(page);
+    await page.waitForTimeout(300);
+    expect(await panX(page)).toBe(atRelease);
+  });
+});

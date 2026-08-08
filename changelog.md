@@ -4,6 +4,11 @@
 
 ### Added
 
+**Trädet går att kasta**
+- Släpper man taget medan man drar rullar duken vidare och saktar in, som en lista på en telefon. Farten mäts över **slutet** av draget, inte hela — en paus på vägen ska inte bromsa ett kast som avslutas snabbt — och avtar exponentiellt: ett linjärt stopp har ett synligt ögonblick där rörelsen bara upphör.
+- Att ta tag i duken mitt i kastet stoppar den tvärt. Zoom, återställning och piltangenter tar också över direkt.
+- `prefers-reduced-motion: reduce` panorerar precis som förut och stannar där fingret släppte.
+
 **Lugnare zoom i trädet**
 - Hjulet zoomar nu **i proportion till hur långt man faktiskt rullar**. En fast faktor per händelse är vad som gjorde styrplattan vild: två fingrar ger en ström av små händelser, och var och en räknades förut lika mycket som ett helt hjulklick. En knuff zoomar lite, ett tag zoomar mycket, och ingen enskild händelse får ta mer än 10 %.
 - Rader och sidor räknas om till bildpunkter (`deltaMode`), och en styrplattas nyp — som kommer som ctrl+hjul — får vara snabbare, eftersom det är en avsiktlig gest.

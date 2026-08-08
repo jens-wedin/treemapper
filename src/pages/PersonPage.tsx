@@ -6,6 +6,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { PersonFull, CitationView, FamilyMember } from '../../lib/queries';
 import { t, lifespan, displayName } from '../lib/i18n';
 import { fetchJson } from '../lib/api';
+import { clearIssueMarks, useIssueMarks } from '../lib/issueMarks';
+import ProblemList from '../components/issues/ProblemList';
 import PersonEditForm from '../components/edit/PersonEditForm';
 import EventEditor from '../components/edit/EventEditor';
 import RelationDialog from '../components/edit/RelationDialog';
@@ -57,6 +59,10 @@ export default function PersonPage() {
   const [editing, setEditing] = useState(false);
   const [warnings, setWarnings] = useState<string[]>([]);
 
+  // Always on here, unlike the charts' opt-in badges: you came to look at one
+  // person, and what the queue has on them belongs with the rest of the record.
+  const marks = useIssueMarks(true);
+
   const load = useCallback(() => {
     fetchJson<PersonFull>(`/api/persons/${id}/full`)
       .then(d => {
@@ -66,6 +72,12 @@ export default function PersonPage() {
       })
       .catch(err => setState(err instanceof Error && err.message === 'HTTP 404' ? 'missing' : 'error'));
   }, [id]);
+
+  // An edit can fix or create a problem, so the register has to be re-read.
+  const reload = useCallback(() => {
+    clearIssueMarks();
+    load();
+  }, [load]);
 
   useEffect(() => {
     setState('loading');
@@ -120,7 +132,7 @@ export default function PersonPage() {
         {editing && (
           <PersonEditForm
             person={person}
-            onSaved={w => { setWarnings(w); setEditing(false); load(); }}
+            onSaved={w => { setWarnings(w); setEditing(false); reload(); }}
             onCancel={() => setEditing(false)}
           />
         )}
@@ -148,7 +160,7 @@ export default function PersonPage() {
         <h2 className="text-xl font-semibold">{t('person.family')}</h2>
         <div className="mt-2 flex flex-wrap gap-2">
           {(['child', 'spouse', 'parent'] as const).map(type => (
-            <RelationDialog key={type} type={type} person={person} families={data.families} onSaved={load} />
+            <RelationDialog key={type} type={type} person={person} families={data.families} onSaved={reload} />
           ))}
         </div>
         <dl className="mt-3 space-y-2">
@@ -177,7 +189,7 @@ export default function PersonPage() {
           events={data.events}
           ownerId={person.id}
           citations={Citations}
-          onChanged={load}
+          onChanged={reload}
         />
       </section>
 
@@ -192,6 +204,13 @@ export default function PersonPage() {
         <section className="mt-8">
           <h2 className="text-xl font-semibold">{t('person.citations')}</h2>
           <Citations items={data.personCitations} />
+        </section>
+      )}
+
+      {marks[person.id] && (
+        <section className="mt-8">
+          <h2 className="text-xl font-semibold">{t('issues.section')}</h2>
+          <ProblemList mark={marks[person.id]!} />
         </section>
       )}
     </article>

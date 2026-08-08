@@ -97,3 +97,25 @@ test('hem visar konsekvens-resultattavlan', async ({ page }) => {
   await page.getByRole('link', { name: 'Konsekvensbänken' }).click();
   await expect(page).toHaveURL(/\/konsekvens/);
 });
+
+test('personsidan avslutar med personens konsekvenser', async ({ page }) => {
+  // I500244 har fyra barn födda efter sin egen död, plus fler problem
+  await page.goto('/person/I500244');
+  const section = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Konsekvenser' }) });
+  await expect(section).toBeVisible();
+
+  // sist på sidan, efter källhänvisningarna
+  const headings = await page.getByRole('heading', { level: 2 }).allTextContents();
+  expect(headings[headings.length - 1]).toBe('Konsekvenser');
+
+  // samma gruppering som i trädets panel: en rubrik per kategori, med antal
+  const group = section.getByRole('listitem').filter({ hasText: 'Barn fött efter förälders bortgång' });
+  await expect(group).toHaveCount(1);
+  await expect(group).toContainText('(4)');
+  await expect(group).toContainText('efter faderns Abraham Abrahamsson död 1800');
+
+  // och ingen rubrik alls för den som inte har något flaggat
+  await page.goto('/person/I500001');
+  await expect(page.getByRole('heading', { level: 2 }).first()).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Konsekvenser' })).toHaveCount(0);
+});

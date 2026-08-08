@@ -155,7 +155,11 @@ one spot free of the name, the flag and the generation band at every ring.
 
 Clicking the card opens the person panel, which lists the problems in the
 queue's own wording at the foot of the panel, after the notes — a footnote to
-the person rather than what the person is. Repeats of one category are gathered
+the person rather than what the person is. **The Personsida ends the same way**,
+and there it needs no toggle: you came to look at one person, and what the queue
+has on them belongs with the rest of their record. Editing anything on that page
+re-reads the register, so a problem you just fixed stops being reported without
+a reload. Repeats of one category are gathered
 under a single heading with a count: four children born after the same father
 died is one fact told four times, not four headings.
 The setting is a module-level store rather than component state, so ticking the

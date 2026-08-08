@@ -10,6 +10,7 @@ const NONE: IssueMarks = Object.freeze({});
 // a second on the real database. The charts ask for the register once and share
 // the answer; dismissing something in Konsekvensbänken drops it (see below).
 let cached: Promise<IssueMarks> | null = null;
+const listeners = new Set<() => void>();
 
 function load(): Promise<IssueMarks> {
   cached ??= fetchJson<{ persons: IssueMarks }>('/api/issues/persons')
@@ -39,9 +40,14 @@ export function groupProblems(mark: PersonIssueMark): { severity: Severity; cate
   return groups;
 }
 
-/** Called after dismissing, restoring or merging: the register has moved on. */
+/**
+ * Called after dismissing, restoring, merging or editing: the register has
+ * moved on. Anything showing marks refetches, so a problem you just fixed
+ * stops being reported without a reload.
+ */
 export function clearIssueMarks(): void {
   cached = null;
+  listeners.forEach(notify => notify());
 }
 
 /**
@@ -51,11 +57,20 @@ export function clearIssueMarks(): void {
  */
 export function useIssueMarks(enabled: boolean): IssueMarks {
   const [marks, setMarks] = useState<IssueMarks>(NONE);
+  const [version, setVersion] = useState(0);
+
+  useEffect(() => {
+    const bump = () => setVersion(v => v + 1);
+    listeners.add(bump);
+    return () => { listeners.delete(bump); };
+  }, []);
+
   useEffect(() => {
     if (!enabled) return;
     let live = true;
     load().then(loaded => { if (live) setMarks(loaded); });
     return () => { live = false; };
-  }, [enabled]);
+  }, [enabled, version]);
+
   return enabled ? marks : NONE;
 }

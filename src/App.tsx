@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { NavLink, Route, Routes, useLocation } from 'react-router';
 import { t, useLanguage, setLanguage, LANGUAGES, type Lang } from './lib/i18n';
-import { useTheme, setTheme, THEMES, type Theme } from './lib/theme';
 import { useActiveTree } from './lib/activeTree';
+import ThemePicker from './components/ThemePicker';
 import TreePicker from './components/TreePicker';
 import Hem from './pages/Hem';
 import PersonList from './pages/PersonList';
@@ -30,7 +30,6 @@ export default function App() {
   const isTree = pathname.startsWith('/trad');
   // Subscribing here re-renders the whole app when the language changes.
   const lang = useLanguage();
-  const theme = useTheme();
   const activeTree = useActiveTree();
 
   useEffect(() => {
@@ -75,19 +74,7 @@ export default function App() {
           <div className="ml-auto">
             <TreePicker />
           </div>
-          <label className="flex items-center gap-2 text-sm">
-            <span className="sr-only">{t('theme.label')}</span>
-            <select
-              aria-label={t('theme.label')}
-              value={theme}
-              onChange={e => setTheme(e.target.value as Theme)}
-              className="rounded-md border px-2 py-1"
-            >
-              {THEMES.map(mode => (
-                <option key={mode} value={mode}>{t(`theme.${mode}`)}</option>
-              ))}
-            </select>
-          </label>
+          <ThemePicker />
           <label className="flex items-center gap-2 text-sm">
             <span className="sr-only">{t('language')}</span>
             <select

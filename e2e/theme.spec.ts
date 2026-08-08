@@ -3,26 +3,34 @@ import { test, expect } from '@playwright/test';
 const htmlClass = (page: import('@playwright/test').Page) =>
   page.evaluate(() => document.documentElement.className);
 
+/** The appearance control is an icon menu now, not a select. */
+const pickTheme = async (page: import('@playwright/test').Page, label: string) => {
+  await page.getByRole('button', { name: /Utseende/ }).click();
+  await page.getByRole('button', { name: label, exact: true }).click();
+};
+const themeButton = (page: import('@playwright/test').Page) =>
+  page.getByRole('button', { name: /Utseende/ });
+
 test.describe('mörkt läge', () => {
   test.use({ colorScheme: 'dark' });
 
   test('följer systemet som standard', async ({ page }) => {
     await page.goto('/');
     await expect.poll(() => htmlClass(page)).toContain('dark');
-    await expect(page.getByLabel('Utseende')).toHaveValue('system');
+    await expect(themeButton(page)).toHaveAccessibleName('Utseende: Följ systemet');
   });
 
   test('ett uttryckligt ljust val vinner över systemet och minns', async ({ page }) => {
     await page.goto('/');
-    await page.getByLabel('Utseende').selectOption('light');
+    await pickTheme(page, 'Ljust');
     await expect.poll(() => htmlClass(page)).not.toContain('dark');
 
     await page.reload();
-    await expect(page.getByLabel('Utseende')).toHaveValue('light');
+    await expect(themeButton(page)).toHaveAccessibleName('Utseende: Ljust');
     await expect.poll(() => htmlClass(page)).not.toContain('dark');
 
     // och tillbaka till systemet, som här är mörkt
-    await page.getByLabel('Utseende').selectOption('system');
+    await pickTheme(page, 'Följ systemet');
     await expect.poll(() => htmlClass(page)).toContain('dark');
   });
 });
@@ -34,7 +42,7 @@ test.describe('ljust läge', () => {
     await page.goto('/');
     await expect.poll(() => htmlClass(page)).not.toContain('dark');
 
-    await page.getByLabel('Utseende').selectOption('dark');
+    await pickTheme(page, 'Mörkt');
     await expect.poll(() => htmlClass(page)).toContain('dark');
     await page.reload();
     await expect.poll(() => htmlClass(page)).toContain('dark');
@@ -51,7 +59,7 @@ test.describe('ljust läge', () => {
       .first().evaluate(el => el.getAttribute('fill'));
 
     const lightCard = await cardFill();
-    await page.getByLabel('Utseende').selectOption('dark');
+    await pickTheme(page, 'Mörkt');
     await expect.poll(cardFill).not.toBe(lightCard);
 
     // en svensk flagga är blå och gul oavsett tema

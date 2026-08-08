@@ -12,7 +12,7 @@ import { useChartTransitions } from '../lib/useChartTransitions';
 import { useFlagPreference, useIssueMarkPreference } from '../lib/chartPreferences';
 import { useIssueMarks } from '../lib/issueMarks';
 import PersonCard, { cardLabel } from './PersonCard';
-import ChartToolbar from './ChartToolbar';
+import ChartZoom from './ChartZoom';
 
 /** Generations added by one click, in whichever direction was clicked. */
 const EXPAND_BY = 2;
@@ -43,8 +43,8 @@ export default function TreeChart({ data, onSelect, selectedId }: {
   const layout = useMemo(() => layoutTree(grafted, new Set(opened.keys())), [grafted, opened]);
 
   const viewport = useChartViewport(layout.bounds);
-  const [showFlags, setShowFlags] = useFlagPreference();
-  const [showIssues, setShowIssues] = useIssueMarkPreference();
+  const [showFlags] = useFlagPreference();
+  const [showIssues] = useIssueMarkPreference();
   const issueMarks = useIssueMarks(showIssues);
   const [activeKey, setActiveKey] = useState('focus');
 
@@ -130,17 +130,8 @@ export default function TreeChart({ data, onSelect, selectedId }: {
 
   return (
     <div className="mt-3 flex min-h-0 flex-1 flex-col">
-      <ChartToolbar
-        zoomPercent={viewport.zoomPercent}
-        onZoom={factor => viewport.zoomBy(factor, focusNode)}
-        onReset={viewport.reset}
-        showFlags={showFlags}
-        onFlagsChange={setShowFlags}
-        showIssues={showIssues}
-        onIssuesChange={setShowIssues}
-        hint={`${t('tree.instructionsPanel')} ${t('tree.expandHintFamily')}`}
-      />
-      <div ref={viewport.wrapRef} className="mt-2 min-h-[320px] w-full flex-1 overflow-hidden rounded-lg border bg-[var(--chart-canvas)]">
+      <p id="trad-instruktioner" className="sr-only">{`${t('tree.instructionsPanel')} ${t('tree.expandHintFamily')}`}</p>
+      <div ref={viewport.wrapRef} className="relative mt-2 min-h-[320px] w-full flex-1 overflow-hidden rounded-lg border bg-[var(--chart-canvas)]">
         <svg
           ref={viewport.svgRef}
           role="group"
@@ -267,6 +258,7 @@ export default function TreeChart({ data, onSelect, selectedId }: {
             })}
           </g>
         </svg>
+        <ChartZoom zoomPercent={viewport.zoomPercent} onZoom={factor => viewport.zoomBy(factor, focusNode)} onReset={viewport.reset} />
       </div>
     </div>
   );

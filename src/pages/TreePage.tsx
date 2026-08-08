@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
-import { Button } from '@/components/ui/button';
 import type { TreeData } from '../../lib/tree';
 import { t, displayName, lifespan } from '../lib/i18n';
 import { fetchJson } from '../lib/api';
@@ -12,6 +11,8 @@ import { layoutFan } from '../lib/fanLayout';
 import { usePrefersReducedMotion } from '../lib/useReducedMotion';
 import AncestorMorph from '../components/AncestorMorph';
 import ChartSwitcher from '../components/ChartSwitcher';
+import TreeSettings from '../components/TreeSettings';
+import ViewTabs from '../components/ViewTabs';
 import TreeChart from '../components/TreeChart';
 import TreeList from '../components/TreeList';
 import TreePersonPanel from '../components/TreePersonPanel';
@@ -26,6 +27,8 @@ const DEPTHS = [1, 2, 3, 4, 5];
 const UP_DEPTHS = [1, 2, 3, 4, 5];
 const VIEWS = ['family', 'pedigree', 'fan', 'list'] as const;
 type View = (typeof VIEWS)[number];
+/** What the tabs point at: one panel, whichever view is showing. */
+const PANEL_ID = 'trad-vy';
 
 /** Reads a generation count from the URL, held to the options we offer. */
 function clamp(raw: string | null, allowed: readonly number[]): number {
@@ -127,52 +130,39 @@ export default function TreePage() {
     <section className="flex min-h-0 flex-1 flex-col" aria-busy={state === 'loading' || undefined}>
       <h1 className="text-2xl font-bold">{t('tree.title')}</h1>
       {data && (
+        // The name itself is the link. A separate "open person page" beside it
+        // said the same thing twice and put the useful target second.
         <p className="mt-1 text-muted-foreground">
-          {displayName(data.focus)} {lifespan(data.focus.birthYear, data.focus.deathYear)}
-          {' · '}
           <Link to={`/person/${data.focus.id}`} className="text-primary underline-offset-2 hover:underline">
-            {t('tree.goToPerson')}
+            {displayName(data.focus)}
           </Link>
+          {' '}
+          {lifespan(data.focus.birthYear, data.focus.deathYear)}
         </p>
       )}
 
-      <div className="mt-4 flex flex-wrap items-end gap-3">
-        <div role="group" aria-label={t('tree.viewLabel')} className="flex gap-1">
-          {VIEWS.map(v => (
-            <Button
-              key={v}
-              variant={view === v ? 'default' : 'outline'}
-              aria-pressed={view === v}
-              onClick={() => chooseView(v)}
-            >
-              {t(`tree.view${v[0]!.toUpperCase()}${v.slice(1)}`)}
-            </Button>
-          ))}
-        </div>
-        <div>
-          <label htmlFor="gen-upp" className="block text-sm font-medium">{t('tree.generationsUp')}</label>
-          <select id="gen-upp" value={upp} onChange={e => setDepth('upp', e.target.value)} className="mt-1 rounded-md border px-2 py-1.5">
-            {UP_DEPTHS.map(d => <option key={d} value={d}>{d}</option>)}
-          </select>
-        </div>
-        {/* descendants only matter where they are drawn */}
-        {(view === 'family' || view === 'list') && (
-          <div>
-            <label htmlFor="gen-ned" className="block text-sm font-medium">{t('tree.generationsDown')}</label>
-            <select id="gen-ned" value={ned} onChange={e => setDepth('ned', e.target.value)} className="mt-1 rounded-md border px-2 py-1.5">
-              {DEPTHS.map(d => <option key={d} value={d}>{d}</option>)}
-            </select>
-          </div>
-        )}
-        {(view === 'pedigree' || view === 'fan') && (
-          <p className="text-sm text-muted-foreground">{t('tree.ancestorsOnly')}</p>
-        )}
+      <div className="mt-4 flex items-end justify-between gap-3">
+        <ViewTabs views={VIEWS} value={view} panelId={PANEL_ID} onChange={chooseView} />
+        <TreeSettings
+          up={upp}
+          down={ned}
+          upOptions={UP_DEPTHS}
+          downOptions={DEPTHS}
+          showDown={view === 'family' || view === 'list'}
+          onUp={value => setDepth('upp', value)}
+          onDown={value => setDepth('ned', value)}
+        />
       </div>
 
       {/* only the very first load has nothing to show; a reload keeps the chart */}
       {state === 'loading' && !data && <p className="mt-4 text-muted-foreground">{t('common.loading')}</p>}
       {data && (
-        <div className="flex min-h-0 flex-1 gap-3">
+        <div
+          id={PANEL_ID}
+          role="tabpanel"
+          aria-labelledby={`tab-${view}`}
+          className="flex min-h-0 flex-1 gap-3"
+        >
           {/* One switcher across all four views, so every combination fades —
               including to and from the list, which is HTML rather than SVG. */}
           <ChartSwitcher

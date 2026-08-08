@@ -1,6 +1,14 @@
 import fs from 'node:fs';
 import { test, expect } from '@playwright/test';
 
+/** Generations and the card toggles now live behind the settings icon. */
+const openSettings = async (page: import('@playwright/test').Page) => {
+  const panel = page.getByRole('dialog');
+  if (await panel.isVisible()) return;                 // clicking again would close it
+  await page.getByRole('button', { name: 'Visningsinställningar' }).click();
+  await panel.waitFor();
+};
+
 test.skip(!fs.existsSync('wedin.db'), 'wedin.db saknas — kör npm run import först');
 
 test('trädet renderas och piltangenter flyttar fokus', async ({ page }) => {
@@ -100,7 +108,7 @@ test('familjevyns utfällningsknapp nås med tangentbordet', async ({ page }) =>
 
 test('antavlan visar förfäder men inga ättlingar', async ({ page }) => {
   await page.goto('/trad/I500003?upp=3&ned=2');
-  await page.getByRole('button', { name: 'Antavla', exact: true }).click();
+  await page.getByRole('tab', { name: 'Antavla' }).click();
   await expect(page).toHaveURL(/vy=pedigree/);
   await expect(page.getByRole('group', { name: 'Antavla' })).toBeVisible();
 
@@ -115,7 +123,10 @@ test('antavlan visar förfäder men inga ättlingar', async ({ page }) => {
   for (const id of childIds) {
     await expect(page.locator(`[data-tree-node="${id}"]`)).toHaveCount(0);
   }
+  // förklaringen till varför "generationer nedåt" saknas bor i inställningarna
+  await openSettings(page);
   await expect(page.getByText('Antavla och solfjäder visar bara förfäder.')).toBeVisible();
+  await expect(page.getByLabel('Generationer nedåt')).toHaveCount(0);
 });
 
 test('generationsvalet håller i sig och gäller genast', async ({ page }) => {
@@ -123,6 +134,7 @@ test('generationsvalet håller i sig och gäller genast', async ({ page }) => {
   await expect(page.locator('[data-tree-node]').first()).toBeVisible();
   const atTwo = await page.locator('[data-tree-node]').count();
 
+  await openSettings(page);
   const generations = page.getByLabel('Generationer uppåt');
   await generations.selectOption('5');
   await expect(generations).toHaveValue('5');        // får inte studsa tillbaka
@@ -133,6 +145,7 @@ test('generationsvalet håller i sig och gäller genast', async ({ page }) => {
 
   // och valet överlever en omladdning
   await page.reload();
+  await openSettings(page);
   await expect(page.getByLabel('Generationer uppåt')).toHaveValue('5');
 });
 
@@ -224,7 +237,7 @@ test('personpanelen fungerar i både antavla och solfjäder', async ({ page }) =
 
 test('listvyn är en likvärdig väg och kan fokusera om trädet', async ({ page }) => {
   await page.goto('/trad/I500001');
-  await page.getByRole('button', { name: 'Lista' }).click();
+  await page.getByRole('tab', { name: 'Lista' }).click();
   await expect(page.getByRole('heading', { name: 'Förfäder' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Ättlingar' })).toBeVisible();
   // :has(> h2 …) — only the inner list section, not the page-level <section> that also contains the heading
@@ -250,6 +263,7 @@ test.describe('konsekvensmärken', () => {
     await expect(card(page)).toBeVisible();
     await expect(page.locator('[data-issue-severity]')).toHaveCount(0);
 
+    await openSettings(page);
     const toggle = page.getByLabel('Visa konsekvenser');
     await toggle.check();
     await expect(card(page).locator('[data-issue-severity="error"]')).toBeVisible();
@@ -257,6 +271,7 @@ test.describe('konsekvensmärken', () => {
 
     // valet följer med till nästa besök och till de andra vyerna
     await page.reload();
+    await openSettings(page);
     await expect(toggle).toBeChecked();
     await expect(card(page).locator('[data-issue-severity]')).toBeVisible();
 
@@ -269,11 +284,14 @@ test.describe('konsekvensmärken', () => {
 
   test('märket säger vad som är fel, och släcks när man stänger av', async ({ page }) => {
     await page.goto(url);
+    await openSettings(page);
     await page.getByLabel('Visa konsekvenser').check();
     await expect(card(page).locator('[data-issue-severity]')).toBeVisible();
 
     // skärmläsare får samma besked som pricken ger ögat
     await expect(card(page)).toHaveAttribute('aria-label', /8 konsekvenser: .+/);
+
+    await openSettings(page);
 
     await page.getByLabel('Visa konsekvenser').uncheck();
     await expect(page.locator('[data-issue-severity]')).toHaveCount(0);
@@ -287,6 +305,8 @@ test.describe('konsekvensmärken', () => {
     await card(page).click();
     await expect(panel).toBeVisible();
     await expect(panel.getByRole('heading', { name: 'Konsekvenser' })).toHaveCount(0);
+
+    await openSettings(page);
 
     await page.getByLabel('Visa konsekvenser').check();
     await expect(panel.getByRole('heading', { name: 'Konsekvenser' })).toBeVisible();
@@ -305,6 +325,7 @@ test.describe('konsekvensmärken', () => {
 
   test('det som avfärdats i Konsekvensbänken räknas inte i trädet', async ({ page }) => {
     await page.goto(url);
+    await openSettings(page);
     await page.getByLabel('Visa konsekvenser').check();
     await expect(card(page).locator('[data-issue-count="8"]')).toBeVisible();
 
@@ -323,7 +344,7 @@ test.describe('övergångar mellan vyerna', () => {
     await page.goto('/trad/I500003?upp=4&vy=pedigree');
     await expect(page.getByRole('group', { name: 'Antavla' })).toBeVisible();
 
-    await page.getByRole('button', { name: 'Solfjäder' }).click();
+    await page.getByRole('tab', { name: 'Solfjäder' }).click();
     // markörerna tar över mitten av övergången …
     await expect(page.locator('[data-morph]')).toBeVisible();
     // … och lämnar över till solfjädern
@@ -336,7 +357,7 @@ test.describe('övergångar mellan vyerna', () => {
     await page.goto('/trad/I500003?upp=4&vy=pedigree');
     await expect(page.getByRole('group', { name: 'Antavla' })).toBeVisible();
 
-    await page.getByRole('button', { name: 'Solfjäder' }).click();
+    await page.getByRole('tab', { name: 'Solfjäder' }).click();
     await expect(page.getByRole('group', { name: 'Solfjäder' })).toBeVisible();
     await expect(page.locator('[data-morph]')).toHaveCount(0);
     await expect(page.getByRole('group', { name: 'Antavla' })).toHaveCount(0);
@@ -348,7 +369,7 @@ test.describe('övergångar mellan vyerna', () => {
 
     // Vyn som lämnar ligger kvar en stund med aria-hidden och inert; varken
     // skärmläsare eller test ska se två träd.
-    await page.getByRole('button', { name: 'Antavla' }).click();
+    await page.getByRole('tab', { name: 'Antavla' }).click();
     for (let i = 0; i < 5; i++) {
       expect(await page.getByRole('group', { name: /Släktträd|Antavla|Solfjäder/ }).count()).toBeLessThanOrEqual(1);
       await page.waitForTimeout(40);

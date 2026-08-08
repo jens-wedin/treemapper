@@ -38,7 +38,7 @@ test('språkvalet minns mellan besök och gäller alla sidor', async ({ page }) 
   await expect(page.getByRole('link', { name: 'Download GEDCOM' })).toBeVisible();
 
   await page.goto('/trad/I500001?vy=fan');
-  await expect(page.getByRole('button', { name: 'Fan', exact: true })).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Fan', exact: true })).toBeVisible();
   await expect(page.getByRole('group', { name: 'Fan chart' })).toBeVisible();
 });
 

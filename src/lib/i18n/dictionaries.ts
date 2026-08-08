@@ -146,7 +146,7 @@ const sv = {
     years: 'år', people: 'personer', children: 'barn', count: 'antal',
   },
   tree: {
-    title: 'Träd', showInTree: 'Visa i träd', chart: 'Diagram', list: 'Lista',
+    title: 'Träd', showInTree: 'Visa i träd', settings: 'Visningsinställningar', chart: 'Diagram', list: 'Lista',
     ancestors: 'Förfäder', descendants: 'Ättlingar',
     generationsUp: 'Generationer uppåt', generationsDown: 'Generationer nedåt',
     zoomIn: 'Zooma in', zoomOut: 'Zooma ut', zoomReset: 'Återställ vy',
@@ -319,7 +319,7 @@ const en: DeepPartial<Dict> = {
     years: 'years', people: 'people', children: 'children', count: 'count',
   },
   tree: {
-    title: 'Tree', showInTree: 'Show in tree', chart: 'Chart', list: 'List',
+    title: 'Tree', showInTree: 'Show in tree', settings: 'Display settings', chart: 'Chart', list: 'List',
     ancestors: 'Ancestors', descendants: 'Descendants',
     generationsUp: 'Generations up', generationsDown: 'Generations down',
     zoomIn: 'Zoom in', zoomOut: 'Zoom out', zoomReset: 'Reset view',
@@ -489,7 +489,7 @@ const de: DeepPartial<Dict> = {
     years: 'Jahre', people: 'Personen', children: 'Kinder', count: 'Anzahl',
   },
   tree: {
-    title: 'Baum', showInTree: 'Im Baum zeigen', chart: 'Diagramm', list: 'Liste',
+    title: 'Baum', showInTree: 'Im Baum zeigen', settings: 'Anzeigeeinstellungen', chart: 'Diagramm', list: 'Liste',
     ancestors: 'Vorfahren', descendants: 'Nachkommen',
     generationsUp: 'Generationen aufwärts', generationsDown: 'Generationen abwärts',
     zoomIn: 'Vergrößern', zoomOut: 'Verkleinern', zoomReset: 'Ansicht zurücksetzen',
@@ -659,7 +659,7 @@ const es: DeepPartial<Dict> = {
     years: 'años', people: 'personas', children: 'hijos', count: 'cantidad',
   },
   tree: {
-    title: 'Árbol', showInTree: 'Ver en el árbol', chart: 'Diagrama', list: 'Lista',
+    title: 'Árbol', showInTree: 'Ver en el árbol', settings: 'Opciones de visualización', chart: 'Diagrama', list: 'Lista',
     ancestors: 'Antepasados', descendants: 'Descendientes',
     generationsUp: 'Generaciones hacia arriba', generationsDown: 'Generaciones hacia abajo',
     zoomIn: 'Acercar', zoomOut: 'Alejar', zoomReset: 'Restablecer vista',

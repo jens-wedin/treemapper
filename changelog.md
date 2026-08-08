@@ -4,6 +4,13 @@
 
 ### Added
 
+**Trädsidan gör plats för trädet**
+- Fokuspersonens **namn är länken** till personsidan. Ett separat "Gå till personsida" bredvid sa samma sak två gånger och satte det användbara sist.
+- Vyerna är **flikar** i stället för knappar, med riktig `tablist`/`tab`-semantik: en enda tabbstopp, piltangenter mellan flikarna, och panelen pekas ut med `aria-controls`. Handskriven i stället för en färdig komponent, eftersom panelen är den animerade växlaren och måste sitta kvar monterad genom ett flikbyte för att övergången ska hinna hända.
+- **Zoomen sitter i diagrammets eget nedre högra hörn** i stället för i ett verktygsfält ovanför. Kontrollerna hör till ytan de påverkar.
+- **Generationer och kortinställningar bor bakom en kugge** som öppnar en popover. Det första man mötte på sidan var annars en rad kontroller i stället för släkten. Generationsvalen ligger kvar i URL:en, så en länk bär dem fortfarande med sig.
+- Texten om piltangenterna är borta från skärmen men **finns kvar för skärmläsare** — den är fortfarande måltavla för diagrammets `aria-describedby`, och tangentbordshjälpen är just det som behövs av den som inte ser diagrammet.
+
 **Trädvyerna övergår i varandra**
 - Att byta mellan Familj, Antavla, Solfjäder och Lista är inte längre ett klipp. Vyn som lämnar ligger kvar över den som kommer under övergången, med `aria-hidden` och `inert`: en skärmläsare ska aldrig hitta två träd, tangentbordsfokus ska aldrig hamna i det som är på väg bort, och ett test som letar efter "trädet" ska fortsätta hitta exakt ett.
 - **Antavlan lindar ihop sig till solfjädern.** De två vyerna ritar samma människor under samma anortal, så varje person har en verklig start och ett verkligt mål — vilket är det som gör en morf meningsfull just där och ingen annanstans i appen. Familjevyn ritar dessutom ättlingar, och de flesta av dess kort har ingenstans att färdas.

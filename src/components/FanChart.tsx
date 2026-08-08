@@ -7,7 +7,7 @@ import { useChartViewport } from '../lib/useChartViewport';
 import { apiUrl } from '../lib/api';
 import { useFlagPreference, useIssueMarkPreference } from '../lib/chartPreferences';
 import { useIssueMarks } from '../lib/issueMarks';
-import ChartToolbar from './ChartToolbar';
+import ChartZoom from './ChartZoom';
 import CountryFlag from './CountryFlag';
 import IssueBadge, { issueCategories, issueColor } from './IssueBadge';
 import { issueLabel } from './PersonCard';
@@ -25,8 +25,8 @@ export default function FanChart({ data, generations, onSelect, selectedId }: {
     [data, generations],
   );
   const viewport = useChartViewport(layout.bounds);
-  const [showFlags, setShowFlags] = useFlagPreference();
-  const [showIssues, setShowIssues] = useIssueMarkPreference();
+  const [showFlags] = useFlagPreference();
+  const [showIssues] = useIssueMarkPreference();
   const issueMarks = useIssueMarks(showIssues);
   const [activeKey, setActiveKey] = useState<string>(() => layout.slices[0]?.key ?? 'centre');
 
@@ -62,17 +62,8 @@ export default function FanChart({ data, generations, onSelect, selectedId }: {
 
   return (
     <div className="mt-3 flex min-h-0 flex-1 flex-col">
-      <ChartToolbar
-        zoomPercent={viewport.zoomPercent}
-        onZoom={viewport.zoomBy}
-        onReset={viewport.reset}
-        showFlags={showFlags}
-        onFlagsChange={setShowFlags}
-        showIssues={showIssues}
-        onIssuesChange={setShowIssues}
-        hint={t('tree.instructionsAncestors')}
-      />
-      <div ref={viewport.wrapRef} className="mt-2 min-h-[320px] w-full flex-1 overflow-hidden rounded-lg border bg-[var(--chart-canvas)]">
+      <p id="trad-instruktioner" className="sr-only">{t('tree.instructionsAncestors')}</p>
+      <div ref={viewport.wrapRef} className="relative mt-2 min-h-[320px] w-full flex-1 overflow-hidden rounded-lg border bg-[var(--chart-canvas)]">
         <svg
           ref={viewport.svgRef}
           role="group"
@@ -209,6 +200,7 @@ export default function FanChart({ data, generations, onSelect, selectedId }: {
             </g>
           </g>
         </svg>
+        <ChartZoom zoomPercent={viewport.zoomPercent} onZoom={viewport.zoomBy} onReset={viewport.reset} />
       </div>
     </div>
   );

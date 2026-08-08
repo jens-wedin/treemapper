@@ -3,6 +3,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 /** Keep in step with the durations in index.css. */
 export const GLIDE_MS = 340;
 export const FADE_OUT_MS = 200;
+/** Cross-fading one chart for another. */
+export const SWITCH_MS = 240;
+/** Winding the antavla's columns into the solfjäder's rings. */
+export const MORPH_MS = 420;
 
 interface Keyed { key: string }
 interface Snapshot<N, L> { nodes: N[]; links: L[] }

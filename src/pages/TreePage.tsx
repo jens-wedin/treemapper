@@ -6,6 +6,7 @@ import { t, displayName, lifespan } from '../lib/i18n';
 import { fetchJson } from '../lib/api';
 import { useIssueMarkPreference } from '../lib/chartPreferences';
 import { useIssueMarks } from '../lib/issueMarks';
+import ChartSwitcher from '../components/ChartSwitcher';
 import TreeChart from '../components/TreeChart';
 import TreeList from '../components/TreeList';
 import TreePersonPanel from '../components/TreePersonPanel';
@@ -134,32 +135,30 @@ export default function TreePage() {
       {/* only the very first load has nothing to show; a reload keeps the chart */}
       {state === 'loading' && !data && <p className="mt-4 text-muted-foreground">{t('common.loading')}</p>}
       {data && (
-        view === 'list' ? (
-          <TreeList ancestors={data.ancestors} descendants={data.descendants} depthQuery={depthQuery} />
-        ) : (
-          <div className="flex min-h-0 flex-1 gap-3">
-            <div className="flex min-w-0 flex-1 flex-col">
-              {view === 'family' && (
-                <TreeChart data={data} onSelect={setSelectedId} selectedId={selectedId} />
-              )}
-              {view === 'pedigree' && (
-                <PedigreeChart data={data} generations={upp} onSelect={setSelectedId} selectedId={selectedId} />
-              )}
-              {view === 'fan' && (
-                <FanChart data={data} generations={upp} onSelect={setSelectedId} selectedId={selectedId} />
-              )}
-            </div>
-            {selectedId && (
-              <TreePersonPanel
-                personId={selectedId}
-                issue={issueMarks[selectedId]}
-                onClose={() => setSelectedId(null)}
-                onSelect={setSelectedId}
-                onFocusTree={focusOn}
-              />
+        <div className="flex min-h-0 flex-1 gap-3">
+          {/* One switcher across all four views, so every combination fades —
+              including to and from the list, which is HTML rather than SVG. */}
+          <ChartSwitcher viewKey={view}>
+            {view === 'list' ? (
+              <TreeList ancestors={data.ancestors} descendants={data.descendants} depthQuery={depthQuery} />
+            ) : view === 'family' ? (
+              <TreeChart data={data} onSelect={setSelectedId} selectedId={selectedId} />
+            ) : view === 'pedigree' ? (
+              <PedigreeChart data={data} generations={upp} onSelect={setSelectedId} selectedId={selectedId} />
+            ) : (
+              <FanChart data={data} generations={upp} onSelect={setSelectedId} selectedId={selectedId} />
             )}
-          </div>
-        )
+          </ChartSwitcher>
+          {view !== 'list' && selectedId && (
+            <TreePersonPanel
+              personId={selectedId}
+              issue={issueMarks[selectedId]}
+              onClose={() => setSelectedId(null)}
+              onSelect={setSelectedId}
+              onFocusTree={focusOn}
+            />
+          )}
+        </div>
       )}
     </section>
   );

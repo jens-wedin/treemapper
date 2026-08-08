@@ -39,7 +39,7 @@
  */
 .chart-canvas {
   background: var(--chart-canvas);
-  box-shadow: inset 0 2px 4px var(--chart-well), inset 0 0 22px var(--chart-well);
+  box-shadow: inset 0 1px 3px var(--chart-well), inset 0 0 16px var(--chart-well);
 }
 
 /* Panning to reveal a freshly opened branch, rather than jumping to it. */
@@ -354,7 +354,7 @@
 :root {
   --chart-canvas: oklch(0.955 0.004 106.5);
   /* The inset shadow that sinks the canvas into the page. */
-  --chart-well: oklch(0.45 0.02 106.9 / 0.16);
+  --chart-well: oklch(0.45 0.02 106.9 / 0.085);
   --chart-link: oklch(0.72 0.02 106.9);
   --chart-link-strong: oklch(0.62 0.02 106.9);
 
@@ -391,7 +391,7 @@
 .dark {
   --chart-canvas: oklch(0.19 0.008 107.1);
   /* Deeper on a dark canvas — the same alpha would vanish against it. */
-  --chart-well: oklch(0 0 0 / 0.42);
+  --chart-well: oklch(0 0 0 / 0.24);
   --chart-link: oklch(0.42 0.015 106.9);
   --chart-link-strong: oklch(0.55 0.02 106.9);
 

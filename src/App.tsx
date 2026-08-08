@@ -15,14 +15,23 @@ import SourcePage from './pages/SourcePage';
 import SettingsPage from './pages/SettingsPage';
 
 /**
- * Page width follows the content: the chart takes the whole window, tables get
- * room for their columns, and prose keeps a readable line length.
+ * One width for every page, so nothing shifts when you change tab. The chart is
+ * the single exception — it is worth the whole window — and it earns it without
+ * moving anything above, because the header has its own width and keeps it.
+ *
+ * The widths used to follow each page's content, which meant the nav itself
+ * moved between tabs.
  */
-function containerClass(pathname: string): string {
-  if (pathname.startsWith('/trad')) return 'w-full px-4';
-  if (/^\/(personer|kallor|konsekvens)/.test(pathname)) return 'mx-auto w-full max-w-6xl px-4';
-  return 'mx-auto w-full max-w-3xl px-4';
-}
+const PAGE_WIDTH = 'mx-auto w-full max-w-6xl px-4';
+
+const containerClass = (pathname: string): string =>
+  (pathname.startsWith('/trad') ? 'w-full px-4' : PAGE_WIDTH);
+
+/**
+ * The header spans the window on every page. Sizing it like the content would
+ * make it the thing that jumps on the one page whose content is wider.
+ */
+const HEADER_WIDTH = 'w-full px-4';
 
 export default function App() {
   const { pathname } = useLocation();
@@ -47,7 +56,7 @@ export default function App() {
         {t('nav.skip')}
       </a>
       <header className="border-b">
-        <nav aria-label={t('appTitle')} className={`${container} flex items-center gap-6 py-3`}>
+        <nav aria-label={t('appTitle')} className={`${HEADER_WIDTH} flex items-center gap-6 py-3`}>
           <span className="shrink-0 whitespace-nowrap font-semibold">{t('appTitle')}</span>
           {(
             [

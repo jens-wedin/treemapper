@@ -47,3 +47,27 @@ test('tangentbord: skip-länken hoppar till innehållet', async ({ page }) => {
   await page.keyboard.press('Tab');
   await expect(page.getByRole('link', { name: 'Hoppa till innehåll' })).toBeFocused();
 });
+
+test('sidhuvudet står stilla mellan flikarna', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 800 });
+
+  const measure = async (path: string) => {
+    await page.goto(path);
+    await page.getByRole('navigation').waitFor();
+    const nav = (await page.getByRole('navigation').boundingBox())!;
+    const main = (await page.locator('main').boundingBox())!;
+    return { nav: [nav.x, nav.width], main: [main.x, main.width] };
+  };
+
+  const home = await measure('/');
+  for (const path of ['/personer', '/statistik', '/konsekvens', '/kallor', '/installningar']) {
+    const here = await measure(path);
+    expect(here.nav, `sidhuvudet flyttade sig på ${path}`).toEqual(home.nav);
+    expect(here.main, `innehållet bytte bredd på ${path}`).toEqual(home.main);
+  }
+
+  // Trädet är undantaget: det får hela fönstret — men sidhuvudet står kvar.
+  const tree = await measure('/trad/I500001');
+  expect(tree.nav).toEqual(home.nav);
+  expect(tree.main[1]).toBeGreaterThan(home.main[1]!);
+});

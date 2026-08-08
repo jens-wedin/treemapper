@@ -9,6 +9,11 @@
 - `EventForm` tar nu emot ägartyp och en låst typ, så samma formulär används för både personhändelser och vigsel. Åldersfältet visas bara för personhändelser — ett par har två åldrar.
 - `FamilyView.marriage` bär med sig händelsens id, vilket är det som gör den redigerbar på plats.
 
+**Sidhuvudet står stilla**
+- Alla sidor har nu **samma bredd**, och sidhuvudet spänner över fönstret oavsett flik. Bredden följde tidigare varje sidas innehåll — tabeller bredare än brödtext — vilket gjorde att navigeringen själv flyttade sig när man bytte flik.
+- Trädet är undantaget och får hela fönstret. Att sidhuvudet har sin egen bredd är just det som låter det vara det utan att något ovanför rör sig.
+- Ett e2e-test mäter navigeringens och innehållets läge och bredd på varje flik och jämför dem — den sortens sak glider annars tillbaka obemärkt.
+
 **Zoomen glider mot sitt mål**
 - Hjulet flyttar ett **mål**, och en slinga stänger fortlöpande avståndet dit. Att sluta rulla *är* därmed svansen — avståndet stängs klart — så gest och efterspel är en enda kurva.
 - Det ersätter en första version som väntade 80 ms på att gesten skulle ta slut och sedan startade en egen utrullning. Mätt bildruta för bildruta stod diagrammet stilla i 87 ms och satte av igen i en femtedel av farten; det stopp-och-start var vad som kändes vingligt.

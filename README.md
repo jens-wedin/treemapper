@@ -154,9 +154,10 @@ a badge in, so it gets a plain dot in the same colour at its inner edge — the
 one spot free of the name, the flag and the generation band at every ring.
 
 Clicking the card opens the person panel, which lists the problems in the
-queue's own wording, under the person's dates and above their family. Repeats
-of one category are gathered under a single heading with a count: four children
-born after the same father died is one fact told four times, not four headings.
+queue's own wording at the foot of the panel, after the notes — a footnote to
+the person rather than what the person is. Repeats of one category are gathered
+under a single heading with a count: four children born after the same father
+died is one fact told four times, not four headings.
 The setting is a module-level store rather than component state, so ticking the
 box in the toolbar fills in the panel beside it without a reload.
 

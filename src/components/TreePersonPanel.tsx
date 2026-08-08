@@ -32,8 +32,8 @@ function MemberLinks({ people, onSelect }: { people: FamilyMember[]; onSelect: (
 }
 
 /**
- * The problems behind the card's badge, in the queue's own words. Shown high
- * up: if a card is marked, that is usually why it was clicked.
+ * The problems behind the card's badge, in the queue's own words. Last in the
+ * panel: it is a footnote to the person, not what the person is.
  */
 function Problems({ mark }: { mark: PersonIssueMark }) {
   return (
@@ -165,8 +165,6 @@ export default function TreePersonPanel({ personId, issue, onClose, onFocusTree,
             )}
           </dl>
 
-          {issue && <Problems mark={issue} />}
-
           <section className="mt-5">
             <h3 className="font-medium">{t('person.family')}</h3>
             <dl className="mt-2 space-y-2 text-sm">
@@ -220,6 +218,8 @@ export default function TreePersonPanel({ personId, issue, onClose, onFocusTree,
               <RichText text={person.note} className="mt-1 text-sm text-foreground" />
             </section>
           )}
+
+          {issue && <Problems mark={issue} />}
         </>
       )}
     </aside>

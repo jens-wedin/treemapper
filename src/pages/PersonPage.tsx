@@ -10,6 +10,7 @@ import { clearIssueMarks, useIssueMarks } from '../lib/issueMarks';
 import ProblemList from '../components/issues/ProblemList';
 import ChangeLog from '../components/issues/ChangeLog';
 import PersonEditForm from '../components/edit/PersonEditForm';
+import PhotoLightbox from '../components/PhotoLightbox';
 import EventEditor from '../components/edit/EventEditor';
 import MarriageEditor from '../components/edit/MarriageEditor';
 import RelationDialog from '../components/edit/RelationDialog';
@@ -60,6 +61,8 @@ export default function PersonPage() {
   const [state, setState] = useState<'loading' | 'ok' | 'missing' | 'error'>('loading');
   const [editing, setEditing] = useState(false);
   const [warnings, setWarnings] = useState<string[]>([]);
+  /** Which photo is open in the lightbox, by index; null when closed. */
+  const [photoAt, setPhotoAt] = useState<number | null>(null);
 
   // Always on here, unlike the charts' opt-in badges: you came to look at one
   // person, and what the queue has on them belongs with the rest of the record.
@@ -144,17 +147,32 @@ export default function PersonPage() {
         <section className="mt-8">
           <h2 className="text-xl font-semibold">{t('person.photos')}</h2>
           <ul className="mt-3 flex flex-wrap gap-3">
-            {photos.map(m => (
+            {photos.map((m, i) => (
               <li key={m.id}>
-                <img
-                  src={apiUrl(`/api/media/${m.id}`)}
-                  alt={m.title ?? displayName(person)}
-                  loading="lazy"
-                  className="h-40 w-40 rounded-lg border object-cover"
-                />
+                {/* A button, not a clickable image: the keyboard and a screen
+                    reader both need to know this opens something. */}
+                <button
+                  type="button"
+                  onClick={() => setPhotoAt(i)}
+                  aria-label={t('person.photoOpen').replace('{name}', m.title ?? displayName(person))}
+                  className="chart-card rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                >
+                  <img
+                    src={apiUrl(`/api/media/${m.id}`)}
+                    alt={m.title ?? displayName(person)}
+                    loading="lazy"
+                    className="h-40 w-40 cursor-zoom-in rounded-lg border object-cover"
+                  />
+                </button>
               </li>
             ))}
           </ul>
+          <PhotoLightbox
+            photos={photos}
+            openAt={photoAt}
+            fallbackAlt={displayName(person)}
+            onClose={() => setPhotoAt(null)}
+          />
         </section>
       )}
 

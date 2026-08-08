@@ -71,3 +71,33 @@ test('sidhuvudet står stilla mellan flikarna', async ({ page }) => {
   expect(tree.nav).toEqual(home.nav);
   expect(tree.main[1]).toBeGreaterThan(home.main[1]!);
 });
+
+test('ett foto öppnas i större format och går att bläddra i', async ({ page }) => {
+  await page.goto('/person/I500001');
+  // Vänta in sidan innan miniatyrerna räknas — annars räknas skelettet.
+  await expect(page.getByRole('heading', { name: 'Foton' })).toBeVisible();
+  const thumbs = page.getByRole('button', { name: /i större format/ });
+  await expect(thumbs.first()).toBeVisible();
+
+  // Mät miniatyren först: när dialogen är öppen är sidan bakom den inert.
+  const thumb = (await thumbs.first().boundingBox())!;
+
+  await thumbs.first().click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole('img')).toBeVisible();
+
+  const large = (await dialog.getByRole('img').boundingBox())!;
+  expect(large.width).toBeGreaterThan(thumb.width);
+
+  // piltangenter bläddrar när det finns fler än ett
+  const heading = dialog.getByRole('heading');
+  const first = await heading.innerText();
+  await page.keyboard.press('ArrowRight');
+  if (await page.getByText(/\d+ av \d+|\d+ of \d+/).count()) {
+    await expect(heading).not.toHaveText(first);
+  }
+
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+});

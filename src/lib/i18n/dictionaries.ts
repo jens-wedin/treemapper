@@ -71,6 +71,8 @@ const sv = {
     spouse: 'Partner', marriage: 'Vigsel', children: 'Barn',
     note: 'Anteckning', citations: 'Källhänvisningar', source: 'Källa',
     age: 'ålder', quality: 'kvalitet',
+    photoOpen: 'Visa {name} i större format', photoPrev: 'Föregående foto',
+    photoNext: 'Nästa foto', photoCount: '{n} av {total}',
   },
   stats: { persons: 'Personer', families: 'Familjer', sources: 'Källor', photos: 'Foton' },
   issues: {
@@ -245,6 +247,8 @@ const en: DeepPartial<Dict> = {
     spouse: 'Partner', marriage: 'Marriage', children: 'Children',
     note: 'Note', citations: 'Citations', source: 'Source',
     age: 'age', quality: 'quality',
+    photoOpen: 'View {name} larger', photoPrev: 'Previous photo',
+    photoNext: 'Next photo', photoCount: '{n} of {total}',
   },
   stats: { persons: 'People', families: 'Families', sources: 'Sources', photos: 'Photos' },
   issues: {
@@ -416,6 +420,8 @@ const de: DeepPartial<Dict> = {
     spouse: 'Partner', marriage: 'Heirat', children: 'Kinder',
     note: 'Notiz', citations: 'Quellenangaben', source: 'Quelle',
     age: 'Alter', quality: 'Qualität',
+    photoOpen: '{name} größer anzeigen', photoPrev: 'Vorheriges Foto',
+    photoNext: 'Nächstes Foto', photoCount: '{n} von {total}',
   },
   stats: { persons: 'Personen', families: 'Familien', sources: 'Quellen', photos: 'Fotos' },
   issues: {
@@ -587,6 +593,8 @@ const es: DeepPartial<Dict> = {
     spouse: 'Pareja', marriage: 'Matrimonio', children: 'Hijos',
     note: 'Nota', citations: 'Citas', source: 'Fuente',
     age: 'edad', quality: 'calidad',
+    photoOpen: 'Ver {name} más grande', photoPrev: 'Foto anterior',
+    photoNext: 'Foto siguiente', photoCount: '{n} de {total}',
   },
   stats: { persons: 'Personas', families: 'Familias', sources: 'Fuentes', photos: 'Fotos' },
   issues: {

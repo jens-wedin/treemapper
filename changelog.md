@@ -9,6 +9,10 @@
 - `EventForm` tar nu emot ägartyp och en låst typ, så samma formulär används för både personhändelser och vigsel. Åldersfältet visas bara för personhändelser — ett par har två åldrar.
 - `FamilyView.marriage` bär med sig händelsens id, vilket är det som gör den redigerbar på plats.
 
+**Foton öppnas i stort format**
+- Ett klick på ett foto på personsidan öppnar det så stort skärmen tillåter. Miniatyrerna är beskurna kvadrater, så bilden på sidan är inte bilden — att öppna den är enda sättet att se vad som faktiskt fotograferades.
+- Piltangenter bläddrar mellan personens foton, rubriken räknar (“3 av 31”), och Escape stänger. Miniatyren är en **knapp** och inte en klickbar bild, så tangentbord och skärmläsare vet att den öppnar något.
+
 **Sidhuvudet står stilla**
 - Alla sidor har nu **samma bredd**, och sidhuvudet spänner över fönstret oavsett flik. Bredden följde tidigare varje sidas innehåll — tabeller bredare än brödtext — vilket gjorde att navigeringen själv flyttade sig när man bytte flik.
 - Trädet är undantaget och får hela fönstret. Att sidhuvudet har sin egen bredd är just det som låter det vara det utan att något ovanför rör sig.

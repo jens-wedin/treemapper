@@ -71,6 +71,30 @@
   to { opacity: 1; transform: scale(1); }
 }
 
+/*
+ * The antavla winding into the solfjäder. The charts get out of the way early
+ * and come back late, leaving the middle of the 420ms to the travelling
+ * markers — otherwise cards, markers and wedges are all on screen at once.
+ */
+.chart-leaving-morph {
+  animation: chart-morph-leave 420ms linear both;
+  pointer-events: none;
+}
+
+.chart-entering-morph {
+  animation: chart-morph-enter 420ms linear both;
+}
+
+@keyframes chart-morph-leave {
+  0% { opacity: 1; }
+  25%, 100% { opacity: 0; }
+}
+
+@keyframes chart-morph-enter {
+  0%, 75% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
 @keyframes chart-node-enter {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -91,7 +115,9 @@
   .chart-node-enter,
   .chart-node-leave,
   .chart-leaving,
-  .chart-entering {
+  .chart-entering,
+  .chart-leaving-morph,
+  .chart-entering-morph {
     animation: none;
   }
 }

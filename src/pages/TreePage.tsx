@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { Button } from '@/components/ui/button';
 import type { TreeData } from '../../lib/tree';
@@ -6,6 +6,11 @@ import { t, displayName, lifespan } from '../lib/i18n';
 import { fetchJson } from '../lib/api';
 import { useIssueMarkPreference } from '../lib/chartPreferences';
 import { useIssueMarks } from '../lib/issueMarks';
+import { flattenAncestors } from '../lib/ahnentafel';
+import { layoutPedigree } from '../lib/pedigreeLayout';
+import { layoutFan } from '../lib/fanLayout';
+import { usePrefersReducedMotion } from '../lib/useReducedMotion';
+import AncestorMorph from '../components/AncestorMorph';
 import ChartSwitcher from '../components/ChartSwitcher';
 import TreeChart from '../components/TreeChart';
 import TreeList from '../components/TreeList';
@@ -49,6 +54,38 @@ export default function TreePage() {
   // register, so a person's problems appear beside their details as well.
   const [showIssues] = useIssueMarkPreference();
   const issueMarks = useIssueMarks(showIssues);
+
+  /**
+   * The antavla and the solfjäder draw the same people under the same
+   * Ahnentafel numbers, so switching between those two can be a morph rather
+   * than a fade. Every other pair has cards with nowhere to travel to.
+   */
+  const reduced = usePrefersReducedMotion();
+  const [morph, setMorph] = useState<'toFan' | 'toPedigree' | null>(null);
+
+  /**
+   * Decided as the view is chosen, not afterwards in an effect. An effect runs
+   * a render too late: the charts would already have started their 240 ms
+   * cross-fade and the solfjäder would be fully drawn while the markers were
+   * still travelling. Batched with the URL change, both land together.
+   */
+  function chooseView(next: View) {
+    if (!reduced && view !== next) {
+      if (view === 'pedigree' && next === 'fan') setMorph('toFan');
+      else if (view === 'fan' && next === 'pedigree') setMorph('toPedigree');
+    }
+    setParam('vy', next);
+  }
+
+  // Built only while a morph runs. layoutPedigree is called without the
+  // branches opened by hand: those live in PedigreeChart's own state and are
+  // already lost when it remounts, so the base slots are exactly what is on
+  // screen at both ends.
+  const morphLayouts = useMemo(() => {
+    if (!morph || !data) return null;
+    const slots = flattenAncestors(data.ancestors, upp);
+    return { pedigree: layoutPedigree(slots), fan: layoutFan(slots, upp) };
+  }, [morph, data, upp]);
 
   /** Re-roots the chart on someone, keeping the current view and depths. */
   function focusOn(personId: string) {
@@ -106,7 +143,7 @@ export default function TreePage() {
               key={v}
               variant={view === v ? 'default' : 'outline'}
               aria-pressed={view === v}
-              onClick={() => setParam('vy', v)}
+              onClick={() => chooseView(v)}
             >
               {t(`tree.view${v[0]!.toUpperCase()}${v.slice(1)}`)}
             </Button>
@@ -138,7 +175,21 @@ export default function TreePage() {
         <div className="flex min-h-0 flex-1 gap-3">
           {/* One switcher across all four views, so every combination fades —
               including to and from the list, which is HTML rather than SVG. */}
-          <ChartSwitcher viewKey={view}>
+          <ChartSwitcher
+            viewKey={view}
+            morphing={morph !== null}
+            overlay={morphLayouts && morph
+              ? size => (
+                <AncestorMorph
+                  pedigree={morphLayouts.pedigree}
+                  fan={morphLayouts.fan}
+                  direction={morph}
+                  size={size}
+                  onDone={() => setMorph(null)}
+                />
+              )
+              : undefined}
+          >
             {view === 'list' ? (
               <TreeList ancestors={data.ancestors} descendants={data.descendants} depthQuery={depthQuery} />
             ) : view === 'family' ? (

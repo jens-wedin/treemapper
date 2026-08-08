@@ -317,3 +317,42 @@ test.describe('konsekvensmärken', () => {
     await expect(card(page).locator('[data-issue-count="7"]')).toBeVisible();
   });
 });
+
+test.describe('övergångar mellan vyerna', () => {
+  test('antavlan lindar ihop sig till solfjädern', async ({ page }) => {
+    await page.goto('/trad/I500003?upp=4&vy=pedigree');
+    await expect(page.getByRole('group', { name: 'Antavla' })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Solfjäder' }).click();
+    // markörerna tar över mitten av övergången …
+    await expect(page.locator('[data-morph]')).toBeVisible();
+    // … och lämnar över till solfjädern
+    await expect(page.locator('[data-morph]')).toHaveCount(0);
+    await expect(page.getByRole('group', { name: 'Solfjäder' })).toBeVisible();
+  });
+
+  test('mindre rörelse hoppar över både morf och korsfade', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/trad/I500003?upp=4&vy=pedigree');
+    await expect(page.getByRole('group', { name: 'Antavla' })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Solfjäder' }).click();
+    await expect(page.getByRole('group', { name: 'Solfjäder' })).toBeVisible();
+    await expect(page.locator('[data-morph]')).toHaveCount(0);
+    await expect(page.getByRole('group', { name: 'Antavla' })).toHaveCount(0);
+  });
+
+  test('bara ett träd åt gången är nåbart under en övergång', async ({ page }) => {
+    await page.goto('/trad/I500003?upp=3&vy=family');
+    await expect(page.getByRole('group', { name: 'Släktträd' })).toBeVisible();
+
+    // Vyn som lämnar ligger kvar en stund med aria-hidden och inert; varken
+    // skärmläsare eller test ska se två träd.
+    await page.getByRole('button', { name: 'Antavla' }).click();
+    for (let i = 0; i < 5; i++) {
+      expect(await page.getByRole('group', { name: /Släktträd|Antavla|Solfjäder/ }).count()).toBeLessThanOrEqual(1);
+      await page.waitForTimeout(40);
+    }
+    await expect(page.getByRole('group', { name: 'Antavla' })).toBeVisible();
+  });
+});

@@ -32,7 +32,15 @@ export interface MorphPoint {
 
 export interface MorphPlan {
   points: (t: number) => MorphPoint[];
+  /** Everything the travel touches, both charts included. */
   bounds: ChartBounds;
+  /**
+   * Each chart's own extent, so the overlay can zoom from one to the other.
+   * Fitting the union instead would shrink everything mid-flight and pop back
+   * to size at the end.
+   */
+  from: ChartBounds;
+  to: ChartBounds;
 }
 
 /**
@@ -122,11 +130,16 @@ export function planMorph(pedigree: PedigreeLayout, fan: FanLayout): MorphPlan {
   // Both charts' extents — and the paths themselves, which is the part that is
   // easy to get wrong: a curving path can swing outside the box that holds its
   // own two ends, so the travel has to be sampled rather than assumed.
+  const from: ChartBounds = {
+    minX: pedigree.bounds.minX + dx, maxX: pedigree.bounds.maxX + dx,
+    minY: pedigree.bounds.minY + dy, maxY: pedigree.bounds.maxY + dy,
+  };
+  const to = fan.bounds;
   const bounds: ChartBounds = {
-    minX: Math.min(pedigree.bounds.minX + dx, fan.bounds.minX),
-    maxX: Math.max(pedigree.bounds.maxX + dx, fan.bounds.maxX),
-    minY: Math.min(pedigree.bounds.minY + dy, fan.bounds.minY),
-    maxY: Math.max(pedigree.bounds.maxY + dy, fan.bounds.maxY),
+    minX: Math.min(from.minX, to.minX),
+    maxX: Math.max(from.maxX, to.maxX),
+    minY: Math.min(from.minY, to.minY),
+    maxY: Math.max(from.maxY, to.maxY),
   };
   for (let step = 0; step <= SAMPLES; step++) {
     for (const point of points(step / SAMPLES)) {
@@ -137,5 +150,5 @@ export function planMorph(pedigree: PedigreeLayout, fan: FanLayout): MorphPlan {
     }
   }
 
-  return { points, bounds };
+  return { points, bounds, from, to };
 }

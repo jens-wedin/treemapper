@@ -1,13 +1,13 @@
 import { useEffect } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import { t } from '../lib/i18n';
 import { refreshTrees, setActiveTree, useActiveTree, useTrees } from '../lib/activeTree';
 
 /**
- * Which family tree the app is showing, and the way in to importing another.
+ * Which family tree the app is showing.
  *
- * The import link is always here rather than only in Inställningar: someone who
- * has one tree and wants a second has no reason to look under settings for it.
+ * Only the picker — importing lives in Inställningar. A shortcut in the header
+ * would sit beside every page for the sake of something done once or twice.
  */
 export default function TreePicker() {
   const trees = useTrees();
@@ -41,14 +41,6 @@ export default function TreePicker() {
           ))}
         </select>
       </label>
-      <Link
-        to="/installningar"
-        title={t('trees.import')}
-        className="rounded-md border px-2 py-1 underline-offset-4 hover:underline"
-      >
-        <span aria-hidden="true">+</span>
-        <span className="sr-only">{t('trees.import')}</span>
-      </Link>
     </div>
   );
 }

@@ -26,7 +26,7 @@ test('gränssnittet kan bytas till engelska, tyska och spanska', async ({ page }
 test('språkvalet minns mellan besök och gäller alla sidor', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('combobox', { name: /Språk|Language|Sprache|Idioma/ }).selectOption('en');
-  // exact: the header's import link is also named "…a family tree"
+  // exact, so the nav link is not confused with anything merely containing it
   await expect(page.getByRole('link', { name: 'Tree', exact: true })).toBeVisible();
 
   await page.reload();

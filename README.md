@@ -57,7 +57,10 @@ asserts exactly that while the cards around it do change.
 ## Browse
 
 - `/` — Hem: search front and center + tree stats
-- `/personer` — searchable person list (namn, födelseår, födelseort) with pagination
+- `/personer` — searchable person list (namn, födelseår, födelseort) with
+  pagination; each row opens either the Personsida or the tree, since two
+  records can share a name and dates and the tree is often the quickest way to
+  tell them apart
 - `/person/:id` — read-only Personsida: photos, family box (clickable), event
   timeline with citations, notes
 - `/trad/:id` — the interactive family tree (see below)

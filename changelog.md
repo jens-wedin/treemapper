@@ -9,6 +9,9 @@
 - **Rättat: filtret bytte inte ut listan.** Valde man en varningskategori låg de logiska felen kvar överst. Samma problem rapporterades flera gånger när data innehåller samma faktum flera gånger (en person har fyra identiska "Bosatt" efter sin död), korten fick då samma React-nyckel, och React behöll gamla kort vid omritningen. Nu viks problem med samma fingeravtryck *och* samma ägare ihop till ett (7 av 2 826). Ägaren måste ingå i identiteten: en dubblettgrupp delar med flit ett fingeravtryck mellan sina medlemmar, och var och en behöver ändå sitt eget kort.
 - `setParam` på både Konsekvens- och trädsidan använder nu funktionsformen av `setSearchParams`. Två ändringar tätt efter varandra läste annars samma ögonblicksbild av URL:en, och den andra slog ut den första.
 
+**Personlistan öppnar trädet**
+- Varje sökträff har nu en **Visa i träd**-länk vid sidan av namnet, som leder till personen i trädvyn i stället för till personsidan. Två poster kan dela både namn och årtal — trädet är ofta det snabbaste sättet att se vilken av dem man har framför sig.
+
 **Åtgärdat och avfärdat**
 - Konsekvensbänken har nu en hopfälld logg överst: de senaste ändringarna i trädet (ur `audit_log`) blandat med det som avfärdats, senast först. Ändringar beskrivs i klartext — ”Död för Anders Johan Persson Karlsson: datum — → ”17 mar 1942””, ”Födelse borttagen för …”, ”Slog ihop Anna Larsson (I3) med …” — genom att jämföra före- och efterbilden fält för fält, och varje rad länkar till personen.
 - Ingenting kopplar en ändring till problemet den löste, och loggen påstår inte att den gör det: problem räknas ut, så ett rättat problem försvinner ur kön av sig självt. Avfärdade problem får sin kategori och sin anteckning genom att fingeravtrycket slås upp mot den detektering som ändå körts i samma anrop; har problemet slutat uppstå säger raden det i stället. GEDCOM-importen räknas inte som utfört arbete.

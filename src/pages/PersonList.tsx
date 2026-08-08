@@ -78,7 +78,8 @@ export default function PersonList() {
               <th scope="col" className="py-2 pr-4">{t('person.name')}</th>
               <th scope="col" className="py-2 pr-4">{t('person.born')}</th>
               <th scope="col" className="py-2 pr-4">{t('person.died')}</th>
-              <th scope="col" className="py-2">{t('person.birthPlace')}</th>
+              <th scope="col" className="py-2 pr-4">{t('person.birthPlace')}</th>
+              <th scope="col" className="py-2">{t('nav.tree')}</th>
             </tr>
           </thead>
           <tbody>
@@ -91,7 +92,14 @@ export default function PersonList() {
                 </td>
                 <td className="py-2 pr-4">{p.birthYear ?? '–'}</td>
                 <td className="py-2 pr-4">{p.deathYear ?? '–'}</td>
-                <td className="py-2">{p.birthPlace ?? '–'}</td>
+                <td className="py-2 pr-4">{p.birthPlace ?? '–'}</td>
+                {/* two people can share a name and dates — the tree is often
+                    the quickest way to tell which one you are looking at */}
+                <td className="py-2">
+                  <Link to={`/trad/${p.id}`} className="text-primary underline-offset-2 hover:underline">
+                    {t('tree.showInTree')}
+                  </Link>
+                </td>
               </tr>
             ))}
           </tbody>

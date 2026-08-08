@@ -16,6 +16,22 @@ test('sök från Hem → personlista → personsida', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Familj' })).toBeVisible();
 });
 
+test('varje sökträff går att öppna direkt i trädet', async ({ page }) => {
+  await page.goto('/personer?q=' + encodeURIComponent('Anders Bergqvist'));
+  const rows = page.locator('tbody tr');
+  await expect(rows.first()).toBeVisible();
+
+  // två poster delar namn och årtal — raden måste öppna sin egen person
+  const second = rows.nth(1);
+  const personHref = await second.getByRole('link', { name: /Anders Bergqvist/ }).getAttribute('href');
+  const id = personHref!.split('/').pop()!;
+
+  await second.getByRole('link', { name: 'Visa i träd' }).click();
+  await expect(page).toHaveURL(new RegExp(`/trad/${id}$`));
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Träd');
+  await expect(page.locator(`[data-tree-node="${id}"]`)).toBeVisible();
+});
+
 test('personsidans familjelänkar navigerar vidare', async ({ page }) => {
   await page.goto('/person/I500001');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Sven-Erik Wedin');

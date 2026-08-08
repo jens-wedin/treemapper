@@ -57,7 +57,13 @@
 .chart-selected-ring {
   opacity: 0.5;
   stroke-width: 2;
-  animation: card-selected-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  /* The snap hands over to the breathing at the moment it lands on the resting
+     values, so the two read as one continuous thing rather than two animations
+     in a row. Slow and shallow on purpose: enough to draw the eye back, not
+     enough to be hard to read next to. */
+  animation:
+    card-selected-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both,
+    card-selected-breathe 2800ms ease-in-out 520ms infinite;
 }
 
 @keyframes card-selected-in {
@@ -66,15 +72,27 @@
   100% { opacity: 0.5; stroke-width: 2; }
 }
 
-/* Same idea where there are no cards: the fan's wedge flashes its outline. */
+@keyframes card-selected-breathe {
+  0%, 100% { opacity: 0.5; stroke-width: 2; }
+  50% { opacity: 0.85; stroke-width: 3.2; }
+}
+
+/* Same idea where there are no cards: the fan's wedge breathes its outline. */
 .chart-selected-wedge {
-  animation: wedge-selected-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation:
+    wedge-selected-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both,
+    wedge-selected-breathe 2800ms ease-in-out 520ms infinite;
 }
 
 @keyframes wedge-selected-in {
   0% { stroke-width: 9; }
   55% { stroke-width: 3.5; }
   100% { stroke-width: 2.5; }
+}
+
+@keyframes wedge-selected-breathe {
+  0%, 100% { stroke-width: 2.5; }
+  50% { stroke-width: 4; }
 }
 
 /*

@@ -5,7 +5,7 @@
 ### Added
 
 **Det markerade kortet syns**
-- Kortet man valt får en **gloria som slår till och sedan lägger sig** — en engångsrörelse, inte en puls: något som aldrig slutar röra sig är svårt att läsa bredvid och svårt att slita blicken från. Animationen slutar där viloläget är, så mindre rörelse hamnar rätt utan rörelsen. Solfjäderns skiva blinkar till i konturen på samma sätt.
+- Kortet man valt får en **gloria som slår till och sedan andas** — långsamt och grunt, 2,8 sekunder per andetag. Insnärpningen lämnar över i samma ögonblick som den landar på viloläget, så de två läses som en enda rörelse. Solfjäderns skiva gör samma sak med sin kontur. `prefers-reduced-motion: reduce` ger glorian utan rörelsen, eftersom viloläget också är animationens utgångsläge.
 - **Rättat: personpanelen sköt rubriken och flikarna ut ur bilden.** Växlaren saknade `min-w-0`, så flexraden vägrade krympa och sidan fick vågrät rullning när panelen öppnades.
 
 **Trädsidan gör plats för trädet**

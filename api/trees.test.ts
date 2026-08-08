@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createTreesApi, treeResolver } from './trees';
 import { createPersonsApi } from './persons';
 import { closeTrees, listTrees, openTree } from '../lib/trees';
+import { SAFE_ENV } from '../vitest.setup';
 
 const MINI = fs.readFileSync(path.resolve('lib/gedcom/fixtures/mini.ged'), 'utf-8');
 
@@ -30,9 +31,9 @@ beforeEach(() => {
 afterEach(() => {
   closeTrees();
   fs.rmSync(workDir, { recursive: true, force: true });
-  delete process.env.WEDIN_DB;
-  delete process.env.WEDIN_TREES_DIR;
-  delete process.env.WEDIN_MEDIA_DIR;
+  // Restored, not deleted: unsetting them would let lib/trees.ts fall back
+  // to the real wedin.db for any test file sharing this worker.
+  Object.assign(process.env, SAFE_ENV);
 });
 
 describe('GET /api/trees', () => {

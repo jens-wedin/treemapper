@@ -12,6 +12,8 @@ export default defineConfig({
   test: {
     environment: 'node',
     passWithNoTests: true,
+    // Keeps every test away from the real wedin.db — see the file itself.
+    setupFiles: ['./vitest.setup.ts'],
     // e2e/*.spec.ts belongs to Playwright, not vitest
     exclude: [...configDefaults.exclude, 'e2e/**'],
   },

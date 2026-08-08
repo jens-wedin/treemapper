@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { TreeNotFound, closeTrees, createTree, deleteTree, listTrees, openTree, renameTree } from './trees';
+import { SAFE_ENV } from '../vitest.setup';
 
 const MINI = path.resolve('lib/gedcom/fixtures/mini.ged');
 
@@ -19,9 +20,9 @@ beforeEach(() => {
 afterEach(() => {
   closeTrees();
   fs.rmSync(workDir, { recursive: true, force: true });
-  delete process.env.WEDIN_DB;
-  delete process.env.WEDIN_TREES_DIR;
-  delete process.env.WEDIN_MEDIA_DIR;
+  // Restored, not deleted: unsetting them would let lib/trees.ts fall back
+  // to the real wedin.db for any test file sharing this worker.
+  Object.assign(process.env, SAFE_ENV);
 });
 
 describe('the default tree', () => {

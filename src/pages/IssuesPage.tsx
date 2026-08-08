@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import type { Severity } from '../../lib/issues';
+import type { IssueLogEntry } from '../../lib/issueLog';
 import { t, getLanguage } from '../lib/i18n';
 import { fetchJson } from '../lib/api';
 import { Badge } from '@/components/ui/badge';
 import IssueCard, { type IssueListItem } from '../components/issues/IssueCard';
 import { SEVERITY_STYLE } from '../components/issues/severityStyle';
+import IssueLog from '../components/issues/IssueLog';
 
 interface IssuesResponse {
   items: IssueListItem[];
+  log: IssueLogEntry[];
   counts: Record<string, number>;
   severityCounts: Record<string, number>;
   severityOrder: Severity[];
@@ -89,6 +92,8 @@ export default function IssuesPage() {
           )}
         </p>
       )}
+
+      {data && <IssueLog entries={data.log} />}
 
       <div className="mt-4 flex flex-wrap items-end gap-4">
         <div>

@@ -4,8 +4,10 @@ import { eq } from 'drizzle-orm';
 import type { Db } from '../db/client';
 import { issueDismissals } from '../db/schema';
 import { detectIssues, summarizeByPerson, SEVERITY_ORDER, type Issue } from '../lib/issues';
+import { buildIssueLog } from '../lib/issueLog';
 
 const MAX_ITEMS = 500;
+const MAX_LOG = 50;
 
 const querySchema = z.object({
   category: z.string().trim().max(80).optional(),
@@ -49,6 +51,9 @@ export function createIssuesApi(db: Db) {
 
     const items = filtered.slice(0, limit).map(i => ({ ...i, dismissed: dismissed.has(i.fingerprint) }));
     return c.json({
+      // Rides along rather than getting its own endpoint: resolving a
+      // dismissal's fingerprint needs the detection this request already ran.
+      log: buildIssueLog(db, MAX_LOG),
       items,
       counts,
       severityCounts,

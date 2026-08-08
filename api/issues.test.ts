@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createDb, type Db } from '../db/client';
 import { persons, events } from '../db/schema';
 import { createIssuesApi } from './issues';
+import { updatePerson } from '../lib/mutations';
 import { createMergeApi } from './merge';
 import type { Hono } from 'hono';
 
@@ -136,5 +137,25 @@ describe('GET /api/issues/persons', () => {
     expect(body.persons.I2).toBeUndefined();
     expect(body.persons.I1).toBeDefined();
     expect(body.total).toBe(1);
+  });
+});
+
+describe('historiken i /api/issues', () => {
+  it('listar både rättat och avfärdat, senast först', async () => {
+    updatePerson(db, 'I1', { givenName: 'Rättad' });
+    const first = (await (await api.request('/api/issues')).json()).items[0];
+    await post(api, '/api/issues/dismiss', { fingerprint: first.fingerprint, note: 'kollat' });
+
+    const body = await (await api.request('/api/issues')).json();
+    expect(body.log).toHaveLength(2);
+    expect(body.log[0]).toMatchObject({ kind: 'dismissed', note: 'kollat' });
+    expect(body.log[1]).toMatchObject({ kind: 'changed', personId: 'I1' });
+    expect(body.log[1].summary).toContain('förnamn');
+  });
+
+  it('påverkas inte av filtren på kön', async () => {
+    updatePerson(db, 'I1', { givenName: 'Rättad' });
+    const body = await (await api.request('/api/issues?severity=error')).json();
+    expect(body.log).toHaveLength(1);
   });
 });

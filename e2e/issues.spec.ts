@@ -119,3 +119,28 @@ test('personsidan avslutar med personens konsekvenser', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 2 }).first()).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Konsekvenser' })).toHaveCount(0);
 });
+
+test('historiken visar vad som rättats och vad som lagts åt sidan', async ({ page }) => {
+  await page.goto('/konsekvens');
+  const log = page.locator('details');
+  await expect(log).toContainText('Åtgärdat och avfärdat');
+  // hopfälld tills man ber om den — kön är sidans huvudsak
+  await expect(log.locator('ol > li').first()).toBeHidden();
+  await log.locator('summary').click();
+  await expect(log).toHaveAttribute('open', '');
+
+  // wedin.db bär med sig tidigare rättningar ur audit_log
+  const first = log.locator('ol > li').first();
+  await expect(first).toBeVisible();
+  await expect(first).toContainText('Rättat');
+
+  // och en avfärdning hamnar överst, med sin kategori och anteckning
+  const category = 'Dubbla mellanslag i namnet';
+  await page.goto('/konsekvens?kategori=' + encodeURIComponent(category));
+  await expect(page.locator('ul > li').first()).toBeVisible();
+  await page.locator('ul > li').first().getByRole('button', { name: 'Avfärda' }).click();
+
+  await log.locator('summary').click();
+  await expect(log.locator('ol > li').first()).toContainText('Avfärdat');
+  await expect(log.locator('ol > li').first()).toContainText(category);
+});

@@ -300,6 +300,15 @@ remembered by a fingerprint of the category, the people involved and the
 offending values, so a dismissed issue stays gone — but legitimately reappears
 if the underlying data changes.
 
+**Åtgärdat och avfärdat** is a collapsed log at the top of the page: the latest
+edits to the tree, from `audit_log`, interleaved with what has been dismissed.
+Nothing links an edit to the issue it settled — issues are computed, so a fixed
+one simply stops appearing, and the log says so rather than implying a
+connection it cannot prove. The GEDCOM import is left out; it is not work done
+on a problem. A dismissal names the problem it set aside by resolving its
+fingerprint against the current detection, which the same request has already
+run; where the problem no longer occurs, the entry says that instead.
+
 **Duplicate merge** compares two records side by side; you pick which record
 survives and which value wins per field. The merge moves every event, citation
 and photo to the survivor, relinks families (collapsing duplicate child links,

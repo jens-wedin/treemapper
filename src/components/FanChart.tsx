@@ -95,12 +95,16 @@ export default function FanChart({ data, generations, onSelect, selectedId }: {
                 >
                   {mark && <title>{issueCategories(mark).join(', ')}</title>}
                   <path
+                    // Keyed so picking someone else replays the outline flash.
+                    key={isSelected ? `sel-${s.key}` : s.key}
                     d={s.wedgePath}
+                    className={isSelected ? 'chart-selected-wedge' : undefined}
                     style={{
                       fill: isSelected ? 'var(--card-fill-selected)' : colors.fill,
-                      stroke: isActive ? 'var(--card-stroke-active)' : 'var(--card-stroke)',
+                      stroke: isSelected ? 'var(--card-stroke-selected)'
+                        : isActive ? 'var(--card-stroke-active)' : 'var(--card-stroke)',
                     }}
-                    strokeWidth={isActive ? 2.5 : 1}
+                    strokeWidth={isSelected || isActive ? 2.5 : 1}
                   />
                   {/* the coloured band marking each generation's outer edge */}
                   <path d={s.bandPath} fill="none" style={{ stroke: colors.band }} strokeWidth={3} />

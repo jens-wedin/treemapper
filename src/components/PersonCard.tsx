@@ -67,6 +67,23 @@ export default function PersonCard({
 
   return (
     <>
+      {/* A halo that snaps in when the card is picked and then stays, quietly.
+          Behind the card, so it reads as a glow rather than a second border.
+          Keyed by the card, so choosing someone else plays it again. */}
+      {selected && (
+        <rect
+          key={`ring-${idKey}`}
+          x={-5}
+          y={-5}
+          width={size.w + 10}
+          height={size.h + 10}
+          rx={wide ? 18 : 14}
+          fill="none"
+          style={{ stroke: 'var(--card-stroke-selected)' }}
+          className="chart-selected-ring"
+        />
+      )}
+
       <rect
         width={size.w}
         height={size.h}

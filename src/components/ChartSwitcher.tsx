@@ -61,7 +61,10 @@ export default function ChartSwitcher({ viewKey, morphing = false, overlay, chil
   const leave = leaving?.morph ? 'chart-leaving-morph' : 'chart-leaving';
 
   return (
-    <div ref={boxRef} className="relative flex min-h-0 flex-1 flex-col">
+    // min-w-0 matters: without it this flex item refuses to shrink below its
+    // content, so opening the person panel widens the row past the viewport and
+    // scrolls the heading and tabs off the side.
+    <div ref={boxRef} className="relative flex min-h-0 min-w-0 flex-1 flex-col">
       {leaving && (
         <div aria-hidden="true" inert className={`${leave} absolute inset-0 flex flex-col`}>
           {leaving.node}

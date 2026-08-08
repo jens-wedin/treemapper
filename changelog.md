@@ -4,6 +4,10 @@
 
 ### Added
 
+**Det markerade kortet syns**
+- Kortet man valt får en **gloria som slår till och sedan lägger sig** — en engångsrörelse, inte en puls: något som aldrig slutar röra sig är svårt att läsa bredvid och svårt att slita blicken från. Animationen slutar där viloläget är, så mindre rörelse hamnar rätt utan rörelsen. Solfjäderns skiva blinkar till i konturen på samma sätt.
+- **Rättat: personpanelen sköt rubriken och flikarna ut ur bilden.** Växlaren saknade `min-w-0`, så flexraden vägrade krympa och sidan fick vågrät rullning när panelen öppnades.
+
 **Trädsidan gör plats för trädet**
 - Fokuspersonens **namn är länken** till personsidan. Ett separat "Gå till personsida" bredvid sa samma sak två gånger och satte det användbara sist.
 - Vyerna är **flikar** i stället för knappar, med riktig `tablist`/`tab`-semantik: en enda tabbstopp, piltangenter mellan flikarna, och panelen pekas ut med `aria-controls`. Handskriven i stället för en färdig komponent, eftersom panelen är den animerade växlaren och måste sitta kvar monterad genom ett flikbyte för att övergången ska hinna hända.

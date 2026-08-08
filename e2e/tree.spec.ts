@@ -412,19 +412,34 @@ test.describe('zoomen', () => {
   const wheel = (page: import('@playwright/test').Page, deltaY: number) =>
     page.locator('svg[role="group"]').first().dispatchEvent('wheel', { deltaY, deltaMode: 0, bubbles: true });
 
+  /**
+   * Zoomen glider mot sitt mål, så en avläsning direkt efter en hjulhändelse
+   * fångar den på vägen. Jämförelserna nedan gäller vilolägena.
+   */
+  const settled = async (page: import('@playwright/test').Page) => {
+    let previous = -1;
+    let current = await percent(page);
+    while (current !== previous) {
+      previous = current;
+      await page.waitForTimeout(90);
+      current = await percent(page);
+    }
+    return current;
+  };
+
   test('hjulet zoomar i proportion till hur långt man rullar', async ({ page }) => {
     await page.goto('/trad/I500001?upp=2&ned=1&vy=family');
     await page.locator('[data-tree-node]').first().waitFor();
 
     // en liten knuff — som en styrplatta ger — ska knappt märkas
-    const start = await percent(page);
+    const start = await settled(page);
     await wheel(page, -6);
-    const afterNudge = await percent(page);
+    const afterNudge = await settled(page);
     expect(afterNudge - start).toBeLessThanOrEqual(2);
 
     // en hel hjulklick tar större kliv, men aldrig mer än ett tak
     await wheel(page, -120);
-    const afterNotch = await percent(page);
+    const afterNotch = await settled(page);
     expect(afterNotch - afterNudge).toBeGreaterThan(afterNudge - start);
     expect(afterNotch).toBeLessThanOrEqual(Math.round(afterNudge * 1.1) + 1);
   });

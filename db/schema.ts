@@ -1,5 +1,19 @@
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
 
+/**
+ * What this database calls itself. One row, id 1.
+ *
+ * A tree's name lives inside the tree rather than in a central registry, so
+ * there is nothing to drift out of sync, corrupt, or lose when a .db file is
+ * copied around. Listing the trees is a directory scan plus one row per file.
+ */
+export const treeMeta = sqliteTable('tree_meta', {
+  id: integer('id').primaryKey(),
+  name: text('name').notNull(),
+  createdAt: text('created_at').notNull(),
+  sourceFile: text('source_file'),                   // uploaded filename, null for the default tree
+});
+
 export const persons = sqliteTable('persons', {
   id: text('id').primaryKey(),                       // GEDCOM xref, e.g. I500001
   givenName: text('given_name').notNull().default(''),

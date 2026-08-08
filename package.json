@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently -k \"tsx watch api/server.ts\" \"vite\"",
-    "dev:e2e": "WEDIN_DB=.e2e.db WEDIN_TREES_DIR=.e2e-trees API_PORT=3199 concurrently -k \"tsx api/server.ts\" \"vite --port 5199\"",
+    "dev:e2e": "WEDIN_DB=.e2e.db WEDIN_TREES_DIR=.e2e-trees WEDIN_MEDIA_DIR=.e2e-media API_PORT=3199 concurrently -k \"tsx api/server.ts\" \"vite --port 5199\"",
     "build": "tsc -b && vite build",
     "test": "vitest run",
     "test:e2e": "playwright test",

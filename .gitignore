@@ -5,6 +5,7 @@ media/
 *.db
 trees/
 .e2e-trees/
+.e2e-media/
 *.db-journal
 *.db-wal
 *.db-shm

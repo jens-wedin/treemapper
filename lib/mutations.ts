@@ -13,7 +13,7 @@ export interface MutationResult<T = null> { warnings: string[]; data: T }
 
 export type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
 
-function audit(tx: Tx, action: 'create' | 'update' | 'delete', entityType: string, entityId: string | number, before: unknown, after: unknown) {
+export function audit(tx: Tx, action: 'create' | 'update' | 'delete', entityType: string, entityId: string | number, before: unknown, after: unknown) {
   tx.insert(auditLog).values({
     timestamp: new Date().toISOString(),
     action,

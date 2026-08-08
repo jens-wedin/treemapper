@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { MediaView } from '../../lib/queries';
 import { t } from '../lib/i18n';
-import { apiUrl } from '../lib/api';
+import { apiUrl, mutateJson } from '../lib/api';
 
 /**
  * A photo at the size it deserves.
@@ -14,18 +19,21 @@ import { apiUrl } from '../lib/api';
  * Left and right move between a person's photos, so looking through them does
  * not mean closing and reopening.
  */
-export default function PhotoLightbox({ photos, openAt, fallbackAlt, onClose }: {
+export default function PhotoLightbox({ photos, openAt, fallbackAlt, onClose, onRemoved }: {
   photos: MediaView[];
   /** Index to open at, or null when closed. */
   openAt: number | null;
   /** Used when a photo has no title of its own. */
   fallbackAlt: string;
   onClose: () => void;
+  /** Removing happens here, where the photo can actually be seen. */
+  onRemoved?: () => void;
 }) {
   const [index, setIndex] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (openAt != null) setIndex(openAt);
+    if (openAt != null) { setIndex(openAt); setError(null); }
   }, [openAt]);
 
   const open = openAt != null;
@@ -44,6 +52,17 @@ export default function PhotoLightbox({ photos, openAt, fallbackAlt, onClose }: 
     return () => window.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, many, photos.length]);
+
+  async function remove() {
+    if (!photo) return;
+    try {
+      await mutateJson(`/api/media/${photo.id}`, 'DELETE');
+      onClose();
+      onRemoved?.();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('common.error'));
+    }
+  }
 
   if (!photo) return null;
 
@@ -86,6 +105,31 @@ export default function PhotoLightbox({ photos, openAt, fallbackAlt, onClose }: 
             </Button>
           )}
         </div>
+
+        {onRemoved && (
+          <div className="flex items-center gap-3">
+            <AlertDialog>
+              <AlertDialogTrigger className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+                {t('person.photoRemove')}
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    {t('person.photoRemoveTitle').replace('{name}', photo.title ?? fallbackAlt)}
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>{t('person.photoRemoveBody')}</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{t('edit.cancel')}</AlertDialogCancel>
+                  <AlertDialogAction className={buttonVariants({ variant: 'destructive' })} onClick={remove}>
+                    {t('person.photoRemove')}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            {error && <span role="alert" className="text-sm text-destructive">{error}</span>}
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

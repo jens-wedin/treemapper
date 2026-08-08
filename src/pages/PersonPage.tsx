@@ -11,6 +11,7 @@ import ProblemList from '../components/issues/ProblemList';
 import ChangeLog from '../components/issues/ChangeLog';
 import PersonEditForm from '../components/edit/PersonEditForm';
 import PhotoLightbox from '../components/PhotoLightbox';
+import PhotoUpload from '../components/edit/PhotoUpload';
 import EventEditor from '../components/edit/EventEditor';
 import MarriageEditor from '../components/edit/MarriageEditor';
 import RelationDialog from '../components/edit/RelationDialog';
@@ -143,9 +144,13 @@ export default function PersonPage() {
         )}
       </header>
 
-      {photos.length > 0 && (
-        <section className="mt-8">
+      {/* Shown even with no photos: adding the first one has to be possible. */}
+      <section className="mt-8">
+        <div className="flex flex-wrap items-center gap-3">
           <h2 className="text-xl font-semibold">{t('person.photos')}</h2>
+          <PhotoUpload personId={person.id} onAdded={reload} />
+        </div>
+        {photos.length > 0 && (
           <ul className="mt-3 flex flex-wrap gap-3">
             {photos.map((m, i) => (
               <li key={m.id}>
@@ -167,14 +172,15 @@ export default function PersonPage() {
               </li>
             ))}
           </ul>
-          <PhotoLightbox
-            photos={photos}
-            openAt={photoAt}
-            fallbackAlt={displayName(person)}
-            onClose={() => setPhotoAt(null)}
-          />
-        </section>
-      )}
+        )}
+        <PhotoLightbox
+          photos={photos}
+          openAt={photoAt}
+          fallbackAlt={displayName(person)}
+          onClose={() => setPhotoAt(null)}
+          onRemoved={reload}
+        />
+      </section>
 
       <section className="mt-8">
         <h2 className="text-xl font-semibold">{t('person.family')}</h2>

@@ -95,3 +95,28 @@ test('vigseln läggs till på familjen, inte på personen', async ({ page }) => 
   const timeline = page.locator('section', { has: page.getByRole('heading', { name: 'Händelser' }) });
   await expect(timeline.getByText('Vigsel')).toHaveCount(0);
 });
+
+test('ett foto går att lägga till och ta bort igen', async ({ page }) => {
+  // en person utan foton, så räkningen blir entydig
+  await page.goto('/person/I500616');
+  await expect(page.getByRole('heading', { name: 'Foton' })).toBeVisible();
+  const thumbs = page.getByRole('button', { name: /i större format/ });
+  const before = await thumbs.count();
+
+  const pixel = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+    'base64',
+  );
+  await page.getByLabel('Lägg till foto').setInputFiles({ name: 'farmor.png', mimeType: 'image/png', buffer: pixel });
+  await expect(thumbs).toHaveCount(before + 1);
+
+  // filnamnet blir titel, och fotot går att öppna
+  await thumbs.last().click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByRole('heading')).toContainText('farmor');
+
+  // och ta bort igen — bakom en bekräftelse
+  await dialog.getByRole('button', { name: 'Ta bort foto' }).click();
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Ta bort foto' }).click();
+  await expect(thumbs).toHaveCount(before);
+});

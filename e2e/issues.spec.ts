@@ -4,14 +4,38 @@ import { test, expect } from '@playwright/test';
 // Mutating tests — these run against the .e2e.db copy (see e2e/global-setup.ts).
 test.skip(!fs.existsSync('wedin.db'), 'wedin.db saknas — kör npm run import först');
 
-test('kön visar problem värst först med kategorifilter', async ({ page }) => {
+test('kön grupperas efter allvarlighetsgrad, värst först', async ({ page }) => {
   await page.goto('/konsekvens');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Konsekvensbänken');
   await expect(page.getByText(/kvar av .* flaggade/)).toBeVisible();
-  // första kortet är ett logiskt fel (värst först)
-  const firstCard = page.locator('li').filter({ hasText: 'Logiskt fel' }).first();
-  await expect(firstCard).toBeVisible();
+
+  const headings = page.getByRole('heading', { level: 2 });
+  await expect(headings.first()).toContainText('Logiskt fel');
+  await expect(headings.nth(1)).toContainText('Dubblett');
   await expect(page.getByLabel('Kategori')).toBeVisible();
+});
+
+test('filtren byter ut listan i stället för att lägga till i den', async ({ page }) => {
+  await page.goto('/konsekvens');
+  await expect(page.getByRole('heading', { level: 2 }).first()).toContainText('Logiskt fel');
+
+  // Att välja en varningskategori får inte lämna kvar de logiska felen —
+  // dubbletta React-nycklar gjorde tidigare att gamla kort blev kvar.
+  await page.getByLabel('Kategori').selectOption('Dödsfall utan datum');
+  await expect(page.getByRole('heading', { level: 2 })).toHaveCount(1);
+  await expect(page.getByRole('heading', { level: 2 })).toContainText('Varning');
+  const categories = page.locator('ul > li > div > span.font-medium');
+  await expect(categories.first()).toBeVisible();
+  const distinct = new Set(await categories.allTextContents());
+  expect([...distinct]).toEqual(['Dödsfall utan datum']);
+
+  // och gradfiltret når de grupper som annars ligger bortom de 500 första
+  await page.getByLabel('Kategori').selectOption('');
+  await expect(page.getByRole('heading', { level: 2 }).first()).toContainText('Logiskt fel');
+
+  await page.getByLabel('Allvarlighetsgrad').selectOption('minor');
+  await expect(page.getByRole('heading', { level: 2 })).toHaveCount(1);
+  await expect(page.getByRole('heading', { level: 2 })).toContainText('Småfel');
 });
 
 test('avfärda döljer problemet och Visa avfärdade återställer det', async ({ page }) => {

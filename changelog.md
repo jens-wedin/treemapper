@@ -4,6 +4,11 @@
 
 ### Added
 
+**Konsekvensbänken grupperas efter allvarlighetsgrad**
+- Kön har nu en rubrik per grad (logiskt fel → dubblett → varning → övrigt → småfel) i stället för en enda lång lista, och ett gradfilter vid sidan av kategorifiltret. Eftersom listan är kapad vid 500 problem var de mildare graderna annars omöjliga att nå — man såg bara fel och dubbletter. Graden står i rubriken, så korten upprepar den inte längre.
+- **Rättat: filtret bytte inte ut listan.** Valde man en varningskategori låg de logiska felen kvar överst. Samma problem rapporterades flera gånger när data innehåller samma faktum flera gånger (en person har fyra identiska "Bosatt" efter sin död), korten fick då samma React-nyckel, och React behöll gamla kort vid omritningen. Nu viks problem med samma fingeravtryck *och* samma ägare ihop till ett (7 av 2 826). Ägaren måste ingå i identiteten: en dubblettgrupp delar med flit ett fingeravtryck mellan sina medlemmar, och var och en behöver ändå sitt eget kort.
+- `setParam` på både Konsekvens- och trädsidan använder nu funktionsformen av `setSearchParams`. Två ändringar tätt efter varandra läste annars samma ögonblicksbild av URL:en, och den andra slog ut den första.
+
 **Konsekvenser i trädet**
 - Ny kryssruta **Visa konsekvenser** i diagrammens verktygsrad, delad av alla tre vyerna och ihågkommen som flaggvalet. Avstängd tills man ber om den: den kostar en genomsökning av hela databasen, och de flesta besök i trädet handlar inte om att rätta data. Strängarna finns på alla fyra språken.
 - Personpanelen listar problemen i Konsekvensbänkens egen formulering, längst ned i panelen efter anteckningarna — en fotnot till personen, inte det personen är. Upprepningar av samma kategori samlas under en rubrik med antal: fyra barn födda efter samma fars bortgång är ett faktum berättat fyra gånger, inte fyra rubriker. Inställningen ligger som ett modulärt tillstånd i stället för komponentstate, så att kryssrutan i verktygsraden fyller panelen bredvid utan omladdning.

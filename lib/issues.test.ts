@@ -283,6 +283,23 @@ describe('detectIssues — dubbletter', () => {
 });
 
 describe('detectIssues — fingeravtryck och undantag', () => {
+  it('rapporterar samma problem en gång, även när fakta ligger dubbelt i data', () => {
+    human('I1', 1800, 1880);
+    // fyra identiska bosättningar efter dödsåret — ett problem, inte fyra
+    for (let i = 0; i < 4; i++) event('I1', 'RESI', '1890');
+    const hits = of(run(), 'Faktum som inträffar efter döden');
+    expect(hits).toHaveLength(1);
+  });
+
+  it('ger varje kort en unik nyckel av fingeravtryck och ägare', () => {
+    human('I1', 1800, 1880);
+    for (let i = 0; i < 3; i++) event('I1', 'RESI', '1890');
+    human('D1', 1900, null, { given: 'Anna', surname: 'Andersson' });
+    human('D2', 1900, null, { given: 'Anna', surname: 'Andersson' });
+    const keys = run().map(i => `${i.fingerprint}|${i.personIds[0]}`);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
   it('är stabila mellan körningar men ändras när värdena ändras', () => {
     human('I1', 1801, 1800);
     const first = of(run(), 'Födsel efter bortgång')[0].fingerprint;

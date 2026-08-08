@@ -72,10 +72,14 @@ export default function TreePage() {
     return () => { stale = true; };
   }, [id, upp, ned]);
 
+  // Functional form: changing view and depth in quick succession must not have
+  // the second change read a snapshot taken before the first.
   function setParam(key: string, value: string) {
-    const next = new URLSearchParams(params);
-    next.set(key, value);
-    setParams(next);
+    setParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set(key, value);
+      return next;
+    });
   }
   const setDepth = (key: 'upp' | 'ned', value: string) => setParam(key, value);
 

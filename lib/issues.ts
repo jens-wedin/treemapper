@@ -416,7 +416,19 @@ export function detectIssues(db: Db, opts: DetectOptions = {}): Issue[] {
     }
   }
 
-  return issues.sort((a, b) =>
+  // Two issues with the same fingerprint *and* the same owner are the same
+  // problem said twice — the data holds duplicate facts (four identical
+  // residences, say), and each of them raised its own flag. Reporting it once
+  // is what the queue means, and it keeps every card's key unique. The owner
+  // has to be part of the identity: a duplicate group shares one fingerprint
+  // across its members on purpose, and each of them still needs its own card.
+  const seen = new Set<string>();
+  const distinct = issues.filter(i => {
+    const key = `${i.fingerprint}|${i.personIds[0]}`;
+    return !seen.has(key) && (seen.add(key), true);
+  });
+
+  return distinct.sort((a, b) =>
     SEVERITY_ORDER.indexOf(a.severity) - SEVERITY_ORDER.indexOf(b.severity)
     || a.category.localeCompare(b.category, 'sv')
     || a.personIds[0]!.localeCompare(b.personIds[0]!));

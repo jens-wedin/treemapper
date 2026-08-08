@@ -279,9 +279,19 @@ completeness categories from the data-quality report: saknar födelse, födelse/
 dödsfall utan datum, and möjlig dubblett.
 
 Issues are **computed, never stored** — fixing the data makes an issue vanish
-and the detectors keep guarding future edits. The queue is sorted worst first
-(logiskt fel → dubblett → varning → övrigt → småfel), filterable by category,
-with **Åtgärda** (jump to the person) and **Avfärda** per issue. Dismissals are
+and the detectors keep guarding future edits. The queue is grouped by severity
+under its own heading, worst first (logiskt fel → dubblett → varning → övrigt →
+småfel), filterable by severity and by category, with **Åtgärda** (jump to the
+person) and **Avfärda** per issue. The list is capped at 500, so the filters are
+how you reach the milder groups.
+
+The same problem is reported once. Where the data holds a fact several times
+over — one person has four identical "Bosatt" events after their death — each
+copy used to raise its own flag, and the repeated cards shared a React key,
+which left stale cards on screen when you changed the filter. Two issues with
+the same fingerprint *and* the same owner are now folded into one (7 of 2 826).
+The owner has to be part of that identity: the members of a duplicate group
+deliberately share one fingerprint and each still needs its own card. Dismissals are
 remembered by a fingerprint of the category, the people involved and the
 offending values, so a dismissed issue stays gone — but legitimately reappears
 if the underlying data changes.

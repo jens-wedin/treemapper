@@ -3,7 +3,9 @@ import { useSearchParams } from 'react-router';
 import type { Severity } from '../../lib/issues';
 import { t, getLanguage } from '../lib/i18n';
 import { fetchJson } from '../lib/api';
+import { Badge } from '@/components/ui/badge';
 import IssueCard, { type IssueListItem } from '../components/issues/IssueCard';
+import { SEVERITY_STYLE } from '../components/issues/severityStyle';
 
 interface IssuesResponse {
   items: IssueListItem[];
@@ -19,6 +21,7 @@ interface IssuesResponse {
 export default function IssuesPage() {
   const [params, setParams] = useSearchParams();
   const category = params.get('kategori') ?? '';
+  const severity = params.get('grad') ?? '';
   const showDismissed = params.get('avfardade') === '1';
 
   const [data, setData] = useState<IssuesResponse | null>(null);
@@ -27,11 +30,12 @@ export default function IssuesPage() {
   const load = useCallback(() => {
     const url = new URLSearchParams();
     if (category) url.set('category', category);
+    if (severity) url.set('severity', severity);
     if (showDismissed) url.set('includeDismissed', '1');
     fetchJson<IssuesResponse>(`/api/issues?${url}`)
       .then(d => { setData(d); setState('ok'); })
       .catch(() => setState('error'));
-  }, [category, showDismissed]);
+  }, [category, severity, showDismissed]);
 
   useEffect(() => {
     document.title = `${t('issues.title')} – ${t('appTitle')}`;
@@ -39,10 +43,15 @@ export default function IssuesPage() {
     load();
   }, [load]);
 
+  // Functional form on purpose: two changes in quick succession (clear the
+  // category, then pick a severity) would otherwise both read the same
+  // snapshot and the second would drop the first.
   function setParam(key: string, value: string) {
-    const next = new URLSearchParams(params);
-    if (value) next.set(key, value); else next.delete(key);
-    setParams(next);
+    setParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (value) next.set(key, value); else next.delete(key);
+      return next;
+    });
   }
 
   if (state === 'error') return <p role="alert">{t('common.error')}</p>;
@@ -51,6 +60,12 @@ export default function IssuesPage() {
   const ordered = data
     ? Object.entries(data.counts).sort((a, b) => b[1] - a[1])
     : [];
+
+  // The queue arrives worst first; heading each run of one severity turns a
+  // long scroll into "here are the seven real errors, then the rest".
+  const groups = (data?.severityOrder ?? [])
+    .map(severity => ({ severity, items: data!.items.filter(i => i.severity === severity) }))
+    .filter(group => group.items.length > 0);
 
   return (
     <section>
@@ -90,6 +105,22 @@ export default function IssuesPage() {
             ))}
           </select>
         </div>
+        <div>
+          <label htmlFor="grad" className="block text-sm font-medium">{t('issues.severity')}</label>
+          <select
+            id="grad"
+            value={severity}
+            onChange={e => setParam('grad', e.target.value)}
+            className="mt-1 rounded-md border px-2 py-1.5"
+          >
+            <option value="">{t('issues.allSeverities')}</option>
+            {(data?.severityOrder ?? []).map(s => (
+              <option key={s} value={s}>
+                {t(`issues.sev.${s}`)} ({(data?.severityCounts[s] ?? 0).toLocaleString('sv-SE')})
+              </option>
+            ))}
+          </select>
+        </div>
         <label className="flex items-center gap-2">
           <input
             type="checkbox"
@@ -110,13 +141,23 @@ export default function IssuesPage() {
         <p className="mt-4 text-muted-foreground">{t('issues.noIssues')}</p>
       )}
 
-      {data && data.items.length > 0 && (
-        <ul className="mt-2 space-y-3">
-          {data.items.map(issue => (
-            <IssueCard key={issue.fingerprint + issue.personIds[0]} issue={issue} onChanged={load} />
-          ))}
-        </ul>
-      )}
+      {data && groups.length > 0 && groups.map(group => (
+        <section key={group.severity} className="mt-6">
+          <h2 className="flex items-center gap-2 text-lg font-semibold">
+            <Badge variant="outline" className={SEVERITY_STYLE[group.severity]}>
+              {t(`issues.sev.${group.severity}`)}
+            </Badge>
+            <span className="text-base font-normal text-muted-foreground">
+              {group.items.length.toLocaleString('sv-SE')}
+            </span>
+          </h2>
+          <ul className="mt-2 space-y-3">
+            {group.items.map(issue => (
+              <IssueCard key={`${issue.fingerprint}|${issue.personIds[0]}`} issue={issue} onChanged={load} />
+            ))}
+          </ul>
+        </section>
+      ))}
     </section>
   );
 }

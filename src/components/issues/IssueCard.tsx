@@ -6,7 +6,6 @@ import { t } from '../../lib/i18n';
 import { mutateJson } from '../../lib/api';
 import { clearIssueMarks } from '../../lib/issueMarks';
 import DuplicateMerge from './DuplicateMerge';
-import { SEVERITY_STYLE } from './severityStyle';
 
 export type IssueListItem = Issue & { dismissed: boolean };
 
@@ -25,10 +24,8 @@ export default function IssueCard({ issue, onChanged }: { issue: IssueListItem; 
 
   return (
     <li className={`rounded-lg border p-4 ${issue.dismissed ? 'opacity-60' : ''}`}>
+      {/* the severity heads the group this card sits in, so it is not repeated here */}
       <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="outline" className={SEVERITY_STYLE[issue.severity]}>
-          {t(`issues.sev.${issue.severity}`)}
-        </Badge>
         <span className="font-medium">{issue.category}</span>
         {issue.dismissed && <Badge variant="outline">{t('issues.dismissedBadge')}</Badge>}
       </div>

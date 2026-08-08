@@ -14,7 +14,8 @@
     "media": "tsx scripts/download-media.ts",
     "refresh-media": "tsx scripts/refresh-media-urls.ts",
     "export": "tsx scripts/export.ts",
-    "repair-conc": "tsx scripts/repair-conc.ts"
+    "repair-conc": "tsx scripts/repair-conc.ts",
+    "merge-duplicates": "tsx scripts/merge-duplicates.ts"
   },
   "dependencies": {
     "@fontsource-variable/public-sans": "^5.3.0",

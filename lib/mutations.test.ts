@@ -7,7 +7,7 @@ import { eq } from 'drizzle-orm';
 import { runImport } from '../scripts/import';
 import { createDb, type Db } from '../db/client';
 import { persons, events, citations, auditLog, familyChildren, families } from '../db/schema';
-import { updatePerson, createEvent, updateEvent, deleteEvent, addRelation } from './mutations';
+import { updatePerson, createEvent, updateEvent, deleteEvent, addRelation, removeChildLink, MutationError } from './mutations';
 
 const fixture = fileURLToPath(new URL('./gedcom/fixtures/mini.ged', import.meta.url));
 let dir: string;
@@ -143,5 +143,55 @@ describe('addRelation', () => {
     db.insert(persons).values({ id: 'I88888888', givenName: 'Unassociated photos', surname: '', sex: 'U' }).run();
     const r = addRelation(db, { type: 'child', personId: 'I1', familyId: 'F1', newPerson: { givenName: 'Efter', surname: 'Sentinel', sex: 'U' } });
     expect(r.data.relativeId).toBe('I9');
+  });
+});
+
+describe('removeChildLink', () => {
+  // delad databas i den här filen — egna id:n per test
+  const setup = (n: number, extraFamily = false) => {
+    const parent = `RP${n}`, child = `RC${n}`;
+    db.insert(persons).values([
+      { id: parent, givenName: 'Far', surname: 'Test', sex: 'M' },
+      { id: child, givenName: 'Barn', surname: 'Test', sex: 'U' },
+    ]).run();
+    db.insert(families).values({ id: `RF${n}`, husbandId: parent, wifeId: null }).run();
+    db.insert(familyChildren).values({ familyId: `RF${n}`, childId: child, seq: 3 }).run();
+    if (extraFamily) {
+      db.insert(families).values({ id: `RG${n}`, husbandId: parent, wifeId: null }).run();
+      db.insert(familyChildren).values({ familyId: `RG${n}`, childId: child, seq: 0 }).run();
+    }
+    return { parent, child, family: `RF${n}`, other: `RG${n}` };
+  };
+  const linksFor = (childId: string) =>
+    db.select().from(familyChildren).all().filter(l => l.childId === childId);
+
+  it('tar bort barnet ur familjen men rör inte personen', () => {
+    const { child, family } = setup(1);
+    db.insert(events).values({ id: 9001, ownerType: 'person', ownerId: child, type: 'BIRT', dateRaw: '1800', dateYear: 1800 }).run();
+
+    removeChildLink(db, family, child);
+
+    expect(linksFor(child)).toEqual([]);
+    expect(db.select().from(persons).all().some(p => p.id === child)).toBe(true);
+    expect(db.select().from(events).all().some(e => e.id === 9001)).toBe(true);
+  });
+
+  it('lossar ur en enda familj när personen är barn i flera', () => {
+    const { child, family, other } = setup(2, true);
+    removeChildLink(db, family, child);
+    expect(linksFor(child).map(l => l.familyId)).toEqual([other]);
+  });
+
+  it('skriver borttagningen till audit_log så den går att ångra', () => {
+    const { child, family } = setup(3);
+    removeChildLink(db, family, child);
+    const row = db.select().from(auditLog).all().at(-1)!;
+    expect(row).toMatchObject({ action: 'delete', entityType: 'familyChild', entityId: `${family}/${child}` });
+    expect(JSON.parse(row.before!)).toMatchObject({ familyId: family, childId: child, seq: 3 });
+  });
+
+  it('säger ifrån när barnet inte finns i familjen', () => {
+    const { family } = setup(4);
+    expect(() => removeChildLink(db, family, 'RC-saknas')).toThrow(MutationError);
   });
 });

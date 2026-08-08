@@ -17,6 +17,8 @@ export interface MergeSummary {
   movedMedia: number;
   relinkedFamilies: number;
   mergedChildLinks: number;
+  /** Families that turned out to be the same couple twice, folded into one. */
+  mergedFamilies: number;
 }
 
 const FIELDS: PersonField[] = ['givenName', 'surname', 'marriedName', 'suffix', 'sex', 'note'];
@@ -57,12 +59,17 @@ export function mergePersons(db: Db, input: MergeInput): MutationResult<MergeSum
       .where(and(eq(media.ownerType, 'person'), eq(media.ownerId, duplicateId))).all();
     const allChildLinks = tx.select().from(familyChildren).all()
       .filter(l => l.childId === survivorId || l.childId === duplicateId);
+    // Every child of every affected family, not just these two people: a
+    // family folded away below must be rebuildable from this snapshot alone.
+    const affectedFamilyIds = new Set(affectedFamilies.map(f => f.id));
+    const affectedChildLinks = tx.select().from(familyChildren).all()
+      .filter(l => affectedFamilyIds.has(l.familyId) || l.childId === survivorId || l.childId === duplicateId);
 
     // Snapshot BEFORE touching anything, so a merge can always be unwound.
     const before = {
       survivor, duplicate,
       families: affectedFamilies,
-      childLinks: allChildLinks,
+      childLinks: affectedChildLinks,
       events: dupEvents,
       citations: dupCitations,
       media: dupMedia,
@@ -75,6 +82,7 @@ export function mergePersons(db: Db, input: MergeInput): MutationResult<MergeSum
       movedMedia: dupMedia.length,
       relinkedFamilies: 0,
       mergedChildLinks: 0,
+      mergedFamilies: 0,
     };
 
     // 1. Fields: survivor wins by default; explicit choice or a blank survivor
@@ -127,6 +135,56 @@ export function mergePersons(db: Db, input: MergeInput): MutationResult<MergeSum
         tx.update(familyChildren).set({ childId: survivorId })
           .where(eq(familyChildren.id, link.id)).run();
         summary.relinkedFamilies++;
+      }
+    }
+
+    // 4b. Folding two people into one can leave the survivor standing in two
+    //     families with the same partner — the same marriage recorded twice,
+    //     which is exactly what happens when a whole branch was imported
+    //     twice. Collapse those into the older family; the children of both
+    //     end up in one place instead of hanging under a phantom marriage.
+    //     A missing partner is deliberately not treated as a match: two sets
+    //     of children by an unknown father are not obviously one union.
+    const spouseFamilies = tx.select().from(families).where(or(
+      eq(families.husbandId, survivorId), eq(families.wifeId, survivorId),
+    )).all();
+    const byCouple = new Map<string, typeof spouseFamilies>();
+    for (const f of spouseFamilies) {
+      if (!f.husbandId || !f.wifeId) continue;
+      const coupleKey = `${f.husbandId}|${f.wifeId}`;
+      const group = byCouple.get(coupleKey) ?? [];
+      group.push(f);
+      byCouple.set(coupleKey, group);
+    }
+
+    for (const group of byCouple.values()) {
+      if (group.length < 2) continue;
+      const [keeper, ...extras] = [...group].sort((a, b) => a.id.localeCompare(b.id));
+      const inKeeper = new Set(tx.select().from(familyChildren)
+        .where(eq(familyChildren.familyId, keeper!.id)).all().map(l => l.childId));
+
+      for (const extra of extras) {
+        for (const link of tx.select().from(familyChildren)
+          .where(eq(familyChildren.familyId, extra.id)).all()) {
+          if (inKeeper.has(link.childId)) {
+            tx.delete(familyChildren).where(eq(familyChildren.id, link.id)).run();
+            summary.mergedChildLinks++;
+          } else {
+            tx.update(familyChildren).set({ familyId: keeper!.id })
+              .where(eq(familyChildren.id, link.id)).run();
+            inKeeper.add(link.childId);
+          }
+        }
+        // the marriage, its sources and its photos belong to the family that stays
+        tx.update(events).set({ ownerId: keeper!.id })
+          .where(and(eq(events.ownerType, 'family'), eq(events.ownerId, extra.id))).run();
+        tx.update(citations).set({ ownerId: keeper!.id })
+          .where(and(eq(citations.ownerType, 'family'), eq(citations.ownerId, extra.id))).run();
+        tx.update(media).set({ ownerId: keeper!.id })
+          .where(and(eq(media.ownerType, 'family'), eq(media.ownerId, extra.id))).run();
+
+        tx.delete(families).where(eq(families.id, extra.id)).run();
+        summary.mergedFamilies++;
       }
     }
 

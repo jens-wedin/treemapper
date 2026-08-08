@@ -224,3 +224,90 @@ describe('mergePersons — spårbarhet', () => {
     expect(rows.audit()).toHaveLength(0);
   });
 });
+
+describe('mergePersons — dubbla familjer för samma par', () => {
+  /**
+   * Det verkliga fallet i wedin.db: samma par och samma barnaskara finns
+   * flera gånger. När andra maken slås ihop står paret plötsligt i två
+   * familjer, och barnen hamnar under båda om ingen städar.
+   */
+  function twinFamilies() {
+    person('H', { given: 'Anders' });
+    person('W1', { given: 'Katarina' });
+    person('W2', { given: 'Katarina' });
+    person('C1', { given: 'Jonas' });
+    person('C2', { given: 'Jonas' });
+    family('F1', 'H', 'W1', ['C1']);
+    family('F2', 'H', 'W2', ['C2']);
+  }
+
+  it('slår ihop familjerna och samlar barnen i en', () => {
+    twinFamilies();
+    const res = mergePersons(db, { survivorId: 'W1', duplicateId: 'W2' });
+
+    const fams = db.select().from(families).all();
+    expect(fams).toHaveLength(1);
+    expect(fams[0]).toMatchObject({ id: 'F1', husbandId: 'H', wifeId: 'W1' });
+
+    const links = db.select().from(familyChildren).all();
+    expect(links.every(l => l.familyId === 'F1')).toBe(true);
+    expect(links.map(l => l.childId).sort()).toEqual(['C1', 'C2']);
+    expect(res.data.mergedFamilies).toBe(1);
+  });
+
+  it('tar med familjens egna händelser och källhänvisningar', () => {
+    twinFamilies();
+    event('F2', 'MARR', 1809, 'family');
+    citation('family', 'F2');
+
+    mergePersons(db, { survivorId: 'W1', duplicateId: 'W2' });
+
+    const marr = db.select().from(events).all().find(e => e.type === 'MARR')!;
+    expect(marr.ownerId).toBe('F1');
+    expect(db.select().from(citations).all().find(c => c.ownerType === 'family')!.ownerId).toBe('F1');
+  });
+
+  it('dubblerar inte ett barn som redan står i den familj som blir kvar', () => {
+    person('H', { given: 'Anders' });
+    person('W1', { given: 'Katarina' });
+    person('W2', { given: 'Katarina' });
+    person('C', { given: 'Jonas' });
+    family('F1', 'H', 'W1', ['C']);
+    family('F2', 'H', 'W2', ['C']);
+
+    mergePersons(db, { survivorId: 'W1', duplicateId: 'W2' });
+    const links = db.select().from(familyChildren).all();
+    expect(links).toHaveLength(1);
+    expect(links[0]).toMatchObject({ familyId: 'F1', childId: 'C' });
+  });
+
+  it('rör inte två äktenskap med olika partner', () => {
+    person('H1'); person('H2'); person('W1'); person('W2');
+    family('F1', 'H1', 'W1');
+    family('F2', 'H2', 'W2');
+    mergePersons(db, { survivorId: 'W1', duplicateId: 'W2' });
+
+    const fams = db.select().from(families).all().sort((a, b) => a.id.localeCompare(b.id));
+    expect(fams).toHaveLength(2);
+    expect(fams.map(f => [f.husbandId, f.wifeId])).toEqual([['H1', 'W1'], ['H2', 'W1']]);
+  });
+
+  it('slår inte ihop familjer där den andra partnern är okänd', () => {
+    // två barnaskaror med okänd far är inte självklart samma familj
+    person('W1'); person('W2'); person('C1'); person('C2');
+    family('F1', null, 'W1', ['C1']);
+    family('F2', null, 'W2', ['C2']);
+    mergePersons(db, { survivorId: 'W1', duplicateId: 'W2' });
+    expect(db.select().from(families).all()).toHaveLength(2);
+  });
+
+  it('skriver hela städningen till audit_log', () => {
+    twinFamilies();
+    mergePersons(db, { survivorId: 'W1', duplicateId: 'W2' });
+    const row = db.select().from(auditLog).all().at(-1)!;
+    const before = JSON.parse(row.before!);
+    // familjen som försvann måste gå att återskapa ur before-bilden
+    expect(before.families.map((f: { id: string }) => f.id).sort()).toEqual(['F1', 'F2']);
+    expect(before.childLinks.map((l: { childId: string }) => l.childId).sort()).toEqual(['C1', 'C2']);
+  });
+});

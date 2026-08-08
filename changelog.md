@@ -12,6 +12,14 @@
 **Personlistan öppnar trädet**
 - Varje sökträff har nu en **Visa i träd**-länk vid sidan av namnet, som leder till personen i trädvyn i stället för till personsidan. Två poster kan dela både namn och årtal — trädet är ofta det snabbaste sättet att se vilken av dem man har framför sig.
 
+**Grenar som importerats flera gånger**
+- `npm run merge-duplicates -- <person-id> ...` viker ihop en gren som finns i flera exemplar: den vandrar hela grenen, klustrar posterna som är samma människa och slår ihop varje klunga i den bäst underbyggda. Torrkörning som standard, säkerhetskopia före `--apply`.
+- Sammanslagning av två personer fäller nu också ihop **familjer som visar sig vara samma par två gånger** — barnen, vigseln och dess källor flyttas till den äldre familjen. Utan det blir resultatet av att städa en dubblerad gren ett par med fyra äktenskap och fyra uppsättningar barn.
+- `removeChildLink` löser det som blockerade allt annat: en import kan placera någon som barn i en familj hen också är gift i, och ingen kan vara sin egen förälder. Så länge länken finns vägrar sammanslagningen (samma släktlinje).
+- Ordningen är inte förhandlingsbar: **barnen före föräldrarna**. Så länge kopiorna hänger under var sin familj är två syskon födda samma dag tvillingar och lämnas i fred; när föräldrarna väl är en person sitter alla i samma familj och den skillnaden går inte längre att se.
+- Klustringen kräver exakt födelsedatum plus antingen samma namn eller samma partner — det senare fångar giftasnamn i omkastad ordning. Det tvetydiga rapporteras i stället för att gissas: två poster gifta med samma person *och* med samma barn, men med olika födelsedatum, skrivs ut för handpåläggning. Att dela barn räcker inte som signal (det gör varje gift par), och att dela partner räcker inte heller (en änka som gifte om sig).
+- Torrkörning mot `wedin.db`: 50 sammanslagningar, 4 561 → 4 511 personer, fyra dubbla familjer ihopfällda, 40 färre konsekvensproblem.
+
 **Åtgärdat och avfärdat**
 - Konsekvensbänken har nu en hopfälld logg överst: de senaste ändringarna i trädet (ur `audit_log`) blandat med det som avfärdats, senast först. Ändringar beskrivs i klartext — ”Död för Anders Johan Persson Karlsson: datum — → ”17 mar 1942””, ”Födelse borttagen för …”, ”Slog ihop Anna Larsson (I3) med …” — genom att jämföra före- och efterbilden fält för fält, och varje rad länkar till personen.
 - Ingenting kopplar en ändring till problemet den löste, och loggen påstår inte att den gör det: problem räknas ut, så ett rättat problem försvinner ur kön av sig självt. Avfärdade problem får sin kategori och sin anteckning genom att fingeravtrycket slås upp mot den detektering som ändå körts i samma anrop; har problemet slutat uppstå säger raden det i stället. GEDCOM-importen räknas inte som utfört arbete.

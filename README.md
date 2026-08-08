@@ -312,6 +312,35 @@ on a problem. A dismissal names the problem it set aside by resolving its
 fingerprint against the current detection, which the same request has already
 run; where the problem no longer occurs, the entry says that instead.
 
+### En gren som importerats flera gånger
+
+Konsekvensbänken flags duplicates a pair at a time, which is the wrong shape of
+tool when a MyHeritage export carries the same family four times over. `npm run
+merge-duplicates -- <person-id> ...` walks the whole branch from a seed person,
+clusters the records that are the same human and merges each cluster into its
+best-sourced one. Dry run by default; `--apply` backs the database up first.
+
+Three rules make it safe enough to run unattended:
+
+- **Children before parents.** While the copies still hang under separate
+  families, two siblings born on the same day are twins and are left alone;
+  once the parents are one person they all sit in one family and that
+  distinction is gone. Merging the parents last is also what lets the
+  duplicated marriages collapse.
+- **An exact birth date is required**, plus either the same name or the same
+  spouse — the latter catches a married name written in a different order
+  ("Brita Jonsdotter Forss" / "Brita Fors Jonsdotter").
+- **Ambiguity is reported, never guessed.** Two records married to the same
+  person *and* sharing children, but with different birth dates, are printed
+  for you to judge: sharing children alone means nothing (every couple does),
+  and sharing a spouse alone is what a widow's second marriage looks like.
+
+Merging two people also **collapses families that turn out to be the same
+couple twice**, moving the children, the marriage and its sources into the
+older family. And `removeChildLink` exists for the one thing that blocks
+everything else: an import can place someone as a child of a family they are
+also a spouse in, and nobody can be their own parent.
+
 **Duplicate merge** compares two records side by side; you pick which record
 survives and which value wins per field. The merge moves every event, citation
 and photo to the survivor, relinks families (collapsing duplicate child links,

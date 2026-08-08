@@ -249,3 +249,25 @@ export function addRelation(db: Db, input: RelationInput): MutationResult<{ rela
     return { warnings: [], data: { relativeId, familyId } };
   });
 }
+
+/**
+ * Removes a child from a family. The link is the only thing deleted: the
+ * person, their events and their own families stay untouched.
+ *
+ * This exists because an import can place someone as a child of a family they
+ * are also a spouse in — a person recorded as their own parent. Nothing else
+ * can be done with such a record: merging it refuses (same ancestry line), and
+ * the charts have to guard against the cycle on every draw.
+ */
+export function removeChildLink(db: Db, familyId: string, childId: string): MutationResult {
+  return db.transaction(tx => {
+    const link = tx.select().from(familyChildren)
+      .where(and(eq(familyChildren.familyId, familyId), eq(familyChildren.childId, childId)))
+      .all()[0];
+    if (!link) throw new MutationError('Barnet finns inte i familjen', 404);
+
+    tx.delete(familyChildren).where(eq(familyChildren.id, link.id)).run();
+    audit(tx, 'delete', 'familyChild', `${familyId}/${childId}`, link, null);
+    return { warnings: [], data: null };
+  });
+}

@@ -4,6 +4,11 @@
 
 ### Added
 
+**Vigseln går att redigera — på familjen**
+- Varje familjeruta på personsidan har nu sin vigsel med **Lägg till / Redigera / Ta bort**. Den saknades tidigare helt: vigsel finns inte bland personens händelsetyper, och det är med flit — i GEDCOM hör den till familjen, inte till någon av makarna. Det är också vad som gör att den syns på bådas sidor och exporteras som `FAM.MARR`.
+- `EventForm` tar nu emot ägartyp och en låst typ, så samma formulär används för både personhändelser och vigsel. Åldersfältet visas bara för personhändelser — ett par har två åldrar.
+- `FamilyView.marriage` bär med sig händelsens id, vilket är det som gör den redigerbar på plats.
+
 **Zoomen kastas också**
 - Slutar man rulla mitt i en zoomning fortsätter den en kort stund och ebbar ut. Farten mäts i **logaritmiska enheter per millisekund**, eftersom skala är multiplikativ — det är vad som gör att utzoomning rullar precis lika långt som inzoomning i stället för att kärva vid den lilla änden.
 - Svansen börjar först när hjulhändelserna upphört. En styrplatta skickar redan sina egna avtagande händelser efter att fingrarna lyfts; att börja medan de fortfarande kommer hade lagt en svans på en annan.

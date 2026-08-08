@@ -71,3 +71,27 @@ test('personsidan avslutas med sin ändringshistorik', async ({ page }) => {
   await expect(log.locator('ol > li').first()).toContainText(/20\d\d-\d\d-\d\d/);
   await expect(log).toContainText('giftasnamn');
 });
+
+test('vigseln läggs till på familjen, inte på personen', async ({ page }) => {
+  await page.goto('/person/I500001');
+  await expect(page.getByRole('heading', { name: 'Familj' })).toBeVisible();
+
+  // Vigsel finns inte bland personens händelsetyper — den hör till paret.
+  await page.getByRole('button', { name: 'Lägg till händelse' }).click();
+  const types = await page.getByLabel('Typ').locator('option').allInnerTexts();
+  expect(types).not.toContain('Vigsel');
+  await page.getByRole('button', { name: 'Avbryt' }).click();
+
+  // … utan redigeras i familjerutan, och sparas på familjen
+  const family = page.locator('section', { has: page.getByRole('heading', { name: 'Familj' }) });
+  await family.getByRole('button', { name: /Lägg till vigsel|Redigera/ }).first().click();
+  await page.getByLabel(/Datum/).fill('14 JUN 1969');
+  await page.getByRole('button', { name: 'Spara' }).click();
+
+  await expect(family.getByText('14 jun 1969')).toBeVisible();
+
+  // och den ligger på familjen, inte på personen: personens händelselista
+  // innehåller ingen vigsel
+  const timeline = page.locator('section', { has: page.getByRole('heading', { name: 'Händelser' }) });
+  await expect(timeline.getByText('Vigsel')).toHaveCount(0);
+});

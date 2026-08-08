@@ -19,7 +19,9 @@ export interface FamilyMember { id: string; givenName: string; surname: string; 
 export interface CitationView { id: number; sourceId: string; sourceTitle: string | null; page: string | null; quality: number | null; text: string | null }
 export interface EventView { id: number; type: string; dateRaw: string | null; dateYear: number | null; place: string | null; description: string | null; age: string | null; citations: CitationView[] }
 export interface MediaView { id: number; title: string | null; available: boolean }
-export interface FamilyView { familyId: string; spouse: FamilyMember | null; marriage: { dateRaw: string | null; dateYear: number | null; place: string | null } | null; children: FamilyMember[] }
+/** The marriage carries its event id so the page can edit it in place. */
+export interface MarriageView { id: number; dateRaw: string | null; dateYear: number | null; place: string | null; description: string | null }
+export interface FamilyView { familyId: string; spouse: FamilyMember | null; marriage: MarriageView | null; children: FamilyMember[] }
 export interface PersonFull {
   person: { id: string; givenName: string; surname: string; marriedName: string | null; suffix: string | null; sex: 'M' | 'F' | 'U'; note: string | null };
   events: EventView[];
@@ -141,7 +143,9 @@ export function getPersonFull(db: Db, id: string): PersonFull | null {
     return {
       familyId: f.id,
       spouse: spouseId ? members([spouseId])[0] ?? null : null,
-      marriage: marr ? { dateRaw: marr.dateRaw, dateYear: marr.dateYear, place: marr.place } : null,
+      marriage: marr
+        ? { id: marr.id, dateRaw: marr.dateRaw, dateYear: marr.dateYear, place: marr.place, description: marr.description }
+        : null,
       children: members(childIds),
     };
   });

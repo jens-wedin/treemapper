@@ -11,6 +11,7 @@ import ProblemList from '../components/issues/ProblemList';
 import ChangeLog from '../components/issues/ChangeLog';
 import PersonEditForm from '../components/edit/PersonEditForm';
 import EventEditor from '../components/edit/EventEditor';
+import MarriageEditor from '../components/edit/MarriageEditor';
 import RelationDialog from '../components/edit/RelationDialog';
 import RichText from '../components/RichText';
 
@@ -174,12 +175,12 @@ export default function PersonPage() {
               <div>
                 <dt className="inline font-medium">{t('person.spouse')}: </dt>
                 <dd className="inline"><MemberLinks people={f.spouse ? [f.spouse] : []} /></dd>
-                {f.marriage && (
-                  <span className="text-sm text-muted-foreground"> · {t('person.marriage')} {f.marriage.dateRaw ?? f.marriage.dateYear}{f.marriage.place && `, ${f.marriage.place}`}</span>
-                )}
               </div>
               <div><dt className="inline font-medium">{t('person.children')}: </dt><dd className="inline"><MemberLinks people={f.children} /></dd></div>
             </dl>
+            {/* The wedding belongs to the couple, not to either spouse — see
+                MarriageEditor for why it is not among the person's events. */}
+            <MarriageEditor familyId={f.familyId} marriage={f.marriage} onChanged={load} />
           </div>
         ))}
       </section>

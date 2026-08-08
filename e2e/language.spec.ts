@@ -26,10 +26,11 @@ test('gränssnittet kan bytas till engelska, tyska och spanska', async ({ page }
 test('språkvalet minns mellan besök och gäller alla sidor', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('combobox', { name: /Språk|Language|Sprache|Idioma/ }).selectOption('en');
-  await expect(page.getByRole('link', { name: 'Tree' })).toBeVisible();
+  // exact: the header's import link is also named "…a family tree"
+  await expect(page.getByRole('link', { name: 'Tree', exact: true })).toBeVisible();
 
   await page.reload();
-  await expect(page.getByRole('link', { name: 'Tree' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Tree', exact: true })).toBeVisible();
 
   // och på en helt annan sida
   await page.goto('/installningar');

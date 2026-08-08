@@ -3,6 +3,8 @@ dist/
 data/
 media/
 *.db
+trees/
+.e2e-trees/
 *.db-journal
 *.db-wal
 *.db-shm

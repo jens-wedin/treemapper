@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { PersonFull, CitationView, FamilyMember } from '../../lib/queries';
 import { t, lifespan, displayName } from '../lib/i18n';
-import { fetchJson } from '../lib/api';
+import { ApiError, apiUrl, fetchJson } from '../lib/api';
 import { clearIssueMarks, useIssueMarks } from '../lib/issueMarks';
 import ProblemList from '../components/issues/ProblemList';
 import ChangeLog from '../components/issues/ChangeLog';
@@ -71,7 +71,7 @@ export default function PersonPage() {
         setState('ok');
         document.title = `${displayName(d.person)} – ${t('appTitle')}`;
       })
-      .catch(err => setState(err instanceof Error && err.message === 'HTTP 404' ? 'missing' : 'error'));
+      .catch(err => setState(err instanceof ApiError && err.status === 404 ? 'missing' : 'error'));
   }, [id]);
 
   // An edit can fix or create a problem, so the register has to be re-read.
@@ -146,7 +146,7 @@ export default function PersonPage() {
             {photos.map(m => (
               <li key={m.id}>
                 <img
-                  src={`/api/media/${m.id}`}
+                  src={apiUrl(`/api/media/${m.id}`)}
                   alt={m.title ?? displayName(person)}
                   loading="lazy"
                   className="h-40 w-40 rounded-lg border object-cover"

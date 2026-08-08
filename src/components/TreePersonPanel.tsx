@@ -5,7 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { PersonFull, FamilyMember } from '../../lib/queries';
 import type { PersonIssueMark } from '../../lib/issues';
 import { t, eventLabel, eventDescription, formatGedcomDate, lifespan, displayName } from '../lib/i18n';
-import { fetchJson } from '../lib/api';
+import { apiUrl, fetchJson } from '../lib/api';
 import RichText from './RichText';
 import ProblemList from './issues/ProblemList';
 
@@ -98,7 +98,7 @@ export default function TreePersonPanel({ personId, issue, onClose, onFocusTree,
           <div className="mt-3 flex items-center gap-3">
             {photos[0] && (
               <img
-                src={`/api/media/${photos[0].id}`}
+                src={apiUrl(`/api/media/${photos[0].id}`)}
                 alt={photos[0].title ?? displayName(person)}
                 className="h-20 w-20 rounded-full border object-cover"
               />

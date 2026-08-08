@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { NavLink, Route, Routes, useLocation } from 'react-router';
 import { t, useLanguage, setLanguage, LANGUAGES, type Lang } from './lib/i18n';
 import { useTheme, setTheme, THEMES, type Theme } from './lib/theme';
+import { useActiveTree } from './lib/activeTree';
+import TreePicker from './components/TreePicker';
 import Hem from './pages/Hem';
 import PersonList from './pages/PersonList';
 import PersonPage from './pages/PersonPage';
@@ -29,6 +31,7 @@ export default function App() {
   // Subscribing here re-renders the whole app when the language changes.
   const lang = useLanguage();
   const theme = useTheme();
+  const activeTree = useActiveTree();
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -69,7 +72,10 @@ export default function App() {
               {label}
             </NavLink>
           ))}
-          <label className="ml-auto flex items-center gap-2 text-sm">
+          <div className="ml-auto">
+            <TreePicker />
+          </div>
+          <label className="flex items-center gap-2 text-sm">
             <span className="sr-only">{t('theme.label')}</span>
             <select
               aria-label={t('theme.label')}
@@ -101,7 +107,9 @@ export default function App() {
         id="innehall"
         className={`${container} flex min-h-0 flex-1 flex-col ${isTree ? 'overflow-auto py-4' : 'py-8'}`}
       >
-        <Routes>
+        {/* Keyed on the tree: switching means every page is showing records
+            that no longer exist, so they are remounted rather than refetched. */}
+        <Routes key={activeTree}>
           <Route path="/" element={<Hem />} />
           <Route path="/personer" element={<PersonList />} />
           <Route path="/person/:id" element={<PersonPage />} />

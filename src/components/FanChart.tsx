@@ -4,6 +4,7 @@ import { t, displayName, lifespan } from '../lib/i18n';
 import { flattenAncestors, BRANCH_COLORS } from '../lib/ahnentafel';
 import { layoutFan } from '../lib/fanLayout';
 import { useChartViewport } from '../lib/useChartViewport';
+import { apiUrl } from '../lib/api';
 import { useFlagPreference, useIssueMarkPreference } from '../lib/chartPreferences';
 import { useIssueMarks } from '../lib/issueMarks';
 import ChartToolbar from './ChartToolbar';
@@ -185,7 +186,7 @@ export default function FanChart({ data, generations, onSelect, selectedId }: {
                     <circle r={centre.r * 0.52} cy={-10} />
                   </clipPath>
                   <image
-                    href={`/api/media/${centre.person.photoId}`}
+                    href={apiUrl(`/api/media/${centre.person.photoId}`)}
                     x={-centre.r * 0.52}
                     y={-10 - centre.r * 0.52}
                     width={centre.r * 1.04}

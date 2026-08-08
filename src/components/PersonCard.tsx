@@ -2,6 +2,7 @@ import type { TreePerson } from '../../lib/tree';
 import type { PersonIssueMark } from '../../lib/issues';
 import { displayName, lifespan, formatGedcomDate, t } from '../lib/i18n';
 import { BRANCH_COLORS, type Branch } from '../lib/ahnentafel';
+import { apiUrl } from '../lib/api';
 import CountryFlag from './CountryFlag';
 import IssueBadge, { issueCategories } from './IssueBadge';
 
@@ -80,7 +81,7 @@ export default function PersonCard({
             <circle cx={avatarCx} cy={avatarCy} r={avatarR} />
           </clipPath>
           <image
-            href={`/api/media/${person.photoId}`}
+            href={apiUrl(`/api/media/${person.photoId}`)}
             x={avatarCx - avatarR}
             y={avatarCy - avatarR}
             width={avatarR * 2}

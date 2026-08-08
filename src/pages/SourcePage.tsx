@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { SourceFull } from '../../lib/sources';
 import { sourceUpdateSchema } from '../../lib/schemas';
 import { t } from '../lib/i18n';
-import { fetchJson, mutateJson } from '../lib/api';
+import { ApiError, fetchJson, mutateJson } from '../lib/api';
 import RichText from '../components/RichText';
 
 const emptyToNull = (v: string) => (v.trim() === '' ? null : v.trim());
@@ -90,7 +90,7 @@ export default function SourcePage() {
         setState('ok');
         document.title = `${d.source.title ?? d.source.id} – ${t('appTitle')}`;
       })
-      .catch(err => setState(err instanceof Error && err.message === 'HTTP 404' ? 'missing' : 'error'));
+      .catch(err => setState(err instanceof ApiError && err.status === 404 ? 'missing' : 'error'));
   }, [id]);
 
   useEffect(() => {

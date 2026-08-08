@@ -63,7 +63,7 @@ export default function FanChart({ data, generations, onSelect, selectedId }: {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <p id="trad-instruktioner" className="sr-only">{t('tree.instructionsAncestors')}</p>
-      <div ref={viewport.wrapRef} className="relative min-h-[320px] w-full flex-1 overflow-hidden rounded-lg border bg-[var(--chart-canvas)]">
+      <div ref={viewport.wrapRef} className="chart-canvas relative min-h-[320px] w-full flex-1 overflow-hidden rounded-lg border">
         <svg
           ref={viewport.svgRef}
           role="group"

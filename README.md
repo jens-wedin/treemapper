@@ -299,6 +299,16 @@ and dismissed Konsekvens issues, which the GEDCOM does not carry.
 ## Project state
 
 All six phases of the design spec are built: import + photos, browse, tree,
-editing, Konsekvensbänken, and sources + export. Plans for each phase live in
-`docs/superpowers/plans/`. `MEMORY.md` records where the work stands and the
-gotchas worth knowing before picking it up again.
+editing, Konsekvensbänken, and sources + export — plus two rounds of tree UX
+work, the Statistik page, and the shadcn `radix-luma`/`olive` theme. Specs live
+in `docs/superpowers/specs/` and plans in `docs/superpowers/plans/`.
+
+**313 unit tests and 37 end-to-end tests**, `tsc -b` and `npm run build` clean.
+The e2e suite runs single-worker against a copy of the database (`.e2e.db`), so
+it never touches the real one.
+
+Note that `main` is stale — it points at an early Phase 1 commit. The work lives
+on `feat/phase1-scaffold-import`, with the Statistik page on `statistik`.
+
+`MEMORY.md` records where the work stands and the gotchas worth knowing before
+picking it up again.

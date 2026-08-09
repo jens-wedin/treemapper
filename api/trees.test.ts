@@ -40,7 +40,7 @@ describe('GET /api/trees', () => {
   it('always lists the tree that was already here', async () => {
     const body = await (await api.request('/api/trees')).json();
     expect(body.trees).toHaveLength(1);
-    expect(body.trees[0]).toMatchObject({ id: 'default', isDefault: true });
+    expect(body.trees[0]).toMatchObject({ id: 'wedin', isDefault: true });
   });
 });
 
@@ -52,7 +52,7 @@ describe('POST /api/trees/import', () => {
     const body = await res.json();
     expect(body.tree).toMatchObject({ id: 'slakten-larsson', name: 'Släkten Larsson', persons: 3, sourceFile: 'mini.ged' });
     expect(body.summary.inserted).toMatchObject({ persons: 3, families: 1, sources: 1, media: 1 });
-    expect(listTrees().map(t => t.id)).toEqual(['default', 'slakten-larsson']);
+    expect(listTrees().map(t => t.id)).toEqual(['wedin', 'slakten-larsson']);
   });
 
   it('names the tree after the file when no name is given', async () => {
@@ -63,14 +63,14 @@ describe('POST /api/trees/import', () => {
   it('leaves the existing tree alone', async () => {
     openTree('default');
     await upload(MINI);
-    expect(listTrees()[0]).toMatchObject({ id: 'default', persons: 0 });
+    expect(listTrees()[0]).toMatchObject({ id: 'wedin', persons: 0 });
   });
 
   it('refuses a file that is not a GEDCOM, without creating anything', async () => {
     const res = await upload('det här är inte en gedcom-fil', 'anteckningar.txt');
     expect(res.status).toBe(400);
     expect((await res.json()).error).toContain('GEDCOM');
-    expect(listTrees().map(t => t.id)).toEqual(['default']);
+    expect(listTrees().map(t => t.id)).toEqual(['wedin']);
     expect(fs.existsSync(path.join(workDir, 'trees'))).toBe(false);
   });
 
@@ -95,7 +95,7 @@ describe('renaming and deleting', () => {
   it('deletes a tree', async () => {
     await upload(MINI, 'mini.ged', 'Larsson');
     expect((await api.request('/api/trees/larsson', { method: 'DELETE' })).status).toBe(200);
-    expect(listTrees().map(t => t.id)).toEqual(['default']);
+    expect(listTrees().map(t => t.id)).toEqual(['wedin']);
   });
 
   it('refuses to delete the tree the CLI owns', async () => {

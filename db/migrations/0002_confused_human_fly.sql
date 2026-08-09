@@ -1,0 +1,1 @@
+ALTER TABLE `tree_meta` ADD `slug` text DEFAULT '' NOT NULL;

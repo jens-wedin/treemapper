@@ -12,6 +12,11 @@ export const treeMeta = sqliteTable('tree_meta', {
   name: text('name').notNull(),
   createdAt: text('created_at').notNull(),
   sourceFile: text('source_file'),                   // uploaded filename, null for the default tree
+  // How this tree is addressed in a URL. Taken from the database's filename
+  // rather than the display name, so renaming a tree never breaks a link
+  // somebody saved. Empty on rows written before slugs existed; backfilled on
+  // first open.
+  slug: text('slug').notNull().default(''),
 });
 
 export const persons = sqliteTable('persons', {

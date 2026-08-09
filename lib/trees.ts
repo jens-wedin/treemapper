@@ -36,7 +36,13 @@ export class TreeNotFound extends Error {
   }
 }
 
-/** The tree that was here before this feature existed, and that the CLI owns. */
+/**
+ * The tree that was here before this feature existed, and that the CLI owns.
+ *
+ * This is an alias, not the tree's public id: it is what the CLI passes, what
+ * older browsers have in storage, and what links written before trees appeared
+ * in the URL still say. `defaultTreeId()` is the id people actually see.
+ */
 export const DEFAULT_TREE = 'default';
 
 // Read at call time, not at import time: the tests and `npm run dev:e2e` point
@@ -61,15 +67,39 @@ export function assertTreeId(id: string): void {
   if (!SAFE_ID.test(id)) throw new TreeNotFound(id);
 }
 
+/**
+ * A tree's public id — the `wedin` in `/wedin/personer`.
+ *
+ * Derived from the database's filename, deliberately not from the display
+ * name: a link somebody saved has to keep working after they rename the tree.
+ * For imported trees the two already agree, since the file was named after the
+ * id when it was created.
+ */
+const slugForFile = (file: string) => slugify(path.basename(file, '.db'));
+
+/**
+ * The default tree answers to two names: its own id, and the legacy `default`.
+ * Anything deciding *what a request may touch* has to ask this rather than
+ * compare against a string — see `deleteTree`.
+ */
+const isDefaultId = (id: string) => id === DEFAULT_TREE || id === defaultTreeId();
+
+/** The default tree's public id, e.g. `wedin` for `wedin.db`. */
+export function defaultTreeId(): string {
+  return openAt(defaultDbPath()).select().from(treeMeta).all()[0]?.slug || DEFAULT_TREE;
+}
+
 const fileFor = (id: string) => {
+  if (isDefaultId(id)) return defaultDbPath();
   assertTreeId(id);
-  return id === DEFAULT_TREE ? defaultDbPath() : path.join(treesDir(), `${id}.db`);
+  return path.join(treesDir(), `${id}.db`);
 };
 
 /** Where a tree's downloaded photos live. The default tree keeps `media/`. */
 export const mediaDirFor = (id: string) => {
+  if (isDefaultId(id)) return mediaRoot();
   assertTreeId(id);
-  return id === DEFAULT_TREE ? mediaRoot() : path.join(mediaRoot(), id);
+  return path.join(mediaRoot(), id);
 };
 
 // Keyed by resolved path rather than id, so a test that repoints WEDIN_DB
@@ -87,28 +117,42 @@ export function closeTrees() {
  * Naming it after its file is a guess the user can correct in the UI.
  */
 function ensureMeta(db: Db, file: string) {
-  if (db.select().from(treeMeta).all().length) return;
-  db.insert(treeMeta).values({
-    id: 1,
-    name: path.basename(file, '.db'),
-    createdAt: new Date().toISOString(),
-    sourceFile: null,
-  }).run();
+  const existing = db.select().from(treeMeta).all()[0];
+  if (!existing) {
+    db.insert(treeMeta).values({
+      id: 1,
+      name: path.basename(file, '.db'),
+      createdAt: new Date().toISOString(),
+      sourceFile: null,
+      slug: slugForFile(file),
+    }).run();
+    return;
+  }
+  // Written before trees had slugs — wedin.db itself, and any tree imported
+  // before this. Backfilling on open means no separate migration step.
+  if (!existing.slug) {
+    db.update(treeMeta).set({ slug: slugForFile(file) }).where(eq(treeMeta.id, 1)).run();
+  }
 }
 
-export function openTree(id: string): Db {
-  const file = fileFor(id);
+/** Opens a database by path, with no notion of ids — what id resolution is built on. */
+function openAt(file: string): Db {
   const cached = open.get(file);
   if (cached) return cached;
-
-  // createDb migrates, and migrating creates the file. Without this check a
-  // typo'd id would silently produce an empty tree instead of an error.
-  if (id !== DEFAULT_TREE && !fs.existsSync(file)) throw new TreeNotFound(id);
-
   const db = createDb(file);
   ensureMeta(db, file);
   open.set(file, db);
   return db;
+}
+
+export function openTree(id: string): Db {
+  const file = fileFor(id);
+
+  // createDb migrates, and migrating creates the file. Without this check a
+  // typo'd id would silently produce an empty tree instead of an error.
+  if (!isDefaultId(id) && !open.has(file) && !fs.existsSync(file)) throw new TreeNotFound(id);
+
+  return openAt(file);
 }
 
 function infoFor(id: string): TreeInfo {
@@ -118,11 +162,13 @@ function infoFor(id: string): TreeInfo {
   const pending = db.select({ n: sql<number>`count(*)` }).from(media)
     .where(ne(media.downloadStatus, 'done')).all()[0]?.n ?? 0;
   return {
-    id,
+    // The slug, never the alias the caller happened to use: this is the id
+    // that ends up in every link the UI builds.
+    id: meta.slug || id,
     name: meta.name,
     createdAt: meta.createdAt,
     sourceFile: meta.sourceFile,
-    isDefault: id === DEFAULT_TREE,
+    isDefault: isDefaultId(id),
     persons: personCount,
     photosPending: pending,
   };
@@ -156,7 +202,9 @@ function slugify(name: string): string {
 
 function allocateId(name: string): string {
   const base = slugify(name);
-  const taken = (id: string) => id === DEFAULT_TREE || fs.existsSync(fileFor(id));
+  // A tree called "Wedin" must not be handed the id the default tree already
+  // answers to — it would become unreachable behind it.
+  const taken = (id: string) => isDefaultId(id) || fs.existsSync(fileFor(id));
   if (!taken(base)) return base;
   for (let n = 2; ; n++) {
     const candidate = `${base}-${n}`;
@@ -230,8 +278,14 @@ export function renameTree(id: string, name: string): TreeInfo {
 }
 
 export function deleteTree(id: string) {
-  if (id === DEFAULT_TREE) throw new Error('Det ursprungliga släktträdet kan inte tas bort');
+  // Compared as a resolved path, not as a string. The default tree answers to
+  // more than one name now, and a guard that checks the spelling rather than
+  // the target is the same mistake that once let `..%2Fwedin` delete the
+  // family database.
   const file = fileFor(id);
+  if (path.resolve(file) === path.resolve(defaultDbPath())) {
+    throw new Error('Det ursprungliga släktträdet kan inte tas bort');
+  }
   if (!fs.existsSync(file)) throw new TreeNotFound(id);
 
   const db = open.get(file);

@@ -30,7 +30,7 @@ describe('the default tree', () => {
   it('is always present and named after its file', () => {
     const trees = listTrees();
     expect(trees).toHaveLength(1);
-    expect(trees[0]).toMatchObject({ id: 'default', name: 'wedin', isDefault: true, persons: 0 });
+    expect(trees[0]).toMatchObject({ id: 'wedin', name: 'wedin', isDefault: true, persons: 0 });
   });
 
   it('cannot be deleted — the CLI scripts own that file', () => {
@@ -46,6 +46,46 @@ describe('the default tree', () => {
   });
 });
 
+describe('a tree is addressed by a stable slug', () => {
+  /**
+   * The slug is what appears in the URL — `/wedin/personer`. It comes from the
+   * database's filename, never from the display name, because a URL somebody
+   * saved has to outlive them renaming the tree.
+   */
+  it('gives the default tree a real id rather than the word "default"', () => {
+    expect(listTrees()[0]).toMatchObject({ id: 'wedin', isDefault: true });
+  });
+
+  it('still answers to "default", so saved links and stored state keep working', () => {
+    expect(openTree('default')).toBe(openTree('wedin'));
+  });
+
+  it('keeps the id when the tree is renamed', () => {
+    renameTree('wedin', 'Släkten Wedin');
+    closeTrees();
+    expect(listTrees()[0]).toMatchObject({ id: 'wedin', name: 'Släkten Wedin' });
+  });
+
+  /**
+   * The alias is the trap: the "cannot be deleted" guard used to compare the
+   * literal string `default`, which a second name for the same file walks
+   * straight past. It compares the resolved file now.
+   */
+  it('will not let either name delete the family database', () => {
+    openTree('wedin');
+    const file = process.env.WEDIN_DB!;
+
+    expect(() => deleteTree('wedin')).toThrow();
+    expect(() => deleteTree('default')).toThrow();
+
+    expect(fs.existsSync(file)).toBe(true);
+  });
+
+  it('will not hand a new tree the default tree\'s id', () => {
+    expect(createTree('Wedin', MINI, 'x.ged').tree.id).toBe('wedin-2');
+  });
+});
+
 describe('importing a tree', () => {
   it('creates a separate database and leaves the default tree alone', () => {
     const { tree, summary } = createTree('Släkten Larsson', MINI, 'larsson.ged');
@@ -57,7 +97,7 @@ describe('importing a tree', () => {
     expect(fs.existsSync(path.join(workDir, 'trees', 'slakten-larsson.db'))).toBe(true);
 
     const trees = listTrees();
-    expect(trees.map(t => t.id)).toEqual(['default', 'slakten-larsson']);
+    expect(trees.map(t => t.id)).toEqual(['wedin', 'slakten-larsson']);
     expect(trees[0]!.persons).toBe(0);   // the tree that already existed is untouched
   });
 
@@ -87,7 +127,7 @@ describe('importing a tree', () => {
 
   it('leaves nothing behind when the import fails', () => {
     expect(() => createTree('Trasig', path.join(workDir, 'finns-inte.ged'), 'x.ged')).toThrow();
-    expect(listTrees().map(t => t.id)).toEqual(['default']);
+    expect(listTrees().map(t => t.id)).toEqual(['wedin']);
     expect(fs.existsSync(path.join(workDir, 'trees', 'trasig.db'))).toBe(false);
   });
 });
@@ -97,7 +137,7 @@ describe('a tree started from nothing', () => {
     const tree = createEmptyTree('Mormors släkt');
 
     expect(tree).toMatchObject({ id: 'mormors-slakt', name: 'Mormors släkt', persons: 0, sourceFile: null });
-    expect(listTrees().map(t => t.id)).toEqual(['default', 'mormors-slakt']);
+    expect(listTrees().map(t => t.id)).toEqual(['wedin', 'mormors-slakt']);
     // The migrations have run, so the tables are there — it simply has no rows.
     expect(openTree('mormors-slakt').select().from(persons).all()).toEqual([]);
   });
@@ -159,7 +199,7 @@ describe('opening and deleting', () => {
 
     deleteTree(tree.id);
 
-    expect(listTrees().map(t => t.id)).toEqual(['default']);
+    expect(listTrees().map(t => t.id)).toEqual(['wedin']);
     expect(fs.existsSync(path.join(workDir, 'trees', 'larsson.db'))).toBe(false);
     expect(fs.existsSync(photoDir)).toBe(false);
     expect(() => openTree(tree.id)).toThrow(TreeNotFound);

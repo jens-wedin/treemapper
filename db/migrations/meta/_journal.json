@@ -15,6 +15,13 @@
       "when": 1786203925535,
       "tag": "0001_yielding_alice",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1786311282312,
+      "tag": "0002_confused_human_fly",
+      "breakpoints": true
     }
   ]
 }

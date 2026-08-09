@@ -68,7 +68,10 @@ export function createTreesApi() {
 
       const given = typeof body['name'] === 'string' ? body['name'].trim() : '';
       const name = given || file.name.replace(/\.ged$/i, '');
-      const tmp = path.join(os.tmpdir(), `wedin-import-${Date.now()}.ged`);
+      // mkdtemp, not a name built from the clock: a predictable path in a
+      // shared /tmp is a file another process can sit on beforehand.
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'wedin-import-'));
+      const tmp = path.join(tmpDir, 'upload.ged');
       fs.writeFileSync(tmp, Buffer.from(await file.arrayBuffer()));
 
       try {
@@ -90,7 +93,7 @@ export function createTreesApi() {
       } catch (err) {
         return c.json({ error: (err as Error).message }, 500);
       } finally {
-        fs.rmSync(tmp, { force: true });
+        fs.rmSync(tmpDir, { recursive: true, force: true });
       }
     },
   );

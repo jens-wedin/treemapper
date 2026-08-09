@@ -4,6 +4,15 @@
 
 ### Added
 
+### Security
+
+**Ett träd-id är inte en sökväg**
+- **Kritiskt, rättat:** `DELETE /api/trees/..%2Fwedin` svarade `200 OK` och raderade `wedin.db` med `-wal` och `-shm` — hela släktdatabasen. Skyddet "det ursprungliga trädet kan inte tas bort" jämförde bara mot strängen `default`, och `../wedin` är inte den strängen. Samma väg via `?tree=` öppnade och migrerade godtyckliga `.db`-filer, och `mediaDirFor` raderade kataloger rekursivt utanför `media/`.
+- Id:n valideras nu mot `^[a-z0-9][a-z0-9-]{0,63}$` i `fileFor` och `mediaDirFor` — de enda ställen där ett id blir en sökväg — så varje anropare täcks. Slugifieringen kunde aldrig producera något annat; allt övrigt kom inte från oss.
+- Ett regressionstest kör tio varianter (`../wedin`, `..%2F..%2Fetc/passwd`, `a/../../b`, tom sträng, nollbyte …) genom både `openTree` och `deleteTree`, och kontrollerar uttryckligen att familjedatabasen ligger kvar.
+- Foton serveras med `X-Content-Type-Options: nosniff`: en uppladdad fil är bara betrodd så långt som typen webbläsaren påstod.
+- Importens temporärfil skapas med `mkdtemp` i stället för ett namn byggt av klockan — en förutsägbar sökväg i ett delat `/tmp` kan en annan process lägga sig på i förväg.
+
 **Lägg till släktingar direkt i trädet**
 - En kryssruta i **Visningsinställningar** sätter ett litet plus på varje kort. Avstängd som standard: att bläddra i trädet är det vanliga, och ett plus på varje kort är brus tills sittningen handlar om att fylla luckor. Plusset är dämpat tills kortet är under pekaren eller plusset har fokus.
 - Plusset öppnar samma tre val som personsidan har — barn, partner, förälder — och samma formulär. När det sparats ritas trädet om på plats.

@@ -108,6 +108,37 @@ describe('a tree started from nothing', () => {
   });
 });
 
+describe('a tree id is not a path', () => {
+  /**
+   * The whole reason ids are validated: `DELETE /api/trees/..%2Fwedin` used to
+   * answer 200 and take the family database with it, past the guard that only
+   * ever compared against the literal `default`.
+   */
+  const escapes = ['../wedin', '../../etc/passwd', 'a/../../b', './x', 'x/y', '..', '', 'Trad', 'träd', 'x\u0000y'];
+
+  it('refuses anything that could climb out of the trees directory', () => {
+    for (const id of escapes) {
+      expect(() => openTree(id), id).toThrow(TreeNotFound);
+      expect(() => deleteTree(id), id).toThrow(TreeNotFound);
+    }
+  });
+
+  it('leaves the family database alone when asked to delete ../wedin', () => {
+    openTree('default');
+    const wedin = process.env.WEDIN_DB!;
+    expect(fs.existsSync(wedin)).toBe(true);
+
+    expect(() => deleteTree('../wedin')).toThrow(TreeNotFound);
+
+    expect(fs.existsSync(wedin)).toBe(true);
+  });
+
+  it('still accepts the ids it makes itself', () => {
+    const { tree } = createTree('Åsa Öberg', MINI, 'x.ged');
+    expect(() => openTree(tree.id)).not.toThrow();
+  });
+});
+
 describe('opening and deleting', () => {
   it('reads only the tree that was asked for', () => {
     createTree('Larsson', MINI, 'x.ged');

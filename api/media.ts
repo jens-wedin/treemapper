@@ -33,6 +33,9 @@ export function createMediaApi(tree: TreeResolver, dirFor = mediaDirFor) {
     if (!fs.existsSync(filePath)) return c.json({ error: 'Hittades inte' }, 404);
     return c.body(fs.readFileSync(filePath), 200, {
       'Content-Type': MIME[row.form ?? ''] ?? 'application/octet-stream',
+      // An upload is trusted only as far as the type the browser claimed for
+      // it; nosniff stops the file being re-interpreted as something else.
+      'X-Content-Type-Options': 'nosniff',
       'Cache-Control': 'public, max-age=31536000, immutable',
     });
   });

@@ -45,12 +45,32 @@ const defaultDbPath = () => process.env.WEDIN_DB ?? 'wedin.db';
 const treesDir = () => process.env.WEDIN_TREES_DIR ?? 'trees';
 const mediaRoot = () => process.env.WEDIN_MEDIA_DIR ?? 'media';
 
-const fileFor = (id: string) =>
-  id === DEFAULT_TREE ? defaultDbPath() : path.join(treesDir(), `${id}.db`);
+/**
+ * Ids are slugs by construction — `allocateId` can only ever produce these.
+ * Anything else did not come from us and must not be turned into a path.
+ *
+ * Without this an id of `../wedin` resolves to the family database itself:
+ * `DELETE /api/trees/..%2Fwedin` answered 200 and removed wedin.db together
+ * with its -wal and -shm, walking straight past the "the default tree cannot
+ * be deleted" guard, which only ever compared against the literal `default`.
+ */
+const SAFE_ID = /^[a-z0-9][a-z0-9-]{0,63}$/;
+
+export function assertTreeId(id: string): void {
+  if (id === DEFAULT_TREE) return;
+  if (!SAFE_ID.test(id)) throw new TreeNotFound(id);
+}
+
+const fileFor = (id: string) => {
+  assertTreeId(id);
+  return id === DEFAULT_TREE ? defaultDbPath() : path.join(treesDir(), `${id}.db`);
+};
 
 /** Where a tree's downloaded photos live. The default tree keeps `media/`. */
-export const mediaDirFor = (id: string) =>
-  id === DEFAULT_TREE ? mediaRoot() : path.join(mediaRoot(), id);
+export const mediaDirFor = (id: string) => {
+  assertTreeId(id);
+  return id === DEFAULT_TREE ? mediaRoot() : path.join(mediaRoot(), id);
+};
 
 // Keyed by resolved path rather than id, so a test that repoints WEDIN_DB
 // cannot be handed the previous test's database.
@@ -112,7 +132,11 @@ function infoFor(id: string): TreeInfo {
 export function listTrees(): TreeInfo[] {
   const dir = treesDir();
   const imported = fs.existsSync(dir)
-    ? fs.readdirSync(dir).filter(f => f.endsWith('.db')).map(f => path.basename(f, '.db'))
+    ? fs.readdirSync(dir)
+      .filter(f => f.endsWith('.db'))
+      .map(f => path.basename(f, '.db'))
+      // Anything not shaped like one of our own ids is not ours to open.
+      .filter(name => SAFE_ID.test(name))
     : [];
   const rest = imported.map(infoFor).sort((a, b) => a.name.localeCompare(b.name, 'sv'));
   return [infoFor(DEFAULT_TREE), ...rest];

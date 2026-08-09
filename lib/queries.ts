@@ -48,13 +48,23 @@ export function searchPersons(db: Db, p: SearchParams): { items: PersonListItem[
   const offset = p.offset ?? 0;
   const conds: (SQL | undefined)[] = [];
   if (p.q) {
-    const pat = `%${p.q}%`;
-    conds.push(or(
-      like(persons.givenName, pat),
-      like(persons.surname, pat),
-      like(persons.marriedName, pat),
-      sql`${persons.givenName} || ' ' || ${persons.surname} like ${pat}`,
-    ));
+    // Word by word, not as one string: "jens wedin" has to find "Erik Anders
+    // Fredrik Lindqvist", and matching the query whole never could — the middle
+    // names sit in the gap between the two words typed. Most people here carry
+    // middle names, so the whole-string search quietly hid them and reported 0
+    // with as much confidence as it reports 5.
+    //
+    // Every word must match somewhere (AND), each against any of the name
+    // fields (OR). So a word that belongs to nobody still narrows the search
+    // to nothing, rather than the search guessing at what was meant.
+    for (const word of p.q.trim().split(/\s+/).filter(Boolean)) {
+      const pat = `%${word}%`;
+      conds.push(or(
+        like(persons.givenName, pat),
+        like(persons.surname, pat),
+        like(persons.marriedName, pat),
+      ));
+    }
   }
   if (p.birthYear != null) conds.push(sql`${birthYearSql} = ${p.birthYear}`);
   if (p.place) conds.push(sql`${birthPlaceSql} like ${'%' + p.place + '%'}`);

@@ -64,15 +64,15 @@ test('sidhuvudet står stilla mellan flikarna', async ({ page }) => {
     return { nav: [nav.x, nav.width], main: [main.x, main.width] };
   };
 
-  const home = await measure('/');
-  for (const path of ['/personer', '/statistik', '/konsekvens', '/kallor', '/installningar']) {
+  const home = await measure('/wedin');
+  for (const path of ['/personer', '/statistik', '/konsekvens', '/kallor', '/installningar'].map(x => `/wedin${x}`)) {
     const here = await measure(path);
     expect(here.nav, `sidhuvudet flyttade sig på ${path}`).toEqual(home.nav);
     expect(here.main, `innehållet bytte bredd på ${path}`).toEqual(home.main);
   }
 
   // Trädet är undantaget: det får hela fönstret — men sidhuvudet står kvar.
-  const tree = await measure('/trad/I500001');
+  const tree = await measure('/wedin/trad/I500001');
   expect(tree.nav).toEqual(home.nav);
   expect(tree.main[1]).toBeGreaterThan(home.main[1]!);
 });

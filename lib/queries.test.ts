@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { eq } from 'drizzle-orm';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -35,6 +36,35 @@ describe('searchPersons', () => {
 
   it('finds by full name', () => {
     expect(searchPersons(db, { q: 'Sven-Erik Wedin' }).total).toBe(1);
+  });
+
+  /**
+   * Searching the two names somebody goes by has to find them even when the
+   * record carries middle names between those two words.
+   *
+   * `%jens wedin%` against "Karl Johan Fredrik Lindqvist" matches nothing — the
+   * middle names sit in the gap. Most of this database has middle names, so a
+   * plain substring search silently hides the person you are looking for, and
+   * answers 0 as confidently as it answers 5.
+   */
+  it('matches each word separately, so middle names cannot hide a person', () => {
+    db.insert(persons).values({
+      id: 'IX1', givenName: 'Karl Johan Fredrik', surname: 'Wedin', sex: 'M',
+    }).run();
+
+    try {
+      expect(searchPersons(db, { q: 'jens wedin' }).items.map(i => i.id)).toEqual(['IX1']);
+      expect(searchPersons(db, { q: 'Wedin Jens' }).items.map(i => i.id)).toEqual(['IX1']);
+      expect(searchPersons(db, { q: '  jens   wedin  ' }).items.map(i => i.id)).toEqual(['IX1']);
+      expect(searchPersons(db, { q: 'manfred' }).items.map(i => i.id)).toEqual(['IX1']);
+
+      // Every word still has to match something — this is a filter, not a guess.
+      expect(searchPersons(db, { q: 'jens larsson' }).total).toBe(0);
+    } finally {
+      // In a finally: a failing assertion above would otherwise leave this row
+      // behind and fail the next test instead, pointing at the wrong thing.
+      db.delete(persons).where(eq(persons.id, 'IX1')).run();
+    }
   });
 
   it('filters by birth year and place', () => {

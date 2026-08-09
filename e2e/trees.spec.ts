@@ -95,7 +95,13 @@ test('ett tomt släktträd går att skapa och fylla för hand', async ({ page })
   await page.getByRole('link', { name: 'Personer' }).click();
   await expect(page.getByText('0 träffar')).toBeVisible();
 
+  // trädvyn säger att trädet är tomt i stället för att påstå att API:et är nere
+  await page.getByRole('link', { name: 'Träd', exact: true }).click();
+  await expect(page.getByText(/tomt än/)).toBeVisible();
+  await expect(page.getByRole('alert')).toHaveCount(0);
+
   // den första personen läggs till här — det finns ingen annan väg in
+  await page.getByRole('link', { name: 'Till Personer' }).click();
   await page.getByRole('button', { name: 'Ny person' }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Förnamn').fill('Karin');
@@ -105,6 +111,11 @@ test('ett tomt släktträd går att skapa och fylla för hand', async ({ page })
   // och man landar på hens sida
   await expect(page).toHaveURL(/\/person\/I1$/);
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Karin Mormorsdotter');
+
+  // trädvyn utan id hittar nu den enda personen av sig själv
+  await page.getByRole('link', { name: 'Träd', exact: true }).click();
+  await expect(page).toHaveURL(/\/trad\/I1/);
+  await expect(page.getByRole('group', { name: 'Släktträd' })).toBeVisible();
 
   // det ursprungliga trädet är orört
   await picker.selectOption({ index: 0 });

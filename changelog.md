@@ -10,6 +10,8 @@
 - `FamilyView.marriage` bär med sig händelsens id, vilket är det som gör den redigerbar på plats.
 
 **Släktträd från ingenting**
+- **Rättat: trädvyn påstod att API:et var nere.** `/trad` utan id utgick från `I500001`, som inte finns i ett nyskapat träd — och inte heller i vilket importerat träd som helst, vars xref-nummer är egna. 404 tolkades som ett trasigt API.
+- Nu frågar sidan trädet vem det har: utan id landar den på den första personen, ett tomt träd får ett eget besked med väg till Personer, och ett id som inte finns säger just det.
 - **Inställningar → Skapa tomt släktträd** startar ett träd utan innehåll, för en släkt man bygger upp för hand. Man byter till det direkt.
 - **Ny person** på Personer-sidan skapar någon utan släkting. Alla andra läggs till från en befintlig persons sida — som barn, partner eller förälder — vilket inte kan starta ett tomt träd. Det är också vägen in för den vars plats i släkten ännu är okänd.
 - Det nya trädets namnfält fick ett eget etikettnamn: importformulärets namnfält ligger på samma sida, och två fält med samma tillgängliga namn går inte att skilja åt.

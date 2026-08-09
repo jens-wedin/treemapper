@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import type { TreeData } from '../../lib/tree';
 import { t, displayName, lifespan } from '../lib/i18n';
-import { fetchJson } from '../lib/api';
+import { ApiError, fetchJson } from '../lib/api';
 import { useIssueMarkPreference } from '../lib/chartPreferences';
 import { useIssueMarks } from '../lib/issueMarks';
 import { flattenAncestors } from '../lib/ahnentafel';
@@ -40,7 +40,8 @@ function clamp(raw: string | null, allowed: readonly number[]): number {
 }
 
 export default function TreePage() {
-  const { id = DEFAULT_FOCUS } = useParams<{ id: string }>();
+  const { id: routeId } = useParams<{ id: string }>();
+  const id = routeId ?? DEFAULT_FOCUS;
   const [params, setParams] = useSearchParams();
   // The API accepts deeper requests than the page offers; these clamps are
   // what the dropdowns promise.
@@ -52,7 +53,7 @@ export default function TreePage() {
   const view: View = VIEWS.includes(viewParam as View) ? (viewParam as View) : 'family';
 
   const [data, setData] = useState<TreeData | null>(null);
-  const [state, setState] = useState<'loading' | 'ok' | 'error'>('loading');
+  const [state, setState] = useState<'loading' | 'ok' | 'error' | 'empty' | 'missing'>('loading');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -115,9 +116,26 @@ export default function TreePage() {
         setState('ok');
         document.title = `${t('tree.title')}: ${displayName(d.focus)} – ${t('appTitle')}`;
       })
-      .catch(() => { if (!stale) setState('error'); });
+      .catch(async err => {
+        if (stale) return;
+        // "That person is not here" is not a broken API. It is the ordinary
+        // state of a tree that was just created, and of any imported tree
+        // whose xrefs simply do not include the id we defaulted to — so ask
+        // the tree who it does have, and go there instead.
+        if (!(err instanceof ApiError) || err.status !== 404) { setState('error'); return; }
+        try {
+          const found = await fetchJson<{ items: { id: string }[] }>('/api/persons?limit=1');
+          const first = found.items[0]?.id;
+          if (stale) return;
+          if (!first) setState('empty');
+          else if (!routeId) navigate(`/trad/${first}${depthQuery}&vy=${view}`, { replace: true });
+          else setState('missing');
+        } catch {
+          if (!stale) setState('error');
+        }
+      });
     return () => { stale = true; };
-  }, [id, upp, ned]);
+  }, [id, upp, ned, routeId, depthQuery, view, navigate]);
 
   // Functional form: changing view and depth in quick succession must not have
   // the second change read a snapshot taken before the first.
@@ -131,6 +149,19 @@ export default function TreePage() {
   const setDepth = (key: 'upp' | 'ned', value: string) => setParam(key, value);
 
   if (state === 'error') return <p role="alert">{t('common.error')}</p>;
+  if (state === 'empty' || state === 'missing') {
+    return (
+      <section>
+        <h1 className="text-2xl font-bold">{t('tree.title')}</h1>
+        <p className="mt-3 text-muted-foreground">
+          {t(state === 'empty' ? 'tree.emptyTree' : 'tree.personGone')}
+        </p>
+        <Link to="/personer" className="mt-3 inline-block text-primary underline-offset-2 hover:underline">
+          {t('tree.toPersons')}
+        </Link>
+      </section>
+    );
+  }
 
   return (
     <section className="flex min-h-0 flex-1 flex-col" aria-busy={state === 'loading' || undefined}>

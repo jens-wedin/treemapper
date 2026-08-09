@@ -156,6 +156,9 @@ const sv = {
     years: 'år', people: 'personer', children: 'barn', count: 'antal',
   },
   tree: {
+    emptyTree: 'Det här släktträdet är tomt än — lägg till den första personen under Personer.',
+    personGone: 'Personen finns inte i det här släktträdet.',
+    toPersons: 'Till Personer',
     title: 'Träd', showInTree: 'Visa i träd', settings: 'Visningsinställningar', chart: 'Diagram', list: 'Lista',
     ancestors: 'Förfäder', descendants: 'Ättlingar',
     generationsUp: 'Generationer uppåt', generationsDown: 'Generationer nedåt',
@@ -339,6 +342,9 @@ const en: DeepPartial<Dict> = {
     years: 'years', people: 'people', children: 'children', count: 'count',
   },
   tree: {
+    emptyTree: 'This family tree is still empty — add the first person under People.',
+    personGone: 'That person is not in this family tree.',
+    toPersons: 'Go to People',
     title: 'Tree', showInTree: 'Show in tree', settings: 'Display settings', chart: 'Chart', list: 'List',
     ancestors: 'Ancestors', descendants: 'Descendants',
     generationsUp: 'Generations up', generationsDown: 'Generations down',
@@ -519,6 +525,9 @@ const de: DeepPartial<Dict> = {
     years: 'Jahre', people: 'Personen', children: 'Kinder', count: 'Anzahl',
   },
   tree: {
+    emptyTree: 'Dieser Stammbaum ist noch leer — füge die erste Person unter Personen hinzu.',
+    personGone: 'Diese Person ist nicht in diesem Stammbaum.',
+    toPersons: 'Zu Personen',
     title: 'Baum', showInTree: 'Im Baum zeigen', settings: 'Anzeigeeinstellungen', chart: 'Diagramm', list: 'Liste',
     ancestors: 'Vorfahren', descendants: 'Nachkommen',
     generationsUp: 'Generationen aufwärts', generationsDown: 'Generationen abwärts',
@@ -699,6 +708,9 @@ const es: DeepPartial<Dict> = {
     years: 'años', people: 'personas', children: 'hijos', count: 'cantidad',
   },
   tree: {
+    emptyTree: 'Este árbol genealógico todavía está vacío: añade la primera persona en Personas.',
+    personGone: 'Esa persona no está en este árbol genealógico.',
+    toPersons: 'Ir a Personas',
     title: 'Árbol', showInTree: 'Ver en el árbol', settings: 'Opciones de visualización', chart: 'Diagrama', list: 'Lista',
     ancestors: 'Antepasados', descendants: 'Descendientes',
     generationsUp: 'Generaciones hacia arriba', generationsDown: 'Generaciones hacia abajo',

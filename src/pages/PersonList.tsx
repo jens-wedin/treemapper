@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { PersonListItem } from '../../lib/queries';
-import { t, displayName } from '../lib/i18n';
+import { t, displayName, plural } from '../lib/i18n';
 import { fetchJson } from '../lib/api';
 import { useTreeUrl } from '../lib/treeUrl';
 import NewPersonDialog from '../components/edit/NewPersonDialog';
@@ -76,7 +76,7 @@ export default function PersonList() {
       </form>
 
       <p aria-live="polite" className="mt-4 text-sm text-muted-foreground">
-        {error ? t('common.error') : result ? t('search.hits').replace('{n}', String(result.total)) : t('common.loading')}
+        {error ? t('common.error') : result ? plural(result.total, 'search.hitOne', 'search.hitMany') : t('common.loading')}
       </p>
 
       {result && result.items.length > 0 && (

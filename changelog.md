@@ -16,6 +16,7 @@
 
 **Sökningen hittade inte personer med mellannamn**
 - `jens wedin` gav 0 träffar i Wedin-trädet trots att du står där — som *Karl Johan Fredrik Lindqvist*. Söket matchade hela frasen som en sträng, och mellannamnen ligger i glappet mellan de två orden man skriver. De flesta i databasen har mellannamn, så söket dolde tyst just den person man letade efter, och svarade 0 lika självsäkert som det svarar 5.
+- Träffräknaren säger `1 träff` och `2 träffar`. Den skrev alltid pluralformen, samma sak som "1 källor" tidigare.
 - Varje ord matchas nu för sig: alla ord måste träffa (AND), vart och ett mot förnamn, efternamn eller gift namn (OR). `jens wedin` hittar *Karl Johan Fredrik Lindqvist*, `sven erik wedin` hittar *Sven-Erik Wedin*, och `jens larsson` ger fortfarande 0 — det är ett filter, inte en gissning.
 
 - **e2e läste en gammal ögonblicksbild.** Uppsättningen kopierade `wedin.db` men inte dess `-wal`, där de senaste skrivningarna ligger i WAL-läge. Sviten testade alltså mot data som saknade allt nyligen rättat. Med `-wal` med föll tre tester som byggde på data du sedan städat bort — en dubblett av Anders Bergqvist som är sammanslagen, och kategorin "Dubbla mellanslag i namnet" som är tömd. De hittar nu sina egna testdata i stället för att namnge poster som hinner försvinna.

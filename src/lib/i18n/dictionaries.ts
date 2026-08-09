@@ -60,7 +60,7 @@ const sv = {
   home: { lead: 'Sök i släktträdet', searchLabel: 'Sök person' },
   search: {
     name: 'Namn', birthYear: 'Födelseår', place: 'Födelseort', button: 'Sök',
-    hits: '{n} träffar', prev: 'Föregående', next: 'Nästa',
+    hits: '{n} träffar', hitOne: 'träff', hitMany: 'träffar', prev: 'Föregående', next: 'Nästa',
   },
   common: {
     loading: 'Läser in …', error: 'Något gick fel — nås API:et?',
@@ -247,7 +247,7 @@ const en: DeepPartial<Dict> = {
   home: { lead: 'Search the family tree', searchLabel: 'Search for a person' },
   search: {
     name: 'Name', birthYear: 'Birth year', place: 'Birthplace', button: 'Search',
-    hits: '{n} results', prev: 'Previous', next: 'Next',
+    hits: '{n} results', hitOne: 'result', hitMany: 'results', prev: 'Previous', next: 'Next',
   },
   common: {
     loading: 'Loading …', error: 'Something went wrong — is the API reachable?',
@@ -431,7 +431,7 @@ const de: DeepPartial<Dict> = {
   home: { lead: 'Im Stammbaum suchen', searchLabel: 'Person suchen' },
   search: {
     name: 'Name', birthYear: 'Geburtsjahr', place: 'Geburtsort', button: 'Suchen',
-    hits: '{n} Treffer', prev: 'Zurück', next: 'Weiter',
+    hits: '{n} Treffer', hitOne: 'Treffer', hitMany: 'Treffer', prev: 'Zurück', next: 'Weiter',
   },
   common: {
     loading: 'Wird geladen …', error: 'Etwas ist schiefgelaufen — ist die API erreichbar?',
@@ -615,7 +615,7 @@ const es: DeepPartial<Dict> = {
   home: { lead: 'Buscar en el árbol', searchLabel: 'Buscar persona' },
   search: {
     name: 'Nombre', birthYear: 'Año de nacimiento', place: 'Lugar de nacimiento', button: 'Buscar',
-    hits: '{n} resultados', prev: 'Anterior', next: 'Siguiente',
+    hits: '{n} resultados', hitOne: 'resultado', hitMany: 'resultados', prev: 'Anterior', next: 'Siguiente',
   },
   common: {
     loading: 'Cargando …', error: 'Algo salió mal — ¿responde la API?',

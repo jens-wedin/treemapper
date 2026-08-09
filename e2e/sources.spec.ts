@@ -7,7 +7,7 @@ test.skip(!fs.existsSync('wedin.db'), 'wedin.db saknas — kör npm run import f
 test('källistan söker och leder till källsidan', async ({ page }) => {
   await page.goto('/wedin/kallor');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Källor');
-  await expect(page.getByText(/träffar/)).toBeVisible();
+  await expect(page.getByText(/\d+ träff(ar)?\b/)).toBeVisible();
 
   const firstLink = page.locator('tbody tr').first().getByRole('link');
   const title = (await firstLink.textContent())!.trim();

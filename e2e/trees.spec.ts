@@ -146,7 +146,7 @@ test('en adress säger vilket släktträd den gäller', async ({ page, context }
   // The list is fetched after navigation, so wait for it before counting.
   const countWedins = async (url: string) => {
     await page.goto(url);
-    await expect(page.getByText(/\d+ träffar/)).toBeVisible();
+    await expect(page.getByText(/\d+ träff(ar)?\b/)).toBeVisible();
     return page.getByRole('link', { name: /Wedin/ }).count();
   };
   const grannar = await countWedins('/grannslakten/personer?q=wedin');

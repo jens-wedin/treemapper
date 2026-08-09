@@ -9,7 +9,7 @@ test('sök från Hem → personlista → personsida', async ({ page }) => {
   await page.getByLabel('Sök person').fill('Sven-Erik Wedin');
   await page.getByRole('button', { name: 'Sök' }).click();
   await expect(page).toHaveURL(/\/personer\?q=/);
-  await expect(page.getByText(/träffar/)).toBeVisible();
+  await expect(page.getByText(/\d+ träff(ar)?\b/)).toBeVisible();
   await page.getByRole('link', { name: /Sven-Erik Wedin/ }).first().click();
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Sven-Erik Wedin');
   await expect(page.getByRole('heading', { name: 'Händelser' })).toBeVisible();

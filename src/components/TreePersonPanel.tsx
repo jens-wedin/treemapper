@@ -6,6 +6,7 @@ import type { PersonFull, FamilyMember } from '../../lib/queries';
 import type { PersonIssueMark } from '../../lib/issues';
 import { t, eventLabel, eventDescription, formatGedcomDate, lifespan, displayName } from '../lib/i18n';
 import { apiUrl, fetchJson } from '../lib/api';
+import { useTreeUrl } from '../lib/treeUrl';
 import RichText from './RichText';
 import ProblemList from './issues/ProblemList';
 
@@ -47,6 +48,7 @@ export default function TreePersonPanel({ personId, issue, onClose, onFocusTree,
   const [data, setData] = useState<PersonFull | null>(null);
   const [state, setState] = useState<'loading' | 'ok' | 'error'>('loading');
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const link = useTreeUrl();
 
   useEffect(() => {
     setState('loading');
@@ -116,7 +118,7 @@ export default function TreePersonPanel({ personId, issue, onClose, onFocusTree,
           <div className="mt-4 flex flex-wrap gap-2">
             <Button size="sm" onClick={() => onFocusTree(person.id)}>{t('tree.focusHere')}</Button>
             <Button asChild variant="outline" size="sm">
-              <Link to={`/person/${person.id}`}>{t('tree.goToPerson')}</Link>
+              <Link to={link(`/person/${person.id}`)}>{t('tree.goToPerson')}</Link>
             </Button>
           </div>
 

@@ -1,7 +1,9 @@
 import { useRef, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { plural, t } from '../../lib/i18n';
-import { refreshTrees, setActiveTree, type TreeSummary } from '../../lib/activeTree';
+import { refreshTrees, type TreeSummary } from '../../lib/activeTree';
+import { treeUrl } from '../../lib/treeUrl';
 
 interface ImportSummary {
   inserted: { persons: number; families: number; sources: number; media: number };
@@ -16,6 +18,7 @@ interface ImportSummary {
  * control every browser, screen reader and keyboard already understands.
  */
 export default function ImportForm({ onImported }: { onImported?: (tree: TreeSummary) => void }) {
+  const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
@@ -93,7 +96,7 @@ export default function ImportForm({ onImported }: { onImported?: (tree: TreeSum
                 plural(result.summary.inserted.sources, 'trees.unitSource', 'trees.unitSources'),
               ].join(', ')}
             </p>
-            <Button type="button" variant="secondary" onClick={() => setActiveTree(result.tree.id)}>
+            <Button type="button" variant="secondary" onClick={() => void navigate(treeUrl(result.tree.id, '/'))}>
               {t('trees.open').replace('{name}', result.tree.name)}
             </Button>
             {result.summary.warnings.length ? (

@@ -1,15 +1,17 @@
 import { Link } from 'react-router';
 import type { AncestorNode, DescendantNode, TreePerson } from '../../lib/tree';
 import { t, displayName, lifespan } from '../lib/i18n';
+import { useTreeUrl } from '../lib/treeUrl';
 
 function PersonLine({ person, depthQuery }: { person: TreePerson; depthQuery: string }) {
+  const link = useTreeUrl();
   return (
     <>
-      <Link to={`/trad/${person.id}${depthQuery}`} className="text-primary underline-offset-2 hover:underline">
+      <Link to={link(`/trad/${person.id}${depthQuery}`)} className="text-primary underline-offset-2 hover:underline">
         {displayName(person)}
       </Link>{' '}
       <span className="text-sm text-muted-foreground">{lifespan(person.birthYear, person.deathYear)}</span>{' '}
-      <Link to={`/person/${person.id}`} className="text-sm text-muted-foreground underline-offset-2 hover:underline">
+      <Link to={link(`/person/${person.id}`)} className="text-sm text-muted-foreground underline-offset-2 hover:underline">
         ({t('tree.goToPerson')})
       </Link>
     </>

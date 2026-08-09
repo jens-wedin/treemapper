@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test';
 test.skip(!fs.existsSync('wedin.db'), 'wedin.db saknas — kör npm run import först');
 
 test('sök från Hem → personlista → personsida', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/wedin');
   await page.getByLabel('Sök person').fill('Sven-Erik Wedin');
   await page.getByRole('button', { name: 'Sök' }).click();
   await expect(page).toHaveURL(/\/personer\?q=/);
@@ -17,13 +17,18 @@ test('sök från Hem → personlista → personsida', async ({ page }) => {
 });
 
 test('varje sökträff går att öppna direkt i trädet', async ({ page }) => {
-  await page.goto('/personer?q=' + encodeURIComponent('Anders Bergqvist'));
+  // A surname with many bearers rather than one named person: the point is
+  // that a row opens *its own* person, and naming a specific duplicate makes
+  // the test rot the day that duplicate is merged.
+  await page.goto('/wedin/personer?q=' + encodeURIComponent('Wedin'));
   const rows = page.locator('tbody tr');
   await expect(rows.first()).toBeVisible();
+  expect(await rows.count()).toBeGreaterThan(1);
 
-  // två poster delar namn och årtal — raden måste öppna sin egen person
+  // The row's own first link, not one matched by name: a search matches
+  // married names too, so the row shown need not read "Wedin" at all.
   const second = rows.nth(1);
-  const personHref = await second.getByRole('link', { name: /Anders Bergqvist/ }).getAttribute('href');
+  const personHref = await second.getByRole('link').first().getAttribute('href');
   const id = personHref!.split('/').pop()!;
 
   await second.getByRole('link', { name: 'Visa i träd' }).click();
@@ -33,7 +38,7 @@ test('varje sökträff går att öppna direkt i trädet', async ({ page }) => {
 });
 
 test('personsidans familjelänkar navigerar vidare', async ({ page }) => {
-  await page.goto('/person/I500001');
+  await page.goto('/wedin/person/I500001');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Sven-Erik Wedin');
   const familj = page.locator('section', { has: page.getByRole('heading', { name: 'Familj' }) });
   const firstLink = familj.getByRole('link').first();
@@ -43,7 +48,7 @@ test('personsidans familjelänkar navigerar vidare', async ({ page }) => {
 });
 
 test('tangentbord: skip-länken hoppar till innehållet', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/wedin');
   await page.keyboard.press('Tab');
   await expect(page.getByRole('link', { name: 'Hoppa till innehåll' })).toBeFocused();
 });
@@ -73,7 +78,7 @@ test('sidhuvudet står stilla mellan flikarna', async ({ page }) => {
 });
 
 test('ett foto öppnas i större format och går att bläddra i', async ({ page }) => {
-  await page.goto('/person/I500001');
+  await page.goto('/wedin/person/I500001');
   // Vänta in sidan innan miniatyrerna räknas — annars räknas skelettet.
   await expect(page.getByRole('heading', { name: 'Foton' })).toBeVisible();
   const thumbs = page.getByRole('button', { name: /i större format/ });

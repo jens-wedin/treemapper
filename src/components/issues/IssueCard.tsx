@@ -5,11 +5,13 @@ import type { Issue } from '../../../lib/issues';
 import { t } from '../../lib/i18n';
 import { mutateJson } from '../../lib/api';
 import { clearIssueMarks } from '../../lib/issueMarks';
+import { useTreeUrl } from '../../lib/treeUrl';
 import DuplicateMerge from './DuplicateMerge';
 
 export type IssueListItem = Issue & { dismissed: boolean };
 
 export default function IssueCard({ issue, onChanged }: { issue: IssueListItem; onChanged: () => void }) {
+  const link = useTreeUrl();
   // The tree charts mark cards from the same register — it has moved on.
   async function dismiss() {
     await mutateJson('/api/issues/dismiss', 'POST', { fingerprint: issue.fingerprint });
@@ -34,7 +36,7 @@ export default function IssueCard({ issue, onChanged }: { issue: IssueListItem; 
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <Button asChild variant="outline" size="sm">
-          <Link to={`/person/${issue.personIds[0]}`}>{t('issues.fix')}</Link>
+          <Link to={link(`/person/${issue.personIds[0]}`)}>{t('issues.fix')}</Link>
         </Button>
         {issue.duplicateGroup && !issue.dismissed && (
           <DuplicateMerge group={issue.duplicateGroup} onMerged={onChanged} />

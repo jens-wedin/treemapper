@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test';
 test.skip(!fs.existsSync('wedin.db'), 'wedin.db saknas — kör npm run import först');
 
 test('källistan söker och leder till källsidan', async ({ page }) => {
-  await page.goto('/kallor');
+  await page.goto('/wedin/kallor');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Källor');
   await expect(page.getByText(/träffar/)).toBeVisible();
 
@@ -19,7 +19,7 @@ test('källistan söker och leder till källsidan', async ({ page }) => {
 });
 
 test('källhänvisning länkar till personen', async ({ page }) => {
-  await page.goto('/kallor');
+  await page.goto('/wedin/kallor');
   await page.locator('tbody tr').first().getByRole('link').click();
   const citationLink = page.locator('ul > li').first().getByRole('link').first();
   await expect(citationLink).toBeVisible();
@@ -28,7 +28,7 @@ test('källhänvisning länkar till personen', async ({ page }) => {
 });
 
 test('redigera en källas titel', async ({ page }) => {
-  await page.goto('/kallor');
+  await page.goto('/wedin/kallor');
   await page.locator('tbody tr').first().getByRole('link').click();
   await page.getByRole('button', { name: 'Redigera' }).click();
   await page.getByLabel('Namn').fill('Testkälla redigerad');
@@ -37,8 +37,9 @@ test('redigera en källas titel', async ({ page }) => {
 });
 
 test('personsidans källhänvisning länkar till källan', async ({ page }) => {
-  await page.goto('/person/I500001');
-  const sourceLink = page.locator('a[href^="/kalla/"]').first();
+  await page.goto('/wedin/person/I500001');
+  // Contains, not starts-with: every link now begins with its tree.
+  const sourceLink = page.locator('a[href*="/kalla/"]').first();
   await expect(sourceLink).toBeVisible();
   const title = (await sourceLink.textContent())!.trim();
   await sourceLink.click();
@@ -47,10 +48,11 @@ test('personsidans källhänvisning länkar till källan', async ({ page }) => {
 });
 
 test('inställningar erbjuder gedcom-nedladdning', async ({ page }) => {
-  await page.goto('/installningar');
+  await page.goto('/wedin/installningar');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Inställningar');
+  // The link names the tree it exports, so what you downloaded is never a guess.
   const link = page.getByRole('link', { name: 'Ladda ner GEDCOM' });
-  await expect(link).toHaveAttribute('href', '/api/export/gedcom');
+  await expect(link).toHaveAttribute('href', '/api/export/gedcom?tree=wedin');
 
   // hämta filen och kontrollera att den ser ut som GEDCOM
   const res = await page.request.get('/api/export/gedcom');

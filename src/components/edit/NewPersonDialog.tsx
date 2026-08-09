@@ -9,6 +9,7 @@ import {
 import { newPersonSchema } from '../../../lib/schemas';
 import { t } from '../../lib/i18n';
 import { mutateJson } from '../../lib/api';
+import { useTreeUrl } from '../../lib/treeUrl';
 
 /**
  * A person who is nobody's relative yet.
@@ -19,6 +20,7 @@ import { mutateJson } from '../../lib/api';
  */
 export default function NewPersonDialog({ onCreated }: { onCreated?: () => void }) {
   const navigate = useNavigate();
+  const link = useTreeUrl();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ givenName: '', surname: '', sex: 'U' as 'M' | 'F' | 'U' });
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +40,7 @@ export default function NewPersonDialog({ onCreated }: { onCreated?: () => void 
       setOpen(false);
       setForm({ givenName: '', surname: '', sex: 'U' });
       onCreated?.();
-      void navigate(`/person/${res.data.id}`);
+      void navigate(link(`/person/${res.data.id}`));
     } catch (err) {
       setError(err instanceof Error ? err.message : t('common.error'));
     } finally {

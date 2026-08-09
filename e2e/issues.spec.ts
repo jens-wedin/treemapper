@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test';
 test.skip(!fs.existsSync('wedin.db'), 'wedin.db saknas — kör npm run import först');
 
 test('kön grupperas efter allvarlighetsgrad, värst först', async ({ page }) => {
-  await page.goto('/konsekvens');
+  await page.goto('/wedin/konsekvens');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Konsekvensbänken');
   await expect(page.getByText(/kvar av .* flaggade/)).toBeVisible();
 
@@ -16,30 +16,41 @@ test('kön grupperas efter allvarlighetsgrad, värst först', async ({ page }) =
 });
 
 test('filtren byter ut listan i stället för att lägga till i den', async ({ page }) => {
-  await page.goto('/konsekvens');
+  await page.goto('/wedin/konsekvens');
   await expect(page.getByRole('heading', { level: 2 }).first()).toContainText('Logiskt fel');
 
   // Att välja en varningskategori får inte lämna kvar de logiska felen —
   // dubbletta React-nycklar gjorde tidigare att gamla kort blev kvar.
-  await page.getByLabel('Kategori').selectOption('Dödsfall utan datum');
+  // Whichever category the queue offers today, by value rather than by label —
+  // the label carries a count, and the data gets cleaned as Jens works through
+  // it, so a hardcoded category quietly stops testing anything.
+  const picker = page.getByLabel('Kategori');
+  const chosen = (await picker.locator('option').nth(1).getAttribute('value'))!;
+  await picker.selectOption(chosen);
   await expect(page.getByRole('heading', { level: 2 })).toHaveCount(1);
-  await expect(page.getByRole('heading', { level: 2 })).toContainText('Varning');
   const categories = page.locator('ul > li > div > span.font-medium');
   await expect(categories.first()).toBeVisible();
   const distinct = new Set(await categories.allTextContents());
-  expect([...distinct]).toEqual(['Dödsfall utan datum']);
+  expect([...distinct]).toEqual([chosen]);
 
   // och gradfiltret når de grupper som annars ligger bortom de 500 första
-  await page.getByLabel('Kategori').selectOption('');
+  await picker.selectOption('');
   await expect(page.getByRole('heading', { level: 2 }).first()).toContainText('Logiskt fel');
 
-  await page.getByLabel('Allvarlighetsgrad').selectOption('minor');
+  // A severity that still has findings: the labels carry counts, and emptied
+  // categories are the normal end state of working through the queue.
+  const grades = page.getByLabel('Allvarlighetsgrad');
+  const labelled = await grades.locator('option').evaluateAll(os =>
+    (os as HTMLOptionElement[]).map(o => ({ value: o.value, label: (o.textContent ?? '').trim() })));
+  const withFindings = labelled.find(o => o.value && !/\(0\)$/.test(o.label))!;
+  await grades.selectOption(withFindings.value);
   await expect(page.getByRole('heading', { level: 2 })).toHaveCount(1);
-  await expect(page.getByRole('heading', { level: 2 })).toContainText('Småfel');
+  await expect(page.getByRole('heading', { level: 2 }))
+    .toContainText(withFindings.label.replace(/\s*\(.*\)$/, ''));
 });
 
 test('avfärda döljer problemet och Visa avfärdade återställer det', async ({ page }) => {
-  await page.goto('/konsekvens?kategori=' + encodeURIComponent('Födsel efter bortgång'));
+  await page.goto('/wedin/konsekvens?kategori=' + encodeURIComponent('Födsel efter bortgång'));
   const cards = page.locator('ul > li');
   await expect(cards.first()).toBeVisible();   // listan hämtas asynkront
   const before = await cards.count();
@@ -62,7 +73,7 @@ test('avfärda döljer problemet och Visa avfärdade återställer det', async (
 });
 
 test('Åtgärda leder till personsidan', async ({ page }) => {
-  await page.goto('/konsekvens?kategori=' + encodeURIComponent('Födsel efter bortgång'));
+  await page.goto('/wedin/konsekvens?kategori=' + encodeURIComponent('Födsel efter bortgång'));
   await expect(page.locator('ul > li').first()).toBeVisible();
   await page.locator('ul > li').first().getByRole('link', { name: 'Åtgärda' }).click();
   await expect(page).toHaveURL(/\/person\/I\d+/);
@@ -70,7 +81,7 @@ test('Åtgärda leder till personsidan', async ({ page }) => {
 });
 
 test('dubblettsammanslagning tar bort den ena posten', async ({ page }) => {
-  await page.goto('/konsekvens?kategori=' + encodeURIComponent('Möjlig dubblett'));
+  await page.goto('/wedin/konsekvens?kategori=' + encodeURIComponent('Möjlig dubblett'));
   const card = page.locator('ul > li').first();
   await expect(card).toBeVisible();
   await card.getByRole('button', { name: 'Slå ihop' }).click();
@@ -87,12 +98,12 @@ test('dubblettsammanslagning tar bort den ena posten', async ({ page }) => {
   await expect(dialog).toBeHidden();
 
   // den borttagna posten finns inte längre
-  await page.goto(`/person/${duplicateId}`);
+  await page.goto(`/wedin/person/${duplicateId}`);
   await expect(page.getByText('Personen finns inte')).toBeVisible();
 });
 
 test('hem visar konsekvens-resultattavlan', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/wedin');
   await expect(page.getByRole('heading', { name: 'Konsekvensproblem' })).toBeVisible();
   await page.getByRole('link', { name: 'Konsekvensbänken' }).click();
   await expect(page).toHaveURL(/\/konsekvens/);
@@ -100,7 +111,7 @@ test('hem visar konsekvens-resultattavlan', async ({ page }) => {
 
 test('personsidan avslutar med personens konsekvenser', async ({ page }) => {
   // I500244 har fyra barn födda efter sin egen död, plus fler problem
-  await page.goto('/person/I500244');
+  await page.goto('/wedin/person/I500244');
   const section = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Konsekvenser' }) });
   await expect(section).toBeVisible();
 
@@ -115,13 +126,13 @@ test('personsidan avslutar med personens konsekvenser', async ({ page }) => {
   await expect(group).toContainText('efter faderns Abraham Abrahamsson död 1800');
 
   // och ingen rubrik alls för den som inte har något flaggat
-  await page.goto('/person/I500001');
+  await page.goto('/wedin/person/I500001');
   await expect(page.getByRole('heading', { level: 2 }).first()).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Konsekvenser' })).toHaveCount(0);
 });
 
 test('historiken visar vad som rättats och vad som lagts åt sidan', async ({ page }) => {
-  await page.goto('/konsekvens');
+  await page.goto('/wedin/konsekvens');
   const log = page.locator('details');
   await expect(log).toContainText('Åtgärdat och avfärdat');
   // hopfälld tills man ber om den — kön är sidans huvudsak
@@ -135,8 +146,9 @@ test('historiken visar vad som rättats och vad som lagts åt sidan', async ({ p
   await expect(first).toContainText('Rättat');
 
   // och en avfärdning hamnar överst, med sin kategori och anteckning
-  const category = 'Dubbla mellanslag i namnet';
-  await page.goto('/konsekvens?kategori=' + encodeURIComponent(category));
+  await page.goto('/wedin/konsekvens');
+  const category = (await page.getByLabel('Kategori').locator('option').nth(1).getAttribute('value'))!;
+  await page.goto('/wedin/konsekvens?kategori=' + encodeURIComponent(category));
   await expect(page.locator('ul > li').first()).toBeVisible();
   await page.locator('ul > li').first().getByRole('button', { name: 'Avfärda' }).click();
 

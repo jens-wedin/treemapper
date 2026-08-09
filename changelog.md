@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Changed
+
+**Släktträdet står i adressen**
+- Varje sida heter nu `/<träd>/<sida>`: `/wedin/personer?q=jens+wedin`, `/andersson/person/I500001`. **En länk betyder en sak.**
+- Tidigare låg trädet bara i webbläsaren, så `/person/I500001` visade det träd väljaren råkade stå på — samma adress var Sven-Erik i ett träd och någon helt annan i ett annat. Ett bokmärke ruttnade så fort man tittade på något annat, och en länk man skickade visade mottagaren en annan person än man menade.
+- Det förvalda trädet heter `wedin` utåt i stället för `default`. Id:t kommer från databasens filnamn, aldrig från visningsnamnet, så ett byte av namn kan inte förstöra en länk som redan finns. `default` fungerar kvar som alias.
+- Id:n som routern behöver själv (`personer`, `trad`, `kalla` …) är reserverade — `/personer` måste betyda Personer-sidan.
+- En adress utan träd (`/personer`) får ett framför sig; en adress med ett *borttaget* träd får sitt utbytt. Att lägga till i stället för att byta hade gett `/wedin/grannslakten/personer`, vilket inte är någon sida.
+- Exportlänken säger vilket träd den gäller: `?tree=wedin`. Det man laddat ner är inte en gissning.
+
+### Fixed
+
+- **e2e läste en gammal ögonblicksbild.** Uppsättningen kopierade `wedin.db` men inte dess `-wal`, där de senaste skrivningarna ligger i WAL-läge. Sviten testade alltså mot data som saknade allt nyligen rättat. Med `-wal` med föll tre tester som byggde på data du sedan städat bort — en dubblett av Anders Bergqvist som är sammanslagen, och kategorin "Dubbla mellanslag i namnet" som är tömd. De hittar nu sina egna testdata i stället för att namnge poster som hinner försvinna.
+
 ### Added
 
 ### Security

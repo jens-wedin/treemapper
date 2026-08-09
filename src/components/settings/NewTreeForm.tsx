@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { t } from '../../lib/i18n';
-import { refreshTrees, setActiveTree, type TreeSummary } from '../../lib/activeTree';
+import { refreshTrees, type TreeSummary } from '../../lib/activeTree';
+import { treeUrl } from '../../lib/treeUrl';
 
 /**
  * A family tree started from nothing.
@@ -11,6 +13,7 @@ import { refreshTrees, setActiveTree, type TreeSummary } from '../../lib/activeT
  * there is nothing to look at in the old one that relates to this.
  */
 export default function NewTreeForm() {
+  const navigate = useNavigate();
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +36,9 @@ export default function NewTreeForm() {
       setMade(body.tree);
       setName('');
       await refreshTrees();
-      setActiveTree(body.tree.id);
+      // Navigating is what switches tree now that the address decides which
+      // one is open; setting the state alone would be undone on the next render.
+      void navigate(treeUrl(body.tree.id, '/installningar'));
     } catch (err) {
       setError(err instanceof Error ? err.message : t('common.error'));
     } finally {

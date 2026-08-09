@@ -8,6 +8,7 @@ import type { SourceFull } from '../../lib/sources';
 import { sourceUpdateSchema } from '../../lib/schemas';
 import { t } from '../lib/i18n';
 import { ApiError, fetchJson, mutateJson } from '../lib/api';
+import { useTreeUrl } from '../lib/treeUrl';
 import RichText from '../components/RichText';
 
 const emptyToNull = (v: string) => (v.trim() === '' ? null : v.trim());
@@ -78,6 +79,7 @@ function SourceEditForm({ source, onSaved, onCancel }: {
 }
 
 export default function SourcePage() {
+  const link = useTreeUrl();
   const { id } = useParams<{ id: string }>();
   const [data, setData] = useState<SourceFull | null>(null);
   const [state, setState] = useState<'loading' | 'ok' | 'missing' | 'error'>('loading');
@@ -102,7 +104,7 @@ export default function SourcePage() {
 
   if (state === 'loading') return <div className="space-y-3"><Skeleton className="h-9 w-72" /><Skeleton className="h-40 w-full" /></div>;
   if (state === 'missing') {
-    return <p>{t('sources.notFound')} <Link className="underline" to="/kallor">{t('sources.backToSources')}</Link></p>;
+    return <p>{t('sources.notFound')} <Link className="underline" to={link('/kallor')}>{t('sources.backToSources')}</Link></p>;
   }
   if (state === 'error' || !data) return <p role="alert">{t('common.error')}</p>;
 
@@ -147,7 +149,7 @@ export default function SourcePage() {
               {citations.map(c => (
                 <li key={c.id} className="border-b pb-2">
                   {c.personId
-                    ? <Link to={`/person/${c.personId}`} className="text-primary underline-offset-2 hover:underline">{c.label}</Link>
+                    ? <Link to={link(`/person/${c.personId}`)} className="text-primary underline-offset-2 hover:underline">{c.label}</Link>
                     : <span>{c.label}</span>}
                   {c.page && <span className="ml-2 text-sm text-muted-foreground">{t('sources.page')}: {c.page}</span>}
                   {c.quality != null && <span className="ml-2 text-sm text-muted-foreground">{t('person.quality')} {c.quality}</span>}

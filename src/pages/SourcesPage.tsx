@@ -5,11 +5,13 @@ import { Input } from '@/components/ui/input';
 import type { SourceListItem } from '../../lib/sources';
 import { t } from '../lib/i18n';
 import { fetchJson } from '../lib/api';
+import { useTreeUrl } from '../lib/treeUrl';
 
 const PAGE_SIZE = 50;
 interface SourcesResult { items: SourceListItem[]; total: number }
 
 export default function SourcesPage() {
+  const link = useTreeUrl();
   const [params, setParams] = useSearchParams();
   const q = params.get('q') ?? '';
   const offset = Math.max(0, Number(params.get('offset') ?? 0) || 0);
@@ -72,7 +74,7 @@ export default function SourcesPage() {
             {result.items.map(s => (
               <tr key={s.id} className="border-b">
                 <td className="py-2 pr-4">
-                  <Link to={`/kalla/${s.id}`} className="text-primary underline-offset-2 hover:underline">
+                  <Link to={link(`/kalla/${s.id}`)} className="text-primary underline-offset-2 hover:underline">
                     {s.title ?? s.id}
                   </Link>
                 </td>

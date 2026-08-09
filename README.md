@@ -55,7 +55,7 @@ a tree to deleting a file.
 
 | Where | What |
 |---|---|
-| `wedin.db` (`WEDIN_DB`) | The tree that was here first, id `default`. Owned by the CLI scripts, and not deletable from the UI. |
+| `wedin.db` (`WEDIN_DB`) | The tree that was here first, id `wedin`. Owned by the CLI scripts, and not deletable from the UI. |
 | `trees/<id>.db` (`WEDIN_TREES_DIR`) | One file per imported tree. |
 | `media/`, `media/<id>/` | Photos, per tree. |
 
@@ -63,11 +63,36 @@ A tree's name lives in a `tree_meta` row **inside** the tree, so there is no
 central registry to drift out of sync or lose when a `.db` is copied. A database
 opened without one is named after its file and can be renamed in the UI.
 
-Every request carries the tree as `?tree=<id>`, added centrally in
-`src/lib/api.ts`. A query parameter rather than a header because the GEDCOM
-export is a plain download link, and links cannot set headers. Keeping the
-choice in the browser rather than on the server is what makes a reload, a second
-tab and the serial e2e suite each behave.
+### The tree is in the address
+
+Every page is `/<tree>/<page>` — `/wedin/personer?q=jens+wedin`,
+`/andersson/person/I500001`. **A link means one thing.**
+
+It did not always. The tree used to live only in the browser, so `/person/I500001`
+showed whichever tree the picker was last left on: the same address was
+Sven-Erik in one tree and someone else entirely in another. A bookmark rotted
+the moment you looked at something else, and a link you sent someone showed them
+a different person than you meant. This was not hypothetical — it produced a
+long and confident investigation of the wrong tree.
+
+A tree's id comes from its **filename**, never its display name, so renaming a
+tree cannot break a link that already exists. `default` still resolves, for the
+CLI and for browsers holding the old stored value.
+
+Ids the router needs for itself — `personer`, `trad`, `kalla` … — are reserved,
+because `/personer` has to mean the People page and could not also mean a tree
+called "Personer".
+
+Two kinds of address arrive without a valid tree, and they need opposite
+treatment: `/personer` is *missing* one, so a tree is put in front; a deleted
+`/grannslakten/personer` is *wrong*, so the tree is swapped out. Prefixing the
+second would give `/wedin/grannslakten/personer`, which is no page at all.
+
+Requests still carry `?tree=<id>`, added centrally in `src/lib/api.ts` — a query
+parameter rather than a header because the GEDCOM export is a plain download
+link, and links cannot set headers. The address is the authority; what the
+browser stores is only a copy, so that a bare `/` returns you to the tree you
+had open last.
 
 **Photos are not downloaded for imported trees.** A GEDCOM stores CDN links, not
 files; new trees show the usual placeholders and the tree list says how many are

@@ -15,13 +15,13 @@ test.describe('mörkt läge', () => {
   test.use({ colorScheme: 'dark' });
 
   test('följer systemet som standard', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/wedin');
     await expect.poll(() => htmlClass(page)).toContain('dark');
     await expect(themeButton(page)).toHaveAccessibleName('Utseende: Följ systemet');
   });
 
   test('ett uttryckligt ljust val vinner över systemet och minns', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/wedin');
     await pickTheme(page, 'Ljust');
     await expect.poll(() => htmlClass(page)).not.toContain('dark');
 
@@ -39,7 +39,7 @@ test.describe('ljust läge', () => {
   test.use({ colorScheme: 'light' });
 
   test('följer systemet och kan tvingas mörkt', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/wedin');
     await expect.poll(() => htmlClass(page)).not.toContain('dark');
 
     await pickTheme(page, 'Mörkt');
@@ -49,7 +49,7 @@ test.describe('ljust läge', () => {
   });
 
   test('trädets kort byter färg med temat, flaggorna gör det inte', async ({ page }) => {
-    await page.goto('/trad/I500001?upp=2&ned=1&vy=family');
+    await page.goto('/wedin/trad/I500001?upp=2&ned=1&vy=family');
     await expect(page.locator('[data-tree-node]').first()).toBeVisible();
 
     const cardFill = () => page.locator('[data-tree-node] rect').first()

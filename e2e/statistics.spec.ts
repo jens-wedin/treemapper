@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test('statistiksidan nås från menyn och visar alla fyra avsnitt', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/wedin');
   await page.getByRole('link', { name: 'Statistik' }).click();
   await expect(page).toHaveURL(/\/statistik/);
   for (const heading of ['Liv och livslängd', 'Namn', 'Familjer', 'Orter och arbete']) {
@@ -10,14 +10,14 @@ test('statistiksidan nås från menyn och visar alla fyra avsnitt', async ({ pag
 });
 
 test('varje diagram har sina siffror även som tabell', async ({ page }) => {
-  await page.goto('/statistik');
+  await page.goto('/wedin/statistik');
   await expect(page.getByRole('heading', { name: 'Liv och livslängd' })).toBeVisible();
   // två diagram i liv, ett i familjer — alla med tabell under
   await expect.poll(() => page.getByRole('table').count()).toBe(3);
 });
 
 test('omöjliga åldrar presenteras inte som roliga fakta', async ({ page }) => {
-  await page.goto('/statistik');
+  await page.goto('/wedin/statistik');
   await expect(page.getByText(/Åldrar över 110 år räknas som datafel/)).toBeVisible();
   const ages = await page.locator('ol li', { hasText: /\d+ år$/ }).allInnerTexts();
   for (const row of ages) {
@@ -27,7 +27,7 @@ test('omöjliga åldrar presenteras inte som roliga fakta', async ({ page }) => 
 });
 
 test('avgränsning till en person hamnar i url:en och överlever omladdning', async ({ page }) => {
-  await page.goto('/statistik');
+  await page.goto('/wedin/statistik');
   await expect(page.getByRole('heading', { name: 'Liv och livslängd' })).toBeVisible();
   // första kortet i första <dl> är antalet personer; "Personer" som text
   // finns även i menyn, så sikta på kortet i stället

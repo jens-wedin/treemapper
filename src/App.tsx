@@ -1,7 +1,10 @@
 import { useEffect } from 'react';
-import { NavLink, Route, Routes, useLocation } from 'react-router';
+import { Navigate, NavLink, Route, Routes, useLocation, useParams } from 'react-router';
 import { t, useLanguage, setLanguage, LANGUAGES, type Lang } from './lib/i18n';
-import { useActiveTree } from './lib/activeTree';
+import {
+  adoptTree, fallbackTree, isKnownTree, notifyTreeChanged, refreshTrees, useActiveTree, useTrees,
+} from './lib/activeTree';
+import { rescueUrl, treeUrl } from './lib/treeUrl';
 import ThemePicker from './components/ThemePicker';
 import TreePicker from './components/TreePicker';
 import Hem from './pages/Hem';
@@ -24,8 +27,57 @@ import SettingsPage from './pages/SettingsPage';
  */
 const PAGE_WIDTH = 'mx-auto w-full max-w-6xl px-4';
 
+/** `/wedin/trad/I500001` → `trad`. The tree is always the first segment. */
+const pageOf = (pathname: string): string => pathname.split('/')[2] ?? '';
+
 const containerClass = (pathname: string): string =>
-  (pathname.startsWith('/trad') ? 'w-full px-4' : PAGE_WIDTH);
+  (pageOf(pathname) === 'trad' ? 'w-full px-4' : PAGE_WIDTH);
+
+/**
+ * The pages of one tree. Everything below renders knowing which database it is
+ * looking at, because the tree is adopted before any of it runs.
+ */
+function TreeScope() {
+  const { tree } = useParams();
+  const { pathname, search, hash } = useLocation();
+
+  // The header renders above these routes and so reads the tree a render
+  // early. Catching it up here, after the render that adopted it. Called
+  // before any early return, so the hook order never changes.
+  const scoped = !!tree && isKnownTree(tree);
+  useEffect(() => {
+    if (scoped) notifyTreeChanged();
+  }, [tree, scoped]);
+
+  // A first segment that is not a tree is an address from before trees were in
+  // the path — `/personer?q=jens+wedin`. Send it to the tree last open, so old
+  // bookmarks land somewhere real instead of on an error.
+  if (!scoped) {
+    return <Navigate to={`${rescueUrl(fallbackTree(), pathname)}${search}${hash}`} replace />;
+  }
+
+  // During render, not in an effect: a page below fetches on mount, and an
+  // effect here would run after that fetch had already gone out under the
+  // previous tree.
+  adoptTree(tree);
+
+  return (
+    // Keyed on the tree: switching means every page is showing records that no
+    // longer exist, so they are remounted rather than refetched.
+    <Routes key={tree}>
+      <Route path="/" element={<Hem />} />
+      <Route path="personer" element={<PersonList />} />
+      <Route path="person/:id" element={<PersonPage />} />
+      <Route path="trad" element={<TreePage />} />
+      <Route path="trad/:id" element={<TreePage />} />
+      <Route path="statistik" element={<StatisticsPage />} />
+      <Route path="konsekvens" element={<IssuesPage />} />
+      <Route path="kallor" element={<SourcesPage />} />
+      <Route path="kalla/:id" element={<SourcePage />} />
+      <Route path="installningar" element={<SettingsPage />} />
+    </Routes>
+  );
+}
 
 /**
  * The header spans the window on every page. Sizing it like the content would
@@ -36,14 +88,19 @@ const HEADER_WIDTH = 'w-full px-4';
 export default function App() {
   const { pathname } = useLocation();
   const container = containerClass(pathname);
-  const isTree = pathname.startsWith('/trad');
+  const isTree = pageOf(pathname) === 'trad';
   // Subscribing here re-renders the whole app when the language changes.
   const lang = useLanguage();
   const activeTree = useActiveTree();
+  const treesLoaded = useTrees().length > 0;
 
   useEffect(() => {
     document.documentElement.lang = lang;
   }, [lang]);
+
+  useEffect(() => {
+    void refreshTrees();
+  }, []);
 
   return (
     // The chart page is pinned to the viewport so the SVG can fill it; every
@@ -71,7 +128,7 @@ export default function App() {
           ).map(([to, label]) => (
             <NavLink
               key={to}
-              to={to}
+              to={treeUrl(activeTree, to)}
               end={to === '/'}
               className={({ isActive }) =>
                 `underline-offset-4 hover:underline ${isActive ? 'font-semibold underline' : ''}`
@@ -103,20 +160,14 @@ export default function App() {
         id="innehall"
         className={`${container} flex min-h-0 flex-1 flex-col ${isTree ? 'overflow-auto py-4' : 'py-8'}`}
       >
-        {/* Keyed on the tree: switching means every page is showing records
-            that no longer exist, so they are remounted rather than refetched. */}
-        <Routes key={activeTree}>
-          <Route path="/" element={<Hem />} />
-          <Route path="/personer" element={<PersonList />} />
-          <Route path="/person/:id" element={<PersonPage />} />
-          <Route path="/trad" element={<TreePage />} />
-          <Route path="/trad/:id" element={<TreePage />} />
-          <Route path="/statistik" element={<StatisticsPage />} />
-          <Route path="/konsekvens" element={<IssuesPage />} />
-          <Route path="/kallor" element={<SourcesPage />} />
-          <Route path="/kalla/:id" element={<SourcePage />} />
-          <Route path="/installningar" element={<SettingsPage />} />
-        </Routes>
+        {/* Which tree an address names can only be answered against the list of
+            trees, so nothing routes until it has arrived. */}
+        {treesLoaded && (
+          <Routes>
+            <Route path=":tree/*" element={<TreeScope />} />
+            <Route path="*" element={<TreeScope />} />
+          </Routes>
+        )}
       </main>
     </div>
   );

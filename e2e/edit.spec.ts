@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test';
 test.skip(!fs.existsSync('wedin.db'), 'wedin.db saknas — kör npm run import först');
 
 test('redigera personfält', async ({ page }) => {
-  await page.goto('/person/I500001');
+  await page.goto('/wedin/person/I500001');
   await page.getByRole('button', { name: 'Redigera' }).first().click();
   await page.getByLabel('Giftasnamn').fill('Teständring');
   await page.getByRole('button', { name: 'Spara' }).click();
@@ -13,7 +13,7 @@ test('redigera personfält', async ({ page }) => {
 });
 
 test('lägg till en händelse', async ({ page }) => {
-  await page.goto('/person/I500001');
+  await page.goto('/wedin/person/I500001');
   await page.getByRole('button', { name: 'Lägg till händelse' }).click();
   await page.getByLabel('Typ').selectOption('OCCU');
   await page.getByLabel('Beskrivning').fill('Testyrke');
@@ -23,7 +23,7 @@ test('lägg till en händelse', async ({ page }) => {
 });
 
 test('lägg till ett barn via dialogen', async ({ page }) => {
-  await page.goto('/person/I500001');
+  await page.goto('/wedin/person/I500001');
   await page.getByRole('button', { name: 'Lägg till barn' }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Skapa ny person').check();
@@ -36,7 +36,7 @@ test('lägg till ett barn via dialogen', async ({ page }) => {
 });
 
 test('borttagning frågar i appens egen dialog och går att ångra sig', async ({ page }) => {
-  await page.goto('/person/I500001');
+  await page.goto('/wedin/person/I500001');
   await page.getByRole('button', { name: 'Lägg till händelse' }).click();
   await page.getByLabel('Typ').selectOption('OCCU');
   await page.getByLabel('Beskrivning').fill('Ska tas bort');
@@ -59,7 +59,7 @@ test('borttagning frågar i appens egen dialog och går att ångra sig', async (
 });
 
 test('personsidan avslutas med sin ändringshistorik', async ({ page }) => {
-  await page.goto('/person/I500001');
+  await page.goto('/wedin/person/I500001');
   const log = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Ändringshistorik' }) });
   await expect(log).toBeVisible();
 
@@ -73,7 +73,7 @@ test('personsidan avslutas med sin ändringshistorik', async ({ page }) => {
 });
 
 test('vigseln läggs till på familjen, inte på personen', async ({ page }) => {
-  await page.goto('/person/I500001');
+  await page.goto('/wedin/person/I500001');
   await expect(page.getByRole('heading', { name: 'Familj' })).toBeVisible();
 
   // Vigsel finns inte bland personens händelsetyper — den hör till paret.
@@ -98,7 +98,7 @@ test('vigseln läggs till på familjen, inte på personen', async ({ page }) => 
 
 test('ett foto går att lägga till och ta bort igen', async ({ page }) => {
   // en person utan foton, så räkningen blir entydig
-  await page.goto('/person/I500616');
+  await page.goto('/wedin/person/I500616');
   await expect(page.getByRole('heading', { name: 'Foton' })).toBeVisible();
   const thumbs = page.getByRole('button', { name: /i större format/ });
   const before = await thumbs.count();

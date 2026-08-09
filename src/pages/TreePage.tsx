@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import type { TreeData } from '../../lib/tree';
 import { t, displayName, lifespan } from '../lib/i18n';
 import { ApiError, fetchJson } from '../lib/api';
+import { useTreeUrl } from '../lib/treeUrl';
 import { useIssueMarkPreference } from '../lib/chartPreferences';
 import { clearIssueMarks, useIssueMarks } from '../lib/issueMarks';
 import { flattenAncestors } from '../lib/ahnentafel';
@@ -41,6 +42,7 @@ function clamp(raw: string | null, allowed: readonly number[]): number {
 }
 
 export default function TreePage() {
+  const link = useTreeUrl();
   const { id: routeId } = useParams<{ id: string }>();
   const id = routeId ?? DEFAULT_FOCUS;
   const [params, setParams] = useSearchParams();
@@ -105,7 +107,7 @@ export default function TreePage() {
   /** Re-roots the chart on someone, keeping the current view and depths. */
   function focusOn(personId: string) {
     setSelectedId(null);
-    navigate(`/trad/${personId}${depthQuery}&vy=${view}`);
+    navigate(link(`/trad/${personId}${depthQuery}&vy=${view}`));
   }
 
   // The previous chart stays on screen while the next one loads: blanking it
@@ -133,7 +135,7 @@ export default function TreePage() {
           const first = found.items[0]?.id;
           if (stale) return;
           if (!first) setState('empty');
-          else if (!routeId) navigate(`/trad/${first}${depthQuery}&vy=${view}`, { replace: true });
+          else if (!routeId) navigate(link(`/trad/${first}${depthQuery}&vy=${view}`), { replace: true });
           else setState('missing');
         } catch {
           if (!stale) setState('error');
@@ -161,7 +163,7 @@ export default function TreePage() {
         <p className="mt-3 text-muted-foreground">
           {t(state === 'empty' ? 'tree.emptyTree' : 'tree.personGone')}
         </p>
-        <Link to="/personer" className="mt-3 inline-block text-primary underline-offset-2 hover:underline">
+        <Link to={link('/personer')} className="mt-3 inline-block text-primary underline-offset-2 hover:underline">
           {t('tree.toPersons')}
         </Link>
       </section>
@@ -175,7 +177,7 @@ export default function TreePage() {
         // The name itself is the link. A separate "open person page" beside it
         // said the same thing twice and put the useful target second.
         <p className="mt-1 text-muted-foreground">
-          <Link to={`/person/${data.focus.id}`} className="text-primary underline-offset-2 hover:underline">
+          <Link to={link(`/person/${data.focus.id}`)} className="text-primary underline-offset-2 hover:underline">
             {displayName(data.focus)}
           </Link>
           {' '}

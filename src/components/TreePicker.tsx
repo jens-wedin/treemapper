@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { t } from '../lib/i18n';
-import { refreshTrees, setActiveTree, useActiveTree, useTrees } from '../lib/activeTree';
+import { useActiveTree, useTrees } from '../lib/activeTree';
+import { switchTreeUrl } from '../lib/treeUrl';
 
 /**
  * Which family tree the app is showing.
@@ -13,10 +13,7 @@ export default function TreePicker() {
   const trees = useTrees();
   const active = useActiveTree();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    void refreshTrees();
-  }, []);
+  const { pathname, search } = useLocation();
 
   // Before the list arrives there is nothing truthful to show as selected.
   const options = trees.length ? trees : [{ id: active, name: '…' }];
@@ -29,10 +26,11 @@ export default function TreePicker() {
           aria-label={t('trees.label')}
           value={active}
           onChange={e => {
-            // A person id from one tree means nothing in another, so any page
-            // showing one record has to be left behind.
-            setActiveTree(e.target.value);
-            void navigate('/');
+            // Navigating is what changes the tree — the address is what the
+            // rest of the app reads. It keeps you on the same kind of page,
+            // but a record id from one tree means nothing in another, so those
+            // are left behind.
+            void navigate(switchTreeUrl(e.target.value, pathname, search));
           }}
           className="max-w-40 rounded-md border px-2 py-1"
         >

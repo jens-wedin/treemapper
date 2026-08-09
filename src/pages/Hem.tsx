@@ -4,11 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { t } from '../lib/i18n';
 import { fetchJson } from '../lib/api';
+import { useTreeUrl } from '../lib/treeUrl';
 
 interface Stats { persons: number; families: number; sources: number; media: number; mediaDone: number }
 interface IssueSummary { total: number; totalAll: number; dismissed: number }
 
 export default function Hem() {
+  const link = useTreeUrl();
   const [q, setQ] = useState('');
   const [stats, setStats] = useState<Stats | null>(null);
   const [issues, setIssues] = useState<IssueSummary | null>(null);
@@ -26,7 +28,7 @@ export default function Hem() {
       <h1 className="text-3xl font-bold">{t('appTitle')}</h1>
       <form
         className="mt-6 flex max-w-xl gap-2"
-        onSubmit={e => { e.preventDefault(); navigate(`/personer?q=${encodeURIComponent(q)}`); }}
+        onSubmit={e => { e.preventDefault(); navigate(link(`/personer?q=${encodeURIComponent(q)}`)); }}
       >
         <div className="flex-1">
           <label htmlFor="hem-sok" className="block text-sm font-medium">{t('home.searchLabel')}</label>
@@ -60,7 +62,7 @@ export default function Hem() {
               .replace('{n}', issues.total.toLocaleString('sv-SE'))
               .replace('{total}', issues.totalAll.toLocaleString('sv-SE'))}
           </p>
-          <Link to="/konsekvens" className="mt-2 inline-block text-primary underline-offset-2 hover:underline">
+          <Link to={link('/konsekvens')} className="mt-2 inline-block text-primary underline-offset-2 hover:underline">
             {t('issues.title')}
           </Link>
         </section>

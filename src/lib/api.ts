@@ -1,14 +1,17 @@
 import { DEFAULT_TREE, forgetTree, getActiveTree } from './activeTree';
 
 /**
- * Every call says which tree it is about. The default tree is left implicit so
- * the common case keeps clean URLs; the server reads a missing `tree` the same
- * way. Also used for `<img src>` and the export link, which never pass through
- * fetch and so cannot carry a header — which is why this is a query parameter.
+ * Every call says which tree it is about — including the original one, which
+ * used to be left implicit for the sake of tidier URLs. Now that it has a real
+ * id rather than the word "default", saying it is the honest thing: the export
+ * link reads `?tree=wedin`, and what you downloaded is not a guess.
+ *
+ * A query parameter rather than a header because `<img src>` and the export
+ * link never pass through fetch and so cannot set one.
  */
 export function apiUrl(path: string): string {
   const tree = getActiveTree();
-  if (tree === DEFAULT_TREE) return path;
+  if (!tree || tree === DEFAULT_TREE) return path;
   return `${path}${path.includes('?') ? '&' : '?'}tree=${encodeURIComponent(tree)}`;
 }
 

@@ -5,12 +5,14 @@ import { Input } from '@/components/ui/input';
 import type { PersonListItem } from '../../lib/queries';
 import { t, displayName } from '../lib/i18n';
 import { fetchJson } from '../lib/api';
+import { useTreeUrl } from '../lib/treeUrl';
 import NewPersonDialog from '../components/edit/NewPersonDialog';
 
 const PAGE_SIZE = 50;
 interface SearchResult { items: PersonListItem[]; total: number }
 
 export default function PersonList() {
+  const link = useTreeUrl();
   const [params, setParams] = useSearchParams();
   const q = params.get('q') ?? '';
   const fodd = params.get('fodd') ?? '';
@@ -92,7 +94,7 @@ export default function PersonList() {
             {result.items.map(p => (
               <tr key={p.id} className="border-b">
                 <td className="py-2 pr-4">
-                  <Link to={`/person/${p.id}`} className="text-primary underline-offset-2 hover:underline">
+                  <Link to={link(`/person/${p.id}`)} className="text-primary underline-offset-2 hover:underline">
                     {displayName(p)}
                   </Link>
                 </td>
@@ -102,7 +104,7 @@ export default function PersonList() {
                 {/* two people can share a name and dates — the tree is often
                     the quickest way to tell which one you are looking at */}
                 <td className="py-2">
-                  <Link to={`/trad/${p.id}`} className="text-primary underline-offset-2 hover:underline">
+                  <Link to={link(`/trad/${p.id}`)} className="text-primary underline-offset-2 hover:underline">
                     {t('tree.showInTree')}
                   </Link>
                 </td>

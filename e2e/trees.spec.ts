@@ -8,10 +8,10 @@ const MINI = path.resolve('lib/gedcom/fixtures/mini.ged');
 
 /**
  * The whole point of the feature: importing adds a tree, it does not touch the
- * one already there. Everything runs against .e2e.db and .e2e-trees.
+ * one already there. Everything runs against the copies under .e2e/.
  */
 test('importera en GEDCOM till ett nytt släktträd, byt till det och ta bort det', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/wedin');
   const wholeTree = await page.getByText(/personer/i).first().textContent();
 
   await page.getByRole('link', { name: 'Inställningar' }).click();
@@ -27,8 +27,8 @@ test('importera en GEDCOM till ett nytt släktträd, byt till det och ta bort de
   await expect(picker.locator('option')).toHaveCount(2);
 
   await picker.selectOption({ label: 'Testsläkten' });
-  await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByText('3', { exact: false }).first()).toBeVisible();
+  // Switching keeps you on the page you were on — only the tree changes.
+  await expect(page).toHaveURL('/testslakten/installningar');
 
   // Its three people are the ones from the file, not from the Wedin tree.
   await page.getByRole('link', { name: 'Personer' }).click();
@@ -49,7 +49,7 @@ test('importera en GEDCOM till ett nytt släktträd, byt till det och ta bort de
 });
 
 test('en fil som inte är GEDCOM skapar inget släktträd', async ({ page }) => {
-  await page.goto('/installningar');
+  await page.goto('/wedin/installningar');
   await page.getByLabel('GEDCOM-fil').setInputFiles({
     name: 'anteckningar.ged',
     mimeType: 'text/plain',
@@ -62,7 +62,7 @@ test('en fil som inte är GEDCOM skapar inget släktträd', async ({ page }) => 
 });
 
 test('släktträdet kan byta namn', async ({ page }) => {
-  await page.goto('/installningar');
+  await page.goto('/wedin/installningar');
   await page.getByLabel('GEDCOM-fil').setInputFiles(MINI);
   await page.getByLabel('Namn på släktträdet').fill('Fel namn');
   await page.getByRole('button', { name: 'Importera', exact: true }).click();
@@ -85,7 +85,7 @@ test('släktträdet kan byta namn', async ({ page }) => {
 });
 
 test('ett tomt släktträd går att skapa och fylla för hand', async ({ page }) => {
-  await page.goto('/installningar');
+  await page.goto('/wedin/installningar');
   await page.getByLabel('Namn på det nya släktträdet').fill('Mormors släkt');
   await page.getByRole('button', { name: 'Skapa tomt släktträd' }).click();
 
@@ -121,4 +121,62 @@ test('ett tomt släktträd går att skapa och fylla för hand', async ({ page })
   await picker.selectOption({ index: 0 });
   await page.getByRole('link', { name: 'Personer' }).click();
   await expect(page.getByText('0 träffar')).toHaveCount(0);
+});
+
+/**
+ * The reason the tree moved into the address.
+ *
+ * It used to live only in the browser, so `/person/I500001` meant whichever
+ * tree the picker was last left on: a bookmark rotted the moment you looked at
+ * something else, and a link you sent someone showed them a different person.
+ * These check that an address now answers for itself.
+ */
+test('en adress säger vilket släktträd den gäller', async ({ page, context }) => {
+  await page.goto('/wedin/personer?q=jens+wedin');
+  await expect(page).toHaveURL('/wedin/personer?q=jens+wedin');
+
+  // Import a second tree containing its own Sven-Erik Wedin.
+  await page.goto('/wedin/installningar');
+  await page.getByLabel('GEDCOM-fil').setInputFiles(MINI);
+  await page.getByLabel('Namn på släktträdet').fill('Grannsläkten');
+  await page.getByRole('button', { name: 'Importera', exact: true }).click();
+  await expect(page.getByText(/Grannsläkten: 3 personer/)).toBeVisible();
+
+  // The same path with the same search is two different sets of people.
+  // The list is fetched after navigation, so wait for it before counting.
+  const countWedins = async (url: string) => {
+    await page.goto(url);
+    await expect(page.getByText(/\d+ träffar/)).toBeVisible();
+    return page.getByRole('link', { name: /Wedin/ }).count();
+  };
+  const grannar = await countWedins('/grannslakten/personer?q=wedin');
+  const wedin = await countWedins('/wedin/personer?q=wedin');
+  expect(grannar).toBeGreaterThan(0);
+  expect(wedin).toBeGreaterThan(grannar);
+
+  // A reload keeps the tree the address named — not the one last picked.
+  await page.goto('/grannslakten/personer');
+  await page.reload();
+  await expect(page).toHaveURL('/grannslakten/personer');
+  await expect(page.getByRole('combobox', { name: 'Släktträd' })).toHaveValue('grannslakten');
+
+  // A fresh browser, with nothing stored, opens the tree the link names.
+  const fresh = await context.browser()!.newContext();
+  const other = await fresh.newPage();
+  await other.goto('/grannslakten/personer');
+  await expect(other.getByRole('combobox', { name: 'Släktträd' })).toHaveValue('grannslakten');
+  await fresh.close();
+
+  // An address from before trees were in the path still lands somewhere real.
+  await page.goto('/personer?q=sven');
+  await expect(page).toHaveURL(/\/[a-z-]+\/personer\?q=sven$/);
+
+  // leave the suite as it found it
+  await page.goto('/wedin/installningar');
+  const cleanup = page.getByRole('listitem').filter({ hasText: 'Grannsläkten' });
+  await cleanup.getByRole('button', { name: 'Ta bort' }).click();
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Ta bort' }).click();
+  // Not a count: an earlier test leaves a tree of its own behind, so name the
+  // one this test is responsible for.
+  await expect(page.getByRole('combobox', { name: 'Släktträd' })).not.toContainText('Grannsläkten');
 });

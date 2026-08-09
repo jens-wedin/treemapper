@@ -197,14 +197,25 @@ function slugify(name: string): string {
     .replace(/[åäàáâã]/g, 'a').replace(/[öòóôõø]/g, 'o').replace(/[èéêë]/g, 'e')
     .replace(/[ìíîï]/g, 'i').replace(/[ùúûü]/g, 'u').replace(/[ýÿ]/g, 'y').replace(/ç/g, 'c');
   const slug = folded.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40).replace(/-+$/, '');
-  return slug || 'trad';
+  // Not `trad`: that is the chart page, so it is reserved, and a nameless tree
+  // would come out as `trad-2` — a second of something there is no first of.
+  return slug || 'slakt';
 }
+
+/**
+ * Ids the router needs for itself. A tree is the first segment of every
+ * address, so a tree called "Personer" would make `/personer` ambiguous —
+ * either the People page or that tree, and no way to tell.
+ */
+const RESERVED = new Set([
+  'personer', 'person', 'trad', 'statistik', 'konsekvens', 'kallor', 'kalla', 'installningar', 'api',
+]);
 
 function allocateId(name: string): string {
   const base = slugify(name);
   // A tree called "Wedin" must not be handed the id the default tree already
   // answers to — it would become unreachable behind it.
-  const taken = (id: string) => isDefaultId(id) || fs.existsSync(fileFor(id));
+  const taken = (id: string) => isDefaultId(id) || RESERVED.has(id) || fs.existsSync(fileFor(id));
   if (!taken(base)) return base;
   for (let n = 2; ; n++) {
     const candidate = `${base}-${n}`;

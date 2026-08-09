@@ -4,7 +4,7 @@ import { test, expect } from '@playwright/test';
 test.skip(!fs.existsSync('wedin.db'), 'wedin.db saknas — kör npm run import först');
 
 test('gränssnittet kan bytas till engelska, tyska och spanska', async ({ page }) => {
-  await page.goto('/personer');
+  await page.goto('/wedin/personer');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Personer');
 
   const picker = page.getByRole('combobox', { name: /Språk|Language|Sprache|Idioma/ });
@@ -24,7 +24,7 @@ test('gränssnittet kan bytas till engelska, tyska och spanska', async ({ page }
 });
 
 test('språkvalet minns mellan besök och gäller alla sidor', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/wedin');
   await page.getByRole('combobox', { name: /Språk|Language|Sprache|Idioma/ }).selectOption('en');
   // exact, so the nav link is not confused with anything merely containing it
   await expect(page.getByRole('link', { name: 'Tree', exact: true })).toBeVisible();
@@ -33,17 +33,17 @@ test('språkvalet minns mellan besök och gäller alla sidor', async ({ page }) 
   await expect(page.getByRole('link', { name: 'Tree', exact: true })).toBeVisible();
 
   // och på en helt annan sida
-  await page.goto('/installningar');
+  await page.goto('/wedin/installningar');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Settings');
   await expect(page.getByRole('link', { name: 'Download GEDCOM' })).toBeVisible();
 
-  await page.goto('/trad/I500001?vy=fan');
+  await page.goto('/wedin/trad/I500001?vy=fan');
   await expect(page.getByRole('tab', { name: 'Fan', exact: true })).toBeVisible();
   await expect(page.getByRole('group', { name: 'Fan chart' })).toBeVisible();
 });
 
 test('händelser och datum översätts på personsidan', async ({ page }) => {
-  await page.goto('/person/I500001');
+  await page.goto('/wedin/person/I500001');
   // scopa till tidslinjen: "Födelse" förekommer även i svensk källtext
   const timeline = page.locator('ol').first();
   await expect(timeline.getByText('Födelse').first()).toBeVisible();

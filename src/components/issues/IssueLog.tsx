@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import type { IssueLogEntry } from '../../../lib/issueLog';
 import { t } from '../../lib/i18n';
 import { SEVERITY_STYLE } from './severityStyle';
+import { useTreeUrl } from '../../lib/treeUrl';
 
 /** Date and time, short — the log is read as "what did I do last night". */
 const when = (iso: string) => {
@@ -15,6 +16,7 @@ const when = (iso: string) => {
  * deliberately set aside. Collapsed by default so the queue stays the page.
  */
 export default function IssueLog({ entries }: { entries: IssueLogEntry[] }) {
+  const link = useTreeUrl();
   return (
     <details className="mt-4 rounded-lg border p-4">
       <summary className="cursor-pointer font-medium">
@@ -44,7 +46,7 @@ export default function IssueLog({ entries }: { entries: IssueLogEntry[] }) {
                 </Badge>
                 <span className="text-foreground">
                   {entry.personId
-                    ? <Link to={`/person/${entry.personId}`} className="text-primary underline-offset-2 hover:underline">{entry.summary}</Link>
+                    ? <Link to={link(`/person/${entry.personId}`)} className="text-primary underline-offset-2 hover:underline">{entry.summary}</Link>
                     : entry.summary}
                 </span>
               </div>

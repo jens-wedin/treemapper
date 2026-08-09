@@ -4,6 +4,9 @@ data/
 media/
 *.db
 trees/
+.e2e/
+# superseded by .e2e/, kept so a stale directory from an older checkout
+# cannot be committed by accident
 .e2e-trees/
 .e2e-media/
 *.db-journal

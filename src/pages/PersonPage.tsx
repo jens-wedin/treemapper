@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { PersonFull, CitationView, FamilyMember } from '../../lib/queries';
 import { t, lifespan, displayName } from '../lib/i18n';
 import { ApiError, apiUrl, fetchJson } from '../lib/api';
+import { useTreeUrl } from '../lib/treeUrl';
 import { clearIssueMarks, useIssueMarks } from '../lib/issueMarks';
 import ProblemList from '../components/issues/ProblemList';
 import ChangeLog from '../components/issues/ChangeLog';
@@ -18,12 +19,13 @@ import RelationDialog from '../components/edit/RelationDialog';
 import RichText from '../components/RichText';
 
 function MemberLinks({ people }: { people: FamilyMember[] }) {
+  const link = useTreeUrl();
   if (!people.length) return <span className="text-muted-foreground">–</span>;
   return (
     <ul className="inline-flex flex-wrap gap-x-3 gap-y-1">
       {people.map(p => (
         <li key={p.id}>
-          <Link to={`/person/${p.id}`} className="text-primary underline-offset-2 hover:underline">
+          <Link to={link(`/person/${p.id}`)} className="text-primary underline-offset-2 hover:underline">
             {displayName(p)}
           </Link>{' '}
           <span className="text-sm text-muted-foreground">{lifespan(p.birthYear, p.deathYear)}</span>
@@ -34,13 +36,14 @@ function MemberLinks({ people }: { people: FamilyMember[] }) {
 }
 
 function Citations({ items }: { items: CitationView[] }) {
+  const link = useTreeUrl();
   if (!items.length) return null;
   return (
     <ul className="mt-1 space-y-1 text-sm text-muted-foreground">
       {items.map(c => (
         <li key={c.id}>
           {t('person.source')}:{' '}
-          <Link to={`/kalla/${c.sourceId}`} className="underline-offset-2 hover:underline">
+          <Link to={link(`/kalla/${c.sourceId}`)} className="underline-offset-2 hover:underline">
             {c.sourceTitle ?? c.sourceId}
           </Link>
           {c.quality != null && <> · {t('person.quality')} {c.quality}</>}
@@ -57,6 +60,7 @@ function Citations({ items }: { items: CitationView[] }) {
 }
 
 export default function PersonPage() {
+  const link = useTreeUrl();
   const { id } = useParams<{ id: string }>();
   const [data, setData] = useState<PersonFull | null>(null);
   const [state, setState] = useState<'loading' | 'ok' | 'missing' | 'error'>('loading');
@@ -97,7 +101,7 @@ export default function PersonPage() {
     return <div className="space-y-3"><Skeleton className="h-9 w-64" /><Skeleton className="h-40 w-full" /></div>;
   }
   if (state === 'missing') {
-    return <p>{t('common.notFound')} <Link className="underline" to="/personer">{t('common.backToList')}</Link></p>;
+    return <p>{t('common.notFound')} <Link className="underline" to={link('/personer')}>{t('common.backToList')}</Link></p>;
   }
   if (state === 'error' || !data) return <p role="alert">{t('common.error')}</p>;
 
@@ -125,7 +129,7 @@ export default function PersonPage() {
           )}
         </p>
         <p className="mt-2 flex items-center gap-3">
-          <Link to={`/trad/${person.id}`} className="text-primary underline-offset-2 hover:underline">
+          <Link to={link(`/trad/${person.id}`)} className="text-primary underline-offset-2 hover:underline">
             {t('tree.showInTree')}
           </Link>
           <Button variant="outline" size="sm" aria-expanded={editing} onClick={() => setEditing(v => !v)}>

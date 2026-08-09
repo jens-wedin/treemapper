@@ -12,7 +12,7 @@ const openSettings = async (page: import('@playwright/test').Page) => {
 test.skip(!fs.existsSync('wedin.db'), 'wedin.db saknas — kör npm run import först');
 
 test('trädet renderas och piltangenter flyttar fokus', async ({ page }) => {
-  await page.goto('/trad/I500001');
+  await page.goto('/wedin/trad/I500001');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Träd');
   const focusNode = page.locator('[data-tree-node="I500001"]');
   await expect(focusNode).toBeVisible();
@@ -25,7 +25,7 @@ test('trädet renderas och piltangenter flyttar fokus', async ({ page }) => {
 });
 
 test('klick på ett kort öppnar personpanelen', async ({ page }) => {
-  await page.goto('/trad/I500001');
+  await page.goto('/wedin/trad/I500001');
   await page.locator('[data-tree-node="I500001"]').click();
   const panel = page.getByRole('complementary', { name: 'Personuppgifter' });
   await expect(panel).toBeVisible();
@@ -37,7 +37,7 @@ test('klick på ett kort öppnar personpanelen', async ({ page }) => {
 });
 
 test('panelen kan fokusera om trädet och öppna personsidan', async ({ page }) => {
-  await page.goto('/trad/I500001');
+  await page.goto('/wedin/trad/I500001');
   // Enter på ett kort öppnar panelen
   const start = page.locator('[data-tree-node="I500001"]');
   await start.focus();
@@ -61,7 +61,7 @@ test('panelen kan fokusera om trädet och öppna personsidan', async ({ page }) 
 // då hamnar knappen i andra änden av trädet utanför den synliga ytan.
 for (const direction of ['up', 'down'] as const) {
   test(`familjevyn fäller ut generationer på plats (${direction})`, async ({ page }) => {
-    await page.goto('/trad/I502603?upp=2&ned=2&vy=family');
+    await page.goto('/wedin/trad/I502603?upp=2&ned=2&vy=family');
     await expect(page.locator('[data-tree-node]').first()).toBeVisible();
     const before = await page.locator('[data-tree-node]').count();
     const url = page.url();
@@ -89,7 +89,7 @@ for (const direction of ['up', 'down'] as const) {
 }
 
 test('familjevyns utfällningsknapp nås med tangentbordet', async ({ page }) => {
-  await page.goto('/trad/I502603?upp=2&ned=2&vy=family');
+  await page.goto('/wedin/trad/I502603?upp=2&ned=2&vy=family');
   const up = page.locator('[data-handle][data-handle-direction="up"]').first();
   await expect(up).toBeVisible();
   const personId = await up.getAttribute('data-handle');
@@ -107,7 +107,7 @@ test('familjevyns utfällningsknapp nås med tangentbordet', async ({ page }) =>
 });
 
 test('antavlan visar förfäder men inga ättlingar', async ({ page }) => {
-  await page.goto('/trad/I500003?upp=3&ned=2');
+  await page.goto('/wedin/trad/I500003?upp=3&ned=2');
   await page.getByRole('tab', { name: 'Antavla' }).click();
   await expect(page).toHaveURL(/vy=pedigree/);
   await expect(page.getByRole('group', { name: 'Antavla' })).toBeVisible();
@@ -130,7 +130,7 @@ test('antavlan visar förfäder men inga ättlingar', async ({ page }) => {
 });
 
 test('generationsvalet håller i sig och gäller genast', async ({ page }) => {
-  await page.goto('/trad/I500003?upp=2&vy=pedigree');
+  await page.goto('/wedin/trad/I500003?upp=2&vy=pedigree');
   await expect(page.locator('[data-tree-node]').first()).toBeVisible();
   const atTwo = await page.locator('[data-tree-node]').count();
 
@@ -151,7 +151,7 @@ test('generationsvalet håller i sig och gäller genast', async ({ page }) => {
 
 test('utfällningsknappen öppnar två generationer till på plats', async ({ page }) => {
   // två generationer: förfäder bortom farföräldrarna ligger utanför tavlan
-  await page.goto('/trad/I500003?upp=2&vy=pedigree');
+  await page.goto('/wedin/trad/I500003?upp=2&vy=pedigree');
   await expect(page.locator('[data-tree-node]').first()).toBeVisible();
   const before = await page.locator('[data-tree-node]').count();
 
@@ -186,7 +186,7 @@ test('utfällningsknappen öppnar två generationer till på plats', async ({ pa
 });
 
 test('utfällningsknappen nås med tangentbordet', async ({ page }) => {
-  await page.goto('/trad/I500003?upp=2&vy=pedigree');
+  await page.goto('/wedin/trad/I500003?upp=2&vy=pedigree');
   const handle = page.locator('[data-handle]').first();
   await expect(handle).toBeVisible();
   const ancestorId = await handle.getAttribute('data-handle');
@@ -204,7 +204,7 @@ test('utfällningsknappen nås med tangentbordet', async ({ page }) => {
 });
 
 test('solfjädern renderas och kan navigeras med tangentbord', async ({ page }) => {
-  await page.goto('/trad/I500003?upp=4&vy=fan');
+  await page.goto('/wedin/trad/I500003?upp=4&vy=fan');
   await expect(page.getByRole('group', { name: 'Solfjäder' })).toBeVisible();
   const slices = page.locator('[data-tree-node]');
   await expect(slices.first()).toBeVisible();
@@ -223,7 +223,7 @@ test('solfjädern renderas och kan navigeras med tangentbord', async ({ page }) 
 
 test('personpanelen fungerar i både antavla och solfjäder', async ({ page }) => {
   for (const [view, label] of [['pedigree', 'Antavla'], ['fan', 'Solfjäder']] as const) {
-    await page.goto(`/trad/I500003?upp=3&vy=${view}`);
+    await page.goto(`/wedin/trad/I500003?upp=3&vy=${view}`);
     await expect(page.getByRole('group', { name: label })).toBeVisible();
     // klicka på etiketten: en skivas bounding box har sin mittpunkt inne i
     // solfjäderns navcirkel, så ett klick "mitt på" elementet träffar navet
@@ -236,7 +236,7 @@ test('personpanelen fungerar i både antavla och solfjäder', async ({ page }) =
 });
 
 test('listvyn är en likvärdig väg och kan fokusera om trädet', async ({ page }) => {
-  await page.goto('/trad/I500001');
+  await page.goto('/wedin/trad/I500001');
   await page.getByRole('tab', { name: 'Lista' }).click();
   await expect(page.getByRole('heading', { name: 'Förfäder' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Ättlingar' })).toBeVisible();
@@ -247,7 +247,7 @@ test('listvyn är en likvärdig väg och kan fokusera om trädet', async ({ page
 });
 
 test('personsidan länkar till trädet', async ({ page }) => {
-  await page.goto('/person/I500001');
+  await page.goto('/wedin/person/I500001');
   await page.getByRole('link', { name: 'Visa i träd' }).click();
   await expect(page).toHaveURL(/\/trad\/I500001/);
   await expect(page.locator('[data-tree-node="I500001"]')).toBeVisible();
@@ -275,10 +275,10 @@ test.describe('konsekvensmärken', () => {
     await expect(toggle).toBeChecked();
     await expect(card(page).locator('[data-issue-severity]')).toBeVisible();
 
-    await page.goto('/trad/I500244?upp=2&vy=pedigree');
+    await page.goto('/wedin/trad/I500244?upp=2&vy=pedigree');
     await expect(card(page).locator('[data-issue-severity]')).toBeVisible();
 
-    await page.goto('/trad/I500244?upp=2&vy=fan');
+    await page.goto('/wedin/trad/I500244?upp=2&vy=fan');
     await expect(page.locator('[data-issue-severity]').first()).toBeVisible();
   });
 
@@ -317,7 +317,7 @@ test.describe('konsekvensmärken', () => {
     await expect(group).toContainText('efter faderns Abraham Abrahamsson död 1800');
 
     // en person utan problem får inget avsnitt
-    await page.goto('/trad/I500001?upp=1&ned=1&vy=family');
+    await page.goto('/wedin/trad/I500001?upp=1&ned=1&vy=family');
     await page.locator('[data-tree-node="I500001"]').click();
     await expect(panel.getByRole('heading', { level: 2 })).toContainText('Sven-Erik');
     await expect(panel.getByRole('heading', { name: 'Konsekvenser' })).toHaveCount(0);
@@ -341,7 +341,7 @@ test.describe('konsekvensmärken', () => {
 
 test.describe('övergångar mellan vyerna', () => {
   test('antavlan lindar ihop sig till solfjädern', async ({ page }) => {
-    await page.goto('/trad/I500003?upp=4&vy=pedigree');
+    await page.goto('/wedin/trad/I500003?upp=4&vy=pedigree');
     await expect(page.getByRole('group', { name: 'Antavla' })).toBeVisible();
 
     await page.getByRole('tab', { name: 'Solfjäder' }).click();
@@ -354,7 +354,7 @@ test.describe('övergångar mellan vyerna', () => {
 
   test('mindre rörelse hoppar över både morf och korsfade', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.goto('/trad/I500003?upp=4&vy=pedigree');
+    await page.goto('/wedin/trad/I500003?upp=4&vy=pedigree');
     await expect(page.getByRole('group', { name: 'Antavla' })).toBeVisible();
 
     await page.getByRole('tab', { name: 'Solfjäder' }).click();
@@ -364,7 +364,7 @@ test.describe('övergångar mellan vyerna', () => {
   });
 
   test('bara ett träd åt gången är nåbart under en övergång', async ({ page }) => {
-    await page.goto('/trad/I500003?upp=3&vy=family');
+    await page.goto('/wedin/trad/I500003?upp=3&vy=family');
     await expect(page.getByRole('group', { name: 'Släktträd' })).toBeVisible();
 
     // Vyn som lämnar ligger kvar en stund med aria-hidden och inert; varken
@@ -380,7 +380,7 @@ test.describe('övergångar mellan vyerna', () => {
 
 test.describe('personpanelen glider in', () => {
   const openPanel = async (page: import('@playwright/test').Page) => {
-    await page.goto('/trad/I500001?upp=2&ned=1&vy=family');
+    await page.goto('/wedin/trad/I500001?upp=2&ned=1&vy=family');
     await page.locator('[data-tree-node="I500001"]').click();
     return page.getByRole('complementary', { name: 'Personuppgifter' });
   };
@@ -428,7 +428,7 @@ test.describe('zoomen', () => {
   };
 
   test('hjulet zoomar i proportion till hur långt man rullar', async ({ page }) => {
-    await page.goto('/trad/I500001?upp=2&ned=1&vy=family');
+    await page.goto('/wedin/trad/I500001?upp=2&ned=1&vy=family');
     await page.locator('[data-tree-node]').first().waitFor();
 
     // en liten knuff — som en styrplatta ger — ska knappt märkas
@@ -463,7 +463,7 @@ test.describe('att kasta trädet', () => {
   };
 
   test('kastet rullar vidare efter att man släppt, och saktar in', async ({ page }) => {
-    await page.goto('/trad/I500001?upp=2&ned=1&vy=family');
+    await page.goto('/wedin/trad/I500001?upp=2&ned=1&vy=family');
     await page.locator('[data-tree-node]').first().waitFor();
 
     await flick(page);
@@ -488,7 +488,7 @@ test.describe('att kasta trädet', () => {
 
   test('mindre rörelse stannar där fingret släppte', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.goto('/trad/I500001?upp=2&ned=1&vy=family');
+    await page.goto('/wedin/trad/I500001?upp=2&ned=1&vy=family');
     await page.locator('[data-tree-node]').first().waitFor();
 
     await flick(page);
@@ -511,7 +511,7 @@ test.describe('att kasta zoomen', () => {
   };
 
   test('zoomen rullar vidare en stund efter att hjulet stannat', async ({ page }) => {
-    await page.goto('/trad/I500001?upp=2&ned=1&vy=family');
+    await page.goto('/wedin/trad/I500001?upp=2&ned=1&vy=family');
     await page.locator('[data-tree-node]').first().waitFor();
 
     await spin(page);
@@ -527,7 +527,7 @@ test.describe('att kasta zoomen', () => {
 
   test('mindre rörelse zoomar utan svans', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.goto('/trad/I500001?upp=2&ned=1&vy=family');
+    await page.goto('/wedin/trad/I500001?upp=2&ned=1&vy=family');
     await page.locator('[data-tree-node]').first().waitFor();
 
     await spin(page);
@@ -539,7 +539,7 @@ test.describe('att kasta zoomen', () => {
 
 test.describe('lägga till släkting från kortet', () => {
   test('plusset visas bara när inställningen är på, och lägger till en förälder', async ({ page }) => {
-    await page.goto('/trad/I500001?upp=2&ned=1&vy=family');
+    await page.goto('/wedin/trad/I500001?upp=2&ned=1&vy=family');
     const card = page.locator('[data-tree-node="I500001"]');
     await expect(card).toBeVisible();
 

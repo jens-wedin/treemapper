@@ -122,7 +122,13 @@ describe('importing a tree', () => {
   });
 
   it('falls back to a usable id when the name has no letters', () => {
-    expect(createTree('***', MINI, 'x.ged').tree.id).toBe('trad');
+    expect(createTree('***', MINI, 'x.ged').tree.id).toBe('slakt');
+  });
+
+  it('will not take an id the router needs for a page', () => {
+    // `/personer` has to mean the People page, so a tree cannot be `personer`.
+    expect(createTree('Personer', MINI, 'x.ged').tree.id).toBe('personer-2');
+    expect(createTree('Träd', MINI, 'x.ged').tree.id).toBe('trad-2');
   });
 
   it('leaves nothing behind when the import fails', () => {

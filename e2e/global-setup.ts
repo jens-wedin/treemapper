@@ -11,16 +11,24 @@ import path from 'node:path';
  * gigabyte.
  */
 export default function globalSetup() {
-  for (const suffix of ['', '-wal', '-shm']) fs.rmSync(`.e2e.db${suffix}`, { force: true });
-  if (fs.existsSync('wedin.db')) fs.copyFileSync('wedin.db', '.e2e.db');
+  fs.rmSync('.e2e', { recursive: true, force: true });
+  fs.mkdirSync('.e2e', { recursive: true });
 
-  fs.rmSync('.e2e-trees', { recursive: true, force: true });
+  // Named wedin.db, in a directory of its own: a tree's id comes from its
+  // filename, so this is what makes the suite walk the same `/wedin/...`
+  // addresses the app really uses.
+  //
+  // The -wal has to come too. In WAL mode the newest writes live there and not
+  // in the .db, so copying the one file alone hands the suite a stale database
+  // — recent edits simply missing, for no visible reason.
+  for (const suffix of ['', '-wal', '-shm']) {
+    if (fs.existsSync(`wedin.db${suffix}`)) fs.copyFileSync(`wedin.db${suffix}`, `.e2e/wedin.db${suffix}`);
+  }
 
-  fs.rmSync('.e2e-media', { recursive: true, force: true });
-  fs.mkdirSync('.e2e-media', { recursive: true });
+  fs.mkdirSync('.e2e/media', { recursive: true });
   if (fs.existsSync('media')) {
     for (const name of fs.readdirSync('media')) {
-      fs.symlinkSync(path.resolve('media', name), path.join('.e2e-media', name));
+      fs.symlinkSync(path.resolve('media', name), path.join('.e2e/media', name));
     }
   }
 }

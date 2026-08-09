@@ -2,7 +2,7 @@ import { and, eq, inArray, or, sql } from 'drizzle-orm';
 import type { Db } from '../db/client';
 import { persons, families, familyChildren, events, citations, sources, auditLog } from '../db/schema';
 import { extractYear } from './dates';
-import type { EventCreate, EventUpdate, PersonUpdate, RelationInput, SourceUpdate } from './schemas';
+import type { EventCreate, EventUpdate, NewPerson, PersonUpdate, RelationInput, SourceUpdate } from './schemas';
 
 export class MutationError extends Error {
   constructor(message: string, public status: 400 | 404 | 409 = 400) {
@@ -59,6 +59,22 @@ function assertOwnerExists(tx: Tx, ownerType: 'person' | 'family', ownerId: stri
   if (!tx.select().from(table).where(eq(table.id, ownerId)).all().length) {
     throw new MutationError('Ägaren finns inte', 404);
   }
+}
+
+/**
+ * A person with nobody attached yet.
+ *
+ * Everyone else is created through addRelation, hanging off someone who is
+ * already there — which cannot start a tree that is empty. This is how the
+ * first person in a new tree comes into being.
+ */
+export function createPerson(db: Db, input: NewPerson): MutationResult<{ id: string }> {
+  return db.transaction(tx => {
+    const id = nextId(tx, persons, 'I');
+    tx.insert(persons).values({ id, givenName: input.givenName, surname: input.surname, sex: input.sex }).run();
+    audit(tx, 'create', 'person', id, null, tx.select().from(persons).where(eq(persons.id, id)).all()[0]);
+    return { warnings: [], data: { id } };
+  });
 }
 
 export function createEvent(db: Db, input: EventCreate): MutationResult<{ id: number }> {

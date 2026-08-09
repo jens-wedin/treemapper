@@ -43,7 +43,10 @@ cross-fade and the morph.
 The app holds **several unconnected family trees**, one SQLite file each, and a
 picker in the header chooses which one is on screen. Importing a GEDCOM from
 **Inställningar → Importera släktträd** creates a *new* tree; nothing existing
-is touched, matched or merged.
+is touched, matched or merged. **Inställningar → Skapa tomt släktträd** starts
+one from nothing, for a family built up by hand — the first person is added
+with **Ny person** on the Personer page, which is also how to record someone
+whose place in the family is not known yet.
 
 One file per tree rather than a `treeId` column, because **GEDCOM xrefs are only
 unique inside one file** — this tree's `I500097` and a cousin's `I500097` are

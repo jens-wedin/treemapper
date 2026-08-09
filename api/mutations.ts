@@ -1,7 +1,7 @@
 import { Hono, type Context } from 'hono';
-import { personUpdateSchema, eventCreateSchema, eventUpdateSchema, relationSchema } from '../lib/schemas';
+import { personUpdateSchema, eventCreateSchema, eventUpdateSchema, newPersonSchema, relationSchema } from '../lib/schemas';
 import type { TreeResolver } from './trees';
-import { MutationError, updatePerson, createEvent, updateEvent, deleteEvent, addRelation } from '../lib/mutations';
+import { MutationError, updatePerson, createPerson, createEvent, updateEvent, deleteEvent, addRelation } from '../lib/mutations';
 import type { MutationResult } from '../lib/mutations';
 
 function run<T>(c: Context, fn: () => MutationResult<T>) {
@@ -26,6 +26,14 @@ export function createMutationsApi(tree: TreeResolver) {
     const parsed = personUpdateSchema.safeParse(await parseBody(c));
     if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? 'Ogiltiga fält' }, 400);
     return run(c, () => updatePerson(db, c.req.param('id'), parsed.data));
+  });
+
+  /** A person attached to nobody — how an empty tree gets its first record. */
+  api.post('/api/persons', async c => {
+    const { db } = tree(c);
+    const parsed = newPersonSchema.safeParse(await parseBody(c));
+    if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? 'Ogiltiga fält' }, 400);
+    return run(c, () => createPerson(db, parsed.data));
   });
 
   api.post('/api/events', async c => {

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { t } from '../lib/i18n';
 import { apiUrl } from '../lib/api';
 import ImportForm from '../components/settings/ImportForm';
+import NewTreeForm from '../components/settings/NewTreeForm';
 import TreeList from '../components/settings/TreeList';
 
 export default function SettingsPage() {
@@ -17,6 +18,12 @@ export default function SettingsPage() {
         <h2 className="text-lg font-semibold">{t('trees.import')}</h2>
         <p className="mt-2 text-foreground">{t('trees.importHelp')}</p>
         <ImportForm />
+      </section>
+
+      <section className="mt-6 rounded-lg border p-4">
+        <h2 className="text-lg font-semibold">{t('trees.create')}</h2>
+        <p className="mt-2 text-foreground">{t('trees.createHelp')}</p>
+        <NewTreeForm />
       </section>
 
       <section className="mt-6 rounded-lg border p-4">

@@ -5,7 +5,7 @@ import { Hono, type Context } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { HTTPException } from 'hono/http-exception';
 import type { Db } from '../db/client';
-import { DEFAULT_TREE, TreeNotFound, createTree, deleteTree, listTrees, openTree, renameTree } from '../lib/trees';
+import { DEFAULT_TREE, TreeNotFound, createEmptyTree, createTree, deleteTree, listTrees, openTree, renameTree } from '../lib/trees';
 import { parseGedcom } from '../lib/gedcom/parser';
 
 export interface ActiveTree { id: string; db: Db }
@@ -46,6 +46,14 @@ export function createTreesApi() {
   const api = new Hono();
 
   api.get('/api/trees', c => c.json({ trees: listTrees() }));
+
+  /** An empty tree, for building a family by hand rather than importing one. */
+  api.post('/api/trees', async c => {
+    const body = await c.req.json().catch(() => ({}));
+    const name = typeof body.name === 'string' ? body.name.trim() : '';
+    if (!name) return c.json({ error: 'Ge släktträdet ett namn' }, 400);
+    return c.json({ ok: true, tree: createEmptyTree(name) });
+  });
 
   api.post(
     '/api/trees/import',

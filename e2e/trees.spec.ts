@@ -83,3 +83,31 @@ test('släktträdet kan byta namn', async ({ page }) => {
   await page.getByRole('alertdialog').getByRole('button', { name: 'Ta bort' }).click();
   await expect(page.getByRole('combobox', { name: 'Släktträd' }).locator('option')).toHaveCount(1);
 });
+
+test('ett tomt släktträd går att skapa och fylla för hand', async ({ page }) => {
+  await page.goto('/installningar');
+  await page.getByLabel('Namn på det nya släktträdet').fill('Mormors släkt');
+  await page.getByRole('button', { name: 'Skapa tomt släktträd' }).click();
+
+  // man byter till det direkt, och det är tomt
+  const picker = page.getByRole('combobox', { name: 'Släktträd' });
+  await expect(picker).toHaveValue('mormors-slakt');
+  await page.getByRole('link', { name: 'Personer' }).click();
+  await expect(page.getByText('0 träffar')).toBeVisible();
+
+  // den första personen läggs till här — det finns ingen annan väg in
+  await page.getByRole('button', { name: 'Ny person' }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByLabel('Förnamn').fill('Karin');
+  await dialog.getByLabel('Efternamn').fill('Mormorsdotter');
+  await dialog.getByRole('button', { name: 'Spara' }).click();
+
+  // och man landar på hens sida
+  await expect(page).toHaveURL(/\/person\/I1$/);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Karin Mormorsdotter');
+
+  // det ursprungliga trädet är orört
+  await picker.selectOption({ index: 0 });
+  await page.getByRole('link', { name: 'Personer' }).click();
+  await expect(page.getByText('0 träffar')).toHaveCount(0);
+});

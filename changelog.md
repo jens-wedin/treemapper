@@ -9,6 +9,11 @@
 - `EventForm` tar nu emot ägartyp och en låst typ, så samma formulär används för både personhändelser och vigsel. Åldersfältet visas bara för personhändelser — ett par har två åldrar.
 - `FamilyView.marriage` bär med sig händelsens id, vilket är det som gör den redigerbar på plats.
 
+**Släktträd från ingenting**
+- **Inställningar → Skapa tomt släktträd** startar ett träd utan innehåll, för en släkt man bygger upp för hand. Man byter till det direkt.
+- **Ny person** på Personer-sidan skapar någon utan släkting. Alla andra läggs till från en befintlig persons sida — som barn, partner eller förälder — vilket inte kan starta ett tomt träd. Det är också vägen in för den vars plats i släkten ännu är okänd.
+- Det nya trädets namnfält fick ett eget etikettnamn: importformulärets namnfält ligger på samma sida, och två fält med samma tillgängliga namn går inte att skilja åt.
+
 **Foton går att lägga till och ta bort**
 - En knapp vid Foton-rubriken laddar upp en bild till personen; filnamnet blir titel. Avdelningen visas även för den som saknar foton — annars finns ingenstans att lägga det första.
 - Borttagning sker i det stora formatet, där man ser vad man tar bort, bakom en bekräftelse. **Raden tas bort, filen ligger kvar.** Raden går att läsa ur ändringshistoriken; bilden kan vara enda kopian av ett ansikte ingen levande minns.

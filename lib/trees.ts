@@ -176,6 +176,27 @@ export function createTree(name: string, gedPath: string, sourceFile: string): {
   return { tree: infoFor(id), summary };
 }
 
+/**
+ * A tree with nobody in it yet, for building a family up by hand rather than
+ * from a file. `createDb` runs the migrations, so the database is complete the
+ * moment it exists — it simply has no rows.
+ */
+export function createEmptyTree(name: string): TreeInfo {
+  const id = allocateId(name);
+  fs.mkdirSync(treesDir(), { recursive: true });
+
+  const db = createDb(fileFor(id));
+  db.insert(treeMeta).values({
+    id: 1,
+    name: name.trim() || id,
+    createdAt: new Date().toISOString(),
+    sourceFile: null,          // nothing was imported; it starts empty
+  }).run();
+  db.$client.close();
+
+  return infoFor(id);
+}
+
 export function renameTree(id: string, name: string): TreeInfo {
   const trimmed = name.trim();
   if (!trimmed) throw new Error('Ett släktträd måste ha ett namn');

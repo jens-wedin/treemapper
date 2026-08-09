@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import type { PersonListItem } from '../../lib/queries';
 import { t, displayName } from '../lib/i18n';
 import { fetchJson } from '../lib/api';
+import NewPersonDialog from '../components/edit/NewPersonDialog';
 
 const PAGE_SIZE = 50;
 interface SearchResult { items: PersonListItem[]; total: number }
@@ -50,7 +51,12 @@ export default function PersonList() {
 
   return (
     <section>
-      <h1 className="text-2xl font-bold">{t('nav.persons')}</h1>
+      <div className="flex flex-wrap items-center gap-3">
+        <h1 className="text-2xl font-bold">{t('nav.persons')}</h1>
+        {/* The only way into an empty tree, and the way to record someone
+            whose place in the family is not known yet. */}
+        <NewPersonDialog />
+      </div>
       <form onSubmit={submit} className="mt-4 flex flex-wrap items-end gap-3">
         <div>
           <label htmlFor="sok-namn" className="block text-sm font-medium">{t('search.name')}</label>

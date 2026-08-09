@@ -2,7 +2,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { TreeNotFound, closeTrees, createTree, deleteTree, listTrees, openTree, renameTree } from './trees';
+import { persons } from '../db/schema';
+import { TreeNotFound, closeTrees, createEmptyTree, createTree, deleteTree, listTrees, openTree, renameTree } from './trees';
 import { SAFE_ENV } from '../vitest.setup';
 
 const MINI = path.resolve('lib/gedcom/fixtures/mini.ged');
@@ -88,6 +89,22 @@ describe('importing a tree', () => {
     expect(() => createTree('Trasig', path.join(workDir, 'finns-inte.ged'), 'x.ged')).toThrow();
     expect(listTrees().map(t => t.id)).toEqual(['default']);
     expect(fs.existsSync(path.join(workDir, 'trees', 'trasig.db'))).toBe(false);
+  });
+});
+
+describe('a tree started from nothing', () => {
+  it('is created empty, named, and ready to be added to', () => {
+    const tree = createEmptyTree('Mormors släkt');
+
+    expect(tree).toMatchObject({ id: 'mormors-slakt', name: 'Mormors släkt', persons: 0, sourceFile: null });
+    expect(listTrees().map(t => t.id)).toEqual(['default', 'mormors-slakt']);
+    // The migrations have run, so the tables are there — it simply has no rows.
+    expect(openTree('mormors-slakt').select().from(persons).all()).toEqual([]);
+  });
+
+  it('shares the naming rules with an imported one', () => {
+    createTree('Larsson', MINI, 'x.ged');
+    expect(createEmptyTree('Larsson').id).toBe('larsson-2');
   });
 });
 

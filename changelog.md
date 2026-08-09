@@ -9,6 +9,13 @@
 - `EventForm` tar nu emot ägartyp och en låst typ, så samma formulär används för både personhändelser och vigsel. Åldersfältet visas bara för personhändelser — ett par har två åldrar.
 - `FamilyView.marriage` bär med sig händelsens id, vilket är det som gör den redigerbar på plats.
 
+**Foton går att lägga till och ta bort**
+- En knapp vid Foton-rubriken laddar upp en bild till personen; filnamnet blir titel. Avdelningen visas även för den som saknar foton — annars finns ingenstans att lägga det första.
+- Borttagning sker i det stora formatet, där man ser vad man tar bort, bakom en bekräftelse. **Raden tas bort, filen ligger kvar.** Raden går att läsa ur ändringshistoriken; bilden kan vara enda kopian av ett ansikte ingen levande minns.
+- Uppladdade filer lagras som de nedladdade — `media/<rad-id>.<ändelse>` — och `originalUrl` pekar på filen själv, så exporten skriver en FILE-rad som betyder något.
+- **Rättat: ändringshistoriken saknade foton.** Den avgör vad som rör en person utifrån posttyp, och `media` fanns aldrig med i listan — tillägg och borttagningar loggades men syntes aldrig.
+- e2e kör mot en egen mediakatalog av symlänkar till de riktiga filerna: sviten läser varje foto, men det den laddar upp hamnar i kopian.
+
 **Foton öppnas i stort format**
 - Ett klick på ett foto på personsidan öppnar det så stort skärmen tillåter. Miniatyrerna är beskurna kvadrater, så bilden på sidan är inte bilden — att öppna den är enda sättet att se vad som faktiskt fotograferades.
 - Piltangenter bläddrar mellan personens foton, rubriken räknar (“3 av 31”), och Escape stänger. Miniatyren är en **knapp** och inte en klickbar bild, så tangentbord och skärmläsare vet att den öppnar något.

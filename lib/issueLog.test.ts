@@ -1,12 +1,17 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createDb, type Db } from '../db/client';
 import { persons, events, families, familyChildren, issueDismissals } from '../db/schema';
 import { updatePerson, updateEvent, createEvent, deleteEvent, removeChildLink } from './mutations';
 import { mergePersons } from './merge';
 import { detectIssues } from './issues';
+import { addPhoto, removePhoto } from './media';
 import { buildIssueLog, buildPersonLog } from './issueLog';
 
 let db: Db;
+const photoDir = fs.mkdtempSync(path.join(os.tmpdir(), 'wedin-log-media-'));
 
 beforeEach(() => {
   db = createDb(':memory:');
@@ -121,6 +126,23 @@ describe('buildPersonLog', () => {
     expect(log.every(e => e.personId === 'I1')).toBe(true);
     expect(log[0]!.summary).toContain('Död');          // senast först
     expect(log[1]!.summary).toContain('förnamn');
+  });
+
+  it('tar med foton som lagts till och tagits bort', () => {
+    const pixel = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+      'base64',
+    );
+    const { id } = addPhoto(db, { ownerId: 'I1', title: 'Farmor', mimeType: 'image/png', bytes: pixel }, photoDir);
+    removePhoto(db, id);
+
+    const log = buildPersonLog(db, 'I1');
+    expect(log).toHaveLength(2);
+    expect(log[0]!.summary).toContain('Foto borttaget');    // senast först
+    expect(log[0]!.summary).toContain('Farmor');
+    expect(log[1]!.summary).toContain('Foto tillagt');
+    // och det hamnar hos rätt person
+    expect(buildPersonLog(db, 'I2')).toEqual([]);
   });
 
   it('håller andras ändringar utanför', () => {

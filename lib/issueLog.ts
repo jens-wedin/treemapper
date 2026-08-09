@@ -92,6 +92,18 @@ export function describeAudit(row: AuditRow, nameOf: (id: string) => string): { 
     return { summary: `${label}${who}: ${changes || 'uppgifter ändrade'}`, personId: ownerId };
   }
 
+  if (row.entityType === 'media') {
+    const ownerId = (snapshot?.ownerId as string | undefined) ?? null;
+    const who = ownerId ? ` för ${nameOf(ownerId)}` : '';
+    const title = (snapshot?.title as string | undefined) || null;
+    const named = title ? `: ”${title}”` : '';
+    if (row.action === 'create') return { summary: `Foto tillagt${who}${named}`, personId: ownerId };
+    // The row is here in full, so a removed photo can be put back — which is
+    // why the file itself is left on disk.
+    if (row.action === 'delete') return { summary: `Foto borttaget${who}${named}`, personId: ownerId };
+    return { summary: `Foto ändrat${who}${named}`, personId: ownerId };
+  }
+
   if (row.entityType === 'person') {
     const changes = fieldChanges(before, after, PERSON_FIELDS);
     return { summary: `${nameOf(row.entityId)}: ${changes || 'uppgifter ändrade'}`, personId: row.entityId };
@@ -184,7 +196,9 @@ export function buildPersonLog(db: Db, personId: string, limit = 25): IssueLogEn
 
     const snapshot = parse(row.after) ?? parse(row.before);
     if (!snapshot) return false;
-    if (row.entityType === 'event') return snapshot.ownerId === personId;
+    // An event and a photo both belong to their owner, and a deleted one is
+    // only in the before-image — which is exactly when the log earns its keep.
+    if (row.entityType === 'event' || row.entityType === 'media') return snapshot.ownerId === personId;
     if (row.entityType === 'family') return snapshot.husbandId === personId || snapshot.wifeId === personId;
     return false;
   };

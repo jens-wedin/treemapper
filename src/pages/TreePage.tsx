@@ -4,12 +4,13 @@ import type { TreeData } from '../../lib/tree';
 import { t, displayName, lifespan } from '../lib/i18n';
 import { ApiError, fetchJson } from '../lib/api';
 import { useIssueMarkPreference } from '../lib/chartPreferences';
-import { useIssueMarks } from '../lib/issueMarks';
+import { clearIssueMarks, useIssueMarks } from '../lib/issueMarks';
 import { flattenAncestors } from '../lib/ahnentafel';
 import { layoutPedigree } from '../lib/pedigreeLayout';
 import { layoutFan } from '../lib/fanLayout';
 import { usePrefersReducedMotion } from '../lib/useReducedMotion';
 import { useLingering } from '../lib/useLingering';
+import AddRelativeDialog from '../components/edit/AddRelativeDialog';
 import AncestorMorph from '../components/AncestorMorph';
 import ChartSwitcher from '../components/ChartSwitcher';
 import TreeSettings from '../components/TreeSettings';
@@ -72,6 +73,10 @@ export default function TreePage() {
    */
   const reduced = usePrefersReducedMotion();
   const [morph, setMorph] = useState<'toFan' | 'toPedigree' | null>(null);
+  /** Whose card's plus was pressed; the dialog lives outside the SVG. */
+  const [relativeFor, setRelativeFor] = useState<string | null>(null);
+  /** Bumped after an edit, to fetch the chart again. */
+  const [reloadKey, setReloadKey] = useState(0);
 
   /**
    * Decided as the view is chosen, not afterwards in an effect. An effect runs
@@ -135,7 +140,7 @@ export default function TreePage() {
         }
       });
     return () => { stale = true; };
-  }, [id, upp, ned, routeId, depthQuery, view, navigate]);
+  }, [id, upp, ned, routeId, depthQuery, view, navigate, reloadKey]);
 
   // Functional form: changing view and depth in quick succession must not have
   // the second change read a snapshot taken before the first.
@@ -222,13 +227,21 @@ export default function TreePage() {
             {view === 'list' ? (
               <TreeList ancestors={data.ancestors} descendants={data.descendants} depthQuery={depthQuery} />
             ) : view === 'family' ? (
-              <TreeChart data={data} onSelect={setSelectedId} selectedId={selectedId} />
+              <TreeChart data={data} onSelect={setSelectedId} selectedId={selectedId} onAddRelative={setRelativeFor} />
             ) : view === 'pedigree' ? (
-              <PedigreeChart data={data} generations={upp} onSelect={setSelectedId} selectedId={selectedId} />
+              <PedigreeChart data={data} generations={upp} onSelect={setSelectedId} selectedId={selectedId} onAddRelative={setRelativeFor} />
             ) : (
               <FanChart data={data} generations={upp} onSelect={setSelectedId} selectedId={selectedId} />
             )}
           </ChartSwitcher>
+          {/* Outside the charts: an SVG cannot host a dialog, and the new
+              relative must survive the chart being redrawn around it. */}
+          <AddRelativeDialog
+            personId={relativeFor}
+            onClose={() => setRelativeFor(null)}
+            onSaved={() => { clearIssueMarks(); setReloadKey(k => k + 1); }}
+          />
+
           {/* Held for the length of its exit, so closing slides away instead
               of blinking out — the panel still needs the person it was
               showing while it leaves. */}

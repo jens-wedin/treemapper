@@ -42,6 +42,19 @@
   box-shadow: inset 0 1px 3px var(--chart-well), inset 0 0 16px var(--chart-well);
 }
 
+/* The plus on a card: quiet until the card is under the pointer or it is
+   focused, so a tree full of them does not read as a tree full of buttons. */
+.chart-add {
+  opacity: 0.45;
+  transition: opacity 160ms ease-out;
+}
+
+.chart-card:hover .chart-add,
+.chart-add:hover,
+.chart-add:focus-visible {
+  opacity: 1;
+}
+
 /* Panning to reveal a freshly opened branch, rather than jumping to it. */
 .chart-pan {
   transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);

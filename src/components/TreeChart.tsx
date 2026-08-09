@@ -9,7 +9,7 @@ import {
 } from '../lib/treeLayout';
 import { useChartViewport } from '../lib/useChartViewport';
 import { useChartTransitions } from '../lib/useChartTransitions';
-import { useFlagPreference, useIssueMarkPreference } from '../lib/chartPreferences';
+import { useAddRelativePreference, useFlagPreference, useIssueMarkPreference } from '../lib/chartPreferences';
 import { useIssueMarks } from '../lib/issueMarks';
 import PersonCard, { cardLabel } from './PersonCard';
 import ChartZoom from './ChartZoom';
@@ -24,11 +24,13 @@ const edgePath = (l: TreeEdge) => (l.type === 'marriage'
   ? `M ${l.x1} ${l.y1} L ${l.x2} ${l.y2}`
   : `M ${l.x1} ${l.y1} C ${l.x1} ${(l.y1 + l.y2) / 2}, ${l.x2} ${(l.y1 + l.y2) / 2}, ${l.x2} ${l.y2}`);
 
-export default function TreeChart({ data, onSelect, selectedId }: {
+export default function TreeChart({ data, onSelect, selectedId, onAddRelative }: {
   data: TreeData;
   /** A card was activated — the page opens the details panel. */
   onSelect: (personId: string) => void;
   selectedId: string | null;
+  /** The page owns the add-relative dialog; the card only reports the click. */
+  onAddRelative: (personId: string) => void;
 }) {
   // Branches opened by hand, keyed by the handle that opened them. Insertion
   // order matters: one opened inside another only grafts after its host.
@@ -45,6 +47,7 @@ export default function TreeChart({ data, onSelect, selectedId }: {
   const viewport = useChartViewport(layout.bounds);
   const [showFlags] = useFlagPreference();
   const [showIssues] = useIssueMarkPreference();
+  const [addRelatives] = useAddRelativePreference();
   const issueMarks = useIssueMarks(showIssues);
   const [activeKey, setActiveKey] = useState('focus');
 
@@ -208,6 +211,7 @@ export default function TreeChart({ data, onSelect, selectedId }: {
                   branch={n.branch}
                   idKey={n.key}
                   issue={issueMarks[n.person.id]}
+                  onAddRelative={addRelatives ? () => onAddRelative(n.person.id) : undefined}
                 />
               </g>
             ))}

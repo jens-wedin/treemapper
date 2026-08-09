@@ -40,6 +40,8 @@ export interface PersonCardProps {
   died?: string | null;
   /** Outstanding Konsekvens problems, when "Visa konsekvenser" is on. */
   issue?: PersonIssueMark;
+  /** Set when "Lägg till släkting" is on: draws the plus and reports clicks. */
+  onAddRelative?: () => void;
 }
 
 /**
@@ -48,6 +50,7 @@ export interface PersonCardProps {
  */
 export default function PersonCard({
   person, variant, showFlag, isFocus, active, selected, branch = 'focus', idKey, born, died, issue,
+  onAddRelative,
 }: PersonCardProps) {
   const wide = variant === 'wide';
   const size = wide ? WIDE : COMPACT;
@@ -157,6 +160,30 @@ export default function PersonCard({
 
       {/* top right corner, clear of the avatar and of the flag below it */}
       {issue && <IssueBadge mark={issue} cx={size.w - 13} cy={13} />}
+
+      {/* Bottom right, opposite the issue badge so the two never collide.
+          A <g> and not a Radix trigger: this lives inside the SVG, and the
+          dialog it opens is owned by the page. */}
+      {onAddRelative && (
+        <g
+          role="button"
+          tabIndex={0}
+          aria-label={t('tree.addRelativeTo').replace('{name}', displayName(person))}
+          className="chart-add cursor-pointer outline-none"
+          transform={`translate(${size.w - 14} ${size.h - 14})`}
+          onClick={e => { e.stopPropagation(); onAddRelative(); }}
+          onKeyDown={e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              e.stopPropagation();
+              onAddRelative();
+            }
+          }}
+        >
+          <circle r={10} style={{ fill: 'var(--card-fill)', stroke: 'var(--card-stroke-active)' }} strokeWidth={1.5} />
+          <path d="M -4 0 H 4 M 0 -4 V 4" style={{ stroke: 'var(--card-stroke-active)' }} strokeWidth={2} strokeLinecap="round" />
+        </g>
+      )}
     </>
   );
 }

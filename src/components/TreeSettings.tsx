@@ -2,7 +2,7 @@ import { Settings2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { t } from '../lib/i18n';
-import { useFlagPreference, useIssueMarkPreference } from '../lib/chartPreferences';
+import { useAddRelativePreference, useFlagPreference, useIssueMarkPreference } from '../lib/chartPreferences';
 
 /**
  * Everything about *how* the tree is drawn, behind one icon: how many
@@ -26,6 +26,7 @@ export default function TreeSettings({
 }) {
   const [showFlags, setShowFlags] = useFlagPreference();
   const [showIssues, setShowIssues] = useIssueMarkPreference();
+  const [addRelatives, setAddRelatives] = useAddRelativePreference();
 
   return (
     <Popover>
@@ -75,6 +76,10 @@ export default function TreeSettings({
           <label className="flex items-center gap-2 text-sm text-foreground" title={t('tree.showIssuesHint')}>
             <input type="checkbox" checked={showIssues} onChange={e => setShowIssues(e.target.checked)} />
             {t('tree.showIssues')}
+          </label>
+          <label className="flex items-center gap-2 text-sm text-foreground">
+            <input type="checkbox" checked={addRelatives} onChange={e => setAddRelatives(e.target.checked)} />
+            {t('tree.addRelatives')}
           </label>
         </div>
       </PopoverContent>

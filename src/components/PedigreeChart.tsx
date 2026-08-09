@@ -8,7 +8,7 @@ import {
 } from '../lib/pedigreeLayout';
 import { useChartViewport } from '../lib/useChartViewport';
 import { useChartTransitions } from '../lib/useChartTransitions';
-import { useFlagPreference, useIssueMarkPreference } from '../lib/chartPreferences';
+import { useAddRelativePreference, useFlagPreference, useIssueMarkPreference } from '../lib/chartPreferences';
 import { useIssueMarks } from '../lib/issueMarks';
 import PersonCard, { cardLabel } from './PersonCard';
 import ChartZoom from './ChartZoom';
@@ -25,11 +25,13 @@ function isAbove(slot: number, host: number): boolean {
   return n === host;
 }
 
-export default function PedigreeChart({ data, generations, onSelect, selectedId }: {
+export default function PedigreeChart({ data, generations, onSelect, selectedId, onAddRelative }: {
   data: TreeData;
   generations: number;
   onSelect: (personId: string) => void;
   selectedId: string | null;
+  /** The page owns the add-relative dialog; the card only reports the click. */
+  onAddRelative: (personId: string) => void;
 }) {
   // Branches opened by hand, keyed by the Ahnentafel slot they hang under.
   // Insertion order matters: a branch opened inside another one can only be
@@ -62,6 +64,7 @@ export default function PedigreeChart({ data, generations, onSelect, selectedId 
   const viewport = useChartViewport(layout.bounds);
   const [showFlags] = useFlagPreference();
   const [showIssues] = useIssueMarkPreference();
+  const [addRelatives] = useAddRelativePreference();
   const issueMarks = useIssueMarks(showIssues);
   const [activeKey, setActiveKey] = useState('a1');
 
@@ -209,6 +212,7 @@ export default function PedigreeChart({ data, generations, onSelect, selectedId 
                   issue={issueMarks[n.person.id]}
                   born={n.person.birthDate ?? (n.person.birthYear != null ? String(n.person.birthYear) : null)}
                   died={n.person.deathDate ?? (n.person.deathYear != null ? String(n.person.deathYear) : null)}
+                  onAddRelative={addRelatives ? () => onAddRelative(n.person.id) : undefined}
                 />
               </g>
             ))}

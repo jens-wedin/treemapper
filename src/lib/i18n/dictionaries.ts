@@ -156,6 +156,7 @@ const sv = {
     years: 'år', people: 'personer', children: 'barn', count: 'antal',
   },
   tree: {
+    addRelatives: 'Lägg till släktingar', addRelativeTo: 'Lägg till släkting till {name}',
     emptyTree: 'Det här släktträdet är tomt än — lägg till den första personen under Personer.',
     personGone: 'Personen finns inte i det här släktträdet.',
     toPersons: 'Till Personer',
@@ -342,6 +343,7 @@ const en: DeepPartial<Dict> = {
     years: 'years', people: 'people', children: 'children', count: 'count',
   },
   tree: {
+    addRelatives: 'Add relatives', addRelativeTo: 'Add a relative to {name}',
     emptyTree: 'This family tree is still empty — add the first person under People.',
     personGone: 'That person is not in this family tree.',
     toPersons: 'Go to People',
@@ -525,6 +527,7 @@ const de: DeepPartial<Dict> = {
     years: 'Jahre', people: 'Personen', children: 'Kinder', count: 'Anzahl',
   },
   tree: {
+    addRelatives: 'Verwandte hinzufügen', addRelativeTo: 'Verwandte zu {name} hinzufügen',
     emptyTree: 'Dieser Stammbaum ist noch leer — füge die erste Person unter Personen hinzu.',
     personGone: 'Diese Person ist nicht in diesem Stammbaum.',
     toPersons: 'Zu Personen',
@@ -708,6 +711,7 @@ const es: DeepPartial<Dict> = {
     years: 'años', people: 'personas', children: 'hijos', count: 'cantidad',
   },
   tree: {
+    addRelatives: 'Añadir familiares', addRelativeTo: 'Añadir un familiar a {name}',
     emptyTree: 'Este árbol genealógico todavía está vacío: añade la primera persona en Personas.',
     personGone: 'Esa persona no está en este árbol genealógico.',
     toPersons: 'Ir a Personas',

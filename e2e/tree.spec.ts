@@ -536,3 +536,40 @@ test.describe('att kasta zoomen', () => {
     expect(await zoom(page)).toBe(atStop);
   });
 });
+
+test.describe('lägga till släkting från kortet', () => {
+  test('plusset visas bara när inställningen är på, och lägger till en förälder', async ({ page }) => {
+    await page.goto('/trad/I500001?upp=2&ned=1&vy=family');
+    const card = page.locator('[data-tree-node="I500001"]');
+    await expect(card).toBeVisible();
+
+    // avstängt som standard — inga plus på korten
+    await expect(page.getByRole('button', { name: /Lägg till släkting till/ })).toHaveCount(0);
+
+    await openSettings(page);
+    await page.getByLabel('Lägg till släktingar').check();
+    await page.keyboard.press('Escape');
+
+    const plus = card.getByRole('button', { name: /Lägg till släkting till Sven-Erik Wedin/ });
+    await expect(plus).toBeVisible();
+    await plus.click();
+
+    // dialogen erbjuder samma tre val som personsidan
+    const dialog = page.getByRole('dialog').filter({ hasText: 'Lägg till släkting till Sven-Erik Wedin' });
+    await expect(dialog.getByRole('button', { name: 'Lägg till barn' })).toBeVisible();
+    await expect(dialog.getByRole('button', { name: 'Lägg till partner' })).toBeVisible();
+    await expect(dialog.getByRole('button', { name: 'Lägg till förälder' })).toBeVisible();
+
+    // valet leder till samma formulär som personsidan använder — i samma
+    // dialog, eftersom en dialog i en dialog inte kan öppnas
+    await dialog.getByRole('button', { name: 'Lägg till barn' }).click();
+    await dialog.getByRole('radio', { name: 'Skapa ny person' }).check();
+    await dialog.getByLabel('Förnamn').fill('Testbarn');
+    await dialog.getByLabel('Efternamn').fill('Wedin');
+    await dialog.getByRole('button', { name: 'Spara' }).click();
+
+    // dialogen stängs och trädet ritas om med den nya personen
+    await expect(dialog).toBeHidden();
+    await expect(page.getByRole('button', { name: /Testbarn Wedin/ }).first()).toBeVisible();
+  });
+});

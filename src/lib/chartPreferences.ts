@@ -46,3 +46,10 @@ export const useFlagPreference = createToggle('wedin-tree-visa-flaggor', true);
  * database, and most sittings at the tree are not about fixing data.
  */
 export const useIssueMarkPreference = createToggle('wedin-tree-visa-konsekvenser', false);
+
+/**
+ * "Lägg till släkting" — an editing affordance on every card, off by default.
+ * Browsing the tree is the common case, and a plus on each card is noise until
+ * the sitting is about filling gaps in.
+ */
+export const useAddRelativePreference = createToggle('wedin-tree-lagg-till-slakting', false);

@@ -4,6 +4,12 @@
 
 ### Added
 
+**Lägg till släktingar direkt i trädet**
+- En kryssruta i **Visningsinställningar** sätter ett litet plus på varje kort. Avstängd som standard: att bläddra i trädet är det vanliga, och ett plus på varje kort är brus tills sittningen handlar om att fylla luckor. Plusset är dämpat tills kortet är under pekaren eller plusset har fokus.
+- Plusset öppnar samma tre val som personsidan har — barn, partner, förälder — och samma formulär. När det sparats ritas trädet om på plats.
+- `RelationForm` bröts ut ur `RelationDialog`: en dialog inuti en dialog går inte att öppna, så skalet är nu anroparens sak och formuläret delas. Personsidan öppnar det i sin egen dialog; trädet visar det i den dialog kortets plus redan öppnat.
+- Plusset är ett `<g role="button">` inuti SVG:n och inte en Radix-utlösare — dialogen ägs av sidan, utanför diagrammet.
+
 **Vigseln går att redigera — på familjen**
 - Varje familjeruta på personsidan har nu sin vigsel med **Lägg till / Redigera / Ta bort**. Den saknades tidigare helt: vigsel finns inte bland personens händelsetyper, och det är med flit — i GEDCOM hör den till familjen, inte till någon av makarna. Det är också vad som gör att den syns på bådas sidor och exporteras som `FAM.MARR`.
 - `EventForm` tar nu emot ägartyp och en låst typ, så samma formulär används för både personhändelser och vigsel. Åldersfältet visas bara för personhändelser — ett par har två åldrar.

@@ -14,6 +14,10 @@
 
 ### Fixed
 
+**Sammanslagning skrev inte in samma faktum två gånger**
+- Två poster om samma person bär oftast samma uppgifter — det är just likheten som gjorde dem till dubbletter. Händelserna flyttades över oprövade, så den som blev kvar stod född två gånger samma dag. Det är också ursprunget till de dubblerade händelseraderna i `wedin.db`.
+- Ett faktum som den kvarvarande redan har, ord för ord (typ, datum, plats, beskrivning), skrivs inte in igen; sammanfattningen räknar dem som `droppedEvents`. Två födslar med *olika* datum behålls båda — det är två källor som säger emot varandra, och det är forskarens sak att avgöra, inte sammanslagningens.
+
 **Sökningen hittade inte personer med mellannamn**
 - `jens wedin` gav 0 träffar i Wedin-trädet trots att du står där — som *Karl Johan Fredrik Lindqvist*. Söket matchade hela frasen som en sträng, och mellannamnen ligger i glappet mellan de två orden man skriver. De flesta i databasen har mellannamn, så söket dolde tyst just den person man letade efter, och svarade 0 lika självsäkert som det svarar 5.
 - Träffräknaren säger `1 träff` och `2 träffar`. Den skrev alltid pluralformen, samma sak som "1 källor" tidigare.

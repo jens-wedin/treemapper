@@ -79,6 +79,41 @@ describe('mergePersons — flytt av data', () => {
     expect(rows.citations().find(c => c.ownerType === 'event')!.ownerId).toBe(String(dupEvent));
   });
 
+  /**
+   * Two records of one person usually carry the same facts — that is what made
+   * them look like duplicates in the first place. Moving them across
+   * unexamined leaves the survivor born twice on the same day.
+   *
+   * Only an exact repeat is dropped. Two births with *different* dates are a
+   * disagreement between sources, and that is the person's own to settle.
+   */
+  it('tar inte med en händelse som den som behålls redan har', () => {
+    person('KEEP');
+    person('DUP');
+    event('KEEP', 'BIRT', 1800);
+    event('DUP', 'BIRT', 1800);      // samma faktum, samma datum
+    event('DUP', 'DEAT', 1870);      // bara dubblettens
+
+    const res = mergePersons(db, { survivorId: 'KEEP', duplicateId: 'DUP' });
+
+    expect(res.data).toMatchObject({ movedEvents: 1, droppedEvents: 1 });
+    const kept = rows.events().filter(e => e.ownerId === 'KEEP');
+    expect(kept.map(e => e.type).sort()).toEqual(['BIRT', 'DEAT']);
+    expect(kept.filter(e => e.type === 'BIRT')).toHaveLength(1);
+  });
+
+  it('behåller två födslar när källorna säger olika datum', () => {
+    person('KEEP');
+    person('DUP');
+    event('KEEP', 'BIRT', 1800);
+    event('DUP', 'BIRT', 1801);      // oenighet, inte en dubblett
+
+    const res = mergePersons(db, { survivorId: 'KEEP', duplicateId: 'DUP' });
+
+    expect(res.data).toMatchObject({ movedEvents: 1, droppedEvents: 0 });
+    expect(rows.events().filter(e => e.ownerId === 'KEEP' && e.type === 'BIRT')).toHaveLength(2);
+  });
+
   it('länkar om make/maka-platser och barnlänkar med bevarad ordning', () => {
     person('KEEP', { sex: 'M' });
     person('DUP', { sex: 'M' });

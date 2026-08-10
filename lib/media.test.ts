@@ -36,11 +36,14 @@ describe('adding a photo', () => {
     expect(row).toMatchObject({
       ownerType: 'person', ownerId: 'I1', title: 'Farmor',
       form: 'png', downloadStatus: 'done', filesize: PIXEL.length,
-      localPath: `media/${id}.png`,
+      // The folder the file really went to. It used to say `media/` whatever
+      // the tree, which is a path that does not exist for any tree but the
+      // first — and that string is what the export writes as FILE.
+      localPath: path.join(photoDir(), `${id}.png`),
     });
     // The export writes FILE from originalUrl — an uploaded photo has to name
     // its own file there, or it would export as a photo with no source.
-    expect(row.originalUrl).toBe(`media/${id}.png`);
+    expect(row.originalUrl).toBe(path.join(photoDir(), `${id}.png`));
   });
 
   it('is written to the change log', () => {

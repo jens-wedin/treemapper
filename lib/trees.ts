@@ -95,9 +95,17 @@ const fileFor = (id: string) => {
   return path.join(treesDir(), `${id}.db`);
 };
 
-/** Where a tree's downloaded photos live. The default tree keeps `media/`. */
+/**
+ * Where a tree's photos live: one folder per tree, named after it.
+ *
+ * The original tree used to keep its photos loose in `media/` while imported
+ * trees got subfolders. That asymmetry was a trap rather than a convenience —
+ * media ids are per-database integers, so every tree owns a media 1, and the
+ * one tree whose photographs are irreplaceable was the one sitting where a
+ * collision would land.
+ */
 export const mediaDirFor = (id: string) => {
-  if (isDefaultId(id)) return mediaRoot();
+  if (isDefaultId(id)) return path.join(mediaRoot(), defaultTreeId());
   assertTreeId(id);
   return path.join(mediaRoot(), id);
 };

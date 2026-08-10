@@ -25,10 +25,17 @@ export default function globalSetup() {
     if (fs.existsSync(`wedin.db${suffix}`)) fs.copyFileSync(`wedin.db${suffix}`, `.e2e/wedin.db${suffix}`);
   }
 
+  // Mirrors the real layout, one folder per tree, because that is what the app
+  // resolves against — photos loose in the root would simply not be found.
   fs.mkdirSync('.e2e/media', { recursive: true });
   if (fs.existsSync('media')) {
-    for (const name of fs.readdirSync('media')) {
-      fs.symlinkSync(path.resolve('media', name), path.join('.e2e/media', name));
+    for (const entry of fs.readdirSync('media', { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const dir = path.join('.e2e/media', entry.name);
+      fs.mkdirSync(dir, { recursive: true });
+      for (const name of fs.readdirSync(path.join('media', entry.name))) {
+        fs.symlinkSync(path.resolve('media', entry.name, name), path.join(dir, name));
+      }
     }
   }
 }

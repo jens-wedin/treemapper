@@ -53,7 +53,10 @@ export function addPhoto(db: Db, input: {
       downloadedAt: new Date().toISOString(),
     };
     const inserted = tx.insert(media).values(row).returning({ id: media.id }).all()[0]!;
-    const localPath = `media/${inserted.id}.${form}`;
+    // The folder the file is actually written to, below — not a guess at it.
+    // Hardcoding `media/` recorded a path that does not exist for any tree but
+    // the first, and that path is what the GEDCOM export writes as its FILE.
+    const localPath = path.join(mediaDir, `${inserted.id}.${form}`);
     tx.update(media).set({ localPath, originalUrl: localPath }).where(eq(media.id, inserted.id)).run();
     audit(tx, 'create', 'media', inserted.id, null, { ...row, id: inserted.id, localPath, originalUrl: localPath });
     return inserted.id;

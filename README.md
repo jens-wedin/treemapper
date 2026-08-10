@@ -57,7 +57,7 @@ a tree to deleting a file.
 |---|---|
 | `wedin.db` (`WEDIN_DB`) | The tree that was here first, id `wedin`. Owned by the CLI scripts, and not deletable from the UI. |
 | `trees/<id>.db` (`WEDIN_TREES_DIR`) | One file per imported tree. |
-| `media/`, `media/<id>/` | Photos, per tree. |
+| `media/<id>/` | Photos, one folder per tree. |
 
 A tree's name lives in a `tree_meta` row **inside** the tree, so there is no
 central registry to drift out of sync or lose when a `.db` is copied. A database
@@ -103,9 +103,15 @@ npm run media                        # the original tree
 npm run media -- andersson  # a tree that was imported
 ```
 
-Each tree downloads into **its own folder** — `media/`, `media/<id>/`. Media ids
-are per-database integers, so every tree owns a media 1; one shared folder would
-have the second tree silently overwrite the first tree's photographs.
+Each tree keeps its photos in **its own folder**, named after the tree:
+`media/wedin/`, `media/andersson/`. Media ids are per-database
+integers, so every tree owns a media 1; one shared folder would have the second
+tree silently overwrite the first tree's photographs.
+
+The original tree used to keep its photos loose in `media/` while imported trees
+got subfolders. `npx tsx scripts/move-media-into-tree-folder.ts <tree> --apply`
+moves an old layout across — renaming rather than copying, and rewriting each
+`local_path` to match.
 
 MyHeritage's links are **signed and expire**. If the download reports HTTP 403,
 take a fresh GEDCOM export and run `npm run refresh-media -- data/<export>.ged`

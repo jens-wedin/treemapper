@@ -14,6 +14,11 @@
 
 ### Fixed
 
+**Varje träd har sin egen fotomapp**
+- Ursprungsträdet lade sina foton löst i `media/` medan importerade träd fick undermappar. Den asymmetrin var en fälla snarare än en bekvämlighet: media-id:n är heltal per databas, så varje träd äger ett media 1 — och det träd vars fotografier inte går att ersätta var det som låg där en krock skulle landa.
+- 985 filer flyttade till `media/wedin/` med `mv`, inte kopiering: samma filsystem, så varje fil flyttas i ett steg och 423 MB fotografier finns aldrig i dubbel upplaga eller halvskrivna. Namn och storlek verifierade före och efter.
+- **Rättat: ett uppladdat foto skrev fel sökväg.** `addPhoto` skrev filen till trädets mapp men sparade alltid `media/<id>` i `local_path` — en sökväg som inte finns för något annat träd än det första. Visningen dolde felet (den läser bara filnamnet), men det är den strängen GEDCOM-exporten skriver som sin FILE-rad.
+
 **Fotonedladdningen kan nu peka på ett träd**
 - `npm run media -- andersson` hämtar ett importerat träds foton. Skriptet öppnade tidigare alltid `wedin.db` och skrev till `media/`, oavsett vilket träd det gällde.
 - Varje träd laddar ner till sin egen mapp. Media-id:n är heltal per databas, så varje träd äger ett media 1 — en delad mapp hade låtit det andra trädet tyst skriva över det förstas fotografier.

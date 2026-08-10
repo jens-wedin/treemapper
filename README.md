@@ -94,9 +94,22 @@ link, and links cannot set headers. The address is the authority; what the
 browser stores is only a copy, so that a bare `/` returns you to the tree you
 had open last.
 
-**Photos are not downloaded for imported trees.** A GEDCOM stores CDN links, not
-files; new trees show the usual placeholders and the tree list says how many are
-pending. `npm run media` remains the way to fetch them.
+**Photos are not downloaded at import.** A GEDCOM stores CDN links, not files, so
+a new tree shows placeholders and the tree list says how many are pending.
+Fetch them when you want them:
+
+```bash
+npm run media                        # the original tree
+npm run media -- andersson  # a tree that was imported
+```
+
+Each tree downloads into **its own folder** — `media/`, `media/<id>/`. Media ids
+are per-database integers, so every tree owns a media 1; one shared folder would
+have the second tree silently overwrite the first tree's photographs.
+
+MyHeritage's links are **signed and expire**. If the download reports HTTP 403,
+take a fresh GEDCOM export and run `npm run refresh-media -- data/<export>.ged`
+before trying again. The report lands in `data/media-report-<tree>.md`.
 
 ## Språk / Language
 

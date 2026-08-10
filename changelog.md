@@ -14,6 +14,11 @@
 
 ### Fixed
 
+**Fotonedladdningen kan nu peka på ett träd**
+- `npm run media -- andersson` hämtar ett importerat träds foton. Skriptet öppnade tidigare alltid `wedin.db` och skrev till `media/`, oavsett vilket träd det gällde.
+- Varje träd laddar ner till sin egen mapp. Media-id:n är heltal per databas, så varje träd äger ett media 1 — en delad mapp hade låtit det andra trädet tyst skriva över det förstas fotografier.
+- 257 foton hämtade till Andersson, 0 misslyckade. Huvudträdets 985 filer orörda.
+
 **Sammanslagning skrev inte in samma faktum två gånger**
 - Två poster om samma person bär oftast samma uppgifter — det är just likheten som gjorde dem till dubbletter. Händelserna flyttades över oprövade, så den som blev kvar stod född två gånger samma dag. Det är också ursprunget till de dubblerade händelseraderna i `wedin.db`.
 - Ett faktum som den kvarvarande redan har, ord för ord (typ, datum, plats, beskrivning), skrivs inte in igen; sammanfattningen räknar dem som `droppedEvents`. Två födslar med *olika* datum behålls båda — det är två källor som säger emot varandra, och det är forskarens sak att avgöra, inte sammanslagningens.

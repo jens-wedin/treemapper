@@ -14,6 +14,12 @@
 
 ### Fixed
 
+**220 dubblerade händelserader borttagna ur wedin.db**
+- Rester från sammanslagningar gjorda innan motorn slutade skriva in samma faktum två gånger: 149 grupper där en rad upprepade en annan exakt, över 58 personer. RESI 76, OCCU 48, BIRT 39, DEAT 37, EVEN 9, BURI 6, MARR 3, CHR 1, EMIG 1.
+- "Exakt" betyder varje kolumn utom id — ägare, typ, datum, år, plats, beskrivning, ålder och råa GEDCOM-taggar. Två födslar med *olika* datum är två källor som säger emot varandra och lämnas i fred.
+- Lägsta id:t behålls, så raden som funnits längst är den som blir kvar. Varje borttagning ligger i ändringsloggen med fullständig före-bild och vilken rad den var en dubblett av.
+- Verifierat: 4 511 personer, 979 familjer, 5 804 källhänvisningar och 979 foton oförändrade. Antalet **distinkta** fakta är detsamma före och efter (14 363) — bara upprepningar försvann. Ingen person blev av med alla sina händelser.
+
 **Varje träd har sin egen fotomapp**
 - Ursprungsträdet lade sina foton löst i `media/` medan importerade träd fick undermappar. Den asymmetrin var en fälla snarare än en bekvämlighet: media-id:n är heltal per databas, så varje träd äger ett media 1 — och det träd vars fotografier inte går att ersätta var det som låg där en krock skulle landa.
 - 985 filer flyttade till `media/wedin/` med `mv`, inte kopiering: samma filsystem, så varje fil flyttas i ett steg och 423 MB fotografier finns aldrig i dubbel upplaga eller halvskrivna. Namn och storlek verifierade före och efter.

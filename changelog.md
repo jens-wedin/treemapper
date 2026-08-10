@@ -43,6 +43,10 @@
 
 ### Added
 
+**Ut- och invandring går att filtrera åt ett håll**
+- En väljare vid rubriken visar bara invandring eller bara utvandring. Antalen står i alternativen — "Alla (58)", "Immigration (41)", "Emigration (17)" — så vilken väg släkten rörde sig är besvarat redan innan man väljer något.
+- Filtreras i webbläsaren: hela listan skickas redan (bara topplistorna kapas till tio), så det går direkt och kan aldrig visa en avhuggen lista som om den vore fullständig.
+
 **Namnen i statistiken leder till personen**
 - Varje lista på statistiksidan svarar på en fråga som genast väcker nästa — vem *var* hen som levde till 104? Namnen var vanlig text, så vägen dit gick via att kopiera namnet till sökrutan, trots att id:t redan låg i svaret.
 - Längst liv, Största familjerna, Åldersskillnad mellan makar, Ut- och invandring och rubrikens "Statistik för X" länkar nu till personsidan. I ett par länkas var make för sig — ett par är två personer, och vilken som helst av dem kan vara den man letar efter.

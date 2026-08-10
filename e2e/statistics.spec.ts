@@ -74,3 +74,31 @@ test('namnen i statistiken leder till personsidan', async ({ page }) => {
     .locator('xpath=following-sibling::ol[1]');
   await expect(families.locator('li').first().getByRole('link')).toHaveCount(2);
 });
+
+test('ut- och invandring går att filtrera åt ett håll i taget', async ({ page }) => {
+  await page.goto('/wedin/statistik');
+
+  // following:: not following-sibling:: — the heading shares a row with the
+  // filter now, so the list is no longer its direct sibling.
+  const list = page.locator('h3', { hasText: /Ut- och invandring|Emigration and immigration/ })
+    .locator('xpath=following::ul[1]');
+  await expect(list.locator('li').first()).toBeVisible();
+  const all = await list.locator('li').count();
+
+  const picker = page.getByLabel(/^Visa$|^Show$/);
+  // The counts are in the option labels, so the answer is there before picking.
+  await expect(picker.locator('option').first()).toContainText(String(all));
+
+  await picker.selectOption('IMMI');
+  const immi = await list.locator('li').count();
+  await expect(list.getByText(/Emigration|Utvandring/)).toHaveCount(0);
+
+  await picker.selectOption('EMIG');
+  const emig = await list.locator('li').count();
+  await expect(list.getByText(/^Immigration|Invandring/)).toHaveCount(0);
+
+  // the two directions together are the whole list, nothing lost or invented
+  expect(immi + emig).toBe(all);
+  expect(immi).toBeGreaterThan(0);
+  expect(emig).toBeGreaterThan(0);
+});

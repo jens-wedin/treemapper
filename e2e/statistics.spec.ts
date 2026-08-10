@@ -50,3 +50,27 @@ test('avgränsning till en person hamnar i url:en och överlever omladdning', as
   await expect(page).not.toHaveURL(/person=/);
   await expect.poll(() => peopleCard.innerText()).toBe(everyone);
 });
+
+/**
+ * Every list on this page answers a question that provokes the next one — who
+ * *was* the person who lived to 104? The name has to be the way there.
+ */
+test('namnen i statistiken leder till personsidan', async ({ page }) => {
+  await page.goto('/wedin/statistik');
+
+  const longest = page.locator('h3', { hasText: /Längst liv|Longest lives/ })
+    .locator('xpath=following-sibling::ol[1]');
+  const first = longest.getByRole('link').first();
+  await expect(first).toBeVisible();
+  const name = (await first.textContent())!.trim();
+
+  await first.click();
+  await expect(page).toHaveURL(/\/wedin\/person\/I\d+/);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText(name);
+
+  // and the couples in Största familjer link each partner on their own
+  await page.goto('/wedin/statistik');
+  const families = page.locator('h3', { hasText: /Största familjerna|Largest families/ })
+    .locator('xpath=following-sibling::ol[1]');
+  await expect(families.locator('li').first().getByRole('link')).toHaveCount(2);
+});

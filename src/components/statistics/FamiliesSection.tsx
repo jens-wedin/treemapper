@@ -1,11 +1,8 @@
 import type { FamiliesStats } from '../../../lib/statistics';
-import type { PersonName } from '../../../lib/statistics';
-import { t, displayName } from '../../lib/i18n';
+import { t } from '../../lib/i18n';
 import StatCard from './StatCard';
 import BarChartWithTable from './BarChartWithTable';
-
-const couple = (husband: PersonName | null, wife: PersonName | null) =>
-  [husband && displayName(husband), wife && displayName(wife)].filter(Boolean).join(' & ') || '—';
+import { CoupleLinks } from './PersonLink';
 
 export default function FamiliesSection({ stats }: { stats: FamiliesStats }) {
   const n = (x: number) => x.toLocaleString('sv-SE');
@@ -36,7 +33,7 @@ export default function FamiliesSection({ stats }: { stats: FamiliesStats }) {
         <ol className="mt-2 space-y-1">
           {stats.largestFamilies.map(f => (
             <li key={f.familyId} className="flex justify-between gap-4">
-              <span>{couple(f.husband, f.wife)}</span>
+              <span><CoupleLinks husband={f.husband} wife={f.wife} /></span>
               <span>{f.children} {t('statistics.children')}</span>
             </li>
           ))}
@@ -52,7 +49,7 @@ export default function FamiliesSection({ stats }: { stats: FamiliesStats }) {
           {stats.largestAgeGap && (
             <>
               {' · '}{t('statistics.largestAgeGap')}:{' '}
-              {couple(stats.largestAgeGap.husband, stats.largestAgeGap.wife)}{' '}
+              <CoupleLinks husband={stats.largestAgeGap.husband} wife={stats.largestAgeGap.wife} />{' '}
               ({stats.largestAgeGap.gap} {t('statistics.years')})
             </>
           )}

@@ -1,14 +1,26 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { Button } from '@/components/ui/button';
-import type { StatisticsData } from '../../lib/statistics';
-import { t, displayName } from '../lib/i18n';
+import type { PersonName, StatisticsData } from '../../lib/statistics';
+import { t } from '../lib/i18n';
+import PersonLink from '../components/statistics/PersonLink';
 import { fetchJson } from '../lib/api';
 import PersonSearch from '../components/PersonSearch';
 import LivesSection from '../components/statistics/LivesSection';
 import NamesSection from '../components/statistics/NamesSection';
 import FamiliesSection from '../components/statistics/FamiliesSection';
 import PlacesSection from '../components/statistics/PlacesSection';
+
+/**
+ * "Statistik för X" with X linked. The sentence is split around its
+ * placeholder rather than assembled by replace(), because a link is an element
+ * and cannot be spliced into a string — and the word order around the name
+ * differs between the four languages.
+ */
+function ScopeLine({ person }: { person: PersonName }) {
+  const [before = '', after = ''] = t('statistics.scopedTo').split('{name}');
+  return <>{before}<PersonLink person={person} />{after}</>;
+}
 
 export default function StatisticsPage() {
   const [params, setParams] = useSearchParams();
@@ -34,7 +46,7 @@ export default function StatisticsPage() {
       <h1 className="text-3xl font-bold">{t('statistics.title')}</h1>
       <p className="mt-1 text-muted-foreground">
         {data?.scope.kind === 'person' && data.scope.person
-          ? t('statistics.scopedTo').replace('{name}', displayName(data.scope.person))
+          ? <ScopeLine person={data.scope.person} />
           : t('statistics.lead')}
       </p>
       <div className="mt-6 max-w-md">

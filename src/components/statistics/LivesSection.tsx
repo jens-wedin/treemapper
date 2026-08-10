@@ -1,6 +1,7 @@
 import type { LivesStats } from '../../../lib/statistics';
 import { MAX_PLAUSIBLE_AGE } from '../../../lib/statistics/lives';
-import { t, displayName } from '../../lib/i18n';
+import { t } from '../../lib/i18n';
+import PersonLink from './PersonLink';
 import StatCard from './StatCard';
 import BarChartWithTable from './BarChartWithTable';
 
@@ -24,7 +25,7 @@ export default function LivesSection({ stats }: { stats: LivesStats }) {
           {stats.longestLives.map(l => (
             <li key={l.id} className="flex justify-between gap-4">
               <span>
-                {displayName(l)}{' '}
+                <PersonLink person={l} />{' '}
                 <span className="text-muted-foreground">{l.birthYear}–{l.deathYear}</span>
               </span>
               <span>{l.age} {t('statistics.years')}</span>

@@ -37,6 +37,10 @@
 
 ### Added
 
+**Namnen i statistiken leder till personen**
+- Varje lista på statistiksidan svarar på en fråga som genast väcker nästa — vem *var* hen som levde till 104? Namnen var vanlig text, så vägen dit gick via att kopiera namnet till sökrutan, trots att id:t redan låg i svaret.
+- Längst liv, Största familjerna, Åldersskillnad mellan makar, Ut- och invandring och rubrikens "Statistik för X" länkar nu till personsidan. I ett par länkas var make för sig — ett par är två personer, och vilken som helst av dem kan vara den man letar efter.
+
 ### Security
 
 **Ett träd-id är inte en sökväg**

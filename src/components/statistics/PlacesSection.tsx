@@ -1,5 +1,6 @@
 import type { PlacesStats } from '../../../lib/statistics';
-import { t, displayName, eventLabel } from '../../lib/i18n';
+import { t, eventLabel } from '../../lib/i18n';
+import PersonLink from './PersonLink';
 import CountryFlag from '../CountryFlag';
 import RankedList from './RankedList';
 
@@ -38,7 +39,7 @@ export default function PlacesSection({ stats }: { stats: PlacesStats }) {
               {/* The event's own name, not an arrow: a bare ← left it unclear
                   whether the place was where they came from or went to. */}
               <span className="text-muted-foreground">{eventLabel(m.type)}</span>{' '}
-              {displayName(m)}
+              <PersonLink person={m} />
               {m.place && <span className="text-muted-foreground"> · {m.place}</span>}
               {m.year != null && <span className="text-muted-foreground"> · {m.year}</span>}
             </li>

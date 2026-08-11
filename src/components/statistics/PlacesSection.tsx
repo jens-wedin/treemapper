@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { PlacesStats } from '../../../lib/statistics';
-import { t, eventLabel } from '../../lib/i18n';
+import { t, eventLabel , uiLocale } from '../../lib/i18n';
 import PersonLink from './PersonLink';
 import CountryFlag from '../CountryFlag';
 import RankedList from './RankedList';
@@ -36,7 +36,7 @@ export default function PlacesSection({ stats }: { stats: PlacesStats }) {
         <RankedList
           title={t('statistics.birthPlaces')}
           rows={asRows(stats.birthPlaces)}
-          caption={t('statistics.basedOn').replace('{n}', stats.withBirthPlace.toLocaleString('sv-SE'))}
+          caption={t('statistics.basedOn').replace('{n}', stats.withBirthPlace.toLocaleString(uiLocale()))}
         />
         <RankedList
           title={t('statistics.countries')}

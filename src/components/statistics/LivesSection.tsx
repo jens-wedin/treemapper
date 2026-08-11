@@ -1,12 +1,12 @@
 import type { LivesStats } from '../../../lib/statistics';
 import { MAX_PLAUSIBLE_AGE } from '../../../lib/statistics/lives';
-import { t } from '../../lib/i18n';
+import { t , uiLocale } from '../../lib/i18n';
 import PersonLink from './PersonLink';
 import StatCard from './StatCard';
 import BarChartWithTable from './BarChartWithTable';
 
 export default function LivesSection({ stats }: { stats: LivesStats }) {
-  const n = (x: number) => x.toLocaleString('sv-SE');
+  const n = (x: number) => x.toLocaleString(uiLocale());
   return (
     <section>
       <h2 className="text-xl font-semibold">{t('statistics.lives')}</h2>

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import type { Severity } from '../../lib/issues';
 import type { IssueLogEntry } from '../../lib/issueLog';
-import { t, getLanguage } from '../lib/i18n';
+import { t, getLanguage , uiLocale } from '../lib/i18n';
 import { fetchJson } from '../lib/api';
 import { Badge } from '@/components/ui/badge';
 import IssueCard, { type IssueListItem } from '../components/issues/IssueCard';
@@ -83,11 +83,11 @@ export default function IssuesPage() {
       {data && (
         <p className="mt-4 rounded-lg border bg-muted/50 p-4 text-lg">
           {t('issues.remaining')
-            .replace('{n}', data.total.toLocaleString('sv-SE'))
-            .replace('{total}', data.totalAll.toLocaleString('sv-SE'))}
+            .replace('{n}', data.total.toLocaleString(uiLocale()))
+            .replace('{total}', data.totalAll.toLocaleString(uiLocale()))}
           {data.dismissed > 0 && (
             <span className="ml-2 text-sm text-muted-foreground">
-              ({data.dismissed.toLocaleString('sv-SE')} {t('issues.dismissedBadge').toLowerCase()})
+              ({data.dismissed.toLocaleString(uiLocale())} {t('issues.dismissedBadge').toLowerCase()})
             </span>
           )}
         </p>
@@ -121,7 +121,7 @@ export default function IssuesPage() {
             <option value="">{t('issues.allSeverities')}</option>
             {(data?.severityOrder ?? []).map(s => (
               <option key={s} value={s}>
-                {t(`issues.sev.${s}`)} ({(data?.severityCounts[s] ?? 0).toLocaleString('sv-SE')})
+                {t(`issues.sev.${s}`)} ({(data?.severityCounts[s] ?? 0).toLocaleString(uiLocale())})
               </option>
             ))}
           </select>
@@ -153,7 +153,7 @@ export default function IssuesPage() {
               {t(`issues.sev.${group.severity}`)}
             </Badge>
             <span className="text-base font-normal text-muted-foreground">
-              {group.items.length.toLocaleString('sv-SE')}
+              {group.items.length.toLocaleString(uiLocale())}
             </span>
           </h2>
           <ul className="mt-2 space-y-3">

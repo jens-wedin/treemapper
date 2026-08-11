@@ -1,11 +1,11 @@
 import type { FamiliesStats } from '../../../lib/statistics';
-import { t } from '../../lib/i18n';
+import { t , uiLocale } from '../../lib/i18n';
 import StatCard from './StatCard';
 import BarChartWithTable from './BarChartWithTable';
 import { CoupleLinks } from './PersonLink';
 
 export default function FamiliesSection({ stats }: { stats: FamiliesStats }) {
-  const n = (x: number) => x.toLocaleString('sv-SE');
+  const n = (x: number) => x.toLocaleString(uiLocale());
   return (
     <section>
       <h2 className="text-xl font-semibold">{t('statistics.families')}</h2>

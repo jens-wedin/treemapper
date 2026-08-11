@@ -3,11 +3,14 @@ import { DICTIONARIES, FALLBACK, EVENT_LABELS, MONTHS, QUALIFIERS, type Lang } f
 
 export type { Lang };
 export const LANGUAGES: { code: Lang; label: string }[] = [
-  { code: 'sv', label: 'Svenska' },
   { code: 'en', label: 'English' },
+  { code: 'sv', label: 'Svenska' },
   { code: 'de', label: 'Deutsch' },
   { code: 'es', label: 'Español' },
 ];
+
+/** For Intl. The app's own language codes are deliberately shorter than these. */
+const LOCALES: Record<Lang, string> = { en: 'en-GB', sv: 'sv-SE', de: 'de-DE', es: 'es-ES' };
 
 const STORAGE_KEY = 'wedin-tree-sprak';
 const listeners = new Set<() => void>();
@@ -19,12 +22,23 @@ function readStored(): Lang {
   } catch {
     /* storage unavailable — fall through */
   }
-  return 'sv';
+  return 'en';
 }
 
 let current: Lang = readStored();
 
 export const getLanguage = (): Lang => current;
+
+/**
+ * Tells the document what language it is in, before the first paint.
+ *
+ * `index.html` can only name one language, and it names English. A reader who
+ * chose Swedish would otherwise get Swedish prose inside `<html lang="en">`,
+ * which is what sends a screen reader off in an English voice.
+ */
+export function startLanguage(): void {
+  if (typeof document !== 'undefined') document.documentElement.lang = current;
+}
 
 export function setLanguage(lang: Lang): void {
   if (!(lang in DICTIONARIES) || lang === current) return;
@@ -62,11 +76,39 @@ function lookup(dict: unknown, path: string[]): string | undefined {
   return typeof node === 'string' ? node : undefined;
 }
 
-/** Translated string for a dot-path; falls back to Swedish, then to the path. */
+/** Translated string for a dot-path; falls back to English, then to the path. */
 export function t(path: string): string {
   const parts = path.split('.');
   return lookup(DICTIONARIES[current], parts) ?? lookup(FALLBACK, parts) ?? path;
 }
+
+/**
+ * Fills `{name}`, `{year}` and friends in a translated template.
+ *
+ * The server describes a problem as a code and the values behind it — the
+ * sentence is assembled here, in the reader's language. Word order differs
+ * between the four, which is exactly why the server cannot do it.
+ *
+ * An unknown placeholder is left standing rather than blanked: `{year}` in the
+ * output says a template and its parameters have drifted apart, where an empty
+ * gap would just look like missing data.
+ */
+export const format = (template: string, params: Record<string, string | number> = {}): string =>
+  template.replace(/\{(\w+)\}/g, (whole, key: string) =>
+    key in params ? String(params[key]) : whole);
+
+/** A translated template, filled: `tf('issueText.died-too-old', { name, age })`. */
+export const tf = (path: string, params: Record<string, string | number> = {}): string =>
+  format(t(path), params);
+
+/**
+ * The BCP 47 tag behind the current language, for `Intl` and `toLocaleString`.
+ * 14 357 or 14,357 — a thousands separator is part of a translation.
+ */
+export const uiLocale = (): string => LOCALES[current];
+
+/** The common case: a count, grouped the way the reader expects. */
+export const formatNumber = (n: number): string => n.toLocaleString(uiLocale());
 
 /**
  * "1 familj" and "2 familjer" — the count with the right form of its noun.
@@ -77,7 +119,7 @@ export const plural = (n: number, oneKey: string, manyKey: string): string =>
   `${n} ${t(n === 1 ? oneKey : manyKey)}`;
 
 export const eventLabel = (type: string): string =>
-  EVENT_LABELS[current][type] ?? EVENT_LABELS.sv[type] ?? type;
+  EVENT_LABELS[current][type] ?? EVENT_LABELS.en[type] ?? type;
 
 export function lifespan(birthYear: number | null, deathYear: number | null): string {
   if (birthYear != null && deathYear != null) return `${birthYear}–${deathYear}`;

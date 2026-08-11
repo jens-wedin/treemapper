@@ -1,5 +1,5 @@
 import type { NamesStats } from '../../../lib/statistics';
-import { t } from '../../lib/i18n';
+import { t , uiLocale } from '../../lib/i18n';
 import RankedList from './RankedList';
 
 export default function NamesSection({ stats }: { stats: NamesStats }) {
@@ -12,7 +12,7 @@ export default function NamesSection({ stats }: { stats: NamesStats }) {
         <RankedList
           title={t('statistics.surnames')}
           rows={stats.surnames}
-          caption={t('statistics.basedOn').replace('{n}', stats.withSurname.toLocaleString('sv-SE'))}
+          caption={t('statistics.basedOn').replace('{n}', stats.withSurname.toLocaleString(uiLocale()))}
         />
       </div>
     </section>

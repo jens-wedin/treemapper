@@ -1,10 +1,10 @@
 import type { IssueLogEntry } from '../../../lib/issueLog';
-import { t } from '../../lib/i18n';
+import { t , uiLocale } from '../../lib/i18n';
 
 /** Date and time, short — a log is read as "what did I do, and when". */
 const when = (iso: string) => {
   const at = new Date(iso);
-  return Number.isNaN(at.valueOf()) ? iso : at.toLocaleString('sv-SE', { dateStyle: 'short', timeStyle: 'short' });
+  return Number.isNaN(at.valueOf()) ? iso : at.toLocaleString(uiLocale(), { dateStyle: 'short', timeStyle: 'short' });
 };
 
 /**

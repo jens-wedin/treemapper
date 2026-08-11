@@ -1,5 +1,6 @@
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
+import { uiLocale } from '../../lib/i18n';
 
 export interface BarRow {
   label: string | number;
@@ -58,9 +59,9 @@ export default function BarChartWithTable({ title, data, xLabel, yLabel, sampleL
               {data.map(row => (
                 <tr key={String(row.label)}>
                   <th scope="row" className="text-left font-normal">{row.label}</th>
-                  <td className="text-right">{row.value.toLocaleString('sv-SE')}</td>
+                  <td className="text-right">{row.value.toLocaleString(uiLocale())}</td>
                   {showSample && (
-                    <td className="text-right text-muted-foreground">{row.sample?.toLocaleString('sv-SE') ?? '—'}</td>
+                    <td className="text-right text-muted-foreground">{row.sample?.toLocaleString(uiLocale()) ?? '—'}</td>
                   )}
                 </tr>
               ))}

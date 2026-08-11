@@ -1,14 +1,14 @@
 import { Link } from 'react-router';
 import { Badge } from '@/components/ui/badge';
 import type { IssueLogEntry } from '../../../lib/issueLog';
-import { t } from '../../lib/i18n';
+import { t , uiLocale } from '../../lib/i18n';
 import { SEVERITY_STYLE } from './severityStyle';
 import { useTreeUrl } from '../../lib/treeUrl';
 
 /** Date and time, short — the log is read as "what did I do last night". */
 const when = (iso: string) => {
   const at = new Date(iso);
-  return Number.isNaN(at.valueOf()) ? iso : at.toLocaleString('sv-SE', { dateStyle: 'short', timeStyle: 'short' });
+  return Number.isNaN(at.valueOf()) ? iso : at.toLocaleString(uiLocale(), { dateStyle: 'short', timeStyle: 'short' });
 };
 
 /**
@@ -22,7 +22,7 @@ export default function IssueLog({ entries }: { entries: IssueLogEntry[] }) {
       <summary className="cursor-pointer font-medium">
         {t('issues.log')}
         <span className="ml-2 text-sm font-normal text-muted-foreground">
-          ({entries.length.toLocaleString('sv-SE')})
+          ({entries.length.toLocaleString(uiLocale())})
         </span>
       </summary>
 

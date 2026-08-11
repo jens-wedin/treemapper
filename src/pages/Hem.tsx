@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { t } from '../lib/i18n';
+import { t , uiLocale } from '../lib/i18n';
 import { fetchJson } from '../lib/api';
 import { useTreeUrl } from '../lib/treeUrl';
 
@@ -59,8 +59,8 @@ export default function Hem() {
           <h2 className="text-lg font-semibold">{t('issues.scoreboard')}</h2>
           <p className="mt-1 text-foreground">
             {t('issues.remaining')
-              .replace('{n}', issues.total.toLocaleString('sv-SE'))
-              .replace('{total}', issues.totalAll.toLocaleString('sv-SE'))}
+              .replace('{n}', issues.total.toLocaleString(uiLocale()))
+              .replace('{total}', issues.totalAll.toLocaleString(uiLocale()))}
           </p>
           <Link to={link('/konsekvens')} className="mt-2 inline-block text-primary underline-offset-2 hover:underline">
             {t('issues.title')}

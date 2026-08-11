@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { uiLocale } from '../../lib/i18n';
 
 /** A ranked "top ten" list. `icon` lets the countries list show its flags. */
 export default function RankedList({ title, rows, caption, icon }: {
@@ -21,7 +22,7 @@ export default function RankedList({ title, rows, caption, icon }: {
                 {icon?.(r.name)}
                 {r.name}
               </span>
-              <span className="text-muted-foreground">{r.count.toLocaleString('sv-SE')}</span>
+              <span className="text-muted-foreground">{r.count.toLocaleString(uiLocale())}</span>
             </li>
           ))}
         </ol>

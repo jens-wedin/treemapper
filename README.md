@@ -18,7 +18,7 @@ npm test         # vitest unit tests
 npm run test:e2e # Playwright browse flow (needs wedin.db)
 ```
 
-## Övergångar mellan trädvyerna
+## Transitions between the tree views
 
 Switching view cross-fades rather than cuts, and **Antavla → Solfjäder morphs**:
 each ancestor travels from their column to their ring. The two views draw the
@@ -38,7 +38,7 @@ markers have to sit still on their cards while the antavla fades, and settle
 before the solfjäder appears. `prefers-reduced-motion: reduce` skips both the
 cross-fade and the morph.
 
-## Flera släktträd
+## Multiple family trees
 
 The app holds **several unconnected family trees**, one SQLite file each, and a
 picker in the header chooses which one is on screen. Importing a GEDCOM from
@@ -117,7 +117,7 @@ MyHeritage's links are **signed and expire**. If the download reports HTTP 403,
 take a fresh GEDCOM export and run `npm run refresh-media -- data/<export>.ged`
 before trying again. The report lands in `data/media-report-<tree>.md`.
 
-## Språk / Language
+## Languages
 
 The interface is available in **Swedish, English, German and Spanish**, picked
 in the header and remembered between visits (it also sets `<html lang>`).
@@ -134,7 +134,7 @@ page says so when another language is selected.
 Adding a language means one dictionary in `src/lib/i18n/dictionaries.ts` plus
 its event labels, month names and qualifiers.
 
-## Ljust och mörkt läge
+## Light and dark mode
 
 A picker in the header: **Follow system / Light / Dark**, remembered between
 visits and applied before the first paint so there is no light flash. While the
@@ -206,7 +206,7 @@ in for a living relative and must survive.
 The stored value is never rewritten, so the edit forms show the original markup
 and GEDCOM export stays byte-for-byte lossless.
 
-## Träd
+## The tree
 
 `/trad/:id` has four views, switched in the toolbar and remembered in the URL
 (`?vy=family|pedigree|fan|list`):
@@ -242,7 +242,7 @@ to their new places, new ones fade in, folded-away ones fade out, and the chart
 eases across if the new branch would otherwise open off-screen. All of it is
 disabled under `prefers-reduced-motion`.
 
-### Visa konsekvenser
+### Consistency marks in the tree ("Visa konsekvenser")
 
 The toolbar's second checkbox marks everyone the Konsekvensbänken still has
 something on, so you can see **where** in the tree the problems sit rather than
@@ -286,7 +286,7 @@ cards, and the one under the pointer lifts on a drop shadow — SVG has no
 box-shadow, so it is a `filter`, which follows the fan's wedges just as well
 as the rectangular cards.
 
-### Familjevyn
+### The family view
 
 Ancestors up, descendants down, 1–5 generations each way (d3-hierarchy does the
 layout maths only).
@@ -323,7 +323,7 @@ layout maths only).
   Enter opens the panel. The "Lista" view is a fully equivalent path for screen
   readers.
 
-## Statistik
+## Statistics
 
 `/statistik` tells the family's story in numbers rather than reporting on data
 quality — completeness and errors belong to Konsekvensbänken.
@@ -356,7 +356,7 @@ to itself and a county to a county — so the heading says "birth places", not
 **Accessibility.** Every chart also renders its numbers as a table, the way the
 tree has its list view.
 
-## Källor och export
+## Sources and export
 
 `/kallor` lists all 520 sources with how many citations each carries; a source
 page shows its fields (editable, audit-logged) and every citation that uses it,
@@ -422,10 +422,12 @@ on a problem. A dismissal names the problem it set aside by resolving its
 fingerprint against the current detection, which the same request has already
 run; where the problem no longer occurs, the entry says that instead.
 
-### Källans egna ord
+### The source's own words
 
-**Källor → Ny källa** lägger till ett dokument du själv har; dialogen frågar
-bara efter titeln och lämnar dig på källans sida, där avskriften skrivs.
+**Källor → Ny källa** adds a document you hold yourself; the dialog asks only
+for the title and leaves you on the source's page, where the transcription is
+written. **Ta bort källa** removes one, refusing while anything still cites it
+and saying how many would lose their evidence.
 
 
 A source has a **Transkription** — the document written out — separate from
@@ -444,7 +446,7 @@ For a document naming several people, transcribe it **once on the source** and
 add a citation from it to each person: the text lives in one place, and each
 person's page shows the source and the line naming them.
 
-### En gren som importerats flera gånger
+### A branch imported more than once
 
 Konsekvensbänken flags duplicates a pair at a time, which is the wrong shape of
 tool when a MyHeritage export carries the same family four times over. `npm run

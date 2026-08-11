@@ -4,274 +4,275 @@
 
 ### Added
 
-**Källhänvisningar går att lägga till för hand**
-- Fanns inte alls: de 5 804 hänvisningarna i wedin.db kom allihop från importen, och inget i appen kunde skapa en. En avskrift var därmed en ö — man kunde skriva av vigselakten perfekt utan att Erik Nilssons sida någonsin nämnde den.
-- Åt båda hållen, för man kommer från båda: **Lägg till person** på källans sida när man håller i ett dokument som nämner flera, och **Lägg till källhänvisning** på personens sida när man just hittat kyrkboken.
-- Sida, kvalitet (GEDCOM:s QUAY, med ord i stället för siffror) och citatet. Citatet är det som gör en hänvisning värd något — utan det pekar man på ett helt dokument utan att veta vilken rad som fick en dit.
-- Att ta bort hänvisningen lossar bandet, inte dokumentet: källan står kvar.
+**Citations can be made by hand**
+- Did not exist at all: all 5 804 citations in wedin.db came from the import, and nothing in the app could create one. A transcription was therefore an island — you could write out the marriage record perfectly and Erik Nilsson's page would never mention it.
+- Both directions, because you arrive from both: **Lägg till person** on the source, when you are holding a document that names several people, and **Lägg till källhänvisning** on the person, when you have just found the parish record.
+- Page, quality (GEDCOM's QUAY, shown as words rather than numbers) and the quotation. The quotation is what makes a citation worth having — without it you are pointing at a whole document with no idea which line sent you there.
+- Removing a citation unties the link, not the document: the source stays.
 
-**Källor går att ta bort**
-- **Ta bort källa** på källans sida. En vanlig DELETE vägrar så länge något hänvisar till källan och svarar med antalet: en källhänvisning är det en uppgift vilar på, och att radera källan under den lämnar personer som påstår saker utan att skälet finns kvar.
-- Bekräftelsen säger hur många hänvisningar som följer med innan man godkänner, inte efteråt. Hela källan och varje borttagen hänvisning ligger i ändringsloggens före-bild, så beslutet går att läsa och återskapa.
+**Sources can be deleted**
+- **Ta bort källa** on the source page. A plain DELETE refuses while anything cites the source and answers with the count: a citation is what a fact rests on, and deleting the source underneath one leaves people asserting things with the reason gone.
+- The confirmation says how many citations go with it before you agree, not afterwards. The whole source and every removed citation sit in the change log's before-image, so the decision can be read back and rebuilt.
 
-**Nya källor går att lägga till**
-- **Källor → Ny källa** skapar en källa för ett dokument du själv har. Fanns inte förut: API:t kunde lista, visa och ändra källor, men inte skapa någon — så ett dokument som inte kommit in med en import gick inte att skriva av någonstans.
-- Dialogen frågar bara efter titeln och skickar dig till källans sida, där avskriften har plats. En dialog är fel form för en sida handskrift.
+**Sources can be added**
+- **Källor → Ny källa** creates a source for a document you hold yourself. Did not exist before: the API could list, show and edit sources but not create one — so a document that had not arrived with an import could not be written out anywhere.
+- The dialog asks only for the title and sends you to the source's own page, where the transcription has room. A dialog is the wrong shape for a page of handwriting.
 
-**Källor kan skrivas av**
-- Ett nytt fält **Transkription** rymmer dokumentet avskrivet, skilt från **Anteckning** som är vad *du* säger om källan. Radbrytningar behålls — i en avskrift är de var raderna bryts på sidan.
-- Motsvarar GEDCOM:s `SOUR.TEXT`, så en avskrift överlever export och kommer tillbaka vid återimport. Ett rundturstest skickar en flerradig text hela vägen ut och in igen.
-- **Rättat: källans egna ord låg i anteckningsfältet.** Importen lät `TEXT` falla tillbaka på `note` när källan saknade `NOTE`. Det fyllde 478 av 520 källor med MyHeritages egna texter och lämnade ingen plats för en egen anteckning. 478 flyttade i wedin.db, 30 i Andersson — bara rader vars anteckning bevisligen kom från en TEXT-nod, kontrollerat mot råtaggarna och inte gissat ur texten.
+**Sources can be transcribed**
+- A new **Transkription** field holds the document written out, separate from **Anteckning**, which is what *you* say about the source. Line breaks are kept — in a transcription they are where the lines break on the page.
+- Maps to GEDCOM's `SOUR.TEXT`, so a transcription survives an export and returns on re-import. A round-trip test sends multi-line text all the way out and back.
+- **Fixed: the source's own words sat in the note field.** The importer let `TEXT` fall back to `note` when a source had no `NOTE`. That filled 478 of 520 sources with MyHeritage's own blurbs and left nowhere for a remark of your own. 478 moved in wedin.db, 30 in Andersson — only rows whose note provably came from a TEXT node, checked against the raw tags rather than guessed from the words.
 
-**Ut- och invandring listas per person, inte per flytt**
-- Anna Jonsdotter flyttade fyra gånger på fyra år och fyllde fyra rader som bara skilde sig i den lilla grå texten på slutet. Listan såg ut att vara full av dubbletter fast den beskrev ett liv i flyttlass. Namnet sägs en gång nu, med flyttarna under.
-- Den som flyttat en gång står kvar på en rad. Ordningen är densamma: personerna kommer i tur efter sin senaste flytt.
+**Emigration and immigration listed per person, not per move**
+- Anna Jonsdotter moved four times in four years and filled four lines that differed only in the small grey text at the end. The list looked full of duplicates when it was describing a life of moving. The name is said once now, with the moves under it.
+- Anyone who moved once stays on a single line. The order is unchanged: people appear by their most recent move.
 
-**Ut- och invandring går att filtrera åt ett håll**
-- En väljare vid rubriken visar bara invandring eller bara utvandring. Antalen står i alternativen — "Alla (58)", "Immigration (41)", "Emigration (17)" — så vilken väg släkten rörde sig är besvarat redan innan man väljer något.
-- Filtreras i webbläsaren: hela listan skickas redan (bara topplistorna kapas till tio), så det går direkt och kan aldrig visa en avhuggen lista som om den vore fullständig.
+**Emigration and immigration can be filtered one way at a time**
+- A picker beside the heading shows only immigration or only emigration. The counts sit in the options — "Alla (58)", "Immigration (41)", "Emigration (17)" — so which way the family moved is answered before you choose anything.
+- Filtered in the browser: the whole list already arrives (only the ranked lists are cut to ten), so it is instant and can never show a truncated list as if it were complete.
 
-**Namnen i statistiken leder till personen**
-- Varje lista på statistiksidan svarar på en fråga som genast väcker nästa — vem *var* hen som levde till 104? Namnen var vanlig text, så vägen dit gick via att kopiera namnet till sökrutan, trots att id:t redan låg i svaret.
-- Längst liv, Största familjerna, Åldersskillnad mellan makar, Ut- och invandring och rubrikens "Statistik för X" länkar nu till personsidan. I ett par länkas var make för sig — ett par är två personer, och vilken som helst av dem kan vara den man letar efter.
+**Names in the statistics lead to the person**
+- Every list on the statistics page answers a question that immediately provokes the next — who *was* the one who lived to 104? The names were plain text, so the way there was to copy the name into the search box, even though the id was already in the payload.
+- Längst liv, Största familjerna, Åldersskillnad mellan makar, Ut- och invandring and the heading's "Statistik för X" now link to the person page. In a couple each spouse is linked separately — a couple is two people, and either of them may be the one being looked for.
+
+**Add relatives straight from the chart**
+- A checkbox in **Visningsinställningar** puts a small plus on every card. Off by default: browsing the tree is the common case, and a plus on every card is noise until the session is about filling gaps. The plus stays dimmed until the card is hovered or the plus has focus.
+- The plus opens the same three choices the person page has — child, partner, parent — and the same form. Once saved, the chart redraws in place.
+- `RelationForm` was split out of `RelationDialog`: a dialog inside a dialog cannot open, so the shell is now the caller's business and the form is shared. The person page opens it in its own dialog; the chart shows it in the dialog the card's plus already opened.
+- The plus is a `<g role="button">` inside the SVG rather than a Radix trigger — the dialog is owned by the page, outside the chart.
+
+**Marriage can be edited — on the family**
+- Every family box on the person page now carries its marriage with **Lägg till / Redigera / Ta bort**. It was missing entirely, and deliberately so: marriage is not among a person's event types because in GEDCOM it belongs to the family, not to either spouse. That is also what makes it appear on both their pages and export as `FAM.MARR`.
+- `EventForm` now takes an owner type and a locked type, so the same form serves both person events and marriages. The age field appears only for person events — a couple has two ages.
+- `FamilyView.marriage` carries the event's id, which is what makes it editable in place.
+
+**A family tree from nothing**
+- **Fixed: the chart claimed the API was down.** `/trad` without an id started from `I500001`, which does not exist in a newly created tree — nor in any imported tree, whose xrefs are its own. The 404 was read as a broken API.
+- The page now asks the tree who it has: without an id it lands on the first person, an empty tree gets its own message with a way to Personer, and an id that does not exist says exactly that.
+- **Inställningar → Skapa tomt släktträd** starts a tree with nothing in it, for a family built up by hand. You switch to it immediately.
+- **Ny person** on the Personer page creates someone with no relative. Everyone else is added from an existing person's page — as child, partner or parent — which cannot start an empty tree. It is also the way in for someone whose place in the family is not yet known.
+- The new tree's name field got an accessible name of its own: the import form's name field is on the same page, and two fields with the same accessible name cannot be told apart.
+
+**Photos can be added and removed**
+- A button by the Foton heading uploads an image to the person; the filename becomes the title. The section shows even for someone with no photos — otherwise there is nowhere to put the first one.
+- Removal happens in the large view, where you can see what you are removing, behind a confirmation. **The row goes, the file stays.** The row can be read back from the change history; the picture may be the only copy of a face nobody living remembers.
+- Uploaded files are stored like downloaded ones — `media/<tree>/<row id>.<ext>` — and `originalUrl` points at the file itself, so the export writes a FILE line that means something.
+- **Fixed: the change history had no photos.** It decides what concerns a person from the record type, and `media` was never in the list — additions and removals were logged but never shown.
+- e2e runs against its own media directory of symlinks to the real files: the suite reads every photo, but anything it uploads lands in the copy.
+
+**Photos open large**
+- Clicking a photo on the person page opens it as large as the screen allows. The thumbnails are cropped squares, so the picture on the page is not the picture — opening it is the only way to see what was actually photographed.
+- Arrow keys move between a person's photos, the heading counts ("3 av 31"), and Escape closes. The thumbnail is a **button** rather than a clickable image, so keyboard and screen reader know it opens something.
+
+**The tree can be thrown**
+- Let go mid-drag and the canvas keeps rolling and slows down, like a list on a phone. Speed is measured over the **end** of the drag, not all of it — a pause on the way should not brake a flick that finishes fast — and decays exponentially: a linear stop has a visible moment where motion simply ceases.
+- Grabbing the canvas mid-flight stops it dead. Zoom, reset and arrow keys also take over immediately.
+- `prefers-reduced-motion: reduce` pans exactly as before and stops where the finger let go.
+
+**The tree views turn into one another**
+- Switching between Familj, Antavla, Solfjäder and Lista is no longer a cut. The view being left stays over the one arriving during the transition, with `aria-hidden` and `inert`: a screen reader must never find two trees, keyboard focus must never land in what is leaving, and a test looking for "the tree" must keep finding exactly one.
+- **The pedigree winds itself into the fan.** The two views draw the same people under the same Ahnentafel numbers, so every person has a real start and a real destination — which is what makes a morph meaningful there and nowhere else in the app. The family view also draws descendants, and most of its cards have nowhere to travel to.
+- The motion is computed in **polar coordinates about the fan's centre**, not in x and y. Straight lines would look like boxes sliding into a circle; moving radius and angle instead makes each path curve outward on its own, and the columns wind up into rings.
+- Only the position travels. A rectangle cannot become a wedge, and morphing the shapes would have required a single parameterised geometry — at the cost of the pedigree's portraits and the fan's labels along arcs. During the transition each ancestor is a small marker in their branch colour.
+- `prefers-reduced-motion: reduce` skips both the cross-fade and the morph.
+
+**A GEDCOM import creates a new family tree**
+- **Inställningar → Importera släktträd** reads a GEDCOM file into an entirely new tree. The tree already there is untouched: nothing is matched, merged or overwritten. A picker in the header switches between them, and someone who has never opened a terminal can do the whole thing.
+- **One SQLite file per tree, not a `treeId` column.** GEDCOM ids are unique only inside one file — this tree's `I500097` and a cousin's `I500097` are different people. Shared tables would have required either rewritten ids or a filter at some forty query sites, where one forgotten filter silently mixes two families.
+- A tree's name lives in a `tree_meta` row **inside the tree**. No central registry to drift out of sync, break, or be lost when a `.db` is copied: listing the trees is a directory read plus one row per file. A database without such a row is named after its file and can be renamed in the UI.
+- **The original tree is never moved.** `wedin.db` (`WEDIN_DB`) stays exactly as it is, so every CLI script and the e2e isolation keep working. It cannot be deleted from the UI — the scripts own that file.
+- Every request carries `?tree=<id>`, added in one place in `src/lib/api.ts`. A query parameter rather than a header, because the GEDCOM export is a plain download link and links cannot set headers.
+- **A broken file creates nothing.** The upload is read and checked before any tree exists: a file with no people is refused with 400, and if the import fails anyway the half-written database is deleted. Uploads over 50 MB are stopped before they are buffered.
+- Photos are not downloaded for imported trees — a GEDCOM holds links, not files. New trees show the placeholders that already exist, and the tree list says how many are missing.
+- `runImport` moved from `scripts/` to `lib/`: a tree created in the browser and one created in the terminal must be the same thing. `npm run import` is unchanged.
+
+**Konsekvensbänken groups by severity**
+- The queue now has a heading per severity (logical error → duplicate → warning → other → minor) instead of one long list, and a severity filter beside the category filter. Because the list is capped at 500 problems, the milder severities were otherwise unreachable — you only ever saw errors and duplicates. The severity is in the heading, so the cards no longer repeat it.
+- **Fixed: the filter did not replace the list.** Choosing a warning category left the logical errors sitting on top. The same problem is reported several times when the data holds the same fact several times (one person has four identical "Bosatt" entries after their death), those cards then shared a React key, and React kept old cards on redraw. Problems with the same fingerprint *and* the same owner are now folded into one (7 of 2 826). The owner has to be part of the identity: a duplicate group deliberately shares one fingerprint across its members, and each still needs its own card.
+- `setParam` on both the Konsekvens and tree pages now uses the functional form of `setSearchParams`. Two changes in quick succession otherwise read the same snapshot of the URL, and the second wiped the first.
+
+**The person list opens the tree**
+- Every search hit now has a **Visa i träd** link beside the name, leading to the person in the chart rather than to the person page. Two records can share both name and years — the tree is often the quickest way to see which one you have in front of you.
+
+**Change history on the person page**
+- The person page ends with what has changed about that person, most recent first, out of `audit_log`. Narrowing to one person means reading the snapshots, not just the entity ids: an event belongs to its owner, a child link to the child, a family to its spouses, and a merge to the record that survived. A deleted event exists only in the before-image — which is exactly when a log earns its keep.
+- **Deletion now asks in the app's own dialog** instead of the browser's `window.confirm`. It names the event, says what deletion means, follows the theme and exists in all four languages. The button that deletes is red; the one that cancels is not.
+- **Fixed:** a person who was a child in two families with the same mother got the mother twice in the family box, with duplicate React keys as a result. `getPersonFull` now counts each relative once. It arose precisely from the branches imported more than once.
+
+**Branches imported more than once**
+- `npm run merge-duplicates -- <person-id> ...` folds up a branch that exists in several copies: it walks the whole branch, clusters the records that are the same human being, and merges each cluster into the best-evidenced one. Dry run by default, backup before `--apply`.
+- Merging two people now also folds together **families that turn out to be the same couple twice** — the children, the marriage and its sources move to the older family. Without that, cleaning a duplicated branch leaves a couple with four marriages and four sets of children.
+- `removeChildLink` solves what blocked everything else: an import can place someone as a child in a family they are also married into, and nobody can be their own parent. While that link exists the merge refuses (same lineage).
+- The order is not negotiable: **children before parents.** While the copies hang under separate families, two siblings born on the same day are twins and are left alone; once the parents are one person they all sit in the same family and that distinction can no longer be seen.
+- Clustering requires an exact birth date plus either the same name or the same partner — the latter catches married names in reversed order. The ambiguous is reported rather than guessed: two records married to the same person *and* sharing children, but with different birth dates, are printed for a human. Sharing children is not signal enough (every married couple does), and sharing a partner is not either (a widow who remarried).
+- Dry run against `wedin.db`: 50 merges, 4 561 → 4 511 people, four duplicate families folded, 40 fewer consistency problems.
+
+**Fixed and dismissed**
+- Konsekvensbänken now has a collapsed log at the top: the most recent changes to the tree (from `audit_log`) mixed with what has been dismissed, newest first. Changes are described in plain words — "Död för Anders Johan Persson Karlsson: datum — → '17 mar 1942'", "Födelse borttagen för …", "Slog ihop Anna Larsson (I3) med …" — by comparing the before and after images field by field, and every line links to the person.
+- Nothing ties a change to the problem it solved, and the log does not claim otherwise: problems are computed, so a fixed problem leaves the queue by itself. Dismissed problems get their category and note by looking the fingerprint up against the detection that ran in the same call; if the problem has stopped occurring the line says so instead. The GEDCOM import does not count as work done.
+- The log rides along in `/api/issues` rather than getting its own endpoint — otherwise the fingerprint lookup would have cost another full scan of the database.
+
+**Consistency marks in the tree**
+- A new **Visa konsekvenser** checkbox in the chart toolbar, shared by all three views and remembered like the flag preference. Off until asked for: it costs a full scan of the database, and most visits to the tree are not about fixing data. The strings exist in all four languages.
+- The person panel lists the problems in Konsekvensbänken's own wording, at the bottom of the panel after the notes — a footnote to the person, not what the person is. Repeats of the same category are gathered under one heading with a count: four children born after the same father's death is one fact told four times, not four headings. The setting is module state rather than component state, so the toolbar checkbox fills the panel beside it without a reload.
+- **The person page** ends with the same section, without a checkbox: if you have gone to a person, what the queue holds about them belongs with the rest of the record. An edit there clears the register, so a problem you have just fixed stops being reported without a reload — `clearIssueMarks` now tells its listeners rather than merely emptying the cache. The list is extracted into `ProblemList`, shared by the panel and the page.
+- The register carries the problems' texts, not just the categories, so the panel needs no query of its own — one scan per person would have cost half a second on every click, and half the tree is marked. Moving `groupProblems` to the client was not cosmetic: `lib/issues.ts` imports `node:crypto`, and a value import from there drags the whole database schema into the browser bundle (`tsc` said nothing; the browser said everything).
+- Cards get a badge in the top right corner — the colour is the person's worst severity, the number how many problems they carry. Hovering names the categories and the card's `aria-label` says the same in words. The fan's slices have no corner to put a badge in, so they get a dot in the same colour at the slice's inner corner: the only place free of the name, the flag and the generation band in every ring (the first attempt framed the whole slice in the severity colour, which made the fan look broken rather than annotated).
+- Nothing new is detected: `/api/issues/persons` runs the same detectors as Konsekvensbänken and folds them per person, so what you dismissed in the queue stops being marked in the tree. Everyone involved is marked, not only the owner of the queue entry — a child born after the father's death is worth seeing from both cards. The scan takes just over half a second across the whole database, so the charts fetch the register once and share the answer; dismissing or merging empties it.
+- Worth knowing: **about half the tree carries at least one problem** (2 335 of 4 561 people), mostly the mass warnings "Dödsfall utan datum" and "Vid liv men för gammal". It is the severity colours that make the view usable — only 160 people have an outright logical error.
+- `flagPreference` became `chartPreferences` with a shared `useStoredToggle`, since there are now two settings that behave the same way.
+
+**Light and dark mode**
+- A picker in the header: **Följ systemet / Ljust / Mörkt**, remembered between visits and applied before the first paint so the page does not flash light. While the choice is "follow system" the app keeps listening to the OS — switch to night mode and the app follows without a reload. The strings exist in all four languages.
+- The charts could not use Tailwind's `dark:` variant, because their colours are SVG fill and stroke set from JavaScript. They are now CSS variables (`--branch-*`, `--card-*`, `--chart-canvas`, `--chart-link`) that `.dark` swaps, applied through `style` — `fill="var(--x)"` does not work as a presentation attribute. The four branch colours keep their identity in both modes: pale tints on a light canvas, deep ones on a dark.
+- The flags' colours are deliberately not themed — a Swedish flag is blue and yellow in any mode. An e2e test checks exactly that, while the cards around it do change colour.
+- The rest of the interface moved from hardcoded greys to the theme's own tokens (`text-muted-foreground`, `bg-muted`, `text-primary`, `text-destructive`); the colour-coded severities got dark variants that keep their hue.
+
+**Statistics**
+- A new page `/statistik` telling the family's story in numbers: lives and lifespans, names, families, and places and work. The whole tree by default, or one person's **own ancestors and descendants** via `?person=` (251 people for Sven-Erik against 4 070 if every family tie were followed — the scoped view would then have been identical to the unscoped one). The scope is a breadth-first walk in JS: 8 ms to load the ties, 0 ms to walk them, against 4.5 seconds for the same question as a recursive CTE.
+- Every figure states what it rests on, because empty years are everywhere. Two guards keep data errors out of the story: lifespans over 110 years (three people, at most 118) and spouse age gaps over 50 years (two couples, 61 and 111) are left out — Konsekvensbänken flags those already.
+- Birth places group on the first part of the place name, so "Alnö, Västernorrland, Sundsvall, Sverige" sits with a bare "Alnö". Across 1 795 distinct place strings there is no clean rule, so the heading promises "birth places" and not "parishes".
+- Every chart shows the same numbers as a table, just as the tree has its list view.
+- The person search that was baked into the relation dialog is now a shared component used by both the dialog and the statistics page.
+
+**Theme**
+- The shadcn theme `radix-luma` with base colour `olive` (preset `b2bkjK7NVw`) applied: new colour tokens for light and dark, Roboto Slab for body text and Public Sans for headings, and pointer cursors on buttons. The charts' own colours stay outside the theme — the branch colours and the grey canvas are deliberately fixed values, so the trees look as they did.
+
+**The family view colours the branches**
+- Ancestors in the family view get the same four branch colours as the pedigree and the fan, computed from the same Ahnentafel numbering — a lone parent is therefore placed by sex, not by position in a list, so the same person gets the same colour in every view (a test compares the two computations). Descendants and partners are left uncoloured: they belong to no grandparent branch.
+
+**The family view unfolds both ways**
+- The same unfolding as the pedigree, in two directions: **⌃** above the topmost ancestors opens two more generations of parents, **⌄** below the outermost descendants opens two generations of children, and both flip to the opposite arrow to fold the branch again. The buttons appear only where the family actually continues (`hasMoreAncestors` and `hasMoreDescendants` from the API). A ⌄ under a couple sits below the marriage line, since that is where the children hang. Unfolding happens in place with the same glide, fade and gentle pan as the pedigree — the view pans to the *nearest* new generation, not the outermost, so the card you clicked stays in sight.
+- The family tree's cards are numbered by their path through the tree, so a fetched branch is inserted in its place without disturbing the other branches' keys — that is what lets the cards glide rather than be redrawn.
+
+**The pedigree unfolds branch by branch**
+- Cards whose parents exist in the database but sit outside the chart get a **▸ button** that unfolds two more generations **in place**: the rest of the chart stays put and the zoom is kept, so you follow a single line further back instead of doubling the whole diagram. The button then becomes a **‹** that folds the branch again — taking whatever was opened inside it. The button appears only where the family actually continues, so it also shows where there is more to fetch. Unfolded branches keep their Ahnentafel numbering and therefore their branch colour. The chart pans exactly as far as needed for the newly opened branch to be visible. With a keyboard: the right arrow stops at the button on its way to the parents, Enter unfolds and folds.
+- Gentle animation when a branch unfolds or folds: because the rows are recomputed, the cards already on screen glide to their new places, the new ones fade in, the folded ones fade out, and the chart pans smoothly if the branch would otherwise have opened off screen. All of it is off under `prefers-reduced-motion`, and the pan stops the moment you grab the chart so dragging does not lag.
+
+**Languages**
+- The interface is available in **Swedish, English, German and Spanish**. A language picker in the header, remembered between visits, which also sets `<html lang>`. Swedish is the source language and the fallback for keys missing from a translation (a test checks that all four dictionaries have identical key sets). The translation covers the interface, GEDCOM event names, date formatting (month names and ABT/BEF/AFT) and the born/died abbreviations. Record content — names, places, notes — stays as entered, and the consistency categories and descriptions remain Swedish (the page says so when another language is chosen).
+
+**Tree (UI round 2026-08-07)**
+- Two new views: **Antavla** (a classic left-to-right pedigree) and **Solfjäder** (a circular chart), both ancestors only, up to 8 generations. The four grandparent branches are coloured separately, positions are computed from the Ahnentafel numbering so a missing ancestor leaves an empty place rather than shifting the rest, and in the fan the text on the lower and left halves is flipped so nothing reads upside down. The view choice is stored in the URL (`?vy=`), and every chart shares zoom, person panel, portraits, flags and keyboard model.
+- Person panel: clicking (or Enter) on a card opens a panel with portrait, dates, family and events. Re-focusing the tree is now its own button in the panel rather than something that happens on every click, and the relatives in the panel can be clicked to read on without the chart moving. Escape closes.
+- Partners are shown in the tree: people whose descendants are drawn get their spouse beside them with a marriage line between, and the children hang from the line rather than from one parent. Children from a second marriage hang from the right couple. Partner cards are reachable by keyboard and appear in the list view.
+- Country flags on the cards, drawn as SVG, with a "Visa flaggor" checkbox in the toolbar (remembered between visits). The flag appears only when the birth place explicitly names a country — a parish with no country is therefore not assumed to be Swedish. Christening counts as a birth place when the birth place is missing; residence and death do not, since they can point at a different country than the one the person was born in.
+- Portraits on the cards: the person's primary photo (or first downloaded) as a round image, with initials as a fallback so every card keeps the same shape.
+
+**Phases 1–6**
+- Phase 6 (Sources + export): a source list with search and citation counts, a source page with editable fields (audit-logged) and every citation linked to people and events, cross-linking from the person page's citations; GEDCOM 5.5.1 export that round-trips `raw_tags` — verified both by unit tests through our own parser and by exporting and re-importing the whole real tree with identical results in every table; `/api/export/gedcom`, `npm run export` and a settings page with a download button.
+- Phase 5 (Konsekvensbänken): 28 deterministic detectors calibrated against MyHeritage's own consistency checker (894 problems in 24 categories) plus four completeness categories; a review queue worst-first with a category filter, Åtgärda/Avfärda and dismissals remembered through stable fingerprints; duplicate merging with a side-by-side comparison, a full audit snapshot and transactional safety; a scoreboard on Hem. New endpoints `/api/issues` and `/api/merge`.
+- Phase 4 (Editing): in-place editing of person fields, events (add/edit/delete) and relations (child/partner/parent through guided dialogs) on the person page; shared zod schemas (`lib/schemas.ts`); transactional mutations with full before/after snapshots in `audit_log`; Swedish error messages for impossible states (self-relation, lineage cycle, third parent, duplicate child); fuzzy dates always accepted (a warning rather than a rejection); e2e runs against a copy of the database so real family data is never mutated.
+- Phase 3 (Tree): an interactive SVG chart (SVG + d3-hierarchy for the layout maths only, an ownership decision over WebGL) — ancestors up and descendants down, 1–5 generations, pan and zoom, arrow-key navigation between relatives, an equivalent list view, `/api/tree/:id`, cycle protection in the data, and support for pedigree collapse (the same person twice in the chart).
+- Phase 2 (Browse): a searchable person list (name/birth year/birth place, also finding married names, paginated), a readable person page (photos, family box with clickable relations, event timeline with citations, notes), Hem with the search box at its centre, a Swedish i18n dictionary, `/api/persons`, `/api/persons/:id/full`, `/api/media/:id`, and a Playwright e2e for the browse flow.
+- Phase 1: repository skeleton, SQLite schema, GEDCOM import CLI, photo download CLI, stats API and app shell.
+- Fault-tolerant GEDCOM parsing: 2 331 broken lines in the real export are recovered as note continuations and listed in the import report instead of crashing the import.
+- `npm run refresh-media` — reloads dead signed CDN links from a fresh MyHeritage export.
 
 ### Changed
 
-**Släktträdet står i adressen**
-- Varje sida heter nu `/<träd>/<sida>`: `/wedin/personer?q=jens+wedin`, `/andersson/person/I500001`. **En länk betyder en sak.**
-- Tidigare låg trädet bara i webbläsaren, så `/person/I500001` visade det träd väljaren råkade stå på — samma adress var Sven-Erik i ett träd och någon helt annan i ett annat. Ett bokmärke ruttnade så fort man tittade på något annat, och en länk man skickade visade mottagaren en annan person än man menade.
-- Det förvalda trädet heter `wedin` utåt i stället för `default`. Id:t kommer från databasens filnamn, aldrig från visningsnamnet, så ett byte av namn kan inte förstöra en länk som redan finns. `default` fungerar kvar som alias.
-- Id:n som routern behöver själv (`personer`, `trad`, `kalla` …) är reserverade — `/personer` måste betyda Personer-sidan.
-- En adress utan träd (`/personer`) får ett framför sig; en adress med ett *borttaget* träd får sitt utbytt. Att lägga till i stället för att byta hade gett `/wedin/grannslakten/personer`, vilket inte är någon sida.
-- Exportlänken säger vilket träd den gäller: `?tree=wedin`. Det man laddat ner är inte en gissning.
+**The family tree is in the address**
+- Every page is now `/<tree>/<page>`: `/wedin/personer?q=jens+wedin`, `/andersson/person/I500001`. **A link means one thing.**
+- Previously the tree lived only in the browser, so `/person/I500001` showed whichever tree the picker happened to be on — the same address was Sven-Erik in one tree and someone else entirely in another. A bookmark rotted as soon as you looked at something else, and a link you sent showed the reader a different person than you meant.
+- The original tree is called `wedin` rather than `default`. The id comes from the database's filename, never from the display name, so renaming a tree cannot break a link that already exists. `default` still works as an alias.
+- Ids the router needs for itself (`personer`, `trad`, `kalla` …) are reserved — `/personer` has to mean the People page.
+- An address with no tree (`/personer`) gets one put in front; an address with a *deleted* tree gets its own swapped out. Prefixing instead of swapping would have given `/wedin/grannslakten/personer`, which is no page at all.
+- The export link says which tree it is for: `?tree=wedin`. What you downloaded is not a guess.
 
-- Diagrammen ligger på en mjuk grå botten i stället för vitt, så korten läser sig som kort, och det kort man håller pekaren över lyfts med en mjuk skugga. SVG har ingen box-shadow, så skuggan är ett `filter` — vilket gör att den följer solfjäderns kilar lika bra som de fyrkantiga korten. Släktlinjerna mörknades ett steg för att inte tappa i läsbarhet mot den gråa bottnen.
-- Trädet blinkar inte längre när man byter person eller djup: sidan tömde diagrammet innan den hämtade nästa, så vyn hann bli tom och passades sedan in på nytt. Nu står det gamla diagrammet kvar tills det nya är hämtat (och ett svar som hinner bli omkört kastas).
-- Antavlan reserverar inte längre plats för grenar som saknas helt. Rutnätet var alltid 2^generationer rader högt, så en gles linje spreds ut över en nästan tom tavla — elva kort hamnade på 28 % zoom. Nu kostar en okänd förälder en tom rad (så att en ensam mor stannar under sin saknade make i stället för att glida upp i hans plats), medan en gren som är borta i sin helhet inte kostar något: samma elva kort visas nu på 82 %.
-- Antavla och solfjäder visar 1–5 generationer i stället för 1–8. Åtta generationer krympte tavlan till några få procent — bortom fem följer man i stället en linje i taget med ▸-knappen.
-- Smalare kort i trädet (150×106 i stället för 210×66): porträttet ligger överst och centrerat, förnamn och efternamn på var sin centrerade rad, årtalen under. Fler personer får plats i bredd och färre namn behöver kortas.
-- Sidbredden följer innehållet: träddiagrammet tar hela fönstret (fäst vid fönsterhöjden, ingen sidscroll), tabellsidor (personer, källor, konsekvens) fick bredare yta för sina kolumner, och löptext behåller läsbar radlängd. Trädets verktygsrad kortades från tre rader till två.
+**The header stays still**
+- Every page now has **the same width**, and the header spans the window whatever tab you are on. The width used to follow each page's content — tables wider than body text — which meant the navigation itself moved when you changed tab.
+- The tree is the exception and gets the whole window. The header having its own width is precisely what lets it be so without anything above moving.
+- An e2e test measures the position and width of the navigation and the content on every tab and compares them — that sort of thing otherwise slides back unnoticed.
+
+**The zoom glides towards its target**
+- The wheel moves a **target**, and a loop continuously closes the distance to it. Stopping scrolling therefore *is* the tail — the distance finishes closing — so gesture and afterglow are a single curve.
+- It replaces a first version that waited 80 ms for the gesture to end and then started its own coast. Measured frame by frame, the chart stood still for 87 ms and set off again at a fifth of the speed; that stop-and-start was what felt wobbly.
+- The distance closes in logarithmic space: scale is multiplicative, so zooming out has to glide exactly as zooming in rather than sticking at the small end.
+
+**Calmer zoom in the tree**
+- The wheel now zooms **in proportion to how far you actually scroll**. A fixed factor per event is what made the trackpad wild: two fingers produce a stream of small events, and each one previously counted as much as a whole wheel click. A nudge zooms a little, a sweep zooms a lot, and no single event may take more than 10 %.
+- Lines and pages are converted to pixels (`deltaMode`), and a trackpad pinch — which arrives as ctrl+wheel — is allowed to be faster, since it is a deliberate gesture.
+- **The zoom buttons glide** rather than jump. The wheel and dragging do not: a transition would always sit one event behind the finger.
+
+**The person panel slides in**
+- The panel fades and slides in from the right, and **stays put while sliding out** rather than blinking away. The latter requires the person it was showing to be kept for a moment after the selection is released — `useLingering` does exactly that, and does nothing at all when `prefers-reduced-motion` is set.
+- Only the panel moves; the chart takes its new width at once. Animating the width would have recomputed the chart's fit every frame, which both stutters and is pointless — the eye follows the panel, not the gap.
+
+**The selected card is visible**
+- The chosen card gets a **halo that strikes and then breathes** — slowly and shallowly, 2.8 seconds per breath. The attack hands over at the exact moment it lands on the resting state, so the two read as one motion. The fan's slice does the same with its outline. `prefers-reduced-motion: reduce` gives the halo without the motion, since the resting state is also the animation's starting point.
+- **Fixed: the person panel pushed the heading and tabs off screen.** The switcher was missing `min-w-0`, so the flex row refused to shrink and the page scrolled sideways when the panel opened.
+
+**The tree page makes room for the tree**
+- The focus person's **name is the link** to their page. A separate "Gå till personsida" beside it said the same thing twice and put the useful thing last.
+- The views are **tabs** rather than buttons, with real `tablist`/`tab` semantics: a single tab stop, arrow keys between the tabs, and the panel pointed at with `aria-controls`. Hand-written rather than an off-the-shelf component, because the panel is the animated switcher and has to stay mounted through a tab change for the transition to happen at all.
+- **The zoom sits in the chart's own bottom right corner** rather than in a toolbar above. Controls belong to the surface they affect.
+- **Generations and card settings live behind a cog** that opens a popover. What met you first on the page was otherwise a row of controls rather than the family. The generation choices stay in the URL, so a link still carries them.
+- The text about the arrow keys is gone from the screen but **remains for screen readers** — it is still the target of the chart's `aria-describedby`, and keyboard help is exactly what is needed by someone who cannot see the chart.
+
+- The charts sit on a soft grey canvas rather than white, so the cards read as cards, and the card under the pointer is lifted with a soft shadow. SVG has no box-shadow, so the shadow is a `filter` — which makes it follow the fan's wedges as well as the rectangular cards. The family lines were darkened a step so as not to lose readability against the grey.
+- The tree no longer blinks when you change person or depth: the page emptied the chart before fetching the next one, so the view went blank and was then fitted afresh. The old chart now stays until the new one has arrived (and a response that gets overtaken is discarded).
+- The pedigree no longer reserves room for branches that are missing entirely. The grid was always 2^generations rows tall, so a sparse line spread out over a nearly empty chart — eleven cards ended up at 28 % zoom. An unknown parent now costs an empty row (so a lone mother stays under her missing husband rather than sliding up into his place), while a branch that is gone altogether costs nothing: the same eleven cards now show at 82 %.
+- The pedigree and fan show 1–5 generations rather than 1–8. Eight generations shrank the chart to a few per cent — beyond five you follow one line at a time with the ▸ button instead.
+- Narrower cards in the tree (150×106 rather than 210×66): the portrait sits at the top and centred, given name and surname on their own centred lines, the years below. More people fit across and fewer names need truncating.
+- The page width follows the content: the tree chart takes the whole window (pinned to the window height, no page scroll), table pages (people, sources, consistency) got wider room for their columns, and body text keeps a readable line length. The tree's toolbar shrank from three rows to two.
 
 ### Fixed
 
-**En testkörning skrev i den riktiga databasen**
-- En källa med titeln "Test" dök upp i `wedin.db` under en Playwright-körning. Kopian under `.e2e/` togs vid 19:47 och saknar raden; `wedin.db` fick den 19:49 — mitt under körningen. Posten är borttagen och antalet är tillbaka på 520.
-- API:t svarar nu på `/api/health` med vilken databasfil det faktiskt betjänar, och sviten har ett test som kräver att det ligger under `.e2e/`. Vite vägrar dessutom starta en e2e-körning som pekar mot utvecklingsserverns port. Ett webbläsartest som tyst når utvecklings-API:t ändrar familjens riktiga uppgifter, och enda spåret är en rad ingen lagt dit.
+**A test run wrote to the real database**
+- A source titled "Test" appeared in `wedin.db` during a Playwright run. The copy under `.e2e/` was taken at 19:47 and does not contain the row; `wedin.db` gained it at 19:49 — in the middle of the run. The record has been removed and the count is back to 520.
+- The API now answers `/api/health` with the database file it is actually serving, and the suite has a test requiring that to be under `.e2e/`. Vite additionally refuses to start an e2e run pointed at the development server's port. A browser test that quietly reaches the development API edits the family's real records, and the only trace is a row nobody put there.
 
-**220 dubblerade händelserader borttagna ur wedin.db**
-- Rester från sammanslagningar gjorda innan motorn slutade skriva in samma faktum två gånger: 149 grupper där en rad upprepade en annan exakt, över 58 personer. RESI 76, OCCU 48, BIRT 39, DEAT 37, EVEN 9, BURI 6, MARR 3, CHR 1, EMIG 1.
-- "Exakt" betyder varje kolumn utom id — ägare, typ, datum, år, plats, beskrivning, ålder och råa GEDCOM-taggar. Två födslar med *olika* datum är två källor som säger emot varandra och lämnas i fred.
-- Lägsta id:t behålls, så raden som funnits längst är den som blir kvar. Varje borttagning ligger i ändringsloggen med fullständig före-bild och vilken rad den var en dubblett av.
-- Verifierat: 4 511 personer, 979 familjer, 5 804 källhänvisningar och 979 foton oförändrade. Antalet **distinkta** fakta är detsamma före och efter (14 363) — bara upprepningar försvann. Ingen person blev av med alla sina händelser.
+**220 duplicate event rows removed from wedin.db**
+- Leftovers from merges made before the engine stopped writing the same fact twice: 149 groups where one row repeated another exactly, across 58 people. RESI 76, OCCU 48, BIRT 39, DEAT 37, EVEN 9, BURI 6, MARR 3, CHR 1, EMIG 1.
+- "Exactly" means every column but the id — owner, type, date, year, place, description, age and raw GEDCOM tags. Two births with *different* dates are two sources contradicting each other and are left alone.
+- The lowest id is kept, so the row that has been there longest survives. Every removal is in the change log with a full before-image and which row it duplicated.
+- Verified: 4 511 people, 979 families, 5 804 citations and 979 photos unchanged. The number of **distinct** facts is the same before and after (14 363) — only repetitions went. Nobody lost all their events.
 
-**Varje träd har sin egen fotomapp**
-- Ursprungsträdet lade sina foton löst i `media/` medan importerade träd fick undermappar. Den asymmetrin var en fälla snarare än en bekvämlighet: media-id:n är heltal per databas, så varje träd äger ett media 1 — och det träd vars fotografier inte går att ersätta var det som låg där en krock skulle landa.
-- 985 filer flyttade till `media/wedin/` med `mv`, inte kopiering: samma filsystem, så varje fil flyttas i ett steg och 423 MB fotografier finns aldrig i dubbel upplaga eller halvskrivna. Namn och storlek verifierade före och efter.
-- **Rättat: ett uppladdat foto skrev fel sökväg.** `addPhoto` skrev filen till trädets mapp men sparade alltid `media/<id>` i `local_path` — en sökväg som inte finns för något annat träd än det första. Visningen dolde felet (den läser bara filnamnet), men det är den strängen GEDCOM-exporten skriver som sin FILE-rad.
+**Every tree has its own photo folder**
+- The original tree kept its photos loose in `media/` while imported trees got subfolders. That asymmetry was a trap rather than a convenience: media ids are per-database integers, so every tree owns a media 1 — and the tree whose photographs cannot be replaced was the one sitting where a collision would land.
+- 985 files moved to `media/wedin/` with `mv`, not a copy: the same filesystem, so each file moves in one step and 423 MB of photographs never exists in duplicate or half-written. Names and sizes verified before and after.
+- **Fixed: an uploaded photo recorded the wrong path.** `addPhoto` wrote the file to the tree's folder but always saved `media/<id>` in `local_path` — a path that does not exist for any tree but the first. Display hid the fault (it reads only the filename), but that string is what the GEDCOM export writes as its FILE line.
 
-**Fotonedladdningen kan nu peka på ett träd**
-- `npm run media -- andersson` hämtar ett importerat träds foton. Skriptet öppnade tidigare alltid `wedin.db` och skrev till `media/`, oavsett vilket träd det gällde.
-- Varje träd laddar ner till sin egen mapp. Media-id:n är heltal per databas, så varje träd äger ett media 1 — en delad mapp hade låtit det andra trädet tyst skriva över det förstas fotografier.
-- 257 foton hämtade till Andersson, 0 misslyckade. Huvudträdets 985 filer orörda.
+**The photo download can be pointed at a tree**
+- `npm run media -- andersson` fetches an imported tree's photos. The script previously always opened `wedin.db` and wrote to `media/`, whichever tree was meant.
+- Each tree downloads into its own folder. Media ids are per-database integers, so every tree owns a media 1 — one shared folder would have let the second tree silently overwrite the first's photographs.
+- 257 photos fetched for Andersson, 0 failed. The main tree's 985 files untouched.
 
-**Sammanslagning skrev inte in samma faktum två gånger**
-- Två poster om samma person bär oftast samma uppgifter — det är just likheten som gjorde dem till dubbletter. Händelserna flyttades över oprövade, så den som blev kvar stod född två gånger samma dag. Det är också ursprunget till de dubblerade händelseraderna i `wedin.db`.
-- Ett faktum som den kvarvarande redan har, ord för ord (typ, datum, plats, beskrivning), skrivs inte in igen; sammanfattningen räknar dem som `droppedEvents`. Två födslar med *olika* datum behålls båda — det är två källor som säger emot varandra, och det är forskarens sak att avgöra, inte sammanslagningens.
+**Merging no longer records the same fact twice**
+- Two records of one person usually carry the same information — that similarity is exactly what made them look like duplicates. The events were moved across unexamined, so the survivor stood born twice on the same day. It is also the origin of the duplicated event rows in `wedin.db`.
+- A fact the survivor already has, word for word (type, date, place, description), is not written again; the summary counts them as `droppedEvents`. Two births with *different* dates are both kept — that is two sources disagreeing, and it is the researcher's to settle, not the merge's.
 
-**Sökningen hittade inte personer med mellannamn**
-- `jens wedin` gav 0 träffar i Wedin-trädet trots att du står där — som *Karl Johan Fredrik Lindqvist*. Söket matchade hela frasen som en sträng, och mellannamnen ligger i glappet mellan de två orden man skriver. De flesta i databasen har mellannamn, så söket dolde tyst just den person man letade efter, och svarade 0 lika självsäkert som det svarar 5.
-- Träffräknaren säger `1 träff` och `2 träffar`. Den skrev alltid pluralformen, samma sak som "1 källor" tidigare.
-- Varje ord matchas nu för sig: alla ord måste träffa (AND), vart och ett mot förnamn, efternamn eller gift namn (OR). `jens wedin` hittar *Karl Johan Fredrik Lindqvist*, `sven erik wedin` hittar *Sven-Erik Wedin*, och `jens larsson` ger fortfarande 0 — det är ett filter, inte en gissning.
+**Search did not find people with middle names**
+- `jens wedin` gave 0 hits in the Wedin tree even though you are in it — as *Karl Johan Fredrik Lindqvist*. The search matched the whole phrase as one string, and the middle names sit in the gap between the two words you type. Most people in the database have middle names, so the search quietly hid the very person being looked for, and answered 0 as confidently as it answers 5.
+- The result counter says `1 träff` and `2 träffar`. It always wrote the plural form, the same thing as "1 källor" before.
+- Each word is now matched separately: every word must hit (AND), each against given name, surname or married name (OR). `jens wedin` finds *Karl Johan Fredrik Lindqvist*, `sven erik wedin` finds *Sven-Erik Wedin*, and `jens larsson` still gives 0 — it is a filter, not a guess.
 
-- **e2e läste en gammal ögonblicksbild.** Uppsättningen kopierade `wedin.db` men inte dess `-wal`, där de senaste skrivningarna ligger i WAL-läge. Sviten testade alltså mot data som saknade allt nyligen rättat. Med `-wal` med föll tre tester som byggde på data du sedan städat bort — en dubblett av Anders Bergqvist som är sammanslagen, och kategorin "Dubbla mellanslag i namnet" som är tömd. De hittar nu sina egna testdata i stället för att namnge poster som hinner försvinna.
+- **e2e read a stale snapshot.** The setup copied `wedin.db` but not its `-wal`, where the newest writes live in WAL mode. The suite therefore tested against data missing everything recently corrected. With the `-wal` included, three tests failed that rested on data since cleaned up — a duplicate of Anders Bergqvist that has been merged, and the category "Dubbla mellanslag i namnet" that has been emptied. They now find their own test data instead of naming records that can disappear.
 
-- `fetchJson` kastar nu `ApiError` med statuskod. Personsidan och källsidan jämförde felmeddelandet med strängen `'HTTP 404'` för att skilja "finns inte" från "något gick sönder" — ett kontrakt som gick sönder tyst så fort meddelandet förbättrades, vilket e2e-sviten fångade.
-- Namnfältet i trädlistan har ett eget etikettnamn. Det delade annars tillgängligt namn med importformulärets namnfält på samma sida, vilket gör dem omöjliga att skilja åt med skärmläsare.
+- `fetchJson` now throws `ApiError` with a status code. The person and source pages compared the error message against the string `'HTTP 404'` to tell "does not exist" from "something broke" — a contract that broke silently as soon as the message was improved, which the e2e suite caught.
+- The name field in the tree list got an accessible name of its own. It otherwise shared its accessible name with the import form's name field on the same page, which makes them impossible to tell apart with a screen reader.
 
-**Konsekvensbänken grupperas efter allvarlighetsgrad**
-- Kön har nu en rubrik per grad (logiskt fel → dubblett → varning → övrigt → småfel) i stället för en enda lång lista, och ett gradfilter vid sidan av kategorifiltret. Eftersom listan är kapad vid 500 problem var de mildare graderna annars omöjliga att nå — man såg bara fel och dubbletter. Graden står i rubriken, så korten upprepar den inte längre.
-- **Rättat: filtret bytte inte ut listan.** Valde man en varningskategori låg de logiska felen kvar överst. Samma problem rapporterades flera gånger när data innehåller samma faktum flera gånger (en person har fyra identiska "Bosatt" efter sin död), korten fick då samma React-nyckel, och React behöll gamla kort vid omritningen. Nu viks problem med samma fingeravtryck *och* samma ägare ihop till ett (7 av 2 826). Ägaren måste ingå i identiteten: en dubblettgrupp delar med flit ett fingeravtryck mellan sina medlemmar, och var och en behöver ändå sitt eget kort.
-- `setParam` på både Konsekvens- och trädsidan använder nu funktionsformen av `setSearchParams`. Två ändringar tätt efter varandra läste annars samma ögonblicksbild av URL:en, och den andra slog ut den första.
-
-**Personlistan öppnar trädet**
-- Varje sökträff har nu en **Visa i träd**-länk vid sidan av namnet, som leder till personen i trädvyn i stället för till personsidan. Två poster kan dela både namn och årtal — trädet är ofta det snabbaste sättet att se vilken av dem man har framför sig.
-
-**Ändringshistorik på personsidan**
-- Personsidan avslutas med vad som ändrats om just den personen, senast först, hämtat ur `audit_log`. Att avgränsa till en person kräver att ögonblicksbilderna läses, inte bara entitets-id:na: en händelse hör till sin ägare, en barnlänk till barnet, en familj till sina makar och en sammanslagning till den post som blev kvar. En borttagen händelse finns bara i före-bilden — vilket är precis när en logg gör nytta.
-- **Borttagning frågar nu i appens egen dialog** i stället för webbläsarens `window.confirm`. Den namnger händelsen det gäller, säger vad borttagningen innebär, följer temat och finns på alla fyra språken. Knappen som tar bort är röd, den som avbryter är det inte.
-- **Rättat:** en person som stod som barn i två familjer med samma mor fick modern två gånger i familjerutan, med dubbla React-nycklar som följd. `getPersonFull` räknar nu varje släkting en gång. Det uppstod just av grenarna som importerats flera gånger.
-
-**Grenar som importerats flera gånger**
-- `npm run merge-duplicates -- <person-id> ...` viker ihop en gren som finns i flera exemplar: den vandrar hela grenen, klustrar posterna som är samma människa och slår ihop varje klunga i den bäst underbyggda. Torrkörning som standard, säkerhetskopia före `--apply`.
-- Sammanslagning av två personer fäller nu också ihop **familjer som visar sig vara samma par två gånger** — barnen, vigseln och dess källor flyttas till den äldre familjen. Utan det blir resultatet av att städa en dubblerad gren ett par med fyra äktenskap och fyra uppsättningar barn.
-- `removeChildLink` löser det som blockerade allt annat: en import kan placera någon som barn i en familj hen också är gift i, och ingen kan vara sin egen förälder. Så länge länken finns vägrar sammanslagningen (samma släktlinje).
-- Ordningen är inte förhandlingsbar: **barnen före föräldrarna**. Så länge kopiorna hänger under var sin familj är två syskon födda samma dag tvillingar och lämnas i fred; när föräldrarna väl är en person sitter alla i samma familj och den skillnaden går inte längre att se.
-- Klustringen kräver exakt födelsedatum plus antingen samma namn eller samma partner — det senare fångar giftasnamn i omkastad ordning. Det tvetydiga rapporteras i stället för att gissas: två poster gifta med samma person *och* med samma barn, men med olika födelsedatum, skrivs ut för handpåläggning. Att dela barn räcker inte som signal (det gör varje gift par), och att dela partner räcker inte heller (en änka som gifte om sig).
-- Torrkörning mot `wedin.db`: 50 sammanslagningar, 4 561 → 4 511 personer, fyra dubbla familjer ihopfällda, 40 färre konsekvensproblem.
-
-**Åtgärdat och avfärdat**
-- Konsekvensbänken har nu en hopfälld logg överst: de senaste ändringarna i trädet (ur `audit_log`) blandat med det som avfärdats, senast först. Ändringar beskrivs i klartext — ”Död för Anders Johan Persson Karlsson: datum — → ”17 mar 1942””, ”Födelse borttagen för …”, ”Slog ihop Anna Larsson (I3) med …” — genom att jämföra före- och efterbilden fält för fält, och varje rad länkar till personen.
-- Ingenting kopplar en ändring till problemet den löste, och loggen påstår inte att den gör det: problem räknas ut, så ett rättat problem försvinner ur kön av sig självt. Avfärdade problem får sin kategori och sin anteckning genom att fingeravtrycket slås upp mot den detektering som ändå körts i samma anrop; har problemet slutat uppstå säger raden det i stället. GEDCOM-importen räknas inte som utfört arbete.
-- Loggen rider med i `/api/issues` i stället för att få en egen slutpunkt — annars hade uppslagningen av fingeravtryck kostat ännu en genomsökning av databasen.
-
-**Konsekvenser i trädet**
-- Ny kryssruta **Visa konsekvenser** i diagrammens verktygsrad, delad av alla tre vyerna och ihågkommen som flaggvalet. Avstängd tills man ber om den: den kostar en genomsökning av hela databasen, och de flesta besök i trädet handlar inte om att rätta data. Strängarna finns på alla fyra språken.
-- Personpanelen listar problemen i Konsekvensbänkens egen formulering, längst ned i panelen efter anteckningarna — en fotnot till personen, inte det personen är. Upprepningar av samma kategori samlas under en rubrik med antal: fyra barn födda efter samma fars bortgång är ett faktum berättat fyra gånger, inte fyra rubriker. Inställningen ligger som ett modulärt tillstånd i stället för komponentstate, så att kryssrutan i verktygsraden fyller panelen bredvid utan omladdning.
-- **Personsidan** avslutas med samma avsnitt, utan kryssruta: har man gått till en person hör det köen har på hen ihop med resten av posten. En redigering där tömmer registret, så ett problem man just rättat slutar rapporteras utan omladdning — `clearIssueMarks` säger nu till sina lyssnare i stället för att bara nolla cachen. Listan är utbruten till `ProblemList`, delad av panelen och sidan.
-- Registret bär med sig problemens texter, inte bara kategorierna, så panelen slipper en egen fråga — en genomsökning per person hade kostat en halv sekund vid varje klick, och halva trädet är märkt. Att flytta `groupProblems` till klientsidan var inte kosmetik: `lib/issues.ts` importerar `node:crypto`, och ett värdeimport därifrån drar med hela databasschemat in i webbläsarbunten (`tsc` sa ingenting; webbläsaren sa allt).
-- Korten får en bricka i övre högra hörnet — färgen är personens värsta allvarlighetsgrad, siffran hur många problem hen bär på. Hovring namnger kategorierna och kortets `aria-label` säger samma sak i ord. Solfjäderns skivor har inget hörn att sätta brickan i, så de får en prick i samma färg i skivans inre hörn: den enda plats som är fri från namnet, flaggan och generationsbandet i varje ring (första försöket ramade in hela skivan i allvarlighetsfärgen, vilket fick solfjädern att se trasig ut snarare än kommenterad).
-- Inget nytt upptäcks: `/api/issues/persons` kör samma detektorer som Konsekvensbänken och viker ihop dem per person, så det man avfärdat i kön slutar märkas i trädet. Alla inblandade märks, inte bara den som äger köposten — ett barn fött efter faderns bortgång är värt att se från båda korten. Genomsökningen tar drygt en halv sekund över hela databasen, så diagrammen hämtar registret en gång och delar på svaret; att avfärda eller slå ihop tömmer det.
-- Värt att veta: **omkring halva trädet bär på minst ett problem** (2 335 av 4 561 personer), mest massvarningarna "Dödsfall utan datum" och "Vid liv men för gammal". Det är allvarlighetsfärgerna som gör vyn användbar — bara 160 personer har ett rent logiskt fel.
-- `flagPreference` blev `chartPreferences` med en gemensam `useStoredToggle`, eftersom det nu finns två inställningar som beter sig likadant.
-
-**Ljust och mörkt läge**
-- Väljare i sidhuvudet: **Följ systemet / Ljust / Mörkt**, ihågkommen mellan besök och applicerad före första målningen så att sidan inte blinkar ljus. Så länge valet är "följ systemet" fortsätter appen lyssna på operativsystemet — byter man till nattläge följer appen med utan omladdning. Strängarna finns på alla fyra språken.
-- Diagrammen kunde inte använda Tailwinds `dark:`-variant, eftersom deras färger är SVG-fill och -stroke satta från JavaScript. De ligger nu som CSS-variabler (`--branch-*`, `--card-*`, `--chart-canvas`, `--chart-link`) som `.dark` byter ut, och appliceras via `style` — `fill="var(--x)"` fungerar inte som presentationsattribut. De fyra grenfärgerna behåller sin identitet i båda lägena: bleka toner mot ljus botten, djupa mot mörk.
-- Flaggornas färger är medvetet inte tematiserade — en svensk flagga är blå och gul oavsett läge. Ett e2e-test kontrollerar just det, samtidigt som korten runt omkring byter färg.
-- Resten av gränssnittet gick från hårdkodade gråskalor till temats egna tokens (`text-muted-foreground`, `bg-muted`, `text-primary`, `text-destructive`); konsekvensproblemens färgkodade allvarlighetsgrader fick mörka varianter som behåller sin kulör.
-
-**Statistik**
-- Ny sida `/statistik` som berättar släktens historia i siffror: liv och livslängd, namn, familjer samt orter och arbete. Hela trädet som standard, eller en persons **egna förfäder och ättlingar** via `?person=` (251 personer för Sven-Erik mot 4 070 om man räknat alla släktband — då hade den avgränsade vyn varit likadan som den oavgränsade). Avgränsningen är en bredden-först-vandring i JS: 8 ms att läsa in släktbanden, 0 ms att gå igenom dem, mot 4,5 sekunder för samma fråga som rekursiv CTE.
-- Varje siffra anger vad den vilar på, eftersom tomma årtal finns överallt. Två spärrar håller datafel utanför berättelsen: livslängder över 110 år (tre personer, som mest 118) och åldersskillnader mellan makar över 50 år (två par, 61 och 111) räknas bort — sådant flaggar Konsekvensbänken redan.
-- Födelseorter grupperas på ortsnamnets första led, så "Alnö, Västernorrland, Sundsvall, Sverige" hamnar tillsammans med bara "Alnö". Bland 1 795 olika ortssträngar finns ingen ren regel, så rubriken lovar "födelseorter" och inte "socknar".
-- Varje diagram visar samma siffror som tabell, precis som trädet har sin listvy.
-- Personsökningen som låg inbakad i relationsdialogen är nu en delad komponent som både dialogen och statistiksidan använder.
-
-**Tema**
-- shadcn-temat `radix-luma` med basfärgen `olive` (preset `b2bkjK7NVw`) applicerat: nya färgtokens för ljust och mörkt läge, Roboto Slab som brödtext och Public Sans för rubriker, samt handpekare på knappar. Diagrammens egna färger står utanför temat — grenfärgerna och den grå bottnen är avsiktligt fasta värden, så träden ser likadana ut som förut.
-
-**Familjevyn färgar grenarna**
-- Familjevyns förfäder får samma fyra grenfärger som antavlan och solfjädern, uträknade ur samma anfarsnumrering — en ensam förälder placeras alltså efter kön, inte efter sin plats i listan, så samma person får samma färg oavsett vy (ett test jämför de två uträkningarna). Ättlingar och partner lämnas ofärgade: de tillhör ingen mor-/farföräldragren.
-
-**Familjevyn fälls ut åt båda hållen**
-- Samma utfällning som i antavlan, fast i två riktningar: **⌃** över de översta förfäderna öppnar två generationer föräldrar till, **⌄** under de yttersta ättlingarna öppnar två generationer barn, och båda vänder till motsatt pil för att fälla ihop grenen igen. Knapparna syns bara där släkten faktiskt fortsätter (`hasMoreAncestors` respektive `hasMoreDescendants` från API:et). En ⌄ under ett par hamnar under vigselstrecket, eftersom det är därifrån barnen hänger. Utfällningen sker på plats med samma glidning, intoning och mjuka panorering som antavlan — vyn panorerar till den *närmaste* nya generationen, inte den yttersta, så att den man klickade på stannar kvar i bild.
-- Familjeträdets kort numreras efter sin väg genom trädet, så en hämtad gren sätts in på sin plats utan att röra de andra grenarnas nycklar — det är det som gör att korten kan glida i stället för att ritas om.
-
-**Antavlan fälls ut gren för gren**
-- Kort vars föräldrar finns i databasen men ligger utanför tavlan får en **▸-knapp** som fäller ut två generationer till **på plats**: resten av tavlan står kvar och zoomen behålls, så man följer en enskild linje längre bak i stället för att fördubbla hela diagrammet. Knappen blir sedan ett **‹** som fäller ihop grenen igen — och tar med sig det som öppnats inuti den. Knappen syns bara där släkten faktiskt fortsätter, så den visar samtidigt var det finns mer att hämta. Utfällda grenar behåller sin anfarsnumrering och därmed sin grenfärg. Tavlan panorerar precis så mycket som behövs för att den nyöppnade grenen ska synas. Med tangentbord: högerpilen stannar vid knappen på väg mot föräldrarna, Enter fäller ut och ihop.
-- Mjuk animering när en gren fälls ut eller ihop: eftersom raderna räknas om glider korten som redan syns till sina nya platser, de nya tonas in, de hopfällda tonas ut, och tavlan panorerar mjukt om grenen annars hade öppnats utanför bild. Allt stängs av vid `prefers-reduced-motion`, och panoreringen slås av så fort man tar tag i tavlan så att dragning inte släpar efter.
-
-**Språk**
-- Gränssnittet finns nu på **svenska, engelska, tyska och spanska**. Språkväljare i sidhuvudet, valet minns mellan besök och sätter även `<html lang>`. Svenska är källspråk och reserv för nycklar som saknas i en översättning (ett test kontrollerar att alla fyra ordlistor har samma nyckeluppsättning). Översättningen omfattar gränssnittet, GEDCOM-händelsernas namn, datumformatering (månadsnamn och ABT/BEF/AFT) och förkortningarna för född/död. Personuppgifter — namn, platser, anteckningar — står kvar som de är registrerade, och konsekvensproblemens kategorier och beskrivningar är kvar på svenska (sidan säger till när ett annat språk är valt).
-
-**Träd (UI-omgång 2026-08-07)**
-- Två nya vyer: **Antavla** (klassisk vänster-till-höger-tavla) och **Solfjäder** (cirkulärt diagram), båda med enbart förfäder i upp till 8 generationer. De fyra mor-/farföräldragrenarna färgas var för sig, platserna räknas ut från anfarsnumreringen så att en saknad förfader lämnar en tom plats i stället för att förskjuta resten, och i solfjädern vänds text på nedre och vänstra halvan så att inget står upp och ned. Vyval sparas i URL:en (`?vy=`), och alla diagram delar zoom, personpanel, porträtt, flaggor och tangentbordsmodell.
-- Personpanel: klick (eller Enter) på ett kort öppnar en panel med porträtt, datum, familj och händelser. Att fokusera om trädet är nu en egen knapp i panelen i stället för något som händer vid varje klick, och släktingarna i panelen går att klicka på för att läsa vidare utan att diagrammet flyttar sig. Escape stänger.
-- Partner visas i trädet: personer vars ättlingar ritas ut får sin make/maka bredvid sig med ett vigselstreck emellan, och barnen hänger från strecket i stället för från ena föräldern. Barn från ett andra äktenskap hänger från rätt par. Partnerkorten nås med tangentbordet och finns med i listvyn.
-- Landsflaggor på korten, ritade som SVG, med kryssrutan "Visa flaggor" i verktygsraden (valet sparas mellan besök). Flaggan visas bara när födelseplatsen uttryckligen namnger ett land — en socken utan land antas alltså inte vara svensk. Dop räknas som födelseort när födelseplats saknas; bosättning och död gör det inte, eftersom de kan peka på ett annat land än personen föddes i.
-- Porträtt på korten: personens primära foto (eller första nedladdade) som rund bild, med initialer som reserv så att alla kort behåller samma form.
-
-**Faserna 1–6**
-- Fas 6 (Källor + export): källista med sökning och antal hänvisningar, källsida med redigerbara fält (auditloggade) och alla hänvisningar länkade till personer och händelser, korslänkning från personsidans källhänvisningar; GEDCOM 5.5.1-export som round-trippar `raw_tags` — verifierad både med enhetstester genom vår egen parser och genom att exportera och återimportera hela det riktiga trädet med identiskt resultat i samtliga tabeller; `/api/export/gedcom`, `npm run export` och en inställningssida med nedladdningsknapp.
-- Fas 5 (Konsekvensbänken): 28 deterministiska detektorer kalibrerade mot MyHeritages egen konsekvenskontroll (894 problem i 24 kategorier) plus fyra kompletthetskategorier; granskningskö värst först med kategorifilter, Åtgärda/Avfärda och avfärdanden som minns via stabila fingeravtryck; sammanslagning av dubbletter med jämförelse sida vid sida, fullständig audit-snapshot och transaktionellt skydd; resultattavla på Hem. Nya endpoints `/api/issues` och `/api/merge`.
-- Fas 4 (Redigering): redigering på plats av personfält, händelser (lägg till/redigera/ta bort) och relationer (barn/partner/förälder via guidade dialoger) på Personsidan; delade zod-scheman (`lib/schemas.ts`); transaktionella mutationer med fullständiga before/after-snapshots i `audit_log`; svenska felmeddelanden för omöjliga tillstånd (självrelation, släktlinjecykel, tredje förälder, dubbelt barn); luddiga datum accepteras alltid (varning i stället för avvisning); e2e körs mot en kopia av databasen så att riktig familjedata aldrig muteras.
-- Fas 3 (Träd): interaktivt SVG-diagram (SVG + d3-hierarchy enbart för layoutmatematik, ägarbeslut framför WebGL) — förfäder uppåt/ättlingar nedåt 1–5 generationer, panorering och zoom, piltangentsnavigering mellan släktingar, likvärdig listvy, `/api/tree/:id`, cykelskydd i datat och stöd för anförlust (samma person två gånger i diagrammet).
-- Fas 2 (Browse): sökbar personlista (namn/födelseår/födelseort, hittar även på giftasnamn, paginerad), läsbar Personsida (foton, familjeruta med klickbara relationer, händelsetidslinje med källhänvisningar, anteckningar), Hem med sökrutan i centrum, svensk i18n-ordlista, `/api/persons`, `/api/persons/:id/full`, `/api/media/:id`, Playwright-e2e för browse-flödet.
-- Fas 1: repo-skelett, SQLite-schema, GEDCOM-import-CLI, fotonedladdnings-CLI, stats-API och appskal.
-- Feltolerant GEDCOM-tolkning: 2 331 trasiga rader i den riktiga exporten räddas som notfortsättningar och listas i importrapporten i stället för att krascha importen.
-- `npm run refresh-media` — laddar om döda signerade CDN-länkar från en färsk MyHeritage-export.
-
-- Kort krockade i familjevyn: ett partnerkort kunde ligga 121 px inne i nästa syskon. Partnerkorten sitter till höger om sin person, så det är det *vänstra* kortet som behöver den extra bredden — men d3 lovar inte vilket av separationsfunktionens två argument som är det vänstra (den skickar (nod, föregående syskon) när syskon placeras och (vänster, höger) när undergrenars konturer jämförs). Bredden tas nu från den av de två som är bredast. Kontrollerat mot 250 riktiga träd: noll överlapp.
-- GEDCOM-exporten tappade texten på 3 519 källhänvisningar. Tolken lyfter ut `TEXT` ur `DATA` och lägger `DATA`:s övriga barn (oftast ett `DATE`) i `raw_tags`; exporten skrev sedan ut dem som **två skilda `DATA`-noder**, och vid inläsning vann den sista — den utan text. Texten läggs nu tillbaka i den `DATA` den kom ifrån. Dessutom: en enstaka vagnretur som låg kvar inne i en anteckning skrevs aldrig ut av exporten och kunde därför inte komma tillbaka — den städas nu bort redan vid inläsning. Efter detta är rundturen exakt: **alla sju tabeller identiska** när hela det riktiga trädet exporteras och läses in igen (4 561 personer, 983 familjer, 14 588 händelser, 5 804 källhänvisningar, 985 media). Tolken behåller numera också den första `TEXT`:en om ett program delar upp `DATA` i flera noder, så samma fälla inte kan slå till från andra håll.
-- Källhänvisningarnas rader klistrades ihop till en enda röra: "Sven-Erik WedinKön: ManHemvist: Sundsvall". MyHeritage skriver aldrig `CONT` — alla 10 190 fortsättningar i exporten är `CONC`, som enligt standarden betyder "skarva utan avskiljare", också där det är en ny rad som avses. En skrivare behöver bara fortsätta en rad när den är full, så en `CONC` efter en rad som aldrig nådde gränsen läses nu som den radbrytning den var menad att vara, medan äkta längduppdelningar fortfarande skarvas ihop. Gränsen räknas i **byte**: "ö" kostar två, så en full rad kan vara 196 tecken — mätt i tecken hamnade brytningar mitt inne i ord (mitt i ett maskerat `<br>`, till exempel). `npm run repair-conc` lagade den befintliga databasen utan att importera om (vilket hade slängt handgjorda ändringar): 1 108 fält fick tillbaka sina radbrytningar, och skriptet rör bara fält där enda skillnaden är var raderna bryts och hoppar över allt som finns i `audit_log`.
-- Anteckningar och källhänvisningar visas som läsbar text i stället för rå HTML. MyHeritage lagrar dem som HTML — 469 av 478 källanteckningar innehåller taggar — och stora delar är dessutom maskerade, ofta två gånger om (`&amp;lt;br&amp;gt;`), så svenska bokstäver stod som `&auml;` mitt i meningarna. Texten avkodas nu tills den står still, `<br>` och styckestaggar blir rad- och styckebrytningar, och resten av taggarna plockas bort. Kontrollerat mot samtliga 6 493 anteckningar i det riktiga trädet: inga taggar, inga entiteter och ingen anteckning som blev tom. Notera att bara kända taggnamn tas bort — `<Privat>`, som MyHeritage använder för levande personer, står kvar (finns i 20 hänvisningar). Ingenting skrivs om i databasen: redigeringsrutorna visar originalet och GEDCOM-exporten är fortfarande förlustfri.
-- Generationsvalet studsade inte tillbaka: sidan klämde `upp` till ett annat tak än rullgardinen erbjöd. Båda utgår nu från samma lista. Solfjäderns yttre ringar krymper dessutom textstorleken och utelämnar årtal och flaggor där skivorna blir för tunna — den överlappningen går inte att zooma bort.
-- Trädets zoom är nu absolut: 100 % betyder kort i verklig storlek oavsett hur brett trädet är (tidigare skalades hela trädet in i vyn först, så breda generationer gick inte att zooma till läsbar storlek). Zoomområde 4–300 %, vyn anpassas till trädet vid inladdning, +/− utgår från fokuspersonen och piltangentsnavigering panorerar så att det aktiva kortet syns.
-- GEDCOM-flaggan `Y` (som i `1 DEAT Y`, "händelsen har inträffat") visas inte längre som beskrivningstext på personsidan eller i trädpanelen. Värdet finns kvar i databasen så att exporten förblir förlustfri.
-- Nya person-id:n utgår inte längre från MyHeritages platshållarpost `I88888888` ("Unassociated photos") — de fortsätter den riktiga numreringen.
-- Sammanslagning från gränssnittet fungerar: zod 4:s `z.record()` med enum-nyckel kräver alla nycklar och avvisade därför tomma fältval.
+- Cards collided in the family view: a partner card could sit 121 px inside the next sibling. Partner cards sit to the right of their person, so it is the *left* card that needs the extra width — but d3 makes no promise about which of the separation function's two arguments is the left one (it passes (node, previous sibling) when siblings are placed and (left, right) when subtree contours are compared). The width is now taken from whichever of the two is wider. Checked against 250 real trees: zero overlaps.
+- The GEDCOM export lost the text on 3 519 citations. The parser lifts `TEXT` out of `DATA` and puts `DATA`'s other children (usually a `DATE`) in `raw_tags`; the export then wrote them as **two separate `DATA` nodes**, and on reading the last one won — the one without text. The text is now put back in the `DATA` it came from. Also: a stray carriage return left inside a note was never written out by the export and therefore could not come back — it is now cleaned away at read time. After this the round trip is exact: **all seven tables identical** when the whole real tree is exported and read back (4 561 people, 983 families, 14 588 events, 5 804 citations, 985 media). The parser now also keeps the first `TEXT` if a program splits `DATA` across several nodes, so the same trap cannot spring from elsewhere.
+- Citation lines were glued into one mess: "Sven-Erik WedinKön: ManHemvist: Sundsvall". MyHeritage never writes `CONT` — all 10 190 continuations in the export are `CONC`, which by the standard means "join with no separator", including where a new line was meant. A writer only needs to continue a line when it is full, so a `CONC` after a line that never reached the limit is now read as the line break it was meant to be, while genuine length splits are still joined. The limit counts **bytes**: "ö" costs two, so a full line can be 196 characters — measured in characters, breaks landed inside words (in the middle of an escaped `<br>`, for instance). `npm run repair-conc` fixed the existing database without re-importing (which would have thrown away hand-made edits): 1 108 fields got their line breaks back, and the script touches only fields where the sole difference is where the lines break, skipping anything present in `audit_log`.
+- Notes and citations are shown as readable text rather than raw HTML. MyHeritage stores them as HTML — 469 of 478 source notes contain tags — and much of it is escaped as well, often twice over (`&amp;lt;br&amp;gt;`), so Swedish letters appeared as `&auml;` mid-sentence. The text is now decoded until it settles, `<br>` and paragraph tags become line and paragraph breaks, and the remaining tags are stripped. Checked against all 6 493 notes in the real tree: no tags, no entities, and no note left empty. Note that only known tag names are removed — `<Privat>`, which MyHeritage uses for living people, stays (present in 20 citations). Nothing is rewritten in the database: the edit boxes show the original and the GEDCOM export is still lossless.
+- The generation selector no longer bounces back: the page clamped `upp` to a different ceiling than the dropdown offered. Both now use the same list. The fan's outer rings additionally shrink the text size and drop years and flags where the slices get too thin — that overlap cannot be zoomed away.
+- The tree's zoom is now absolute: 100 % means cards at real size however wide the tree is (previously the whole tree was scaled to fit first, so wide generations could not be zoomed to a readable size). Zoom range 4–300 %, the view fits the tree on load, +/− work from the focus person, and arrow-key navigation pans so the active card is visible.
+- The GEDCOM flag `Y` (as in `1 DEAT Y`, "the event happened") is no longer shown as description text on the person page or in the tree panel. The value stays in the database so the export remains lossless.
+- New person ids no longer start from MyHeritage's placeholder record `I88888888` ("Unassociated photos") — they continue the real numbering.
+- Merging from the interface works: zod 4's `z.record()` with an enum key requires every key and therefore rejected empty field choices.
 
 ### Security
 
-**Ett träd-id är inte en sökväg**
-- **Kritiskt, rättat:** `DELETE /api/trees/..%2Fwedin` svarade `200 OK` och raderade `wedin.db` med `-wal` och `-shm` — hela släktdatabasen. Skyddet "det ursprungliga trädet kan inte tas bort" jämförde bara mot strängen `default`, och `../wedin` är inte den strängen. Samma väg via `?tree=` öppnade och migrerade godtyckliga `.db`-filer, och `mediaDirFor` raderade kataloger rekursivt utanför `media/`.
-- Id:n valideras nu mot `^[a-z0-9][a-z0-9-]{0,63}$` i `fileFor` och `mediaDirFor` — de enda ställen där ett id blir en sökväg — så varje anropare täcks. Slugifieringen kunde aldrig producera något annat; allt övrigt kom inte från oss.
-- Ett regressionstest kör tio varianter (`../wedin`, `..%2F..%2Fetc/passwd`, `a/../../b`, tom sträng, nollbyte …) genom både `openTree` och `deleteTree`, och kontrollerar uttryckligen att familjedatabasen ligger kvar.
-- Foton serveras med `X-Content-Type-Options: nosniff`: en uppladdad fil är bara betrodd så långt som typen webbläsaren påstod.
-- Importens temporärfil skapas med `mkdtemp` i stället för ett namn byggt av klockan — en förutsägbar sökväg i ett delat `/tmp` kan en annan process lägga sig på i förväg.
-
-**Lägg till släktingar direkt i trädet**
-- En kryssruta i **Visningsinställningar** sätter ett litet plus på varje kort. Avstängd som standard: att bläddra i trädet är det vanliga, och ett plus på varje kort är brus tills sittningen handlar om att fylla luckor. Plusset är dämpat tills kortet är under pekaren eller plusset har fokus.
-- Plusset öppnar samma tre val som personsidan har — barn, partner, förälder — och samma formulär. När det sparats ritas trädet om på plats.
-- `RelationForm` bröts ut ur `RelationDialog`: en dialog inuti en dialog går inte att öppna, så skalet är nu anroparens sak och formuläret delas. Personsidan öppnar det i sin egen dialog; trädet visar det i den dialog kortets plus redan öppnat.
-- Plusset är ett `<g role="button">` inuti SVG:n och inte en Radix-utlösare — dialogen ägs av sidan, utanför diagrammet.
-
-**Vigseln går att redigera — på familjen**
-- Varje familjeruta på personsidan har nu sin vigsel med **Lägg till / Redigera / Ta bort**. Den saknades tidigare helt: vigsel finns inte bland personens händelsetyper, och det är med flit — i GEDCOM hör den till familjen, inte till någon av makarna. Det är också vad som gör att den syns på bådas sidor och exporteras som `FAM.MARR`.
-- `EventForm` tar nu emot ägartyp och en låst typ, så samma formulär används för både personhändelser och vigsel. Åldersfältet visas bara för personhändelser — ett par har två åldrar.
-- `FamilyView.marriage` bär med sig händelsens id, vilket är det som gör den redigerbar på plats.
-
-**Släktträd från ingenting**
-- **Rättat: trädvyn påstod att API:et var nere.** `/trad` utan id utgick från `I500001`, som inte finns i ett nyskapat träd — och inte heller i vilket importerat träd som helst, vars xref-nummer är egna. 404 tolkades som ett trasigt API.
-- Nu frågar sidan trädet vem det har: utan id landar den på den första personen, ett tomt träd får ett eget besked med väg till Personer, och ett id som inte finns säger just det.
-- **Inställningar → Skapa tomt släktträd** startar ett träd utan innehåll, för en släkt man bygger upp för hand. Man byter till det direkt.
-- **Ny person** på Personer-sidan skapar någon utan släkting. Alla andra läggs till från en befintlig persons sida — som barn, partner eller förälder — vilket inte kan starta ett tomt träd. Det är också vägen in för den vars plats i släkten ännu är okänd.
-- Det nya trädets namnfält fick ett eget etikettnamn: importformulärets namnfält ligger på samma sida, och två fält med samma tillgängliga namn går inte att skilja åt.
-
-**Foton går att lägga till och ta bort**
-- En knapp vid Foton-rubriken laddar upp en bild till personen; filnamnet blir titel. Avdelningen visas även för den som saknar foton — annars finns ingenstans att lägga det första.
-- Borttagning sker i det stora formatet, där man ser vad man tar bort, bakom en bekräftelse. **Raden tas bort, filen ligger kvar.** Raden går att läsa ur ändringshistoriken; bilden kan vara enda kopian av ett ansikte ingen levande minns.
-- Uppladdade filer lagras som de nedladdade — `media/<rad-id>.<ändelse>` — och `originalUrl` pekar på filen själv, så exporten skriver en FILE-rad som betyder något.
-- **Rättat: ändringshistoriken saknade foton.** Den avgör vad som rör en person utifrån posttyp, och `media` fanns aldrig med i listan — tillägg och borttagningar loggades men syntes aldrig.
-- e2e kör mot en egen mediakatalog av symlänkar till de riktiga filerna: sviten läser varje foto, men det den laddar upp hamnar i kopian.
-
-**Foton öppnas i stort format**
-- Ett klick på ett foto på personsidan öppnar det så stort skärmen tillåter. Miniatyrerna är beskurna kvadrater, så bilden på sidan är inte bilden — att öppna den är enda sättet att se vad som faktiskt fotograferades.
-- Piltangenter bläddrar mellan personens foton, rubriken räknar (“3 av 31”), och Escape stänger. Miniatyren är en **knapp** och inte en klickbar bild, så tangentbord och skärmläsare vet att den öppnar något.
-
-**Sidhuvudet står stilla**
-- Alla sidor har nu **samma bredd**, och sidhuvudet spänner över fönstret oavsett flik. Bredden följde tidigare varje sidas innehåll — tabeller bredare än brödtext — vilket gjorde att navigeringen själv flyttade sig när man bytte flik.
-- Trädet är undantaget och får hela fönstret. Att sidhuvudet har sin egen bredd är just det som låter det vara det utan att något ovanför rör sig.
-- Ett e2e-test mäter navigeringens och innehållets läge och bredd på varje flik och jämför dem — den sortens sak glider annars tillbaka obemärkt.
-
-**Zoomen glider mot sitt mål**
-- Hjulet flyttar ett **mål**, och en slinga stänger fortlöpande avståndet dit. Att sluta rulla *är* därmed svansen — avståndet stängs klart — så gest och efterspel är en enda kurva.
-- Det ersätter en första version som väntade 80 ms på att gesten skulle ta slut och sedan startade en egen utrullning. Mätt bildruta för bildruta stod diagrammet stilla i 87 ms och satte av igen i en femtedel av farten; det stopp-och-start var vad som kändes vingligt.
-- Avståndet stängs i logaritmiskt rum: skala är multiplikativ, så utzoomning måste glida precis som inzoomning i stället för att kärva vid den lilla änden.
-
-**Trädet går att kasta**
-- Släpper man taget medan man drar rullar duken vidare och saktar in, som en lista på en telefon. Farten mäts över **slutet** av draget, inte hela — en paus på vägen ska inte bromsa ett kast som avslutas snabbt — och avtar exponentiellt: ett linjärt stopp har ett synligt ögonblick där rörelsen bara upphör.
-- Att ta tag i duken mitt i kastet stoppar den tvärt. Zoom, återställning och piltangenter tar också över direkt.
-- `prefers-reduced-motion: reduce` panorerar precis som förut och stannar där fingret släppte.
-
-**Lugnare zoom i trädet**
-- Hjulet zoomar nu **i proportion till hur långt man faktiskt rullar**. En fast faktor per händelse är vad som gjorde styrplattan vild: två fingrar ger en ström av små händelser, och var och en räknades förut lika mycket som ett helt hjulklick. En knuff zoomar lite, ett tag zoomar mycket, och ingen enskild händelse får ta mer än 10 %.
-- Rader och sidor räknas om till bildpunkter (`deltaMode`), och en styrplattas nyp — som kommer som ctrl+hjul — får vara snabbare, eftersom det är en avsiktlig gest.
-- **Zoomknapparna glider** i stället för att hoppa. Hjul och dragning gör det inte: en övergång skulle alltid ligga en händelse efter fingret.
-
-**Personpanelen glider in**
-- Panelen tonar och glider in från höger, och **ligger kvar medan den glider ut** i stället för att blinka bort. Det senare kräver att den personen den visade hålls kvar en stund efter att markeringen släppts — `useLingering` gör just det, och gör ingenting alls när `prefers-reduced-motion` är satt.
-- Bara panelen rör sig; diagrammet tar sin nya bredd direkt. Att animera bredden hade räknat om diagrammets passning varje bildruta, vilket både hackar och är onödigt — blicken följer panelen, inte springan.
-
-**Det markerade kortet syns**
-- Kortet man valt får en **gloria som slår till och sedan andas** — långsamt och grunt, 2,8 sekunder per andetag. Insnärpningen lämnar över i samma ögonblick som den landar på viloläget, så de två läses som en enda rörelse. Solfjäderns skiva gör samma sak med sin kontur. `prefers-reduced-motion: reduce` ger glorian utan rörelsen, eftersom viloläget också är animationens utgångsläge.
-- **Rättat: personpanelen sköt rubriken och flikarna ut ur bilden.** Växlaren saknade `min-w-0`, så flexraden vägrade krympa och sidan fick vågrät rullning när panelen öppnades.
-
-**Trädsidan gör plats för trädet**
-- Fokuspersonens **namn är länken** till personsidan. Ett separat "Gå till personsida" bredvid sa samma sak två gånger och satte det användbara sist.
-- Vyerna är **flikar** i stället för knappar, med riktig `tablist`/`tab`-semantik: en enda tabbstopp, piltangenter mellan flikarna, och panelen pekas ut med `aria-controls`. Handskriven i stället för en färdig komponent, eftersom panelen är den animerade växlaren och måste sitta kvar monterad genom ett flikbyte för att övergången ska hinna hända.
-- **Zoomen sitter i diagrammets eget nedre högra hörn** i stället för i ett verktygsfält ovanför. Kontrollerna hör till ytan de påverkar.
-- **Generationer och kortinställningar bor bakom en kugge** som öppnar en popover. Det första man mötte på sidan var annars en rad kontroller i stället för släkten. Generationsvalen ligger kvar i URL:en, så en länk bär dem fortfarande med sig.
-- Texten om piltangenterna är borta från skärmen men **finns kvar för skärmläsare** — den är fortfarande måltavla för diagrammets `aria-describedby`, och tangentbordshjälpen är just det som behövs av den som inte ser diagrammet.
-
-**Trädvyerna övergår i varandra**
-- Att byta mellan Familj, Antavla, Solfjäder och Lista är inte längre ett klipp. Vyn som lämnar ligger kvar över den som kommer under övergången, med `aria-hidden` och `inert`: en skärmläsare ska aldrig hitta två träd, tangentbordsfokus ska aldrig hamna i det som är på väg bort, och ett test som letar efter "trädet" ska fortsätta hitta exakt ett.
-- **Antavlan lindar ihop sig till solfjädern.** De två vyerna ritar samma människor under samma anortal, så varje person har en verklig start och ett verkligt mål — vilket är det som gör en morf meningsfull just där och ingen annanstans i appen. Familjevyn ritar dessutom ättlingar, och de flesta av dess kort har ingenstans att färdas.
-- Rörelsen räknas i **polära koordinater kring solfjäderns mitt**, inte i x och y. Räta linjer hade sett ut som lådor som glider in i en cirkel; att i stället flytta radie och vinkel får varje bana att böja sig utåt av sig själv, och kolumnerna lindar ihop sig till ringar.
-- Bara läget färdas. En rektangel kan inte bli en tårtbit, och att morfa formerna hade krävt en enda parameteriserad geometri — på bekostnad av antavlans porträtt och solfjäderns etiketter längs bågar. Under övergången bär en liten markör per ana grenens färg.
-- `prefers-reduced-motion: reduce` hoppar över både korsfade och morf.
-
-**GEDCOM-import skapar ett nytt släktträd**
-- **Inställningar → Importera släktträd** läser en GEDCOM-fil till ett helt nytt träd. Det träd som redan finns rörs inte: ingenting matchas, slås ihop eller skrivs över. En trädväljare i sidhuvudet byter mellan dem, och den som aldrig öppnat en terminal klarar hela vägen själv.
-- **En SQLite-fil per träd, inte en `treeId`-kolumn.** GEDCOM-id är bara unika inom en fil — det här trädets `I500097` och en kusins `I500097` är olika människor. Delade tabeller hade krävt antingen omskrivna id:n eller ett filter på ett fyrtiotal frågeställen, där ett enda glömt filter tyst blandar ihop två släkter.
-- Trädets namn bor i en `tree_meta`-rad **inne i trädet**. Inget centralt register som kan komma ur synk, gå sönder eller tappas bort när en `.db` kopieras: att lista träden är en katalogläsning plus en rad per fil. En databas utan rad får sitt filnamn och kan döpas om i gränssnittet.
-- **Det ursprungliga trädet flyttas aldrig.** `wedin.db` (`WEDIN_DB`) är kvar precis som det är och heter `default` i listan, så alla CLI-skript och e2e-isoleringen fungerar oförändrat. Det kan inte tas bort från gränssnittet — skripten äger den filen.
-- Varje förfrågan bär med sig `?tree=<id>`, tillagt på ett enda ställe i `src/lib/api.ts`. Frågeparameter och inte header, eftersom GEDCOM-exporten är en vanlig nedladdningslänk och länkar inte kan sätta headers. Att valet ligger i webbläsaren och inte i servern är vad som gör att en omladdning, en andra flik och den seriella e2e-sviten alla beter sig.
-- **En trasig fil skapar ingenting.** Uppladdningen läses och kontrolleras innan något träd finns: en fil utan personer avvisas med 400, och skulle importen ändå fela raderas den halvskrivna databasen. Uppladdningar över 50 MB stoppas innan de buffras.
-- Foton laddas inte ner för importerade träd — en GEDCOM innehåller länkar, inte filer. Nya träd visar platshållarna som redan finns, och trädlistan säger hur många som saknas. `npm run media` är fortfarande vägen dit.
-- `runImport` flyttad från `scripts/` till `lib/`: ett träd skapat i webbläsaren och ett skapat i terminalen måste vara samma sak. `npm run import` är oförändrat.
+**A tree id is not a path**
+- **Critical, fixed:** `DELETE /api/trees/..%2Fwedin` answered `200 OK` and deleted `wedin.db` together with its `-wal` and `-shm` — the whole family database. The guard "the original tree cannot be deleted" only compared against the string `default`, and `../wedin` is not that string. The same route via `?tree=` opened and migrated arbitrary `.db` files, and `mediaDirFor` deleted directories recursively outside `media/`.
+- Ids are now validated against `^[a-z0-9][a-z0-9-]{0,63}$` in `fileFor` and `mediaDirFor` — the only places where an id becomes a path — so every caller is covered. Slugification could never produce anything else; everything else did not come from us.
+- A regression test runs ten variants (`../wedin`, `..%2F..%2Fetc/passwd`, `a/../../b`, empty string, null byte …) through both `openTree` and `deleteTree`, and checks explicitly that the family database is still there.
+- Photos are served with `X-Content-Type-Options: nosniff`: an uploaded file is trusted only as far as the type the browser claimed for it.
+- The import's temporary file is created with `mkdtemp` rather than a name built from the clock — a predictable path in a shared `/tmp` is one another process can sit on beforehand.
 
 ### Data
 
-- Riktig import genomförd: 4 561 personer, 983 familjer, 520 källor, 14 588 händelser, 5 804 källhänvisningar.
-- Alla 985 foton räddade (2026-08-06) via färsk MyHeritage-export + `refresh-media` + `media` → 985/985 nedladdade, 0 fel (425 MB, gitignorerat).
+- Real import completed: 4 561 people, 983 families, 520 sources, 14 588 events, 5 804 citations.
+- All 985 photos recovered (2026-08-06) via a fresh MyHeritage export + `refresh-media` + `media` → 985/985 downloaded, 0 failures (425 MB, gitignored).
+- **Andersson deduplicated (2026-08-09…11): 504 → 486 people, 0 duplicate findings.** One branch imported twice, showing at three levels: Jens himself, his grandparents (invisible to the detector because one copy said "Anders Andersson" and the other "Anders Bertil Andersson"), and six Bergqvist children recorded under both of Anders Bergqvist's wives. The last were assigned by arithmetic: Karin was 6 years old in 1719, Elisabet died in 1733. No citation or photo lost — 483 and 257 before and after.

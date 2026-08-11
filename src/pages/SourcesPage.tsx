@@ -78,7 +78,7 @@ export default function SourcesPage() {
             {result.items.map(s => (
               <tr key={s.id} className="border-b">
                 <td className="py-2 pr-4">
-                  <Link to={link(`/kalla/${s.id}`)} className="text-primary underline-offset-2 hover:underline">
+                  <Link to={link(`/source/${s.id}`)} className="text-primary underline-offset-2 hover:underline">
                     {s.title ?? s.id}
                   </Link>
                 </td>

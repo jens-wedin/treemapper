@@ -60,9 +60,9 @@ function SourceEditForm({ source, onSaved, onCancel }: {
     <form onSubmit={submit} className="mt-4 rounded-lg border p-4">
       <div className="flex flex-wrap gap-3">
         {([
-          ['kalla-titel', t('person.name'), 'title', 'w-80'],
-          ['kalla-forfattare', t('sources.author'), 'author', 'w-64'],
-          ['kalla-utgivare', t('sources.publication'), 'publication', 'w-64'],
+          ['source-titel', t('person.name'), 'title', 'w-80'],
+          ['source-forfattare', t('sources.author'), 'author', 'w-64'],
+          ['source-utgivare', t('sources.publication'), 'publication', 'w-64'],
         ] as const).map(([id, label, key, width]) => (
           <div key={id}>
             <label htmlFor={id} className="block text-sm font-medium">{label}</label>
@@ -122,7 +122,7 @@ export default function SourcePage() {
 
   if (state === 'loading') return <div className="space-y-3"><Skeleton className="h-9 w-72" /><Skeleton className="h-40 w-full" /></div>;
   if (state === 'missing') {
-    return <p>{t('sources.notFound')} <Link className="underline" to={link('/kallor')}>{t('sources.backToSources')}</Link></p>;
+    return <p>{t('sources.notFound')} <Link className="underline" to={link('/sources')}>{t('sources.backToSources')}</Link></p>;
   }
   if (state === 'error' || !data) return <p role="alert">{t('common.error')}</p>;
 

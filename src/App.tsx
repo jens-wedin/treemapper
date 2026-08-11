@@ -27,11 +27,11 @@ import SettingsPage from './pages/SettingsPage';
  */
 const PAGE_WIDTH = 'mx-auto w-full max-w-6xl px-4';
 
-/** `/wedin/trad/I500001` → `trad`. The tree is always the first segment. */
+/** `/wedin/tree/I500001` → `tree`. The tree is always the first segment. */
 const pageOf = (pathname: string): string => pathname.split('/')[2] ?? '';
 
 const containerClass = (pathname: string): string =>
-  (pageOf(pathname) === 'trad' ? 'w-full px-4' : PAGE_WIDTH);
+  (pageOf(pathname) === 'tree' ? 'w-full px-4' : PAGE_WIDTH);
 
 /**
  * The pages of one tree. Everything below renders knowing which database it is
@@ -50,7 +50,7 @@ function TreeScope() {
   }, [tree, scoped]);
 
   // A first segment that is not a tree is an address from before trees were in
-  // the path — `/personer?q=jens+wedin`. Send it to the tree last open, so old
+  // the path — `/people?q=jens+wedin`. Send it to the tree last open, so old
   // bookmarks land somewhere real instead of on an error.
   if (!scoped) {
     return <Navigate to={`${rescueUrl(fallbackTree(), pathname)}${search}${hash}`} replace />;
@@ -66,15 +66,15 @@ function TreeScope() {
     // longer exist, so they are remounted rather than refetched.
     <Routes key={tree}>
       <Route path="/" element={<Hem />} />
-      <Route path="personer" element={<PersonList />} />
+      <Route path="people" element={<PersonList />} />
       <Route path="person/:id" element={<PersonPage />} />
-      <Route path="trad" element={<TreePage />} />
-      <Route path="trad/:id" element={<TreePage />} />
-      <Route path="statistik" element={<StatisticsPage />} />
-      <Route path="konsekvens" element={<IssuesPage />} />
-      <Route path="kallor" element={<SourcesPage />} />
-      <Route path="kalla/:id" element={<SourcePage />} />
-      <Route path="installningar" element={<SettingsPage />} />
+      <Route path="tree" element={<TreePage />} />
+      <Route path="tree/:id" element={<TreePage />} />
+      <Route path="statistics" element={<StatisticsPage />} />
+      <Route path="issues" element={<IssuesPage />} />
+      <Route path="sources" element={<SourcesPage />} />
+      <Route path="source/:id" element={<SourcePage />} />
+      <Route path="settings" element={<SettingsPage />} />
     </Routes>
   );
 }
@@ -88,7 +88,7 @@ const HEADER_WIDTH = 'w-full px-4';
 export default function App() {
   const { pathname } = useLocation();
   const container = containerClass(pathname);
-  const isTree = pageOf(pathname) === 'trad';
+  const isTree = pageOf(pathname) === 'tree';
   // Subscribing here re-renders the whole app when the language changes.
   const lang = useLanguage();
   const activeTree = useActiveTree();
@@ -118,12 +118,12 @@ export default function App() {
           {(
             [
               ['/', t('nav.home')],
-              ['/personer', t('nav.persons')],
-              ['/trad', t('nav.tree')],
-              ['/statistik', t('nav.statistics')],
-              ['/konsekvens', t('nav.issues')],
-              ['/kallor', t('nav.sources')],
-              ['/installningar', t('nav.settings')],
+              ['/people', t('nav.persons')],
+              ['/tree', t('nav.tree')],
+              ['/statistics', t('nav.statistics')],
+              ['/issues', t('nav.issues')],
+              ['/sources', t('nav.sources')],
+              ['/settings', t('nav.settings')],
             ] as const
           ).map(([to, label]) => (
             <NavLink

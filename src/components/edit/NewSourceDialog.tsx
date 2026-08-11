@@ -36,7 +36,7 @@ export default function NewSourceDialog({ onCreated }: { onCreated?: () => void 
       setTitle('');
       onCreated?.();
       // Straight to the new source, where the transcription field is.
-      void navigate(link(`/kalla/${res.data.id}`));
+      void navigate(link(`/source/${res.data.id}`));
     } catch (err) {
       setError(err instanceof Error ? err.message : t('common.error'));
     } finally {

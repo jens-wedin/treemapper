@@ -23,9 +23,9 @@ interface IssuesResponse {
 
 export default function IssuesPage() {
   const [params, setParams] = useSearchParams();
-  const category = params.get('kategori') ?? '';
-  const severity = params.get('grad') ?? '';
-  const showDismissed = params.get('avfardade') === '1';
+  const category = params.get('category') ?? '';
+  const severity = params.get('severity') ?? '';
+  const showDismissed = params.get('dismissed') === '1';
 
   const [data, setData] = useState<IssuesResponse | null>(null);
   const [state, setState] = useState<'loading' | 'ok' | 'error'>('loading');
@@ -101,7 +101,7 @@ export default function IssuesPage() {
           <select
             id="kategori"
             value={category}
-            onChange={e => setParam('kategori', e.target.value)}
+            onChange={e => setParam('category', e.target.value)}
             className="mt-1 max-w-md rounded-md border px-2 py-1.5"
           >
             <option value="">{t('issues.allCategories')}</option>
@@ -115,7 +115,7 @@ export default function IssuesPage() {
           <select
             id="grad"
             value={severity}
-            onChange={e => setParam('grad', e.target.value)}
+            onChange={e => setParam('severity', e.target.value)}
             className="mt-1 rounded-md border px-2 py-1.5"
           >
             <option value="">{t('issues.allSeverities')}</option>
@@ -130,7 +130,7 @@ export default function IssuesPage() {
           <input
             type="checkbox"
             checked={showDismissed}
-            onChange={e => setParam('avfardade', e.target.checked ? '1' : '')}
+            onChange={e => setParam('dismissed', e.target.checked ? '1' : '')}
           />
           {t('issues.showDismissed')}
         </label>

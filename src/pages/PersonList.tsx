@@ -15,33 +15,33 @@ export default function PersonList() {
   const link = useTreeUrl();
   const [params, setParams] = useSearchParams();
   const q = params.get('q') ?? '';
-  const fodd = params.get('fodd') ?? '';
-  const ort = params.get('ort') ?? '';
+  const born = params.get('born') ?? '';
+  const place = params.get('place') ?? '';
   const offset = Math.max(0, Number(params.get('offset') ?? 0) || 0);
 
-  const [form, setForm] = useState({ q, fodd, ort });
+  const [form, setForm] = useState({ q, born, place });
   const [result, setResult] = useState<SearchResult | null>(null);
   const [error, setError] = useState(false);
 
-  useEffect(() => { setForm({ q, fodd, ort }); }, [q, fodd, ort]);
+  useEffect(() => { setForm({ q, born, place }); }, [q, born, place]);
 
   useEffect(() => {
     document.title = `${t('nav.persons')} – ${t('appTitle')}`;
     const url = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(offset) });
     if (q) url.set('q', q);
-    if (fodd) url.set('birthYear', fodd);
-    if (ort) url.set('place', ort);
+    if (born) url.set('birthYear', born);
+    if (place) url.set('place', place);
     setResult(null);
     setError(false);
     fetchJson<SearchResult>(`/api/persons?${url}`).then(setResult).catch(() => setError(true));
-  }, [q, fodd, ort, offset]);
+  }, [q, born, place, offset]);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const next = new URLSearchParams();
     if (form.q) next.set('q', form.q);
-    if (form.fodd) next.set('fodd', form.fodd);
-    if (form.ort) next.set('ort', form.ort);
+    if (form.born) next.set('born', form.born);
+    if (form.place) next.set('place', form.place);
     setParams(next);
   }
 
@@ -66,11 +66,11 @@ export default function PersonList() {
         </div>
         <div>
           <label htmlFor="sok-fodd" className="block text-sm font-medium">{t('search.birthYear')}</label>
-          <Input id="sok-fodd" inputMode="numeric" value={form.fodd} onChange={e => setForm({ ...form, fodd: e.target.value })} className="mt-1 w-28" />
+          <Input id="sok-fodd" inputMode="numeric" value={form.born} onChange={e => setForm({ ...form, born: e.target.value })} className="mt-1 w-28" />
         </div>
         <div>
           <label htmlFor="sok-ort" className="block text-sm font-medium">{t('search.place')}</label>
-          <Input id="sok-ort" value={form.ort} onChange={e => setForm({ ...form, ort: e.target.value })} className="mt-1 w-56" />
+          <Input id="sok-ort" value={form.place} onChange={e => setForm({ ...form, place: e.target.value })} className="mt-1 w-56" />
         </div>
         <Button type="submit">{t('search.button')}</Button>
       </form>
@@ -104,7 +104,7 @@ export default function PersonList() {
                 {/* two people can share a name and dates — the tree is often
                     the quickest way to tell which one you are looking at */}
                 <td className="py-2">
-                  <Link to={link(`/trad/${p.id}`)} className="text-primary underline-offset-2 hover:underline">
+                  <Link to={link(`/tree/${p.id}`)} className="text-primary underline-offset-2 hover:underline">
                     {t('tree.showInTree')}
                   </Link>
                 </td>

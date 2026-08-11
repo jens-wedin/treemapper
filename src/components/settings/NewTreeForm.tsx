@@ -38,7 +38,7 @@ export default function NewTreeForm() {
       await refreshTrees();
       // Navigating is what switches tree now that the address decides which
       // one is open; setting the state alone would be undone on the next render.
-      void navigate(treeUrl(body.tree.id, '/installningar'));
+      void navigate(treeUrl(body.tree.id, '/settings'));
     } catch (err) {
       setError(err instanceof Error ? err.message : t('common.error'));
     } finally {

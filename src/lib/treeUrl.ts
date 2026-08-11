@@ -3,24 +3,28 @@ import { useLocation, useParams } from 'react-router';
 import { getActiveTree } from './activeTree';
 
 /**
- * Every address names its tree: `/wedin/personer`, `/andersson/person/I500001`.
+ * Every address names its tree: `/wedin/people`, `/andersson/person/I500001`.
  *
  * It used to live only in the browser, which made every link ambiguous — the
  * same `/person/I500001` meant a different person depending on what the picker
  * was last set to, so a bookmark quietly rotted and a shared link showed the
  * reader somebody else. The id in the path fixes the answer.
+ *
+ * The segments are English, like the rest of the project. The Swedish ones
+ * (`/personer`, `/kallor`, `/trad`) are gone rather than redirected: they were
+ * only ever in this one browser's history.
  */
 
 /**
  * Pages whose first segment could be mistaken for a tree. A tree called
- * "Personer" would otherwise slug to `personer` and make `/personer`
+ * "People" would otherwise slug to `people` and make `/people`
  * unanswerable, so `allocateId` refuses these — see lib/trees.ts.
  */
 export const PAGE_SEGMENTS = [
-  'personer', 'person', 'trad', 'statistik', 'konsekvens', 'kallor', 'kalla', 'installningar',
+  'people', 'person', 'tree', 'statistics', 'issues', 'sources', 'source', 'settings',
 ] as const;
 
-/** `/wedin` + `/personer` → `/wedin/personer`. */
+/** `/wedin` + `/people` → `/wedin/people`. */
 export function treeUrl(tree: string, path: string): string {
   const rest = path === '/' ? '' : path.startsWith('/') ? path : `/${path}`;
   return `/${tree}${rest}`;
@@ -36,7 +40,7 @@ export function useTreeId(): string {
   return useParams().tree ?? getActiveTree();
 }
 
-/** Builds links for the current tree: `link('/personer')` → `/wedin/personer`. */
+/** Builds links for the current tree: `link('/people')` → `/wedin/people`. */
 export function useTreeUrl(): (path: string) => string {
   const tree = useTreeId();
   return useCallback((path: string) => treeUrl(tree, path), [tree]);
@@ -47,7 +51,7 @@ export function useTreeUrl(): (path: string) => string {
  * `/person/I500001` has no meaning in another tree, and `/person` on its own
  * matches no route at all — it would render a blank page.
  */
-const LANDING: Record<string, string> = { person: 'personer', kalla: 'kallor' };
+const LANDING: Record<string, string> = { person: 'people', source: 'sources' };
 
 /**
  * The same page in another tree.
@@ -60,7 +64,7 @@ const LANDING: Record<string, string> = { person: 'personer', kalla: 'kallor' };
 export function switchTreeUrl(to: string, pathname: string, search: string): string {
   const [, , page = ''] = pathname.split('/');
   const target = LANDING[page] ?? page;
-  const keepSearch = target === 'personer' && page === 'personer' ? search : '';
+  const keepSearch = target === 'people' && page === 'people' ? search : '';
   return `${treeUrl(to, target ? `/${target}` : '/')}${keepSearch}`;
 }
 
@@ -70,11 +74,11 @@ export function switchTreeUrl(to: string, pathname: string, search: string): str
  *
  * Two different things arrive here and they need opposite treatment:
  *
- *   `/personer?q=…`         an address from before trees were in the path.
+ *   `/people?q=…`           an address from before trees were in the path.
  *                           The tree is *missing* — put one in front.
- *   `/grannslakten/personer` a tree that has been deleted, or never existed
+ *   `/grannslakten/people`   a tree that has been deleted, or never existed
  *                           here. The tree is *wrong* — swap it out. Prefixing
- *                           would give `/wedin/grannslakten/personer`, which
+ *                           would give `/wedin/grannslakten/people`, which
  *                           matches no page at all.
  */
 export function rescueUrl(tree: string, pathname: string): string {
@@ -84,7 +88,7 @@ export function rescueUrl(tree: string, pathname: string): string {
   return treeUrl(tree, rest);
 }
 
-/** The path with its tree stripped: `/wedin/personer` → `/personer`. */
+/** The path with its tree stripped: `/wedin/people` → `/people`. */
 export function useUnscopedPath(): string {
   const { pathname } = useLocation();
   const tree = useParams().tree;

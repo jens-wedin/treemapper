@@ -22,7 +22,7 @@ import TreePersonPanel from '../components/TreePersonPanel';
 import PedigreeChart from '../components/PedigreeChart';
 import FanChart from '../components/FanChart';
 
-// Tree owner — the natural default root for /trad without an id.
+// Tree owner — the natural default root for /tree without an id.
 const DEFAULT_FOCUS = 'I500001';
 // Five generations is as much as stays readable at once; beyond that the
 // pedigree's expander buttons continue a single line instead.
@@ -31,7 +31,7 @@ const UP_DEPTHS = [1, 2, 3, 4, 5];
 const VIEWS = ['family', 'pedigree', 'fan', 'list'] as const;
 type View = (typeof VIEWS)[number];
 /** What the tabs point at: one panel, whichever view is showing. */
-const PANEL_ID = 'trad-vy';
+const PANEL_ID = 'tree-vy';
 /** Keep in step with .panel-leaving in index.css. */
 const PANEL_OUT_MS = 320;
 
@@ -48,11 +48,11 @@ export default function TreePage() {
   const [params, setParams] = useSearchParams();
   // The API accepts deeper requests than the page offers; these clamps are
   // what the dropdowns promise.
-  const upp = clamp(params.get('upp'), UP_DEPTHS);
-  const ned = clamp(params.get('ned'), DEPTHS);
-  const depthQuery = `?upp=${upp}&ned=${ned}`;
+  const up = clamp(params.get('up'), UP_DEPTHS);
+  const down = clamp(params.get('down'), DEPTHS);
+  const depthQuery = `?up=${up}&down=${down}`;
 
-  const viewParam = params.get('vy') as View | null;
+  const viewParam = params.get('view') as View | null;
   const view: View = VIEWS.includes(viewParam as View) ? (viewParam as View) : 'family';
 
   const [data, setData] = useState<TreeData | null>(null);
@@ -91,7 +91,7 @@ export default function TreePage() {
       if (view === 'pedigree' && next === 'fan') setMorph('toFan');
       else if (view === 'fan' && next === 'pedigree') setMorph('toPedigree');
     }
-    setParam('vy', next);
+    setParam('view', next);
   }
 
   // Built only while a morph runs. layoutPedigree is called without the
@@ -100,14 +100,14 @@ export default function TreePage() {
   // screen at both ends.
   const morphLayouts = useMemo(() => {
     if (!morph || !data) return null;
-    const slots = flattenAncestors(data.ancestors, upp);
-    return { pedigree: layoutPedigree(slots), fan: layoutFan(slots, upp) };
-  }, [morph, data, upp]);
+    const slots = flattenAncestors(data.ancestors, up);
+    return { pedigree: layoutPedigree(slots), fan: layoutFan(slots, up) };
+  }, [morph, data, up]);
 
   /** Re-roots the chart on someone, keeping the current view and depths. */
   function focusOn(personId: string) {
     setSelectedId(null);
-    navigate(link(`/trad/${personId}${depthQuery}&vy=${view}`));
+    navigate(link(`/tree/${personId}${depthQuery}&view=${view}`));
   }
 
   // The previous chart stays on screen while the next one loads: blanking it
@@ -116,7 +116,7 @@ export default function TreePage() {
   useEffect(() => {
     let stale = false;
     setState('loading');
-    fetchJson<TreeData>(`/api/tree/${id}?up=${upp}&down=${ned}`)
+    fetchJson<TreeData>(`/api/tree/${id}?up=${up}&down=${down}`)
       .then(d => {
         if (stale) return;
         setData(d);
@@ -135,14 +135,14 @@ export default function TreePage() {
           const first = found.items[0]?.id;
           if (stale) return;
           if (!first) setState('empty');
-          else if (!routeId) navigate(link(`/trad/${first}${depthQuery}&vy=${view}`), { replace: true });
+          else if (!routeId) navigate(link(`/tree/${first}${depthQuery}&view=${view}`), { replace: true });
           else setState('missing');
         } catch {
           if (!stale) setState('error');
         }
       });
     return () => { stale = true; };
-  }, [id, upp, ned, routeId, depthQuery, view, navigate, reloadKey]);
+  }, [id, up, down, routeId, depthQuery, view, navigate, reloadKey]);
 
   // Functional form: changing view and depth in quick succession must not have
   // the second change read a snapshot taken before the first.
@@ -153,7 +153,7 @@ export default function TreePage() {
       return next;
     });
   }
-  const setDepth = (key: 'upp' | 'ned', value: string) => setParam(key, value);
+  const setDepth = (key: 'up' | 'down', value: string) => setParam(key, value);
 
   if (state === 'error') return <p role="alert">{t('common.error')}</p>;
   if (state === 'empty' || state === 'missing') {
@@ -163,7 +163,7 @@ export default function TreePage() {
         <p className="mt-3 text-muted-foreground">
           {t(state === 'empty' ? 'tree.emptyTree' : 'tree.personGone')}
         </p>
-        <Link to={link('/personer')} className="mt-3 inline-block text-primary underline-offset-2 hover:underline">
+        <Link to={link('/people')} className="mt-3 inline-block text-primary underline-offset-2 hover:underline">
           {t('tree.toPersons')}
         </Link>
       </section>
@@ -188,13 +188,13 @@ export default function TreePage() {
       <div className="mt-4 flex items-end justify-between gap-3">
         <ViewTabs views={VIEWS} value={view} panelId={PANEL_ID} onChange={chooseView} />
         <TreeSettings
-          up={upp}
-          down={ned}
+          up={up}
+          down={down}
           upOptions={UP_DEPTHS}
           downOptions={DEPTHS}
           showDown={view === 'family' || view === 'list'}
-          onUp={value => setDepth('upp', value)}
-          onDown={value => setDepth('ned', value)}
+          onUp={value => setDepth('up', value)}
+          onDown={value => setDepth('down', value)}
         />
       </div>
 
@@ -231,9 +231,9 @@ export default function TreePage() {
             ) : view === 'family' ? (
               <TreeChart data={data} onSelect={setSelectedId} selectedId={selectedId} onAddRelative={setRelativeFor} />
             ) : view === 'pedigree' ? (
-              <PedigreeChart data={data} generations={upp} onSelect={setSelectedId} selectedId={selectedId} onAddRelative={setRelativeFor} />
+              <PedigreeChart data={data} generations={up} onSelect={setSelectedId} selectedId={selectedId} onAddRelative={setRelativeFor} />
             ) : (
-              <FanChart data={data} generations={upp} onSelect={setSelectedId} selectedId={selectedId} />
+              <FanChart data={data} generations={up} onSelect={setSelectedId} selectedId={selectedId} />
             )}
           </ChartSwitcher>
           {/* Outside the charts: an SVG cannot host a dialog, and the new

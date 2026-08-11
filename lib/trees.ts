@@ -212,11 +212,16 @@ function slugify(name: string): string {
 
 /**
  * Ids the router needs for itself. A tree is the first segment of every
- * address, so a tree called "Personer" would make `/personer` ambiguous —
+ * address, so a tree called "People" would make `/people` ambiguous —
  * either the People page or that tree, and no way to tell.
+ *
+ * The Swedish segments stay reserved. The routes no longer answer to them, but
+ * a tree named "Källor" would still slug to `kallor`, and an old bookmark
+ * reaching it would land somewhere its author never meant.
  */
 const RESERVED = new Set([
-  'personer', 'person', 'trad', 'statistik', 'konsekvens', 'kallor', 'kalla', 'installningar', 'api',
+  'people', 'person', 'tree', 'statistics', 'issues', 'sources', 'source', 'settings', 'api',
+  'personer', 'trad', 'statistik', 'konsekvens', 'kallor', 'kalla', 'installningar',
 ]);
 
 function allocateId(name: string): string {

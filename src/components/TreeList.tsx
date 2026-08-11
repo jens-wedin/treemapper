@@ -7,7 +7,7 @@ function PersonLine({ person, depthQuery }: { person: TreePerson; depthQuery: st
   const link = useTreeUrl();
   return (
     <>
-      <Link to={link(`/trad/${person.id}${depthQuery}`)} className="text-primary underline-offset-2 hover:underline">
+      <Link to={link(`/tree/${person.id}${depthQuery}`)} className="text-primary underline-offset-2 hover:underline">
         {displayName(person)}
       </Link>{' '}
       <span className="text-sm text-muted-foreground">{lifespan(person.birthYear, person.deathYear)}</span>{' '}

@@ -45,7 +45,7 @@ function Citations({ items, onChanged }: { items: CitationView[]; onChanged?: ()
       {items.map(c => (
         <li key={c.id}>
           {t('person.source')}:{' '}
-          <Link to={link(`/kalla/${c.sourceId}`)} className="underline-offset-2 hover:underline">
+          <Link to={link(`/source/${c.sourceId}`)} className="underline-offset-2 hover:underline">
             {c.sourceTitle ?? c.sourceId}
           </Link>
           {c.quality != null && <> · {t('person.quality')} {c.quality}</>}
@@ -104,7 +104,7 @@ export default function PersonPage() {
     return <div className="space-y-3"><Skeleton className="h-9 w-64" /><Skeleton className="h-40 w-full" /></div>;
   }
   if (state === 'missing') {
-    return <p>{t('common.notFound')} <Link className="underline" to={link('/personer')}>{t('common.backToList')}</Link></p>;
+    return <p>{t('common.notFound')} <Link className="underline" to={link('/people')}>{t('common.backToList')}</Link></p>;
   }
   if (state === 'error' || !data) return <p role="alert">{t('common.error')}</p>;
 
@@ -132,7 +132,7 @@ export default function PersonPage() {
           )}
         </p>
         <p className="mt-2 flex items-center gap-3">
-          <Link to={link(`/trad/${person.id}`)} className="text-primary underline-offset-2 hover:underline">
+          <Link to={link(`/tree/${person.id}`)} className="text-primary underline-offset-2 hover:underline">
             {t('tree.showInTree')}
           </Link>
           <Button variant="outline" size="sm" aria-expanded={editing} onClick={() => setEditing(v => !v)}>

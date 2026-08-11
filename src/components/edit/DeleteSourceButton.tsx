@@ -32,7 +32,7 @@ export default function DeleteSourceButton({ id, title, citationCount }: {
     setError(null);
     try {
       await mutateJson(`/api/sources/${id}?citations=remove`, 'DELETE');
-      void navigate(link('/kallor'));
+      void navigate(link('/sources'));
     } catch (err) {
       setError(err instanceof Error ? err.message : t('common.error'));
     }

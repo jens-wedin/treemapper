@@ -140,3 +140,40 @@ test('en citerad källa säger hur många hänvisningar som följer med', async 
   await page.getByRole('button', { name: 'Avbryt' }).click();
   await expect(page.getByRole('alertdialog')).toHaveCount(0);
 });
+
+/**
+ * The link between a document and the people it names — the step that turns a
+ * transcription into genealogy. Both directions, because you approach it from
+ * both: holding the document, or researching the person.
+ */
+test('en källa knyts till en person från källans sida', async ({ page }) => {
+  await page.goto('/wedin/kallor');
+  await page.getByRole('button', { name: 'Ny källa' }).click();
+  await page.getByRole('dialog').getByLabel('Namn').fill('vigselakten');
+  await page.getByRole('dialog').getByRole('button', { name: 'Spara' }).click();
+  await expect(page).toHaveURL(/\/kalla\/S\d+$/);
+
+  await page.getByRole('button', { name: 'Lägg till person' }).click();
+  await page.getByLabel('Lägg till person').fill('Sven-Erik');
+  // PersonSearch searches on submit, not while typing.
+  await page.getByLabel('Lägg till person').press('Enter');
+  await page.getByRole('button', { name: /Sven-Erik Wedin/ }).first().click();
+  await page.getByLabel('Citat').fill('Erik Nilsson maistre marteleur');
+  await page.getByLabel('Kvalitet').selectOption('3');
+  await page.getByRole('button', { name: 'Spara' }).click();
+
+  await expect(page.getByRole('link', { name: /Sven-Erik Wedin/ })).toBeVisible();
+  await expect(page.getByText('Erik Nilsson maistre marteleur')).toBeVisible();
+
+  // and it shows on the person's own page
+  await page.getByRole('link', { name: /Sven-Erik Wedin/ }).first().click();
+  await expect(page.getByRole('link', { name: 'vigselakten' })).toBeVisible();
+
+  // untying it leaves the source standing. Target the row for *this* source:
+  // Sven-Erik already carries citations from the import.
+  const row = page.locator('li').filter({ has: page.getByRole('link', { name: 'vigselakten' }) });
+  await row.getByRole('button', { name: 'Ta bort hänvisningen' }).click();
+  await expect(page.getByRole('link', { name: 'vigselakten' })).toHaveCount(0);
+  await page.goto('/wedin/kallor?q=vigselakten');
+  await expect(page.getByRole('link', { name: 'vigselakten' })).toBeVisible();
+});

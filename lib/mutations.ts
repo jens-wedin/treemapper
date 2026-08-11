@@ -2,7 +2,7 @@ import { and, eq, inArray, or, sql } from 'drizzle-orm';
 import type { Db } from '../db/client';
 import { persons, families, familyChildren, events, citations, sources, auditLog } from '../db/schema';
 import { extractYear } from './dates';
-import type { EventCreate, EventUpdate, NewPerson, PersonUpdate, RelationInput, SourceUpdate } from './schemas';
+import type { CitationCreate, EventCreate, EventUpdate, NewPerson, PersonUpdate, RelationInput, SourceUpdate } from './schemas';
 
 export class MutationError extends Error {
   constructor(message: string, public status: 400 | 404 | 409 = 400) {
@@ -70,6 +70,45 @@ export function createSource(db: Db, input: SourceUpdate): MutationResult<{ id: 
  * `withCitations` is how you say you mean it — and the before-image keeps every
  * removed citation, so the decision is reversible from the change log.
  */
+/**
+ * Ties a source to a person: this is why we believe it.
+ *
+ * Both ends are checked. A citation pointing at a person or a document that is
+ * not there is worse than none — it reads as evidence and leads nowhere.
+ */
+export function addCitation(db: Db, input: CitationCreate): MutationResult<{ id: number }> {
+  return db.transaction(tx => {
+    if (!tx.select().from(persons).where(eq(persons.id, input.ownerId)).all().length) {
+      throw new MutationError('Personen finns inte', 404);
+    }
+    if (!tx.select().from(sources).where(eq(sources.id, input.sourceId)).all().length) {
+      throw new MutationError('Källan finns inte', 404);
+    }
+    const row = {
+      ownerType: input.ownerType,
+      ownerId: input.ownerId,
+      sourceId: input.sourceId,
+      page: input.page ?? null,
+      quality: input.quality ?? null,
+      text: input.text ?? null,
+    };
+    const inserted = tx.insert(citations).values(row).returning({ id: citations.id }).all()[0]!;
+    audit(tx, 'create', 'citation', inserted.id, null, { ...row, id: inserted.id });
+    return { warnings: [], data: { id: inserted.id } };
+  });
+}
+
+/** Unties the source from the person. The document itself stays. */
+export function removeCitation(db: Db, id: number): MutationResult {
+  return db.transaction(tx => {
+    const before = tx.select().from(citations).where(eq(citations.id, id)).all()[0];
+    if (!before) throw new MutationError('Källhänvisningen finns inte', 404);
+    tx.delete(citations).where(eq(citations.id, id)).run();
+    audit(tx, 'delete', 'citation', id, before, null);
+    return { warnings: [], data: null };
+  });
+}
+
 export function deleteSource(
   db: Db,
   id: string,

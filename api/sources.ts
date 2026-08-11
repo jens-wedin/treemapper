@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { listSources, getSourceFull } from '../lib/sources';
-import { sourceUpdateSchema } from '../lib/schemas';
-import { MutationError, createSource, deleteSource, updateSource } from '../lib/mutations';
+import { citationCreateSchema, sourceUpdateSchema } from '../lib/schemas';
+import { MutationError, addCitation, createSource, deleteSource, removeCitation, updateSource } from '../lib/mutations';
 import type { TreeResolver } from './trees';
 
 const querySchema = z.object({
@@ -34,6 +34,30 @@ export function createSourcesApi(tree: TreeResolver) {
     if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? 'Ogiltiga fält' }, 400);
     try {
       return c.json({ ok: true, ...createSource(db, parsed.data) });
+    } catch (err) {
+      if (err instanceof MutationError) return c.json({ error: err.message }, err.status);
+      throw err;
+    }
+  });
+
+  api.post('/api/citations', async c => {
+    const { db } = tree(c);
+    const parsed = citationCreateSchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? 'Ogiltiga fält' }, 400);
+    try {
+      return c.json({ ok: true, ...addCitation(db, parsed.data) });
+    } catch (err) {
+      if (err instanceof MutationError) return c.json({ error: err.message }, err.status);
+      throw err;
+    }
+  });
+
+  api.delete('/api/citations/:id', c => {
+    const { db } = tree(c);
+    const id = Number(c.req.param('id'));
+    if (!Number.isInteger(id)) return c.json({ error: 'Ogiltigt id' }, 400);
+    try {
+      return c.json({ ok: true, ...removeCitation(db, id) });
     } catch (err) {
       if (err instanceof MutationError) return c.json({ error: err.message }, err.status);
       throw err;

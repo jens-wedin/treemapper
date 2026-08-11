@@ -7,6 +7,8 @@ import type { PersonFull, CitationView, FamilyMember } from '../../lib/queries';
 import { t, lifespan, displayName } from '../lib/i18n';
 import { ApiError, apiUrl, fetchJson } from '../lib/api';
 import { useTreeUrl } from '../lib/treeUrl';
+import AddCitationToPerson from '../components/edit/AddCitationToPerson';
+import RemoveCitationButton from '../components/edit/RemoveCitationButton';
 import { clearIssueMarks, useIssueMarks } from '../lib/issueMarks';
 import ProblemList from '../components/issues/ProblemList';
 import ChangeLog from '../components/issues/ChangeLog';
@@ -35,7 +37,7 @@ function MemberLinks({ people }: { people: FamilyMember[] }) {
   );
 }
 
-function Citations({ items }: { items: CitationView[] }) {
+function Citations({ items, onChanged }: { items: CitationView[]; onChanged?: () => void }) {
   const link = useTreeUrl();
   if (!items.length) return null;
   return (
@@ -47,6 +49,7 @@ function Citations({ items }: { items: CitationView[] }) {
             {c.sourceTitle ?? c.sourceId}
           </Link>
           {c.quality != null && <> · {t('person.quality')} {c.quality}</>}
+          {onChanged && <> · <RemoveCitationButton id={c.id} onRemoved={onChanged} /></>}
           {c.page && (
             /^https?:\/\//.test(c.page)
               ? <> · <a href={c.page} className="underline-offset-2 hover:underline" target="_blank" rel="noreferrer">{new URL(c.page).hostname}</a></>
@@ -230,12 +233,17 @@ export default function PersonPage() {
         </section>
       )}
 
-      {data.personCitations.length > 0 && (
-        <section className="mt-8">
+      {/* Shown even when empty: without somewhere to put the first one, a
+          person can never acquire a source. */}
+      <section className="mt-8">
+        <div className="flex flex-wrap items-center gap-3">
           <h2 className="text-xl font-semibold">{t('person.citations')}</h2>
-          <Citations items={data.personCitations} />
-        </section>
-      )}
+          <AddCitationToPerson personId={person.id} onAdded={load} />
+        </div>
+        {data.personCitations.length > 0
+          ? <Citations items={data.personCitations} onChanged={load} />
+          : <p className="mt-2 text-muted-foreground">{t('sources.none')}</p>}
+      </section>
 
       {marks[person.id] && (
         <section className="mt-8">

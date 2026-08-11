@@ -11,6 +11,8 @@ import { ApiError, fetchJson, mutateJson } from '../lib/api';
 import { useTreeUrl } from '../lib/treeUrl';
 import RichText from '../components/RichText';
 import DeleteSourceButton from '../components/edit/DeleteSourceButton';
+import AddCitationToSource from '../components/edit/AddCitationToSource';
+import RemoveCitationButton from '../components/edit/RemoveCitationButton';
 
 const emptyToNull = (v: string) => (v.trim() === '' ? null : v.trim());
 
@@ -169,9 +171,12 @@ export default function SourcePage() {
       )}
 
       <section className="mt-8">
-        <h2 className="text-lg font-semibold">
-          {t('sources.citations')} <span className="font-normal text-muted-foreground">({citationTotal})</span>
-        </h2>
+        <div className="flex flex-wrap items-center gap-3">
+          <h2 className="text-lg font-semibold">
+            {t('sources.citations')} <span className="font-normal text-muted-foreground">({citationTotal})</span>
+          </h2>
+          <AddCitationToSource sourceId={source.id} onAdded={load} />
+        </div>
         {citations.length === 0 && <p className="mt-2 text-muted-foreground">{t('sources.none')}</p>}
         {citations.length > 0 && (
           <>
@@ -184,6 +189,7 @@ export default function SourcePage() {
                   {c.page && <span className="ml-2 text-sm text-muted-foreground">{t('sources.page')}: {c.page}</span>}
                   {c.quality != null && <span className="ml-2 text-sm text-muted-foreground">{t('person.quality')} {c.quality}</span>}
                   <RichText text={c.text} className="mt-1 text-sm text-muted-foreground" />
+                  <RemoveCitationButton id={c.id} onRemoved={load} />
                 </li>
               ))}
             </ul>

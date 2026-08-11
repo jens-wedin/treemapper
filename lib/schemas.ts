@@ -47,6 +47,21 @@ export const sourceUpdateSchema = z.object({
 }).partial();
 export type SourceUpdate = z.infer<typeof sourceUpdateSchema>;
 
+export const citationCreateSchema = z.object({
+  // Person-level for now: every one of the 5 804 imported citations is, and
+  // citing a single fact needs its own affordance on every event row.
+  ownerType: z.literal('person'),
+  ownerId: z.string().trim().min(2),
+  sourceId: z.string().trim().min(2),
+  page: z.string().trim().max(200).nullable().optional(),
+  /** GEDCOM QUAY: 0 unreliable … 3 primary evidence. */
+  quality: z.number().int().min(0).max(3).nullable().optional(),
+  // The passage naming this person — what makes a citation worth having rather
+  // than a pointer at a whole document.
+  text: z.string().max(5_000).nullable().optional(),
+});
+export type CitationCreate = z.infer<typeof citationCreateSchema>;
+
 const fieldChoice = z.enum(['survivor', 'duplicate']);
 
 export const mergeSchema = z.object({

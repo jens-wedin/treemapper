@@ -7,7 +7,7 @@ import { eq } from 'drizzle-orm';
 import { runImport } from '../scripts/import';
 import { createDb, type Db } from '../db/client';
 import { persons, events, citations, auditLog, familyChildren, families, sources } from '../db/schema';
-import { updatePerson, createEvent, updateEvent, deleteEvent, addRelation, removeChildLink, MutationError, createSource, deleteSource } from './mutations';
+import { updatePerson, createEvent, updateEvent, deleteEvent, addRelation, removeChildLink, MutationError, createSource, deleteSource, addCitation, removeCitation } from './mutations';
 
 const fixture = fileURLToPath(new URL('./gedcom/fixtures/mini.ged', import.meta.url));
 let dir: string;
@@ -265,5 +265,40 @@ describe('deleteSource', () => {
 
   it('säger ifrån om källan inte finns', () => {
     expect(() => deleteSource(db, 'S999999')).toThrow(/finns inte/i);
+  });
+});
+
+describe('addCitation / removeCitation', () => {
+  it('knyter en källa till en person och loggar det', () => {
+    const sourceId = createSource(db, { title: 'Notarialakt' }).data.id;
+    const res = addCitation(db, {
+      ownerType: 'person', ownerId: 'I1', sourceId,
+      page: 'fol. 12v', quality: 3, text: 'Erik Nilsson maistre marteleur',
+    });
+
+    const row = db.select().from(citations).where(eq(citations.id, res.data.id)).all()[0]!;
+    expect(row).toMatchObject({ ownerType: 'person', ownerId: 'I1', sourceId, page: 'fol. 12v', quality: 3 });
+    expect(db.select().from(auditLog).all()
+      .some(a => a.entityType === 'citation' && a.action === 'create')).toBe(true);
+  });
+
+  it('vägrar peka på en person eller källa som inte finns', () => {
+    const sourceId = createSource(db, { title: 'Finns' }).data.id;
+    expect(() => addCitation(db, { ownerType: 'person', ownerId: 'I999999', sourceId })).toThrow(/finns inte/i);
+    expect(() => addCitation(db, { ownerType: 'person', ownerId: 'I1', sourceId: 'S999999' })).toThrow(/finns inte/i);
+  });
+
+  it('tas bort igen, med sin före-bild kvar i loggen', () => {
+    const sourceId = createSource(db, { title: 'Att lossa' }).data.id;
+    const { id } = addCitation(db, { ownerType: 'person', ownerId: 'I1', sourceId, text: 'ett utdrag' }).data;
+
+    removeCitation(db, id);
+
+    expect(db.select().from(citations).where(eq(citations.id, id)).all()).toHaveLength(0);
+    const entry = db.select().from(auditLog).all().reverse()
+      .find(a => a.entityType === 'citation' && a.action === 'delete')!;
+    expect(entry.before).toContain('ett utdrag');
+    // the source itself is untouched — removing the link is not removing the document
+    expect(db.select().from(sources).where(eq(sources.id, sourceId)).all()).toHaveLength(1);
   });
 });

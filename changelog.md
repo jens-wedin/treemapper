@@ -47,6 +47,12 @@
 
 ### Added
 
+**Källhänvisningar går att lägga till för hand**
+- Fanns inte alls: de 5 804 hänvisningarna i wedin.db kom allihop från importen, och inget i appen kunde skapa en. En avskrift var därmed en ö — man kunde skriva av vigselakten perfekt utan att Erik Nilssons sida någonsin nämnde den.
+- Åt båda hållen, för man kommer från båda: **Lägg till person** på källans sida när man håller i ett dokument som nämner flera, och **Lägg till källhänvisning** på personens sida när man just hittat kyrkboken.
+- Sida, kvalitet (GEDCOM:s QUAY, med ord i stället för siffror) och citatet. Citatet är det som gör en hänvisning värd något — utan det pekar man på ett helt dokument utan att veta vilken rad som fick en dit.
+- Att ta bort hänvisningen lossar bandet, inte dokumentet: källan står kvar.
+
 **Källor går att ta bort**
 - **Ta bort källa** på källans sida. En vanlig DELETE vägrar så länge något hänvisar till källan och svarar med antalet: en källhänvisning är det en uppgift vilar på, och att radera källan under den lämnar personer som påstår saker utan att skälet finns kvar.
 - Bekräftelsen säger hur många hänvisningar som följer med innan man godkänner, inte efteråt. Hela källan och varje borttagen hänvisning ligger i ändringsloggens före-bild, så beslutet går att läsa och återskapa.

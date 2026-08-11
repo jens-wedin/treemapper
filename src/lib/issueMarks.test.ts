@@ -47,7 +47,7 @@ describe('groupProblems', () => {
     setLanguage('sv');
     const [first] = groupProblems(mark);
     expect(first!.title).toBe('Barn fött efter förälders bortgång');
-    expect(first!.texts[0]).toBe('Brita föddes 1834, efter att sin far Per dött 1830.');
+    expect(first!.texts[0]).toBe('Brita föddes 1834, efter faderns Per död 1830.');
   });
 
   it('translates the parent role rather than printing the key', () => {

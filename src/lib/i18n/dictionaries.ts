@@ -183,6 +183,7 @@ const en = {
     'possible-duplicate': 'Same name and birth year ({year}) as {others} more in the tree. Confidence: {confidence}.',
   },
   issueRole: { father: 'father', mother: 'mother' },
+  issueRoleOwner: { father: 'their father', mother: 'their mother' },
   issueConfidence: { high: 'high (same parents)', review: 'needs judgement' },
   /** The change history, said in words. Keys are what happened, not how it reads. */
   log: {
@@ -463,7 +464,7 @@ const sv: DeepPartial<Dict> = {
     'two-digit-year': '{event} för {name} har bara {year} som årtal.',
     'place-looks-like-date': 'Platsen för {event} (\'{place}\') för {name} liknar ett datum.',
     'child-older-than-parents': '{child} (född {childBirth}) är äldre än eller lika gammal som sin {role} {parent} (född {parentBirth}).',
-    'child-born-after-parent-died': '{child} föddes {childBirth}, efter att sin {role} {parent} dött {parentDeath}.',
+    'child-born-after-parent-died': '{child} föddes {childBirth}, efter {roleOwner} {parent} död {parentDeath}.',
     'parents-too-young': '{parent} var bara {age} år när {child} föddes ({childBirth}).',
     'parent-too-old': '{parent} var {age} år när {child} föddes ({childBirth}).',
     'siblings-born-too-close': '{a} och {b} är födda bara {days} dagar isär.',
@@ -478,6 +479,7 @@ const sv: DeepPartial<Dict> = {
     'possible-duplicate': 'Samma namn och födelseår ({year}) som {others} till i trädet. Säkerhet: {confidence}.',
   },
   issueRole: { father: 'far', mother: 'mor' },
+  issueRoleOwner: { father: 'faderns', mother: 'moderns' },
   issueConfidence: { high: 'hög (samma föräldrar)', review: 'kräver bedömning' },
   /** The change history, said in words. Keys are what happened, not how it reads. */
   log: {
@@ -755,7 +757,7 @@ const de: DeepPartial<Dict> = {
     'two-digit-year': '{event} für {name} hat nur {year} als Jahreszahl.',
     'place-looks-like-date': 'Der Ort von {event} (\'{place}\') für {name} sieht aus wie ein Datum.',
     'child-older-than-parents': '{child} (geboren {childBirth}) ist älter als oder gleich alt wie {role} {parent} (geboren {parentBirth}).',
-    'child-born-after-parent-died': '{child} wurde {childBirth} geboren, nachdem {role} {parent} {parentDeath} gestorben war.',
+    'child-born-after-parent-died': '{child} wurde {childBirth} geboren, nachdem {roleOwner} {parent} {parentDeath} gestorben war.',
     'parents-too-young': '{parent} war erst {age}, als {child} geboren wurde ({childBirth}).',
     'parent-too-old': '{parent} war {age}, als {child} geboren wurde ({childBirth}).',
     'siblings-born-too-close': '{a} und {b} wurden nur {days} Tage auseinander geboren.',
@@ -770,6 +772,7 @@ const de: DeepPartial<Dict> = {
     'possible-duplicate': 'Gleicher Name und gleiches Geburtsjahr ({year}) wie {others} weitere im Baum. Sicherheit: {confidence}.',
   },
   issueRole: { father: 'Vater', mother: 'Mutter' },
+  issueRoleOwner: { father: 'der Vater', mother: 'die Mutter' },
   issueConfidence: { high: 'hoch (gleiche Eltern)', review: 'erfordert Prüfung' },
   /** The change history, said in words. Keys are what happened, not how it reads. */
   log: {
@@ -1062,6 +1065,7 @@ const es: DeepPartial<Dict> = {
     'possible-duplicate': 'Mismo nombre y año de nacimiento ({year}) que {others} más en el árbol. Confianza: {confidence}.',
   },
   issueRole: { father: 'padre', mother: 'madre' },
+  issueRoleOwner: { father: 'su padre', mother: 'su madre' },
   issueConfidence: { high: 'alta (mismos padres)', review: 'requiere valoración' },
   /** The change history, said in words. Keys are what happened, not how it reads. */
   log: {

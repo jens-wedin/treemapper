@@ -27,17 +27,30 @@ describe('issue strings', () => {
     }
   });
 
-  it('uses the same placeholders in every translation of a wording', () => {
-    // A translation that drops {name} renders a sentence about nobody, and
-    // nothing else in the codebase would notice.
+  it('fills every placeholder a translation asks for', () => {
+    // Languages need different constructions — Swedish wants a possessive
+    // where English wants a preposition — so the templates are not required to
+    // use the *same* placeholders. What matters is that each one it does use
+    // gets filled: a stray {name} renders a sentence about nobody, and nothing
+    // else in the codebase would notice.
     const english = DICTIONARIES.en as Record<string, Record<string, string>>;
     for (const code of ISSUE_CODES) {
-      const expected = placeholders(english.issueText![code]!);
+      // `role` also yields `roleOwner`, which resolve() derives from it.
+      const supplied = new Set(placeholders(english.issueText![code]!));
+      if (supplied.has('role')) supplied.add('roleOwner');
       for (const { code: lang } of LANGUAGES) {
         const dict = DICTIONARIES[lang] as Record<string, Record<string, string>>;
-        expect({ code, lang, keys: placeholders(dict.issueText![code]!) })
-          .toEqual({ code, lang, keys: expected });
+        const unfillable = placeholders(dict.issueText![code]!).filter(p => !supplied.has(p));
+        expect({ code, lang, unfillable }).toEqual({ code, lang, unfillable: [] });
       }
+    }
+  });
+
+  it('gives the possessive role a word in every language', () => {
+    for (const { code: lang } of LANGUAGES) {
+      const dict = DICTIONARIES[lang] as Record<string, Record<string, string>>;
+      expect({ lang, father: !!dict.issueRoleOwner?.father, mother: !!dict.issueRoleOwner?.mother })
+        .toEqual({ lang, father: true, mother: true });
     }
   });
 });
@@ -71,5 +84,17 @@ describe('issueText', () => {
     setLanguage('sv');
     expect(issueTitle('missing-birth')).toBe('Saknar födelse');
     expect(issueText('missing-birth', { name: 'Anna' })).toBe('Ingen födelsehändelse registrerad för Anna.');
+  });
+});
+
+describe('the possessive role', () => {
+  it('reads as Swedish grammar wants it, not as a translated preposition', () => {
+    const params = { child: 'Maria', childBirth: 1836, role: 'father', parent: 'Abraham', parentDeath: 1800 };
+    setLanguage('sv');
+    expect(issueText('child-born-after-parent-died', params))
+      .toBe('Maria föddes 1836, efter faderns Abraham död 1800.');
+    setLanguage('en');
+    expect(issueText('child-born-after-parent-died', params))
+      .toBe('Maria was born in 1836, after their father Abraham died in 1800.');
   });
 });

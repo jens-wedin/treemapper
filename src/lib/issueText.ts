@@ -19,12 +19,21 @@ const TRANSLATED: Record<string, (value: string) => string> = {
   confidence: value => t(`issueConfidence.${value}`),
 };
 
+/**
+ * `role` also arrives as `roleOwner`, the possessive.
+ *
+ * English says "after their father Abraham died"; Swedish wants "efter faderns
+ * Abraham död" — a definite form, not a preposition. Rather than force one
+ * grammar on four languages, both forms are offered and each template takes
+ * the one that fits.
+ */
 function resolve(params: IssueParams): Record<string, string | number> {
   const out: Record<string, string | number> = {};
   for (const [key, value] of Object.entries(params)) {
     const translate = TRANSLATED[key];
     out[key] = translate ? translate(String(value)) : value;
   }
+  if ('role' in params) out.roleOwner = t(`issueRoleOwner.${params.role}`);
   return out;
 }
 

@@ -1,8 +1,11 @@
-# Wedin släktträd
+# Wedin Family Tree
 
 Web app that replaces MyHeritage for the Wedin family tree: browse, edit,
-fix consistency problems (Konsekvensproblem), and manage sources. Local-first
-(SQLite); designed to move to Vercel + Neon later.
+fix consistency problems, and manage sources. Local-first (SQLite); designed
+to move to Vercel + Neon later.
+
+The project is written in English — code, comments, tests, routes and terminal
+output. The family data it holds is Swedish and stays Swedish.
 
 Design spec: `docs/superpowers/specs/2026-08-05-wedin-tree-design.md`.
 
@@ -11,7 +14,7 @@ Design spec: `docs/superpowers/specs/2026-08-05-wedin-tree-design.md`.
 ```bash
 npm install
 npm run import   # one-time: data/Wedin_Family_Tree_CLEANED.ged → wedin.db
-                 # (further trees are imported in the app, see Flera släktträd)
+                 # (further trees are imported in the app, see Multiple family trees)
 npm run media    # download photos from MyHeritage CDN → media/<tree>/
 npm run dev      # http://localhost:5173 (API on :3001)
 npm test         # vitest unit tests
@@ -20,7 +23,7 @@ npm run test:e2e # Playwright browse flow (needs wedin.db)
 
 ## Transitions between the tree views
 
-Switching view cross-fades rather than cuts, and **Antavla → Solfjäder morphs**:
+Switching view cross-fades rather than cuts, and **the pedigree chart morphs into the fan chart**:
 each ancestor travels from their column to their ring. The two views draw the
 same people under the same Ahnentafel numbers, which is what makes a morph
 meaningful there and nowhere else — the family view also draws descendants, and
@@ -34,18 +37,18 @@ become a wedge, so during the morph each ancestor is a small marker in their
 branch colour, with the cards fading out and the wedges fading in either side.
 
 The easing is ease-in-out rather than the ease-out used for the fold glides: the
-markers have to sit still on their cards while the antavla fades, and settle
-before the solfjäder appears. `prefers-reduced-motion: reduce` skips both the
+markers have to sit still on their cards while the pedigree fades, and settle
+before the fan appears. `prefers-reduced-motion: reduce` skips both the
 cross-fade and the morph.
 
 ## Multiple family trees
 
 The app holds **several unconnected family trees**, one SQLite file each, and a
 picker in the header chooses which one is on screen. Importing a GEDCOM from
-**Inställningar → Importera släktträd** creates a *new* tree; nothing existing
-is touched, matched or merged. **Inställningar → Skapa tomt släktträd** starts
+**Settings → Import family tree** creates a *new* tree; nothing existing
+is touched, matched or merged. **Settings → Create an empty family tree** starts
 one from nothing, for a family built up by hand — the first person is added
-with **Ny person** on the Personer page, which is also how to record someone
+with **New person** on the People page, which is also how to record someone
 whose place in the family is not known yet.
 
 One file per tree rather than a `treeId` column, because **GEDCOM xrefs are only
@@ -65,7 +68,7 @@ opened without one is named after its file and can be renamed in the UI.
 
 ### The tree is in the address
 
-Every page is `/<tree>/<page>` — `/wedin/personer?q=jens+wedin`,
+Every page is `/<tree>/<page>` — `/wedin/people?q=jens+wedin`,
 `/andersson/person/I500001`. **A link means one thing.**
 
 It did not always. The tree used to live only in the browser, so `/person/I500001`
@@ -79,14 +82,15 @@ A tree's id comes from its **filename**, never its display name, so renaming a
 tree cannot break a link that already exists. `default` still resolves, for the
 CLI and for browsers holding the old stored value.
 
-Ids the router needs for itself — `personer`, `trad`, `kalla` … — are reserved,
-because `/personer` has to mean the People page and could not also mean a tree
-called "Personer".
+Ids the router needs for itself — `people`, `tree`, `source` … — are reserved,
+because `/people` has to mean the People page and could not also mean a tree
+called "People". The retired Swedish segments stay reserved too, so a tree
+named "Källor" cannot quietly occupy an address an old bookmark still points at.
 
 Two kinds of address arrive without a valid tree, and they need opposite
-treatment: `/personer` is *missing* one, so a tree is put in front; a deleted
-`/grannslakten/personer` is *wrong*, so the tree is swapped out. Prefixing the
-second would give `/wedin/grannslakten/personer`, which is no page at all.
+treatment: `/people` is *missing* one, so a tree is put in front; a deleted
+`/grannslakten/people` is *wrong*, so the tree is swapped out. Prefixing the
+second would give `/wedin/grannslakten/people`, which is no page at all.
 
 Requests still carry `?tree=<id>`, added centrally in `src/lib/api.ts` — a query
 parameter rather than a header because the GEDCOM export is a plain download
@@ -119,17 +123,28 @@ before trying again. The report lands in `data/media-report-<tree>.md`.
 
 ## Languages
 
-The interface is available in **Swedish, English, German and Spanish**, picked
-in the header and remembered between visits (it also sets `<html lang>`).
-Swedish is the source language and the fallback for any key a translation
+The interface is available in **English, Swedish, German and Spanish**, picked
+in the header and remembered between visits (it also sets `<html lang>`, before
+the first paint). A browser with no stored preference opens in English.
+
+English is the source language and the fallback for any key a translation
 misses; a unit test asserts all four dictionaries carry the same keys.
 
 Translation covers the interface itself, GEDCOM event names, date formatting
-(month names and the `ABT`/`BEF`/`AFT` qualifiers) and the born/died
-abbreviations. **Record content stays as entered** — names, places and notes are
-genealogical data, not UI. The Konsekvens category names and problem
-descriptions are produced by the detectors in Swedish and stay Swedish; the
-page says so when another language is selected.
+(month names and the `ABT`/`BEF`/`AFT` qualifiers), the born/died abbreviations,
+number grouping — `14,357` or `14 357` — and, since the switch to English, the
+consistency problems and the change history. **Record content stays as
+entered**: names, places and notes are genealogical data, not UI.
+
+The detectors and the change log report a **code and the values behind it**,
+never a finished sentence. `lib/issues.ts` says
+`child-born-after-parent-died` with `{child, childBirth, role, parent,
+parentDeath}`, and `src/lib/issueText.ts` builds the sentence in the reader's
+language. That is what it takes to be translatable at all: word order differs
+between the four, and Swedish wants a possessive (*efter faderns Abraham död
+1800*) where English wants a preposition (*after their father Abraham died in
+1800*). So `role` resolves to both `{role}` and `{roleOwner}`, and each template
+takes the form its grammar needs.
 
 Adding a language means one dictionary in `src/lib/i18n/dictionaries.ts` plus
 its event labels, month names and qualifiers.
@@ -157,13 +172,13 @@ asserts exactly that while the cards around it do change.
 ## Browse
 
 - `/` — Hem: search front and center + tree stats
-- `/personer` — searchable person list (namn, födelseår, födelseort) with
+- `/people` — searchable person list (name, birth year, birth place) with
   pagination; each row opens either the Personsida or the tree, since two
   records can share a name and dates and the tree is often the quickest way to
   tell them apart
 - `/person/:id` — read-only Personsida: photos, family box (clickable), event
   timeline with citations, notes
-- `/trad/:id` — the interactive family tree (see below)
+- `/tree/:id` — the interactive family tree (see below)
 
 The export is verified lossless against the real tree: exporting all 4 561
 people, 983 families, 14 588 events, 5 804 citations and 985 photos and reading
@@ -208,14 +223,14 @@ and GEDCOM export stays byte-for-byte lossless.
 
 ## The tree
 
-`/trad/:id` has four views, switched in the toolbar and remembered in the URL
-(`?vy=family|pedigree|fan|list`):
+`/tree/:id` has four views, switched in the toolbar and remembered in the URL
+(`?view=family|pedigree|fan|list`):
 
 | Vy | Visar |
 |---|---|
 | **Familj** | Ancestors up and descendants down around one person, with partners as couples |
 | **Antavla** | Classic left-to-right pedigree — ancestors only, 1–5 generations, unfoldable one branch at a time |
-| **Solfjäder** | Circular fan chart — ancestors only, 1–5 generations |
+| **Fan chart** | Circular fan chart — ancestors only, 1–5 generations |
 | **Lista** | Nested lists; the accessible equivalent of all three charts |
 
 The two ancestor views colour the four grandparent lines (father's father,
@@ -242,15 +257,15 @@ to their new places, new ones fade in, folded-away ones fade out, and the chart
 eases across if the new branch would otherwise open off-screen. All of it is
 disabled under `prefers-reduced-motion`.
 
-### Consistency marks in the tree ("Visa konsekvenser")
+### Consistency marks in the tree ("Show inconsistencies")
 
-The toolbar's second checkbox marks everyone the Konsekvensbänken still has
+The toolbar's second checkbox marks everyone the consistency bench still has
 something on, so you can see **where** in the tree the problems sit rather than
 working a flat queue. It is off until asked for, remembered like the flag
 toggle, and shared by all three charts.
 
 Cards wear a badge in the top-right corner: the colour is their worst severity
-(logiskt fel red, dubblett purple, varning amber, övrigt blue, småfel grey) and
+(logical error red, duplicate purple, warning amber, other blue, minor grey) and
 the number is how many problems they carry. Hovering names the categories, and
 the card's aria-label says the same in words. A fan wedge has no corner to put
 a badge in, so it gets a plain dot in the same colour at its inner edge — the
@@ -276,8 +291,8 @@ from either card. The scan takes about half a second over the whole database,
 so the charts fetch the register once and share it.
 
 Be warned that **about half the tree carries at least one problem** (2 335 of
-4 561 people, mostly the bulk warnings "Dödsfall utan datum" and "Vid liv men
-för gammal"). The severity colours are what make the view usable: only 160
+4 561 people, mostly the bulk warnings "Death without a date" and "Alive but too
+old"). The severity colours are what make the view usable: only 160
 people have an outright logiskt fel.
 
 All charts share the same pan/zoom, the same person panel on click, portraits,
@@ -317,7 +332,7 @@ layout maths only).
   Personsida. Relatives in the panel are clickable, so you can read around a
   family without moving the chart. Escape closes it.
 - **Zoom is absolute**: 100 % means cards at their real size no matter how wide
-  the tree is, range 4–300 %. The view fits the tree on load, "Återställ vy"
+  the tree is, range 4–300 %. The view fits the tree on load, "Reset view"
   returns to that fit, and the +/− buttons zoom around the focus person.
 - **Keyboard**: arrow keys walk between relatives (the view pans to follow),
   Enter opens the panel. The "Lista" view is a fully equivalent path for screen
@@ -325,8 +340,8 @@ layout maths only).
 
 ## Statistics
 
-`/statistik` tells the family's story in numbers rather than reporting on data
-quality — completeness and errors belong to Konsekvensbänken.
+`/statistics` tells the family's story in numbers rather than reporting on data
+quality — completeness and errors belong to the consistency bench.
 
 Four sections: **lives and lifespans** (sex split, longest lives, average
 lifespan and births by century), **names** (most common given names by sex and
@@ -345,7 +360,7 @@ the preloaded links; the recursive-CTE version took 4.5 s against 0 ms.
 years are everywhere. Two guards keep data errors out of the story: lifespans
 ignore ages over 110 (three people, topping out at 118) and spouse age gaps
 ignore differences over 50 years (two couples, at 61 and 111). Both are things
-Konsekvensbänken already flags.
+the consistency bench already flags.
 
 **Approximate by design.** Birth places group on the first comma-separated part,
 so "Alnö, Västernorrland, Sundsvall, Sverige" counts with a bare "Alnö". Across
@@ -358,48 +373,47 @@ tree has its list view.
 
 ## Sources and export
 
-`/kallor` lists all 520 sources with how many citations each carries; a source
+`/sources` lists all 520 sources with how many citations each carries; a source
 page shows its fields (editable, audit-logged) and every citation that uses it,
 linked back to the person and event. Citations on a Personsida link the other
 way, to the source.
 
-**Ny källa** adds a document you hold yourself, and **Ta bort källa** removes
+**New source** adds a document you hold yourself, and **Delete source** removes
 one — refusing while anything still cites it, and saying how many would lose
-their evidence. **Citations are made by hand from either side**: *Lägg till
-person* on the source, for a document that names several people; *Lägg till
-källhänvisning* on a person, for the record you just found. Each carries the
+their evidence. **Citations are made by hand from either side**: *Add person* on the source, for a document that names several people; *Add
+source citation* on a person, for the record you just found. Each carries the
 page, GEDCOM's quality (QUAY, shown as words rather than 0–3) and the quotation
 — the passage naming that person, which is what makes a citation worth more
 than a pointer at a whole document. Removing a citation unties the link and
 leaves the document.
 
-`/installningar` exports the whole tree as **GEDCOM 5.5.1** — the backup and the
+`/settings` exports the whole tree as **GEDCOM 5.5.1** — the backup and the
 escape hatch out of this app, readable by MyHeritage, Ancestry, Gramps and
-others. `npm run export -- [sökväg]` does the same from the terminal.
+others. `npm run export -- [path]` does the same from the terminal.
 
 The export re-emits everything the import preserved, including the `raw_tags`
 subtrees holding GEDCOM structures this app doesn't model. It is verified by a
 round-trip test — export, re-parse through our own parser, compare — and by a
 full-tree check: exporting and re-importing the real database reproduces every
-table exactly (4 561 personer, 983 familjer, 3 616 barnlänkar, 14 588 händelser,
-5 804 källhänvisningar, 985 media, 520 källor).
+table exactly (4,561 people, 983 families, 3,616 child links, 14,588 events,
+5,804 citations, 985 media, 520 sources).
 
 **Photos are not inside the GEDCOM** — only the links to them. A complete backup
 is the exported `.ged` plus the `media/` folder.
 
-## Konsekvensbänken
+## The consistency bench
 
-`/konsekvens` is the cleanup workbench. 28 deterministic detectors reproduce
+`/issues` is the cleanup workbench. 28 deterministic detectors reproduce
 MyHeritage's own consistency check (calibrated against
 `data/konsekvensproblem.pdf` — its 894 problems in 24 categories) plus four
-completeness categories from the data-quality report: saknar födelse, födelse/
-dödsfall utan datum, and möjlig dubblett.
+completeness categories from the data-quality report: missing birth, birth and
+death without a date, and possible duplicate.
 
 Issues are **computed, never stored** — fixing the data makes an issue vanish
 and the detectors keep guarding future edits. The queue is grouped by severity
-under its own heading, worst first (logiskt fel → dubblett → varning → övrigt →
-småfel), filterable by severity and by category, with **Åtgärda** (jump to the
-person) and **Avfärda** per issue. The list is capped at 500, so the filters are
+under its own heading, worst first (logical error → duplicate → warning → other
+→ minor), filterable by severity and by category, with **Fix** (jump to the
+person) and **Dismiss** per issue. The list is capped at 500, so the filters are
 how you reach the milder groups.
 
 The same problem is reported once. Where the data holds a fact several times
@@ -413,7 +427,7 @@ remembered by a fingerprint of the category, the people involved and the
 offending values, so a dismissed issue stays gone — but legitimately reappears
 if the underlying data changes.
 
-**Åtgärdat och avfärdat** is a collapsed log at the top of the page: the latest
+**Fixed and dismissed** is a collapsed log at the top of the page: the latest
 edits to the tree, from `audit_log`, interleaved with what has been dismissed.
 Nothing links an edit to the issue it settled — issues are computed, so a fixed
 one simply stops appearing, and the log says so rather than implying a
@@ -424,9 +438,9 @@ run; where the problem no longer occurs, the entry says that instead.
 
 ### The source's own words
 
-**Källor → Ny källa** adds a document you hold yourself; the dialog asks only
+**Sources → New source** adds a document you hold yourself; the dialog asks only
 for the title and leaves you on the source's page, where the transcription is
-written. **Ta bort källa** removes one, refusing while anything still cites it
+written. **Delete source** removes one, refusing while anything still cites it
 and saying how many would lose their evidence.
 
 
@@ -448,7 +462,7 @@ person's page shows the source and the line naming them.
 
 ### A branch imported more than once
 
-Konsekvensbänken flags duplicates a pair at a time, which is the wrong shape of
+The consistency bench flags duplicates a pair at a time, which is the wrong shape of
 tool when a MyHeritage export carries the same family four times over. `npm run
 merge-duplicates -- <person-id> ...` walks the whole branch from a seed person,
 clusters the records that are the same human and merges each cluster into its
@@ -484,7 +498,7 @@ record. It refuses to merge a person with themselves or two people in the same
 ancestry line, and the whole operation is one transaction — a failure anywhere
 leaves the tree untouched.
 
-The Personsida ends with **Ändringshistorik**: what has been changed about
+The person page ends with **Change history**: what has been changed about
 that person, newest first, read out of `audit_log`. Scoping it takes reading
 the snapshots rather than the entity ids — an event belongs to its owner, a
 child link to the child, a family to its spouses, a merge to the record that
@@ -496,9 +510,9 @@ a log earns its keep.
 Removing something asks first, in the app's own dialog rather than the
 browser's: it names the event in question, says the removal goes to the change
 log, and follows the theme and the chosen language. All editing lives on the
-Personsida: **Redigera** for names/kön/anteckning,
-per-event **Redigera**/**Ta bort** plus **Lägg till händelse**, and guided
-dialogs for **Lägg till barn/partner/förälder** (pick an existing person or
+Person page: **Edit** for names, sex and note;
+per-event **Edit**/**Remove** plus **Add event**; and guided
+dialogs for **Add child / partner / parent** (pick an existing person or
 create a new one; family records are created and linked correctly).
 
 Every mutation is validated with the shared zod schemas in `lib/schemas.ts` and
@@ -529,7 +543,7 @@ export. If links ever need refreshing again:
 
 1. Make a **fresh** GEDCOM export (with media links) in MyHeritage, put it in
    `data/`.
-2. `npm run refresh-media -- data/<färsk-export>.ged` — re-arms the URLs on the
+2. `npm run refresh-media -- data/<fresh-export>.ged` — re-arms the URLs on the
    existing database (matches photos by `_PHOTO_RIN`, then owner+filesize, then
    owner+title; already-downloaded photos are untouched).
 3. `npm run media` — downloads with the fresh links; safe to re-run, it only
@@ -547,7 +561,7 @@ export. If links ever need refreshing again:
 2. a copy of the `media/` folder (photos are not inside the GEDCOM).
 
 Copying `wedin.db` itself also works and additionally preserves the audit log
-and dismissed Konsekvens issues, which the GEDCOM does not carry. **Copy the
+and dismissed consistency problems, which the GEDCOM does not carry. **Copy the
 `-wal` and `-shm` files with it** — in WAL mode the newest writes live there,
 and copying the `.db` alone hands you a stale database with recent edits simply
 missing. `backups/` holds dated copies taken before each repair run.
@@ -555,7 +569,7 @@ missing. `backups/` holds dated copies taken before each repair run.
 ## Project state
 
 All six phases of the design spec are built: import + photos, browse, tree,
-editing, Konsekvensbänken, and sources + export — plus the tree UX work, the
+editing, the consistency bench, and sources + export — plus the tree UX work, the
 Statistik page, the shadcn `radix-luma`/`olive` theme, several unconnected
 family trees, the tree in every URL, and sources you can transcribe and cite by
 hand. Specs live in `docs/superpowers/specs/` and plans in

@@ -1,8 +1,9 @@
 # MEMORY — where the project stands
 
 _Last updated: 2026-08-11. All six spec phases are built, plus tree UX work, a
-shadcn theme, Statistik, multiple family trees, the tree in every URL, sources
-you can write out and cite by hand, and several rounds of data repair._
+shadcn theme, Statistics, multiple family trees, the tree in every URL, sources
+you can write out and cite by hand, several rounds of data repair — and the
+whole project moved to English._
 
 ## Where the work lives — read this first
 
@@ -11,9 +12,41 @@ you can write out and cite by hand, and several rounds of data repair._
 — by now far more than statistics — still unmerged. Check `git branch` before
 assuming you are somewhere sensible.
 
+## The project is written in English (2026-08-11)
+
+Jens asked for this so the repo can go on GitHub and be read by people who do
+not speak Swedish: script output, test names, source language, URLs. Code,
+comments, tests, routes, query parameters, storage keys, element ids and
+terminal output are English. **The family data is Swedish and stays Swedish** —
+names, places, notes, GEDCOM bodies, and the `sv` dictionary.
+
+Decisions worth not re-litigating:
+
+- **Clean break on URLs, no redirects.** `/wedin/personer` → `/wedin/people`;
+  `trad`/`statistik`/`konsekvens`/`kallor`/`kalla`/`installningar` →
+  `tree`/`statistics`/`issues`/`sources`/`source`/`settings`. A Swedish path
+  now parses as an unknown tree and `rescueUrl` lands it on that tree's home
+  page. The Swedish words stay in `RESERVED`, so a tree named "Källor" cannot
+  occupy an address an old link points at.
+- **Query parameters too**: `kategori`/`grad`/`avfardade`/`fodd`/`ort`/`upp`/
+  `ned`/`vy` → `category`/`severity`/`dismissed`/`born`/`place`/`up`/`down`/
+  `view`.
+- **Storage keys were renamed with a migration.** `readPreference(key,
+  legacyKey)` in `src/lib/storage.ts` reads the old Swedish name once and moves
+  the value. Without it, renaming would have silently reset Jens's theme,
+  language and open tree. Worth keeping until every browser has opened once.
+- **Issue categories are codes, not sentences.** See Languages below. This was
+  safe only because all three databases had **zero dismissals** — the
+  fingerprint hashes the category, so with dismissals present this would have
+  needed a migration. Re-check before touching fingerprints again.
+
+Verification that mattered: the old and new detectors were run side by side on
+all three real databases — 2 714, 288 and 2 problems, the same people flagged —
+and every row count was identical before and after the whole job.
+
 ## The tree is in the address (2026-08-09)
 
-Every page is `/<tree>/<page>`: `/wedin/personer?q=jens+wedin`,
+Every page is `/<tree>/<page>`: `/wedin/people?q=jens+wedin`,
 `/andersson/person/I500001`. **A link means one thing.**
 
 Before this the tree lived only in `localStorage`, so `/person/I500001` meant
@@ -27,11 +60,11 @@ Decisions worth not re-litigating:
 - **A tree's id comes from its database filename, never its display name.**
   `wedin.db` → `wedin`. Renaming a tree therefore cannot break a saved link.
   `default` still resolves as a legacy alias for the CLI and old browser state.
-- **Route names are reserved ids** (`personer`, `trad`, `kalla` …) so
-  `/personer` can only mean the People page.
-- **Two kinds of bad address need opposite treatment.** `/personer` is *missing*
-  a tree → put one in front. `/deleted-tree/personer` is *wrong* → swap it out.
-  Prefixing the second gives `/wedin/deleted-tree/personer`, which is no page.
+- **Route names are reserved ids** (`people`, `tree`, `source` …, plus the
+  retired Swedish ones) so `/people` can only mean the People page.
+- **Two kinds of bad address need opposite treatment.** `/people` is *missing*
+  a tree → put one in front. `/deleted-tree/people` is *wrong* → swap it out.
+  Prefixing the second gives `/wedin/deleted-tree/people`, which is no page.
 - **The tree is adopted during render, not in an effect.** A page fetches on
   mount; an effect runs after that fetch has already gone out under the previous
   tree. `adoptTree()` sets it synchronously above the routes.
@@ -41,15 +74,15 @@ Decisions worth not re-litigating:
 
 ## Sources you can actually use (2026-08-11)
 
-- **Transkription** on a source is the document written out, separate from
-  **Anteckning**, which is what *you* say about it. Maps to GEDCOM `SOUR.TEXT`
+- **Transcription** on a source is the document written out, separate from
+  **Note**, which is what *you* say about it. Maps to GEDCOM `SOUR.TEXT`
   and round-trips (there is a test with multi-line French, because CONC/CONT
   splitting is what mangles long text).
 - **Fixed on the way:** the importer fell `TEXT` back into `note`, so 478 of 520
   sources held MyHeritage's own blurbs where a remark of your own belongs.
   `scripts/split-source-text.ts` separates them, moving only rows whose note
   provably came from a TEXT node — checked against raw tags, not guessed.
-- **Ny källa** and **Ta bort källa** exist now; before, sources could only
+- **New source** and **Delete source** exist now; before, sources could only
   arrive by import. Deletion refuses while anything cites the source and says
   how many; 515 of 521 are cited, the heaviest 875 times.
 - **Citations can be made by hand**, from either side. Every one of the 5 804
@@ -92,10 +125,10 @@ serving, with an e2e test asserting it is the `.e2e/` copy and vite refusing to
 start an e2e run pointed at the development port. I never identified the test
 that did it — if it recurs, that guard is what will say so.
 
-## Statistik (2026-08-08)
+## Statistics (2026-08-08)
 
-`/statistik` tells the family's story in numbers — deliberately *not* a
-completeness dashboard, which is Konsekvensbänken's job. Five query modules in
+`/statistics` tells the family's story in numbers — deliberately *not* a
+completeness dashboard, which is the consistency bench's job. Five query modules in
 `lib/statistics/` (relatives, lives, names, families, places), composed by
 `index.ts`, served by `api/statistics.ts`, rendered by `StatisticsPage` with one
 component per section. Spec and plan:
@@ -131,7 +164,7 @@ the tree's branch colours and grey canvas are fixed values outside the theme.
 ## Tree views (2026-08-07)
 
 Four views on `/trad/:id`, chosen in the toolbar and stored in `?vy=`:
-**Familj** (the original), **Antavla** (pedigree), **Solfjäder** (fan) and
+**Family** (the original), **Pedigree**, **Fan chart** and
 **Lista**. The two ancestor views are built on `src/lib/ahnentafel.ts`
 (numbering + the four branch colours) and share `useChartViewport`,
 `PersonCard`, `ChartToolbar`, the flag preference and `TreePersonPanel`.
@@ -143,18 +176,26 @@ labels on the lower half need the arc drawn backwards; radial labels on the
 left half need a 180° flip and `text-anchor: end`; and labels must be truncated
 to the arc length their slice actually has, or they bleed into neighbours.
 
-## Languages (2026-08-07)
+## Languages (2026-08-07, source language flipped 2026-08-11)
 
-UI in sv/en/de/es. `src/lib/i18n/dictionaries.ts` holds the four dictionaries
-(Swedish is source + fallback), `src/lib/i18n/index.ts` the store: `t()` stays a
-plain function reading a module variable, and `useLanguage()` in `App` re-renders
-the tree on change. Event labels, month names and date qualifiers are per
-language too. A test asserts all four dictionaries have identical key sets — add
-a key to Swedish and that test tells you which translations are missing.
+UI in en/sv/de/es. **English is the source language and the fallback**;
+`src/lib/i18n/dictionaries.ts` leads with `en`, and `Dict = typeof en`. A browser
+with no stored preference opens in English. `src/lib/i18n/index.ts` is the store:
+`t()` stays a plain function reading a module variable, and `useLanguage()` in
+`App` re-renders the tree on change. Event labels, month names, date qualifiers
+and number grouping are per language. A test asserts all four dictionaries have
+identical key sets — add a key to English and it tells you which translations
+are missing.
 
-Not translated on purpose: record content (names, places, notes) and the
-Konsekvens categories/messages, which the detectors generate in Swedish.
-Translating those means moving `lib/issues.ts` to keys + params.
+**Consistency problems and the change history are translated too**, since
+2026-08-11. The detector reports a code plus the values behind it
+(`child-born-after-parent-died` with `{child, childBirth, role, parent,
+parentDeath}`) and `src/lib/issueText.ts` builds the sentence. `role` resolves to
+both `{role}` and `{roleOwner}` because Swedish wants a possessive where English
+wants a preposition — do not simplify that away.
+
+Not translated on purpose: record content — names, places, notes. That is
+genealogical data, not UI.
 
 ## Data integrity fixes (2026-08-08)
 
@@ -182,26 +223,28 @@ rather than trusting the tests:
 
 ## Current state
 
-- **Data**: 4 561 personer, 983 familjer, 3 616 barnlänkar, 14 588 händelser,
-  5 804 källhänvisningar, 520 källor, 985 foton (alla nedladdade, 425 MB).
-- **Tests**: 313 vitest + 37 Playwright e2e, all green (e2e runs with one worker — they share .e2e.db). `tsc -b` clean,
-  `npm run build` clean.
-- **Konsekvens**: 2 831 problem över 2 275 personer (171 fel, 518 dubbletter,
-  1 868 varningar, 251 övrigt, 23 småfel), 241 dubblettgrupper.
+- **Data** (`wedin.db`): 4 511 people, 979 families, 14 357 events, 5 805
+  citations, 521 sources, 978 photos. Two further trees: Andersson
+  (486 people) and Test (3).
+- **Tests**: 466 vitest + 80 Playwright e2e, all green. The e2e suite runs with
+  one worker — the specs share `.e2e.db` and would race. `tsc -b` clean.
+- **Consistency**: 2 714 problems in `wedin.db`, 288 in Andersson, 2 in
+  Test. Zero dismissals anywhere.
 
 ## Built (see docs/superpowers/plans/ for the per-phase plans)
 
-1. Import + foton — GEDCOM-parser, mapper, import-CLI med antalskontroll,
-   fotonedladdning, `refresh-media`.
-2. Browse — personlista, Personsida, i18n.
-3. Träd — SVG + d3-hierarchy, listvy.
-4. Redigering — fält, händelser, relationer, audit_log.
-5. Konsekvensbänken — 28 detektorer, granskningskö, merge-motor.
-6. Källor + export — källsidor, GEDCOM 5.5.1-export (round-trip-verifierad).
+1. Import + photos — GEDCOM parser, mapper, import CLI with a count check,
+   photo download, `refresh-media`.
+2. Browse — person list, person page, i18n.
+3. Tree — SVG + d3-hierarchy, list view.
+4. Editing — fields, events, relations, audit_log.
+5. The consistency bench — 28 detectors, a review queue, the merge engine.
+6. Sources + export — source pages, GEDCOM 5.5.1 export (round-trip verified).
 
-Plus a UX round on the tree (2026-08-07): porträtt på korten, smalare kort med
-bilden överst, landsflaggor med av/på, partner som par med vigselstreck,
-absolut zoom, helskärmslayout, och personpanel vid klick.
+Plus a UX round on the tree (2026-08-07): portraits on the cards, narrower cards
+with the picture on top, country flags with an on/off toggle, partners drawn as
+a couple with a marriage line, absolute zoom, a full-screen layout, and a person
+panel on click.
 
 ## Gotchas worth remembering
 
@@ -238,6 +281,18 @@ absolut zoom, helskärmslayout, och personpanel vid klick.
   `htmlFor` + `id`.
 - Compare checksums with the **same algorithm** on both sides. `md5` before and
   `shasum` after is not a comparison; use file mtimes for "was this touched".
+- **The unit tests run in node, which has no `localStorage`.** Every preference
+  read is inside a try/catch, so those paths were passing by never reaching
+  storage at all. `vitest.setup.ts` now installs an in-memory stub.
+- **An untyped `Map` turns everything read from it into `any`.**
+  `new Map(cond ? entries : [])` in `lib/issueLog.ts` widened to `Map<any, any>`
+  and hid a field that no longer existed — it compiled for a while and failed
+  only at runtime. Give a `Map` its type arguments.
+- **Don't require the same placeholders in every translation.** Languages need
+  different constructions; the test that matters is that each placeholder a
+  template uses actually gets filled.
+- **Scratch `.spec.ts` files anywhere in the repo get picked up by vitest.**
+  A screenshot spec parked in `.baseline/` failed the unit run.
 
 ## Open threads
 
@@ -260,6 +315,10 @@ absolut zoom, helskärmslayout, och personpanel vid klick.
 - **Backups in `backups/`** from this week's repairs — safe to delete once the
   data is trusted. Also the older `wedin.db.before-*` files in the repo root.
 - **Jens has more UX/UI feedback coming** — that is the natural next work.
+- **Commit messages are English from 2026-08-11 onward.** Earlier history is
+  Swedish and is not being rewritten.
+- **API error messages are English strings, not translated.** They reach the
+  user as raw text through `err.message`; doing it properly needs error codes
+  and dictionary entries. Known gap, written down in the spec.
 - The live MyHeritage tree drifted after the July export. Decide whether to
   re-import from a fresh cleaned export before doing serious editing here.
-- Konsekvens category names stay Swedish in the other three languages.

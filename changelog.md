@@ -2,20 +2,47 @@
 
 ## [Unreleased]
 
+### Changed
+
+**The project is written in English**
+- Code, comments, tests, routes, query parameters, stored preference keys, element ids and terminal output. So that it can go on GitHub and be read by someone who does not speak Swedish. The family data is Swedish and stays Swedish: names, places, notes, GEDCOM bodies, and the Swedish translation of the interface.
+- **English is now the source language.** `en` is the authored dictionary and the fallback; `sv` joins `de` and `es` as a translation. A browser with no stored preference opens in English. Every stored preference key was renamed, and each reads its old Swedish name once so the theme, the language and the tree you had open survive the change.
+- **Routes are English, with no redirects.** `/wedin/personer` becomes `/wedin/people`; `trad`, `statistik`, `konsekvens`, `kallor`, `kalla` and `installningar` become `tree`, `statistics`, `issues`, `sources`, `source` and `settings`. Query parameters follow: `kategori`, `grad`, `avfardade`, `fodd`, `ort`, `upp`, `ned`, `vy` are now `category`, `severity`, `dismissed`, `born`, `place`, `up`, `down`, `view`. A Swedish path now reads as an unknown tree and lands on that tree's home page rather than rendering nothing. The Swedish words stay *reserved*, so a tree named "Källor" cannot occupy an address an old link still points at.
+
+**Consistency problems are finally translatable**
+- The detector's category *was* its Swedish sentence, so the queue was Swedish however the app was set — the page even said so, in a line that is now gone. Worse, the dismissal fingerprint was a hash of that sentence: rewording a message would have quietly un-dismissed everything it named.
+- 28 stable codes replace them. `lib/issues.ts` reports `child-born-after-parent-died` with the values behind it, and the UI builds the sentence — in English, Swedish, German or Spanish. Verified against all three real databases: 2 714, 288 and 2 problems before and after, flagging the same people. Dismissals were re-checked as zero immediately beforehand, which is what made changing the fingerprint safe.
+- Word order differs between the four languages, and Swedish wants a possessive (*efter faderns Abraham död 1800*) where English wants a preposition (*after their father Abraham died in 1800*), so `role` resolves to both `{role}` and `{roleOwner}` and each template takes the form its grammar needs.
+- The change history got the same treatment — it was building *"Foto tillagt för X"* on the server — and so did the source page's *"Familj F12 — Vigsel"*. Both are computed at read time, so neither needed a migration. `lib/eventLabels.ts` is gone; the UI translates the GEDCOM tag itself.
+
+**Numbers and dates follow the language**
+- `toLocaleString('sv-SE')` was hard-coded at nineteen call sites, so an English page counted `14 357` with a Swedish space. A thousands separator is part of a translation, like everything else.
+
+**The document says which language it is in**
+- `startLanguage()` sets `<html lang>` before the first paint. `index.html` can only name one language and it names English, so a reader who had chosen Swedish was getting Swedish prose inside `<html lang="en">` — which is what sends a screen reader off in an English voice.
+
+### Fixed
+
+**Storage, tested for the first time**
+- Every stored preference is wrapped in a try/catch, and the unit tests run in node, which has no `localStorage` — so those paths were passing by never reaching storage at all. The setup file now provides an in-memory one.
+
+**"1 citations"**
+- The refusal to delete a cited source counted in English but did not read in it.
+
 ### Added
 
 **Citations can be made by hand**
 - Did not exist at all: all 5 804 citations in wedin.db came from the import, and nothing in the app could create one. A transcription was therefore an island — you could write out the marriage record perfectly and Erik Nilsson's page would never mention it.
-- Both directions, because you arrive from both: **Lägg till person** on the source, when you are holding a document that names several people, and **Lägg till källhänvisning** on the person, when you have just found the parish record.
+- Both directions, because you arrive from both: **Add person** on the source, when you are holding a document that names several people, and **Add source citation** on the person, when you have just found the parish record.
 - Page, quality (GEDCOM's QUAY, shown as words rather than numbers) and the quotation. The quotation is what makes a citation worth having — without it you are pointing at a whole document with no idea which line sent you there.
 - Removing a citation unties the link, not the document: the source stays.
 
 **Sources can be deleted**
-- **Ta bort källa** on the source page. A plain DELETE refuses while anything cites the source and answers with the count: a citation is what a fact rests on, and deleting the source underneath one leaves people asserting things with the reason gone.
+- **Delete source** on the source page. A plain DELETE refuses while anything cites the source and answers with the count: a citation is what a fact rests on, and deleting the source underneath one leaves people asserting things with the reason gone.
 - The confirmation says how many citations go with it before you agree, not afterwards. The whole source and every removed citation sit in the change log's before-image, so the decision can be read back and rebuilt.
 
 **Sources can be added**
-- **Källor → Ny källa** creates a source for a document you hold yourself. Did not exist before: the API could list, show and edit sources but not create one — so a document that had not arrived with an import could not be written out anywhere.
+- **Sources → New source** creates a source for a document you hold yourself. Did not exist before: the API could list, show and edit sources but not create one — so a document that had not arrived with an import could not be written out anywhere.
 - The dialog asks only for the title and sends you to the source's own page, where the transcription has room. A dialog is the wrong shape for a page of handwriting.
 
 **Sources can be transcribed**
@@ -33,23 +60,23 @@
 
 **Names in the statistics lead to the person**
 - Every list on the statistics page answers a question that immediately provokes the next — who *was* the one who lived to 104? The names were plain text, so the way there was to copy the name into the search box, even though the id was already in the payload.
-- Längst liv, Största familjerna, Åldersskillnad mellan makar, Ut- och invandring and the heading's "Statistik för X" now link to the person page. In a couple each spouse is linked separately — a couple is two people, and either of them may be the one being looked for.
+- Longest lives, Largest families, Age gap between spouses, Emigration and immigration, and the heading's "Statistics for X" now link to the person page. In a couple each spouse is linked separately — a couple is two people, and either of them may be the one being looked for.
 
 **Add relatives straight from the chart**
-- A checkbox in **Visningsinställningar** puts a small plus on every card. Off by default: browsing the tree is the common case, and a plus on every card is noise until the session is about filling gaps. The plus stays dimmed until the card is hovered or the plus has focus.
+- A checkbox in **Display settings** puts a small plus on every card. Off by default: browsing the tree is the common case, and a plus on every card is noise until the session is about filling gaps. The plus stays dimmed until the card is hovered or the plus has focus.
 - The plus opens the same three choices the person page has — child, partner, parent — and the same form. Once saved, the chart redraws in place.
 - `RelationForm` was split out of `RelationDialog`: a dialog inside a dialog cannot open, so the shell is now the caller's business and the form is shared. The person page opens it in its own dialog; the chart shows it in the dialog the card's plus already opened.
 - The plus is a `<g role="button">` inside the SVG rather than a Radix trigger — the dialog is owned by the page, outside the chart.
 
 **Marriage can be edited — on the family**
-- Every family box on the person page now carries its marriage with **Lägg till / Redigera / Ta bort**. It was missing entirely, and deliberately so: marriage is not among a person's event types because in GEDCOM it belongs to the family, not to either spouse. That is also what makes it appear on both their pages and export as `FAM.MARR`.
+- Every family box on the person page now carries its marriage with **Add / Edit / Remove**. It was missing entirely, and deliberately so: marriage is not among a person's event types because in GEDCOM it belongs to the family, not to either spouse. That is also what makes it appear on both their pages and export as `FAM.MARR`.
 - `EventForm` now takes an owner type and a locked type, so the same form serves both person events and marriages. The age field appears only for person events — a couple has two ages.
 - `FamilyView.marriage` carries the event's id, which is what makes it editable in place.
 
 **A family tree from nothing**
 - **Fixed: the chart claimed the API was down.** `/trad` without an id started from `I500001`, which does not exist in a newly created tree — nor in any imported tree, whose xrefs are its own. The 404 was read as a broken API.
 - The page now asks the tree who it has: without an id it lands on the first person, an empty tree gets its own message with a way to Personer, and an id that does not exist says exactly that.
-- **Inställningar → Skapa tomt släktträd** starts a tree with nothing in it, for a family built up by hand. You switch to it immediately.
+- **Settings → Create an empty family tree** starts a tree with nothing in it, for a family built up by hand. You switch to it immediately.
 - **Ny person** on the Personer page creates someone with no relative. Everyone else is added from an existing person's page — as child, partner or parent — which cannot start an empty tree. It is also the way in for someone whose place in the family is not yet known.
 - The new tree's name field got an accessible name of its own: the import form's name field is on the same page, and two fields with the same accessible name cannot be told apart.
 
@@ -70,14 +97,14 @@
 - `prefers-reduced-motion: reduce` pans exactly as before and stops where the finger let go.
 
 **The tree views turn into one another**
-- Switching between Familj, Antavla, Solfjäder and Lista is no longer a cut. The view being left stays over the one arriving during the transition, with `aria-hidden` and `inert`: a screen reader must never find two trees, keyboard focus must never land in what is leaving, and a test looking for "the tree" must keep finding exactly one.
+- Switching between Family, Pedigree, Fan and List is no longer a cut. The view being left stays over the one arriving during the transition, with `aria-hidden` and `inert`: a screen reader must never find two trees, keyboard focus must never land in what is leaving, and a test looking for "the tree" must keep finding exactly one.
 - **The pedigree winds itself into the fan.** The two views draw the same people under the same Ahnentafel numbers, so every person has a real start and a real destination — which is what makes a morph meaningful there and nowhere else in the app. The family view also draws descendants, and most of its cards have nowhere to travel to.
 - The motion is computed in **polar coordinates about the fan's centre**, not in x and y. Straight lines would look like boxes sliding into a circle; moving radius and angle instead makes each path curve outward on its own, and the columns wind up into rings.
 - Only the position travels. A rectangle cannot become a wedge, and morphing the shapes would have required a single parameterised geometry — at the cost of the pedigree's portraits and the fan's labels along arcs. During the transition each ancestor is a small marker in their branch colour.
 - `prefers-reduced-motion: reduce` skips both the cross-fade and the morph.
 
 **A GEDCOM import creates a new family tree**
-- **Inställningar → Importera släktträd** reads a GEDCOM file into an entirely new tree. The tree already there is untouched: nothing is matched, merged or overwritten. A picker in the header switches between them, and someone who has never opened a terminal can do the whole thing.
+- **Settings → Import family tree** reads a GEDCOM file into an entirely new tree. The tree already there is untouched: nothing is matched, merged or overwritten. A picker in the header switches between them, and someone who has never opened a terminal can do the whole thing.
 - **One SQLite file per tree, not a `treeId` column.** GEDCOM ids are unique only inside one file — this tree's `I500097` and a cousin's `I500097` are different people. Shared tables would have required either rewritten ids or a filter at some forty query sites, where one forgotten filter silently mixes two families.
 - A tree's name lives in a `tree_meta` row **inside the tree**. No central registry to drift out of sync, break, or be lost when a `.db` is copied: listing the trees is a directory read plus one row per file. A database without such a row is named after its file and can be renamed in the UI.
 - **The original tree is never moved.** `wedin.db` (`WEDIN_DB`) stays exactly as it is, so every CLI script and the e2e isolation keep working. It cannot be deleted from the UI — the scripts own that file.
@@ -86,13 +113,13 @@
 - Photos are not downloaded for imported trees — a GEDCOM holds links, not files. New trees show the placeholders that already exist, and the tree list says how many are missing.
 - `runImport` moved from `scripts/` to `lib/`: a tree created in the browser and one created in the terminal must be the same thing. `npm run import` is unchanged.
 
-**Konsekvensbänken groups by severity**
+**The consistency bench groups by severity**
 - The queue now has a heading per severity (logical error → duplicate → warning → other → minor) instead of one long list, and a severity filter beside the category filter. Because the list is capped at 500 problems, the milder severities were otherwise unreachable — you only ever saw errors and duplicates. The severity is in the heading, so the cards no longer repeat it.
 - **Fixed: the filter did not replace the list.** Choosing a warning category left the logical errors sitting on top. The same problem is reported several times when the data holds the same fact several times (one person has four identical "Bosatt" entries after their death), those cards then shared a React key, and React kept old cards on redraw. Problems with the same fingerprint *and* the same owner are now folded into one (7 of 2 826). The owner has to be part of the identity: a duplicate group deliberately shares one fingerprint across its members, and each still needs its own card.
 - `setParam` on both the Konsekvens and tree pages now uses the functional form of `setSearchParams`. Two changes in quick succession otherwise read the same snapshot of the URL, and the second wiped the first.
 
 **The person list opens the tree**
-- Every search hit now has a **Visa i träd** link beside the name, leading to the person in the chart rather than to the person page. Two records can share both name and years — the tree is often the quickest way to see which one you have in front of you.
+- Every search hit now has a **Show in tree** link beside the name, leading to the person in the chart rather than to the person page. Two records can share both name and years — the tree is often the quickest way to see which one you have in front of you.
 
 **Change history on the person page**
 - The person page ends with what has changed about that person, most recent first, out of `audit_log`. Narrowing to one person means reading the snapshots, not just the entity ids: an event belongs to its owner, a child link to the child, a family to its spouses, and a merge to the record that survived. A deleted event exists only in the before-image — which is exactly when a log earns its keep.
@@ -108,29 +135,29 @@
 - Dry run against `wedin.db`: 50 merges, 4 561 → 4 511 people, four duplicate families folded, 40 fewer consistency problems.
 
 **Fixed and dismissed**
-- Konsekvensbänken now has a collapsed log at the top: the most recent changes to the tree (from `audit_log`) mixed with what has been dismissed, newest first. Changes are described in plain words — "Död för Anders Johan Persson Karlsson: datum — → '17 mar 1942'", "Födelse borttagen för …", "Slog ihop Anna Larsson (I3) med …" — by comparing the before and after images field by field, and every line links to the person.
+- The consistency bench now has a collapsed log at the top: the most recent changes to the tree (from `audit_log`) mixed with what has been dismissed, newest first. Changes are described in plain words — "Death for Anders Johan Persson Karlsson: date — → '17 mar 1942'", "Birth removed for …", "Merged Anna Larsson (I3) into …" — by comparing the before and after images field by field, and every line links to the person.
 - Nothing ties a change to the problem it solved, and the log does not claim otherwise: problems are computed, so a fixed problem leaves the queue by itself. Dismissed problems get their category and note by looking the fingerprint up against the detection that ran in the same call; if the problem has stopped occurring the line says so instead. The GEDCOM import does not count as work done.
 - The log rides along in `/api/issues` rather than getting its own endpoint — otherwise the fingerprint lookup would have cost another full scan of the database.
 
 **Consistency marks in the tree**
 - A new **Visa konsekvenser** checkbox in the chart toolbar, shared by all three views and remembered like the flag preference. Off until asked for: it costs a full scan of the database, and most visits to the tree are not about fixing data. The strings exist in all four languages.
-- The person panel lists the problems in Konsekvensbänken's own wording, at the bottom of the panel after the notes — a footnote to the person, not what the person is. Repeats of the same category are gathered under one heading with a count: four children born after the same father's death is one fact told four times, not four headings. The setting is module state rather than component state, so the toolbar checkbox fills the panel beside it without a reload.
+- The person panel lists the problems in the consistency bench's own wording, at the bottom of the panel after the notes — a footnote to the person, not what the person is. Repeats of the same category are gathered under one heading with a count: four children born after the same father's death is one fact told four times, not four headings. The setting is module state rather than component state, so the toolbar checkbox fills the panel beside it without a reload.
 - **The person page** ends with the same section, without a checkbox: if you have gone to a person, what the queue holds about them belongs with the rest of the record. An edit there clears the register, so a problem you have just fixed stops being reported without a reload — `clearIssueMarks` now tells its listeners rather than merely emptying the cache. The list is extracted into `ProblemList`, shared by the panel and the page.
 - The register carries the problems' texts, not just the categories, so the panel needs no query of its own — one scan per person would have cost half a second on every click, and half the tree is marked. Moving `groupProblems` to the client was not cosmetic: `lib/issues.ts` imports `node:crypto`, and a value import from there drags the whole database schema into the browser bundle (`tsc` said nothing; the browser said everything).
 - Cards get a badge in the top right corner — the colour is the person's worst severity, the number how many problems they carry. Hovering names the categories and the card's `aria-label` says the same in words. The fan's slices have no corner to put a badge in, so they get a dot in the same colour at the slice's inner corner: the only place free of the name, the flag and the generation band in every ring (the first attempt framed the whole slice in the severity colour, which made the fan look broken rather than annotated).
-- Nothing new is detected: `/api/issues/persons` runs the same detectors as Konsekvensbänken and folds them per person, so what you dismissed in the queue stops being marked in the tree. Everyone involved is marked, not only the owner of the queue entry — a child born after the father's death is worth seeing from both cards. The scan takes just over half a second across the whole database, so the charts fetch the register once and share the answer; dismissing or merging empties it.
-- Worth knowing: **about half the tree carries at least one problem** (2 335 of 4 561 people), mostly the mass warnings "Dödsfall utan datum" and "Vid liv men för gammal". It is the severity colours that make the view usable — only 160 people have an outright logical error.
+- Nothing new is detected: `/api/issues/persons` runs the same detectors as the consistency bench and folds them per person, so what you dismissed in the queue stops being marked in the tree. Everyone involved is marked, not only the owner of the queue entry — a child born after the father's death is worth seeing from both cards. The scan takes just over half a second across the whole database, so the charts fetch the register once and share the answer; dismissing or merging empties it.
+- Worth knowing: **about half the tree carries at least one problem** (2 335 of 4 561 people), mostly the mass warnings "Death without a date" and "Alive but too old". It is the severity colours that make the view usable — only 160 people have an outright logical error.
 - `flagPreference` became `chartPreferences` with a shared `useStoredToggle`, since there are now two settings that behave the same way.
 
 **Light and dark mode**
-- A picker in the header: **Följ systemet / Ljust / Mörkt**, remembered between visits and applied before the first paint so the page does not flash light. While the choice is "follow system" the app keeps listening to the OS — switch to night mode and the app follows without a reload. The strings exist in all four languages.
+- A picker in the header: **Follow system / Light / Dark**, remembered between visits and applied before the first paint so the page does not flash light. While the choice is "follow system" the app keeps listening to the OS — switch to night mode and the app follows without a reload. The strings exist in all four languages.
 - The charts could not use Tailwind's `dark:` variant, because their colours are SVG fill and stroke set from JavaScript. They are now CSS variables (`--branch-*`, `--card-*`, `--chart-canvas`, `--chart-link`) that `.dark` swaps, applied through `style` — `fill="var(--x)"` does not work as a presentation attribute. The four branch colours keep their identity in both modes: pale tints on a light canvas, deep ones on a dark.
 - The flags' colours are deliberately not themed — a Swedish flag is blue and yellow in any mode. An e2e test checks exactly that, while the cards around it do change colour.
 - The rest of the interface moved from hardcoded greys to the theme's own tokens (`text-muted-foreground`, `bg-muted`, `text-primary`, `text-destructive`); the colour-coded severities got dark variants that keep their hue.
 
 **Statistics**
 - A new page `/statistik` telling the family's story in numbers: lives and lifespans, names, families, and places and work. The whole tree by default, or one person's **own ancestors and descendants** via `?person=` (251 people for Sven-Erik against 4 070 if every family tie were followed — the scoped view would then have been identical to the unscoped one). The scope is a breadth-first walk in JS: 8 ms to load the ties, 0 ms to walk them, against 4.5 seconds for the same question as a recursive CTE.
-- Every figure states what it rests on, because empty years are everywhere. Two guards keep data errors out of the story: lifespans over 110 years (three people, at most 118) and spouse age gaps over 50 years (two couples, 61 and 111) are left out — Konsekvensbänken flags those already.
+- Every figure states what it rests on, because empty years are everywhere. Two guards keep data errors out of the story: lifespans over 110 years (three people, at most 118) and spouse age gaps over 50 years (two couples, 61 and 111) are left out — the consistency bench flags those already.
 - Birth places group on the first part of the place name, so "Alnö, Västernorrland, Sundsvall, Sverige" sits with a bare "Alnö". Across 1 795 distinct place strings there is no clean rule, so the heading promises "birth places" and not "parishes".
 - Every chart shows the same numbers as a table, just as the tree has its list view.
 - The person search that was baked into the relation dialog is now a shared component used by both the dialog and the statistics page.
@@ -153,7 +180,7 @@
 - The interface is available in **Swedish, English, German and Spanish**. A language picker in the header, remembered between visits, which also sets `<html lang>`. Swedish is the source language and the fallback for keys missing from a translation (a test checks that all four dictionaries have identical key sets). The translation covers the interface, GEDCOM event names, date formatting (month names and ABT/BEF/AFT) and the born/died abbreviations. Record content — names, places, notes — stays as entered, and the consistency categories and descriptions remain Swedish (the page says so when another language is chosen).
 
 **Tree (UI round 2026-08-07)**
-- Two new views: **Antavla** (a classic left-to-right pedigree) and **Solfjäder** (a circular chart), both ancestors only, up to 8 generations. The four grandparent branches are coloured separately, positions are computed from the Ahnentafel numbering so a missing ancestor leaves an empty place rather than shifting the rest, and in the fan the text on the lower and left halves is flipped so nothing reads upside down. The view choice is stored in the URL (`?vy=`), and every chart shares zoom, person panel, portraits, flags and keyboard model.
+- Two new views: **Antavla** (a classic left-to-right pedigree) and **Fan chart** (a circular chart), both ancestors only, up to 8 generations. The four grandparent branches are coloured separately, positions are computed from the Ahnentafel numbering so a missing ancestor leaves an empty place rather than shifting the rest, and in the fan the text on the lower and left halves is flipped so nothing reads upside down. The view choice is stored in the URL (`?vy=`), and every chart shares zoom, person panel, portraits, flags and keyboard model.
 - Person panel: clicking (or Enter) on a card opens a panel with portrait, dates, family and events. Re-focusing the tree is now its own button in the panel rather than something that happens on every click, and the relatives in the panel can be clicked to read on without the chart moving. Escape closes.
 - Partners are shown in the tree: people whose descendants are drawn get their spouse beside them with a marriage line between, and the children hang from the line rather than from one parent. Children from a second marriage hang from the right couple. Partner cards are reachable by keyboard and appear in the list view.
 - Country flags on the cards, drawn as SVG, with a "Visa flaggor" checkbox in the toolbar (remembered between visits). The flag appears only when the birth place explicitly names a country — a parish with no country is therefore not assumed to be Swedish. Christening counts as a birth place when the birth place is missing; residence and death do not, since they can point at a different country than the one the person was born in.
@@ -161,7 +188,7 @@
 
 **Phases 1–6**
 - Phase 6 (Sources + export): a source list with search and citation counts, a source page with editable fields (audit-logged) and every citation linked to people and events, cross-linking from the person page's citations; GEDCOM 5.5.1 export that round-trips `raw_tags` — verified both by unit tests through our own parser and by exporting and re-importing the whole real tree with identical results in every table; `/api/export/gedcom`, `npm run export` and a settings page with a download button.
-- Phase 5 (Konsekvensbänken): 28 deterministic detectors calibrated against MyHeritage's own consistency checker (894 problems in 24 categories) plus four completeness categories; a review queue worst-first with a category filter, Åtgärda/Avfärda and dismissals remembered through stable fingerprints; duplicate merging with a side-by-side comparison, a full audit snapshot and transactional safety; a scoreboard on Hem. New endpoints `/api/issues` and `/api/merge`.
+- Phase 5 (the consistency bench): 28 deterministic detectors calibrated against MyHeritage's own consistency checker (894 problems in 24 categories) plus four completeness categories; a review queue worst-first with a category filter, Fix/Dismiss and dismissals remembered through stable fingerprints; duplicate merging with a side-by-side comparison, a full audit snapshot and transactional safety; a scoreboard on Home. New endpoints `/api/issues` and `/api/merge`.
 - Phase 4 (Editing): in-place editing of person fields, events (add/edit/delete) and relations (child/partner/parent through guided dialogs) on the person page; shared zod schemas (`lib/schemas.ts`); transactional mutations with full before/after snapshots in `audit_log`; Swedish error messages for impossible states (self-relation, lineage cycle, third parent, duplicate child); fuzzy dates always accepted (a warning rather than a rejection); e2e runs against a copy of the database so real family data is never mutated.
 - Phase 3 (Tree): an interactive SVG chart (SVG + d3-hierarchy for the layout maths only, an ownership decision over WebGL) — ancestors up and descendants down, 1–5 generations, pan and zoom, arrow-key navigation between relatives, an equivalent list view, `/api/tree/:id`, cycle protection in the data, and support for pedigree collapse (the same person twice in the chart).
 - Phase 2 (Browse): a searchable person list (name/birth year/birth place, also finding married names, paginated), a readable person page (photos, family box with clickable relations, event timeline with citations, notes), Hem with the search box at its centre, a Swedish i18n dictionary, `/api/persons`, `/api/persons/:id/full`, `/api/media/:id`, and a Playwright e2e for the browse flow.
@@ -203,7 +230,7 @@
 - **Fixed: the person panel pushed the heading and tabs off screen.** The switcher was missing `min-w-0`, so the flex row refused to shrink and the page scrolled sideways when the panel opened.
 
 **The tree page makes room for the tree**
-- The focus person's **name is the link** to their page. A separate "Gå till personsida" beside it said the same thing twice and put the useful thing last.
+- The focus person's **name is the link** to their page. A separate "Open person page" beside it said the same thing twice and put the useful thing last.
 - The views are **tabs** rather than buttons, with real `tablist`/`tab` semantics: a single tab stop, arrow keys between the tabs, and the panel pointed at with `aria-controls`. Hand-written rather than an off-the-shelf component, because the panel is the animated switcher and has to stay mounted through a tab change for the transition to happen at all.
 - **The zoom sits in the chart's own bottom right corner** rather than in a toolbar above. Controls belong to the surface they affect.
 - **Generations and card settings live behind a cog** that opens a popover. What met you first on the page was otherwise a row of controls rather than the family. The generation choices stay in the URL, so a link still carries them.

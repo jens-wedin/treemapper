@@ -43,6 +43,10 @@
 
 ### Added
 
+**Ut- och invandring listas per person, inte per flytt**
+- Anna Jonsdotter flyttade fyra gånger på fyra år och fyllde fyra rader som bara skilde sig i den lilla grå texten på slutet. Listan såg ut att vara full av dubbletter fast den beskrev ett liv i flyttlass. Namnet sägs en gång nu, med flyttarna under.
+- Den som flyttat en gång står kvar på en rad. Ordningen är densamma: personerna kommer i tur efter sin senaste flytt.
+
 **Ut- och invandring går att filtrera åt ett håll**
 - En väljare vid rubriken visar bara invandring eller bara utvandring. Antalen står i alternativen — "Alla (58)", "Immigration (41)", "Emigration (17)" — så vilken väg släkten rörde sig är besvarat redan innan man väljer något.
 - Filtreras i webbläsaren: hela listan skickas redan (bara topplistorna kapas till tio), så det går direkt och kan aldrig visa en avhuggen lista som om den vore fullständig.

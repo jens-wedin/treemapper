@@ -15,6 +15,20 @@ export default function PlacesSection({ stats }: { stats: PlacesStats }) {
   // instant and can never show a truncated answer as if it were the full one.
   const [direction, setDirection] = useState<Direction>('all');
   const shown = direction === 'all' ? stats.migrations : stats.migrations.filter(m => m.type === direction);
+
+  /**
+   * One entry per person, not per move.
+   *
+   * Someone who moved four times in four years filled four lines that differed
+   * only in the small grey text at the end, and read as the same record over
+   * and over — the list looked full of duplicates when it was describing a life
+   * of moving. Their name is said once now, with the moves under it.
+   *
+   * Order is kept: people appear by their most recent move, because `shown` is
+   * already newest first and Map preserves insertion order.
+   */
+  const byPerson = new Map<string, typeof shown>();
+  for (const m of shown) byPerson.set(m.id, [...(byPerson.get(m.id) ?? []), m]);
   return (
     <section>
       <h2 className="text-xl font-semibold">{t('statistics.places')}</h2>
@@ -68,16 +82,30 @@ export default function PlacesSection({ stats }: { stats: PlacesStats }) {
         <p className="mt-2 text-muted-foreground">{t('statistics.notEnough')}</p>
       ) : (
         <ul className="mt-2 space-y-1">
-          {shown.map((m, i) => (
-            <li key={`${m.id}-${i}`}>
-              {/* The event's own name, not an arrow: a bare ← left it unclear
-                  whether the place was where they came from or went to. */}
-              <span className="text-muted-foreground">{eventLabel(m.type)}</span>{' '}
-              <PersonLink person={m} />
-              {m.place && <span className="text-muted-foreground"> · {m.place}</span>}
-              {m.year != null && <span className="text-muted-foreground"> · {m.year}</span>}
-            </li>
-          ))}
+          {[...byPerson.values()].map(moves => {
+            const person = moves[0]!;
+            /* The event's own name, not an arrow: a bare ← left it unclear
+               whether the place was where they came from or went to. */
+            const move = (m: typeof person) => (
+              <>
+                <span className="text-muted-foreground">{eventLabel(m.type)}</span>
+                {m.place && <span className="text-muted-foreground"> · {m.place}</span>}
+                {m.year != null && <span className="text-muted-foreground"> · {m.year}</span>}
+              </>
+            );
+            return (
+              <li key={person.id}>
+                <PersonLink person={person} />{' '}
+                {/* One move stays on the line with the name; several get their
+                    own so the years read as a sequence rather than a run-on. */}
+                {moves.length === 1 ? move(person) : (
+                  <ul className="ml-4 border-l pl-3">
+                    {moves.map((m, i) => <li key={i}>{move(m)}</li>)}
+                  </ul>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>

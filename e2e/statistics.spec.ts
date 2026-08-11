@@ -1,52 +1,52 @@
 import { test, expect } from '@playwright/test';
 
-test('statistiksidan nås från menyn och visar alla fyra avsnitt', async ({ page }) => {
+test('the statistics page is reached from the menu and shows all four sections', async ({ page }) => {
   await page.goto('/wedin');
-  await page.getByRole('link', { name: 'Statistik' }).click();
-  await expect(page).toHaveURL(/\/statistik/);
-  for (const heading of ['Liv och livslängd', 'Namn', 'Familjer', 'Orter och arbete']) {
+  await page.getByRole('link', { name: 'Statistics' }).click();
+  await expect(page).toHaveURL(/\/statistics/);
+  for (const heading of ['Lives and lifespans', 'Names', 'Families', 'Places and work']) {
     await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible();
   }
 });
 
-test('varje diagram har sina siffror även som tabell', async ({ page }) => {
-  await page.goto('/wedin/statistik');
-  await expect(page.getByRole('heading', { name: 'Liv och livslängd' })).toBeVisible();
-  // två diagram i liv, ett i familjer — alla med tabell under
+test('every chart has its numbers as a table too', async ({ page }) => {
+  await page.goto('/wedin/statistics');
+  await expect(page.getByRole('heading', { name: 'Lives and lifespans' })).toBeVisible();
+  // two charts under Lives, one under Families — each with a table below
   await expect.poll(() => page.getByRole('table').count()).toBe(3);
 });
 
-test('omöjliga åldrar presenteras inte som roliga fakta', async ({ page }) => {
-  await page.goto('/wedin/statistik');
-  await expect(page.getByText(/Åldrar över 110 år räknas som datafel/)).toBeVisible();
-  const ages = await page.locator('ol li', { hasText: /\d+ år$/ }).allInnerTexts();
+test('impossible ages are not presented as fun facts', async ({ page }) => {
+  await page.goto('/wedin/statistics');
+  await expect(page.getByText(/Ages over 110 are treated as data errors/)).toBeVisible();
+  const ages = await page.locator('ol li', { hasText: /\d+ years$/ }).allInnerTexts();
   for (const row of ages) {
-    const age = Number(/(\d+) år$/.exec(row.trim())?.[1] ?? 0);
+    const age = Number(/(\d+) years$/.exec(row.trim())?.[1] ?? 0);
     expect(age).toBeLessThanOrEqual(110);
   }
 });
 
-test('avgränsning till en person hamnar i url:en och överlever omladdning', async ({ page }) => {
-  await page.goto('/wedin/statistik');
-  await expect(page.getByRole('heading', { name: 'Liv och livslängd' })).toBeVisible();
-  // första kortet i första <dl> är antalet personer; "Personer" som text
-  // finns även i menyn, så sikta på kortet i stället
+test('narrowing to one person lands in the URL and survives a reload', async ({ page }) => {
+  await page.goto('/wedin/statistics');
+  await expect(page.getByRole('heading', { name: 'Lives and lifespans' })).toBeVisible();
+  // the first card in the first <dl> is the number of people; "People" as text
+  // also appears in the menu, so aim at the card instead
   const peopleCard = page.locator('dl').first().locator('div').first();
   const everyone = await peopleCard.innerText();
 
-  await page.getByLabel('Välj person').fill('Sven-Erik Wedin');
-  await page.getByRole('button', { name: 'Sök' }).click();
+  await page.getByLabel('Choose a person').fill('Sven-Erik Wedin');
+  await page.getByRole('button', { name: 'Search' }).click();
   await page.getByRole('button', { name: /Sven-Erik Wedin/ }).first().click();
 
   await expect(page).toHaveURL(/person=I\d+/);
-  await expect(page.getByText(/Statistik för Sven-Erik Wedin/)).toBeVisible();
+  await expect(page.getByText(/Statistics for Sven-Erik Wedin/)).toBeVisible();
   // siffrorna ska faktiskt ha smalnat av, inte bara rubriken
   await expect.poll(() => peopleCard.innerText()).not.toBe(everyone);
 
   await page.reload();
-  await expect(page.getByText(/Statistik för Sven-Erik Wedin/)).toBeVisible();
+  await expect(page.getByText(/Statistics for Sven-Erik Wedin/)).toBeVisible();
 
-  await page.getByRole('button', { name: 'Visa hela släktträdet' }).click();
+  await page.getByRole('button', { name: 'Show the whole tree' }).click();
   await expect(page).not.toHaveURL(/person=/);
   await expect.poll(() => peopleCard.innerText()).toBe(everyone);
 });
@@ -56,9 +56,9 @@ test('avgränsning till en person hamnar i url:en och överlever omladdning', as
  * *was* the person who lived to 104? The name has to be the way there.
  */
 test('namnen i statistiken leder till personsidan', async ({ page }) => {
-  await page.goto('/wedin/statistik');
+  await page.goto('/wedin/statistics');
 
-  const longest = page.locator('h3', { hasText: /Längst liv|Longest lives/ })
+  const longest = page.locator('h3', { hasText: /Longest lives/ })
     .locator('xpath=following-sibling::ol[1]');
   const first = longest.getByRole('link').first();
   await expect(first).toBeVisible();
@@ -68,19 +68,19 @@ test('namnen i statistiken leder till personsidan', async ({ page }) => {
   await expect(page).toHaveURL(/\/wedin\/person\/I\d+/);
   await expect(page.getByRole('heading', { level: 1 })).toContainText(name);
 
-  // and the couples in Största familjer link each partner on their own
-  await page.goto('/wedin/statistik');
-  const families = page.locator('h3', { hasText: /Största familjerna|Largest families/ })
+  // and the couples in Largest families link each partner on their own
+  await page.goto('/wedin/statistics');
+  const families = page.locator('h3', { hasText: /Largest families/ })
     .locator('xpath=following-sibling::ol[1]');
   await expect(families.locator('li').first().getByRole('link')).toHaveCount(2);
 });
 
-test('ut- och invandring går att filtrera åt ett håll i taget', async ({ page }) => {
-  await page.goto('/wedin/statistik');
+test('emigration and immigration can be filtered one direction at a time', async ({ page }) => {
+  await page.goto('/wedin/statistics');
 
   // following:: not following-sibling:: — the heading shares a row with the
   // filter now, so the list is no longer its direct sibling.
-  const list = page.locator('h3', { hasText: /Ut- och invandring|Emigration and immigration/ })
+  const list = page.locator('h3', { hasText: /Emigration and immigration/ })
     .locator('xpath=following::ul[1]');
   await expect(list.locator('li').first()).toBeVisible();
   // Moves, not people: someone who moved four times is one entry with four
@@ -88,7 +88,7 @@ test('ut- och invandring går att filtrera åt ett håll i taget', async ({ page
   const moves = () => list.locator('li:not(:has(li))').count();
   const all = await moves();
 
-  const picker = page.getByLabel(/^Visa$|^Show$/);
+  const picker = page.getByLabel(/^Show$/);
   // The counts are in the option labels, so the answer is there before picking.
   await expect(picker.locator('option').first()).toContainText(String(all));
 

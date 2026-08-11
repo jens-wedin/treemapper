@@ -2,25 +2,25 @@ import fs from 'node:fs';
 import { test, expect } from '@playwright/test';
 
 // Runs against the real imported database; skip when it's absent.
-test.skip(!fs.existsSync('wedin.db'), 'wedin.db saknas — kör npm run import först');
+test.skip(!fs.existsSync('wedin.db'), 'wedin.db is missing — run npm run import first');
 
-test('sök från Hem → personlista → personsida', async ({ page }) => {
+test('search from Home → people list → person page', async ({ page }) => {
   await page.goto('/wedin');
-  await page.getByLabel('Sök person').fill('Sven-Erik Wedin');
-  await page.getByRole('button', { name: 'Sök' }).click();
-  await expect(page).toHaveURL(/\/personer\?q=/);
-  await expect(page.getByText(/\d+ träff(ar)?\b/)).toBeVisible();
+  await page.getByLabel('Search for a person').fill('Sven-Erik Wedin');
+  await page.getByRole('button', { name: 'Search' }).click();
+  await expect(page).toHaveURL(/\/people\?q=/);
+  await expect(page.getByText(/\d+ results?\b/)).toBeVisible();
   await page.getByRole('link', { name: /Sven-Erik Wedin/ }).first().click();
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Sven-Erik Wedin');
-  await expect(page.getByRole('heading', { name: 'Händelser' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Familj' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Events' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Family' })).toBeVisible();
 });
 
-test('varje sökträff går att öppna direkt i trädet', async ({ page }) => {
+test('every search result can be opened straight in the tree', async ({ page }) => {
   // A surname with many bearers rather than one named person: the point is
   // that a row opens *its own* person, and naming a specific duplicate makes
   // the test rot the day that duplicate is merged.
-  await page.goto('/wedin/personer?q=' + encodeURIComponent('Wedin'));
+  await page.goto('/wedin/people?q=' + encodeURIComponent('Wedin'));
   const rows = page.locator('tbody tr');
   await expect(rows.first()).toBeVisible();
   expect(await rows.count()).toBeGreaterThan(1);
@@ -31,29 +31,29 @@ test('varje sökträff går att öppna direkt i trädet', async ({ page }) => {
   const personHref = await second.getByRole('link').first().getAttribute('href');
   const id = personHref!.split('/').pop()!;
 
-  await second.getByRole('link', { name: 'Visa i träd' }).click();
-  await expect(page).toHaveURL(new RegExp(`/trad/${id}$`));
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Träd');
+  await second.getByRole('link', { name: 'Show in tree' }).click();
+  await expect(page).toHaveURL(new RegExp(`/tree/${id}$`));
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Tree');
   await expect(page.locator(`[data-tree-node="${id}"]`)).toBeVisible();
 });
 
-test('personsidans familjelänkar navigerar vidare', async ({ page }) => {
+test('the person page\'s family links navigate onward', async ({ page }) => {
   await page.goto('/wedin/person/I500001');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Sven-Erik Wedin');
-  const familj = page.locator('section', { has: page.getByRole('heading', { name: 'Familj' }) });
+  const familj = page.locator('section', { has: page.getByRole('heading', { name: 'Family' }) });
   const firstLink = familj.getByRole('link').first();
   const name = await firstLink.textContent();
   await firstLink.click();
   await expect(page.getByRole('heading', { level: 1 })).toContainText(name!.trim());
 });
 
-test('tangentbord: skip-länken hoppar till innehållet', async ({ page }) => {
+test('keyboard: the skip link jumps to the content', async ({ page }) => {
   await page.goto('/wedin');
   await page.keyboard.press('Tab');
-  await expect(page.getByRole('link', { name: 'Hoppa till innehåll' })).toBeFocused();
+  await expect(page.getByRole('link', { name: 'Skip to content' })).toBeFocused();
 });
 
-test('sidhuvudet står stilla mellan flikarna', async ({ page }) => {
+test('the header stays still between tabs', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 800 });
 
   const measure = async (path: string) => {
@@ -65,26 +65,26 @@ test('sidhuvudet står stilla mellan flikarna', async ({ page }) => {
   };
 
   const home = await measure('/wedin');
-  for (const path of ['/personer', '/statistik', '/konsekvens', '/kallor', '/installningar'].map(x => `/wedin${x}`)) {
+  for (const path of ['/people', '/statistics', '/issues', '/sources', '/settings'].map(x => `/wedin${x}`)) {
     const here = await measure(path);
-    expect(here.nav, `sidhuvudet flyttade sig på ${path}`).toEqual(home.nav);
-    expect(here.main, `innehållet bytte bredd på ${path}`).toEqual(home.main);
+    expect(here.nav, `the header moved on ${path}`).toEqual(home.nav);
+    expect(here.main, `the content changed width on ${path}`).toEqual(home.main);
   }
 
-  // Trädet är undantaget: det får hela fönstret — men sidhuvudet står kvar.
-  const tree = await measure('/wedin/trad/I500001');
+  // The tree is the exception: it gets the whole window — but the header stays put.
+  const tree = await measure('/wedin/tree/I500001');
   expect(tree.nav).toEqual(home.nav);
   expect(tree.main[1]).toBeGreaterThan(home.main[1]!);
 });
 
-test('ett foto öppnas i större format och går att bläddra i', async ({ page }) => {
+test('a photo opens larger, and can be paged through', async ({ page }) => {
   await page.goto('/wedin/person/I500001');
-  // Vänta in sidan innan miniatyrerna räknas — annars räknas skelettet.
-  await expect(page.getByRole('heading', { name: 'Foton' })).toBeVisible();
-  const thumbs = page.getByRole('button', { name: /i större format/ });
+  // Wait for the page before counting thumbnails — otherwise the skeleton is counted.
+  await expect(page.getByRole('heading', { name: 'Photos' })).toBeVisible();
+  const thumbs = page.getByRole('button', { name: /larger/ });
   await expect(thumbs.first()).toBeVisible();
 
-  // Mät miniatyren först: när dialogen är öppen är sidan bakom den inert.
+  // Measure the thumbnail first: with the dialog open, the page behind it is inert.
   const thumb = (await thumbs.first().boundingBox())!;
 
   await thumbs.first().click();
@@ -95,18 +95,18 @@ test('ett foto öppnas i större format och går att bläddra i', async ({ page 
   const large = (await dialog.getByRole('img').boundingBox())!;
   expect(large.width).toBeGreaterThan(thumb.width);
 
-  // Allt håller sig innanför rutan: bilden vägrar annars krympa och knuffar
-  // ut bläddringspilarna ur dialogen.
+  // Everything stays inside the box: otherwise the image refuses to shrink and pushes
+  // the paging arrows out of the dialog.
   const box = (await dialog.boundingBox())!;
   expect(large.x + large.width).toBeLessThanOrEqual(box.x + box.width);
-  for (const name of ['Föregående foto', 'Nästa foto']) {
+  for (const name of ['Previous photo', 'Next photo']) {
     const arrow = await dialog.getByRole('button', { name }).boundingBox();
     if (!arrow) continue;                       // bara ett foto: inga pilar
-    expect(arrow.x, `${name} utanför vänsterkanten`).toBeGreaterThanOrEqual(box.x);
-    expect(arrow.x + arrow.width, `${name} utanför högerkanten`).toBeLessThanOrEqual(box.x + box.width);
+    expect(arrow.x, `${name} is past the left edge`).toBeGreaterThanOrEqual(box.x);
+    expect(arrow.x + arrow.width, `${name} is past the right edge`).toBeLessThanOrEqual(box.x + box.width);
   }
 
-  // piltangenter bläddrar när det finns fler än ett
+  // arrow keys page through when there is more than one
   const heading = dialog.getByRole('heading');
   const first = await heading.innerText();
   await page.keyboard.press('ArrowRight');

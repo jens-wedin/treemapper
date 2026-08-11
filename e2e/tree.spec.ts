@@ -5,63 +5,63 @@ import { test, expect } from '@playwright/test';
 const openSettings = async (page: import('@playwright/test').Page) => {
   const panel = page.getByRole('dialog');
   if (await panel.isVisible()) return;                 // clicking again would close it
-  await page.getByRole('button', { name: 'Visningsinställningar' }).click();
+  await page.getByRole('button', { name: 'Display settings' }).click();
   await panel.waitFor();
 };
 
-test.skip(!fs.existsSync('wedin.db'), 'wedin.db saknas — kör npm run import först');
+test.skip(!fs.existsSync('wedin.db'), 'wedin.db is missing — run npm run import first');
 
-test('trädet renderas och piltangenter flyttar fokus', async ({ page }) => {
-  await page.goto('/wedin/trad/I500001');
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Träd');
+test('the tree renders, and arrow keys move the focus', async ({ page }) => {
+  await page.goto('/wedin/tree/I500001');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Tree');
   const focusNode = page.locator('[data-tree-node="I500001"]');
   await expect(focusNode).toBeVisible();
   await focusNode.focus();
-  await expect(focusNode).toBeFocused();   // vänta in renderingen innan tangenttryck
-  await page.keyboard.press('ArrowUp');    // I500001 har 2 föräldrar
+  await expect(focusNode).toBeFocused();   // wait for the render before pressing a key
+  await page.keyboard.press('ArrowUp');    // I500001 has 2 parents
   await expect
     .poll(() => page.evaluate(() => document.activeElement?.getAttribute('data-tree-node')))
     .not.toBe('I500001');
 });
 
-test('klick på ett kort öppnar personpanelen', async ({ page }) => {
-  await page.goto('/wedin/trad/I500001');
+test('clicking a card opens the person panel', async ({ page }) => {
+  await page.goto('/wedin/tree/I500001');
   await page.locator('[data-tree-node="I500001"]').click();
-  const panel = page.getByRole('complementary', { name: 'Personuppgifter' });
+  const panel = page.getByRole('complementary', { name: 'Person details' });
   await expect(panel).toBeVisible();
   await expect(panel.getByRole('heading', { level: 2 })).toContainText('Sven-Erik Wedin');
-  await expect(panel.getByRole('heading', { name: 'Familj' })).toBeVisible();
-  // panelen stängs med Escape
+  await expect(panel.getByRole('heading', { name: 'Family' })).toBeVisible();
+  // the panel closes with Escape
   await page.keyboard.press('Escape');
   await expect(panel).toBeHidden();
 });
 
-test('panelen kan fokusera om trädet och öppna personsidan', async ({ page }) => {
-  await page.goto('/wedin/trad/I500001');
-  // Enter på ett kort öppnar panelen
+test('the panel can re-centre the tree and open the person page', async ({ page }) => {
+  await page.goto('/wedin/tree/I500001');
+  // Enter on a card opens the panel
   const start = page.locator('[data-tree-node="I500001"]');
   await start.focus();
   await expect(start).toBeFocused();
   await page.keyboard.press('ArrowUp');
   await page.keyboard.press('Enter');
-  const panel = page.getByRole('complementary', { name: 'Personuppgifter' });
+  const panel = page.getByRole('complementary', { name: 'Person details' });
   await expect(panel).toBeVisible();
 
-  await panel.getByRole('button', { name: 'Fokusera trädet här' }).click();
-  await expect(page).toHaveURL(/\/trad\/(?!I500001)I\d+/);
+  await panel.getByRole('button', { name: 'Centre the tree here' }).click();
+  await expect(page).toHaveURL(/\/tree\/(?!I500001)I\d+/);
   await expect(panel).toBeHidden();
 
   await page.locator('[data-tree-node]').first().click();
-  await page.getByRole('complementary', { name: 'Personuppgifter' })
-    .getByRole('link', { name: 'Gå till personsida' }).click();
+  await page.getByRole('complementary', { name: 'Person details' })
+    .getByRole('link', { name: 'Open person page' }).click();
   await expect(page).toHaveURL(/\/person\/I\d+/);
 });
 
-// Uppåt och nedåt körs var för sig: den första utfällningen panorerar vyn, och
-// då hamnar knappen i andra änden av trädet utanför den synliga ytan.
+// Up and down run separately: the first expansion pans the view, and
+// the button then ends up at the far end of the tree, outside the visible area.
 for (const direction of ['up', 'down'] as const) {
-  test(`familjevyn fäller ut generationer på plats (${direction})`, async ({ page }) => {
-    await page.goto('/wedin/trad/I502603?upp=2&ned=2&vy=family');
+  test(`the family view expands generations in place (${direction})`, async ({ page }) => {
+    await page.goto('/wedin/tree/I502603?up=2&down=2&view=family');
     await expect(page.locator('[data-tree-node]').first()).toBeVisible();
     const before = await page.locator('[data-tree-node]').count();
     const url = page.url();
@@ -78,7 +78,7 @@ for (const direction of ['up', 'down'] as const) {
       .toBeGreaterThan(before);
     expect(page.url()).toBe(url);                  // ingen omnavigering, ingen blink
 
-    // knappen vänder, och fäller ihop grenen igen
+    // the button turns around, and collapses the branch again
     const fold = page.locator(`[data-handle="${personId}"][data-handle-direction="${direction}"]`);
     await expect(fold).toHaveAttribute('data-handle-action', 'collapse');
     await fold.click();
@@ -88,13 +88,13 @@ for (const direction of ['up', 'down'] as const) {
   });
 }
 
-test('familjevyns utfällningsknapp nås med tangentbordet', async ({ page }) => {
-  await page.goto('/wedin/trad/I502603?upp=2&ned=2&vy=family');
+test('the family view\'s expand button is reachable by keyboard', async ({ page }) => {
+  await page.goto('/wedin/tree/I502603?up=2&down=2&view=family');
   const up = page.locator('[data-handle][data-handle-direction="up"]').first();
   await expect(up).toBeVisible();
   const personId = await up.getAttribute('data-handle');
 
-  // uppåtpilen från det översta kortet ska stanna vid knappen
+  // the up arrow from the topmost card should stop at the button
   await page.locator(`[data-tree-node="${personId}"]`).first().focus();
   await page.keyboard.press('ArrowUp');
   await expect
@@ -106,52 +106,52 @@ test('familjevyns utfällningsknapp nås med tangentbordet', async ({ page }) =>
     .toHaveAttribute('data-handle-action', 'collapse');
 });
 
-test('antavlan visar förfäder men inga ättlingar', async ({ page }) => {
-  await page.goto('/wedin/trad/I500003?upp=3&ned=2');
-  await page.getByRole('tab', { name: 'Antavla' }).click();
-  await expect(page).toHaveURL(/vy=pedigree/);
-  await expect(page.getByRole('group', { name: 'Antavla' })).toBeVisible();
+test('the pedigree chart shows ancestors but no descendants', async ({ page }) => {
+  await page.goto('/wedin/tree/I500003?up=3&down=2');
+  await page.getByRole('tab', { name: 'Pedigree' }).click();
+  await expect(page).toHaveURL(/view=pedigree/);
+  await expect(page.getByRole('group', { name: 'Pedigree' })).toBeVisible();
 
   // fokuspersonen och hans far finns med
   await expect(page.locator('[data-tree-node="I500003"]')).toBeVisible();
   await expect(page.locator('[data-tree-node="I500001"]')).toBeVisible();
 
-  // inga ättlingar — hämta barnen ur API:et i stället för att gissa id:n
+  // no descendants — take the children from the API rather than guessing ids
   const tree = await (await page.request.get('/api/tree/I500003?up=0&down=1')).json();
   const childIds: string[] = tree.descendants.children.map((c: { person: { id: string } }) => c.person.id);
   expect(childIds.length).toBeGreaterThan(0);
   for (const id of childIds) {
     await expect(page.locator(`[data-tree-node="${id}"]`)).toHaveCount(0);
   }
-  // förklaringen till varför "generationer nedåt" saknas bor i inställningarna
+  // the explanation for the missing "generations down" lives in the settings
   await openSettings(page);
-  await expect(page.getByText('Antavla och solfjäder visar bara förfäder.')).toBeVisible();
-  await expect(page.getByLabel('Generationer nedåt')).toHaveCount(0);
+  await expect(page.getByText('The pedigree and fan views show ancestors only.')).toBeVisible();
+  await expect(page.getByLabel('Generations down')).toHaveCount(0);
 });
 
-test('generationsvalet håller i sig och gäller genast', async ({ page }) => {
-  await page.goto('/wedin/trad/I500003?upp=2&vy=pedigree');
+test('the generation choice sticks, and applies at once', async ({ page }) => {
+  await page.goto('/wedin/tree/I500003?up=2&view=pedigree');
   await expect(page.locator('[data-tree-node]').first()).toBeVisible();
   const atTwo = await page.locator('[data-tree-node]').count();
 
   await openSettings(page);
-  const generations = page.getByLabel('Generationer uppåt');
+  const generations = page.getByLabel('Generations up');
   await generations.selectOption('5');
-  await expect(generations).toHaveValue('5');        // får inte studsa tillbaka
-  await expect(page).toHaveURL(/upp=5/);
+  await expect(generations).toHaveValue('5');        // must not bounce back
+  await expect(page).toHaveURL(/up=5/);
   await expect
     .poll(() => page.locator('[data-tree-node]').count())
     .toBeGreaterThan(atTwo);
 
-  // och valet överlever en omladdning
+  // and the choice survives a reload
   await page.reload();
   await openSettings(page);
-  await expect(page.getByLabel('Generationer uppåt')).toHaveValue('5');
+  await expect(page.getByLabel('Generations up')).toHaveValue('5');
 });
 
-test('utfällningsknappen öppnar två generationer till på plats', async ({ page }) => {
-  // två generationer: förfäder bortom farföräldrarna ligger utanför tavlan
-  await page.goto('/wedin/trad/I500003?upp=2&vy=pedigree');
+test('the expand button opens two more generations in place', async ({ page }) => {
+  // two generations: ancestors beyond the grandparents lie outside the chart
+  await page.goto('/wedin/tree/I500003?up=2&view=pedigree');
   await expect(page.locator('[data-tree-node]').first()).toBeVisible();
   const before = await page.locator('[data-tree-node]').count();
 
@@ -162,7 +162,7 @@ test('utfällningsknappen öppnar två generationer till på plats', async ({ pa
 
   await handle.click();
 
-  // förfäderns egna föräldrar ritas ut — resten av tavlan står kvar
+  // the ancestor's own parents are drawn — the rest of the chart stays put
   const forebears = await (await page.request.get(`/api/tree/${ancestorId}?up=1&down=0`)).json();
   const parentIds: string[] = forebears.ancestors.parents.map((p: { person: { id: string } }) => p.person.id);
   expect(parentIds.length).toBeGreaterThan(0);
@@ -173,7 +173,7 @@ test('utfällningsknappen öppnar två generationer till på plats', async ({ pa
   expect(await page.locator('[data-tree-node]').count()).toBeGreaterThan(before);
   expect(page.url()).toBe(url);                 // ingen omnavigering, ingen blink
 
-  // knappen blir en hopfällningsknapp, och fäller ihop grenen igen
+  // the button becomes a collapse button, and folds the branch back up
   const collapse = page.locator(`[data-handle="${ancestorId}"]`);
   await expect(collapse).toHaveAttribute('data-handle-action', 'collapse');
   await collapse.click();
@@ -185,14 +185,14 @@ test('utfällningsknappen öppnar två generationer till på plats', async ({ pa
     .toBe(before);
 });
 
-test('utfällningsknappen nås med tangentbordet', async ({ page }) => {
-  await page.goto('/wedin/trad/I500003?upp=2&vy=pedigree');
+test('the expand button is reachable by keyboard', async ({ page }) => {
+  await page.goto('/wedin/tree/I500003?up=2&view=pedigree');
   const handle = page.locator('[data-handle]').first();
   await expect(handle).toBeVisible();
   const ancestorId = await handle.getAttribute('data-handle');
 
-  // fokusera förfaderns kort och gå höger — där finns ingen förälder utritad,
-  // så högerpilen ska landa på knappen
+  // focus the ancestor's card and go right — no parent is drawn there,
+  // so the right arrow should land on the button
   await page.locator(`[data-tree-node="${ancestorId}"]`).first().focus();
   await page.keyboard.press('ArrowRight');
   await expect
@@ -203,15 +203,15 @@ test('utfällningsknappen nås med tangentbordet', async ({ page }) => {
   await expect(page.locator(`[data-handle="${ancestorId}"]`)).toHaveAttribute('data-handle-action', 'collapse');
 });
 
-test('solfjädern renderas och kan navigeras med tangentbord', async ({ page }) => {
-  await page.goto('/wedin/trad/I500003?upp=4&vy=fan');
-  await expect(page.getByRole('group', { name: 'Solfjäder' })).toBeVisible();
+test('the fan chart renders, and can be navigated by keyboard', async ({ page }) => {
+  await page.goto('/wedin/tree/I500003?up=4&view=fan');
+  await expect(page.getByRole('group', { name: 'Fan chart' })).toBeVisible();
   const slices = page.locator('[data-tree-node]');
   await expect(slices.first()).toBeVisible();
   expect(await slices.count()).toBeGreaterThan(5);
 
-  // piltangent flyttar fokus mellan skivor — fråga DOM:en var fokus hamnade
-  // i stället för att läsa tabindex, som släpar en rendering efter
+  // an arrow key moves focus between slices — ask the DOM where focus landed
+  // rather than reading tabindex, which lags a render behind
   const first = page.locator('[data-tree-node="I500001"]');
   await first.focus();
   await expect(first).toBeFocused();
@@ -221,115 +221,115 @@ test('solfjädern renderas och kan navigeras med tangentbord', async ({ page }) 
     .not.toBe('I500001');
 });
 
-test('personpanelen fungerar i både antavla och solfjäder', async ({ page }) => {
-  for (const [view, label] of [['pedigree', 'Antavla'], ['fan', 'Solfjäder']] as const) {
-    await page.goto(`/wedin/trad/I500003?upp=3&vy=${view}`);
+test('the person panel works in both the pedigree and the fan chart', async ({ page }) => {
+  for (const [view, label] of [['pedigree', 'Pedigree'], ['fan', 'Fan chart']] as const) {
+    await page.goto(`/wedin/tree/I500003?up=3&view=${view}`);
     await expect(page.getByRole('group', { name: label })).toBeVisible();
-    // klicka på etiketten: en skivas bounding box har sin mittpunkt inne i
-    // solfjäderns navcirkel, så ett klick "mitt på" elementet träffar navet
+    // click the label: a slice's bounding box has its centre inside
+    // the fan's hub circle, so a click "in the middle" hits the hub
     await page.locator('[data-tree-node="I500001"] text').first().click();
-    const panel = page.getByRole('complementary', { name: 'Personuppgifter' });
+    const panel = page.getByRole('complementary', { name: 'Person details' });
     await expect(panel).toBeVisible();
     await expect(panel.getByRole('heading', { level: 2 })).toContainText('Sven-Erik Wedin');
     await page.keyboard.press('Escape');
   }
 });
 
-test('listvyn är en likvärdig väg och kan fokusera om trädet', async ({ page }) => {
-  await page.goto('/wedin/trad/I500001');
-  await page.getByRole('tab', { name: 'Lista' }).click();
-  await expect(page.getByRole('heading', { name: 'Förfäder' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Ättlingar' })).toBeVisible();
+test('the list view is an equal path, and can re-centre the tree', async ({ page }) => {
+  await page.goto('/wedin/tree/I500001');
+  await page.getByRole('tab', { name: 'List' }).click();
+  await expect(page.getByRole('heading', { name: 'Ancestors' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Descendants' })).toBeVisible();
   // :has(> h2 …) — only the inner list section, not the page-level <section> that also contains the heading
-  const ancestorSection = page.locator('section:has(> h2:text-is("Förfäder"))');
+  const ancestorSection = page.locator('section:has(> h2:text-is("Ancestors"))');
   await ancestorSection.getByRole('link').first().click();
-  await expect(page).toHaveURL(/\/trad\/(?!I500001)/);
+  await expect(page).toHaveURL(/\/tree\/(?!I500001)/);
 });
 
-test('personsidan länkar till trädet', async ({ page }) => {
+test('the person page links to the tree', async ({ page }) => {
   await page.goto('/wedin/person/I500001');
-  await page.getByRole('link', { name: 'Visa i träd' }).click();
-  await expect(page).toHaveURL(/\/trad\/I500001/);
+  await page.getByRole('link', { name: 'Show in tree' }).click();
+  await expect(page).toHaveURL(/\/tree\/I500001/);
   await expect(page.locator('[data-tree-node="I500001"]')).toBeVisible();
 });
 
-test.describe('konsekvensmärken', () => {
-  // I500244 har åtta problem, varav ett fel — en tacksam startpunkt
-  const url = '/trad/I500244?upp=1&ned=1&vy=family';
+test.describe('problem marks', () => {
+  // I500244 has eight problems, one of them an error — a convenient starting point
+  const url = '/tree/I500244?up=1&down=1&view=family';
   const card = (page: import('@playwright/test').Page) => page.locator('[data-tree-node="I500244"]');
 
-  test('är avstängda tills man ber om dem, och minns valet', async ({ page }) => {
+  test('are off until asked for, and the choice is remembered', async ({ page }) => {
     await page.goto(url);
     await expect(card(page)).toBeVisible();
     await expect(page.locator('[data-issue-severity]')).toHaveCount(0);
 
     await openSettings(page);
-    const toggle = page.getByLabel('Visa konsekvenser');
+    const toggle = page.getByLabel('Show inconsistencies');
     await toggle.check();
     await expect(card(page).locator('[data-issue-severity="error"]')).toBeVisible();
     await expect(card(page).locator('[data-issue-count="8"]')).toBeVisible();
 
-    // valet följer med till nästa besök och till de andra vyerna
+    // the choice carries to the next visit and to the other views
     await page.reload();
     await openSettings(page);
     await expect(toggle).toBeChecked();
     await expect(card(page).locator('[data-issue-severity]')).toBeVisible();
 
-    await page.goto('/wedin/trad/I500244?upp=2&vy=pedigree');
+    await page.goto('/wedin/tree/I500244?up=2&view=pedigree');
     await expect(card(page).locator('[data-issue-severity]')).toBeVisible();
 
-    await page.goto('/wedin/trad/I500244?upp=2&vy=fan');
+    await page.goto('/wedin/tree/I500244?up=2&view=fan');
     await expect(page.locator('[data-issue-severity]').first()).toBeVisible();
   });
 
-  test('märket säger vad som är fel, och släcks när man stänger av', async ({ page }) => {
+  test('the mark says what is wrong, and goes out when switched off', async ({ page }) => {
     await page.goto(url);
     await openSettings(page);
-    await page.getByLabel('Visa konsekvenser').check();
+    await page.getByLabel('Show inconsistencies').check();
     await expect(card(page).locator('[data-issue-severity]')).toBeVisible();
 
-    // skärmläsare får samma besked som pricken ger ögat
-    await expect(card(page)).toHaveAttribute('aria-label', /8 konsekvenser: .+/);
+    // a screen reader gets the same message the dot gives the eye
+    await expect(card(page)).toHaveAttribute('aria-label', /8 inconsistencies: .+/);
 
     await openSettings(page);
 
-    await page.getByLabel('Visa konsekvenser').uncheck();
+    await page.getByLabel('Show inconsistencies').uncheck();
     await expect(page.locator('[data-issue-severity]')).toHaveCount(0);
   });
 
-  test('panelen berättar vad som är fel, med köns egna ord', async ({ page }) => {
+  test('the panel says what is wrong, in the queue\'s own words', async ({ page }) => {
     await page.goto(url);
-    const panel = page.getByRole('complementary', { name: 'Personuppgifter' });
+    const panel = page.getByRole('complementary', { name: 'Person details' });
 
-    // avstängd: panelen är sig lik
+    // switched off: the panel looks as it always did
     await card(page).click();
     await expect(panel).toBeVisible();
-    await expect(panel.getByRole('heading', { name: 'Konsekvenser' })).toHaveCount(0);
+    await expect(panel.getByRole('heading', { name: 'Inconsistencies' })).toHaveCount(0);
 
     await openSettings(page);
 
-    await page.getByLabel('Visa konsekvenser').check();
-    await expect(panel.getByRole('heading', { name: 'Konsekvenser' })).toBeVisible();
-    // samma kategori en gång, med antalet, och problemets egen formulering
-    const group = panel.getByRole('listitem').filter({ hasText: 'Barn fött efter förälders bortgång' });
+    await page.getByLabel('Show inconsistencies').check();
+    await expect(panel.getByRole('heading', { name: 'Inconsistencies' })).toBeVisible();
+    // the same category once, with the count, and the problem's own wording
+    const group = panel.getByRole('listitem').filter({ hasText: 'Child born after a parent died' });
     await expect(group).toHaveCount(1);
     await expect(group).toContainText('(4)');
-    await expect(group).toContainText('efter faderns Abraham Abrahamsson död 1800');
+    await expect(group).toContainText('after their father Abraham Abrahamsson died in 1800');
 
-    // en person utan problem får inget avsnitt
-    await page.goto('/wedin/trad/I500001?upp=1&ned=1&vy=family');
+    // a person with no problems gets no section
+    await page.goto('/wedin/tree/I500001?up=1&down=1&view=family');
     await page.locator('[data-tree-node="I500001"]').click();
     await expect(panel.getByRole('heading', { level: 2 })).toContainText('Sven-Erik');
-    await expect(panel.getByRole('heading', { name: 'Konsekvenser' })).toHaveCount(0);
+    await expect(panel.getByRole('heading', { name: 'Inconsistencies' })).toHaveCount(0);
   });
 
-  test('det som avfärdats i Konsekvensbänken räknas inte i trädet', async ({ page }) => {
+  test('what was dismissed in Konsekvensbänken is not counted in the tree', async ({ page }) => {
     await page.goto(url);
     await openSettings(page);
-    await page.getByLabel('Visa konsekvenser').check();
+    await page.getByLabel('Show inconsistencies').check();
     await expect(card(page).locator('[data-issue-count="8"]')).toBeVisible();
 
-    // avfärda ett av de åtta, som i kön
+    // dismiss one of the eight, as the queue would
     const queue = await (await page.request.get('/api/issues?limit=500')).json();
     const mine = queue.items.find((i: { personIds: string[] }) => i.personIds.includes('I500244'));
     await page.request.post('/api/issues/dismiss', { data: { fingerprint: mine.fingerprint } });
@@ -339,73 +339,73 @@ test.describe('konsekvensmärken', () => {
   });
 });
 
-test.describe('övergångar mellan vyerna', () => {
-  test('antavlan lindar ihop sig till solfjädern', async ({ page }) => {
-    await page.goto('/wedin/trad/I500003?upp=4&vy=pedigree');
-    await expect(page.getByRole('group', { name: 'Antavla' })).toBeVisible();
+test.describe('transitions between the views', () => {
+  test('the pedigree chart winds itself into the fan chart', async ({ page }) => {
+    await page.goto('/wedin/tree/I500003?up=4&view=pedigree');
+    await expect(page.getByRole('group', { name: 'Pedigree' })).toBeVisible();
 
-    await page.getByRole('tab', { name: 'Solfjäder' }).click();
-    // markörerna tar över mitten av övergången …
+    await page.getByRole('tab', { name: 'Fan' }).click();
+    // the markers take over the middle of the transition …
     await expect(page.locator('[data-morph]')).toBeVisible();
-    // … och lämnar över till solfjädern
+    // … and hand over to the fan chart
     await expect(page.locator('[data-morph]')).toHaveCount(0);
-    await expect(page.getByRole('group', { name: 'Solfjäder' })).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Fan chart' })).toBeVisible();
   });
 
-  test('mindre rörelse hoppar över både morf och korsfade', async ({ page }) => {
+  test('reduced motion skips both the morph and the cross-fade', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.goto('/wedin/trad/I500003?upp=4&vy=pedigree');
-    await expect(page.getByRole('group', { name: 'Antavla' })).toBeVisible();
+    await page.goto('/wedin/tree/I500003?up=4&view=pedigree');
+    await expect(page.getByRole('group', { name: 'Pedigree' })).toBeVisible();
 
-    await page.getByRole('tab', { name: 'Solfjäder' }).click();
-    await expect(page.getByRole('group', { name: 'Solfjäder' })).toBeVisible();
+    await page.getByRole('tab', { name: 'Fan' }).click();
+    await expect(page.getByRole('group', { name: 'Fan chart' })).toBeVisible();
     await expect(page.locator('[data-morph]')).toHaveCount(0);
-    await expect(page.getByRole('group', { name: 'Antavla' })).toHaveCount(0);
+    await expect(page.getByRole('group', { name: 'Pedigree' })).toHaveCount(0);
   });
 
-  test('bara ett träd åt gången är nåbart under en övergång', async ({ page }) => {
-    await page.goto('/wedin/trad/I500003?upp=3&vy=family');
-    await expect(page.getByRole('group', { name: 'Släktträd' })).toBeVisible();
+  test('only one tree is reachable at a time during a transition', async ({ page }) => {
+    await page.goto('/wedin/tree/I500003?up=3&view=family');
+    await expect(page.getByRole('group', { name: 'Family tree' })).toBeVisible();
 
-    // Vyn som lämnar ligger kvar en stund med aria-hidden och inert; varken
-    // skärmläsare eller test ska se två träd.
-    await page.getByRole('tab', { name: 'Antavla' }).click();
+    // The leaving view lingers with aria-hidden and inert; neither a
+    // screen reader nor a test should see two trees.
+    await page.getByRole('tab', { name: 'Pedigree' }).click();
     for (let i = 0; i < 5; i++) {
-      expect(await page.getByRole('group', { name: /Släktträd|Antavla|Solfjäder/ }).count()).toBeLessThanOrEqual(1);
+      expect(await page.getByRole('group', { name: /Family tree chart|Pedigree|Fan chart/ }).count()).toBeLessThanOrEqual(1);
       await page.waitForTimeout(40);
     }
-    await expect(page.getByRole('group', { name: 'Antavla' })).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Pedigree' })).toBeVisible();
   });
 });
 
-test.describe('personpanelen glider in', () => {
+test.describe('the person panel slides in', () => {
   const openPanel = async (page: import('@playwright/test').Page) => {
-    await page.goto('/wedin/trad/I500001?upp=2&ned=1&vy=family');
+    await page.goto('/wedin/tree/I500001?up=2&down=1&view=family');
     await page.locator('[data-tree-node="I500001"]').click();
-    return page.getByRole('complementary', { name: 'Personuppgifter' });
+    return page.getByRole('complementary', { name: 'Person details' });
   };
 
   test('panelen animeras in och ligger kvar medan den glider ut', async ({ page }) => {
     const panel = await openPanel(page);
-    // klassen sitter kvar så länge panelen är öppen — inget tidsberoende
+    // the class stays as long as the panel is open — nothing time-dependent
     await expect(panel).toHaveClass(/panel-entering/);
 
-    await panel.getByRole('button', { name: 'Stäng panelen' }).click();
+    await panel.getByRole('button', { name: 'Close panel' }).click();
     await expect(panel).toHaveCount(0);
   });
 
-  test('mindre rörelse stänger panelen på en gång', async ({ page }) => {
+  test('reduced motion closes the panel at once', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     const panel = await openPanel(page);
     await expect(panel).toBeVisible();
 
-    await panel.getByRole('button', { name: 'Stäng panelen' }).click();
-    // utan väntan på en utglidning som inte spelas
+    await panel.getByRole('button', { name: 'Close panel' }).click();
+    // with no wait for a slide-out that never plays
     await expect(panel).toHaveCount(0, { timeout: 150 });
   });
 });
 
-test.describe('zoomen', () => {
+test.describe('the zoom', () => {
   const percent = (page: import('@playwright/test').Page) =>
     page.locator('text=/^\\d+%$/').first().innerText().then(s => Number(s.replace('%', '')));
 
@@ -413,8 +413,8 @@ test.describe('zoomen', () => {
     page.locator('svg[role="group"]').first().dispatchEvent('wheel', { deltaY, deltaMode: 0, bubbles: true });
 
   /**
-   * Zoomen glider mot sitt mål, så en avläsning direkt efter en hjulhändelse
-   * fångar den på vägen. Jämförelserna nedan gäller vilolägena.
+   * The zoom glides towards its target, so a reading taken straight after a
+   * wheel event catches it in transit. The comparisons below are of the resting states.
    */
   const settled = async (page: import('@playwright/test').Page) => {
     let previous = -1;
@@ -427,17 +427,17 @@ test.describe('zoomen', () => {
     return current;
   };
 
-  test('hjulet zoomar i proportion till hur långt man rullar', async ({ page }) => {
-    await page.goto('/wedin/trad/I500001?upp=2&ned=1&vy=family');
+  test('the wheel zooms in proportion to how far it is scrolled', async ({ page }) => {
+    await page.goto('/wedin/tree/I500001?up=2&down=1&view=family');
     await page.locator('[data-tree-node]').first().waitFor();
 
-    // en liten knuff — som en styrplatta ger — ska knappt märkas
+    // a small nudge — what a trackpad gives — should barely register
     const start = await settled(page);
     await wheel(page, -6);
     const afterNudge = await settled(page);
     expect(afterNudge - start).toBeLessThanOrEqual(2);
 
-    // en hel hjulklick tar större kliv, men aldrig mer än ett tak
+    // a full wheel click takes a bigger step, but never more than a ceiling
     await wheel(page, -120);
     const afterNotch = await settled(page);
     expect(afterNotch - afterNudge).toBeGreaterThan(afterNudge - start);
@@ -445,7 +445,7 @@ test.describe('zoomen', () => {
   });
 });
 
-test.describe('att kasta trädet', () => {
+test.describe('flinging the tree', () => {
   const panX = async (page: import('@playwright/test').Page) => {
     const t = await page.locator('svg[role="group"] > g').first().getAttribute('transform');
     return Number(/translate\(([-\d.]+)/.exec(t ?? '')?.[1] ?? NaN);
@@ -462,8 +462,8 @@ test.describe('att kasta trädet', () => {
     await page.mouse.up();
   };
 
-  test('kastet rullar vidare efter att man släppt, och saktar in', async ({ page }) => {
-    await page.goto('/wedin/trad/I500001?upp=2&ned=1&vy=family');
+  test('the fling coasts on after release, and slows down', async ({ page }) => {
+    await page.goto('/wedin/tree/I500001?up=2&down=1&view=family');
     await page.locator('[data-tree-node]').first().waitFor();
 
     await flick(page);
@@ -473,22 +473,22 @@ test.describe('att kasta trädet', () => {
     await page.waitForTimeout(150);
     const second = await panX(page);
 
-    // Lika långa fönster, annars säger jämförelsen ingenting: ett längre
-    // fönster hinner längre även medan farten avtar.
-    expect(first - atRelease).toBeGreaterThan(0);                  // rullar vidare av sig självt
-    expect(second - first).toBeGreaterThan(0);                     // fortsätter
+    // Equal windows, or the comparison says nothing: a longer one
+    // covers more ground even while the speed is falling.
+    expect(first - atRelease).toBeGreaterThan(0);                  // coasts on by itself
+    expect(second - first).toBeGreaterThan(0);                     // keeps going
     expect(second - first).toBeLessThan(first - atRelease);        // men saktar in
 
-    // och stannar av sig självt
+    // and stops by itself
     await page.waitForTimeout(1500);
     const stopped = await panX(page);
     await page.waitForTimeout(250);
     expect(await panX(page)).toBeCloseTo(stopped, 1);
   });
 
-  test('mindre rörelse stannar där fingret släppte', async ({ page }) => {
+  test('reduced motion stops where the finger let go', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.goto('/wedin/trad/I500001?upp=2&ned=1&vy=family');
+    await page.goto('/wedin/tree/I500001?up=2&down=1&view=family');
     await page.locator('[data-tree-node]').first().waitFor();
 
     await flick(page);
@@ -498,7 +498,7 @@ test.describe('att kasta trädet', () => {
   });
 });
 
-test.describe('att kasta zoomen', () => {
+test.describe('flinging the zoom', () => {
   const zoom = (page: import('@playwright/test').Page) =>
     page.locator('text=/^\\d+%$/').first().innerText().then(s => Number(s.replace('%', '')));
 
@@ -510,8 +510,8 @@ test.describe('att kasta zoomen', () => {
     }
   };
 
-  test('zoomen rullar vidare en stund efter att hjulet stannat', async ({ page }) => {
-    await page.goto('/wedin/trad/I500001?upp=2&ned=1&vy=family');
+  test('the zoom coasts on for a moment after the wheel stops', async ({ page }) => {
+    await page.goto('/wedin/tree/I500001?up=2&down=1&view=family');
     await page.locator('[data-tree-node]').first().waitFor();
 
     await spin(page);
@@ -521,13 +521,13 @@ test.describe('att kasta zoomen', () => {
     await page.waitForTimeout(500);
     const settled = await zoom(page);
 
-    expect(coasted).toBeGreaterThan(atStop);      // fortsätter av sig självt
+    expect(coasted).toBeGreaterThan(atStop);      // carries on by itself
     expect(settled).toBe(coasted);                // och stannar
   });
 
-  test('mindre rörelse zoomar utan svans', async ({ page }) => {
+  test('reduced motion zooms without a tail', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.goto('/wedin/trad/I500001?upp=2&ned=1&vy=family');
+    await page.goto('/wedin/tree/I500001?up=2&down=1&view=family');
     await page.locator('[data-tree-node]').first().waitFor();
 
     await spin(page);
@@ -537,38 +537,38 @@ test.describe('att kasta zoomen', () => {
   });
 });
 
-test.describe('lägga till släkting från kortet', () => {
-  test('plusset visas bara när inställningen är på, och lägger till en förälder', async ({ page }) => {
-    await page.goto('/wedin/trad/I500001?upp=2&ned=1&vy=family');
+test.describe('adding a relative from the card', () => {
+  test('the plus appears only when the setting is on, and adds a parent', async ({ page }) => {
+    await page.goto('/wedin/tree/I500001?up=2&down=1&view=family');
     const card = page.locator('[data-tree-node="I500001"]');
     await expect(card).toBeVisible();
 
-    // avstängt som standard — inga plus på korten
-    await expect(page.getByRole('button', { name: /Lägg till släkting till/ })).toHaveCount(0);
+    // off by default — no pluses on the cards
+    await expect(page.getByRole('button', { name: /Add a relative to/ })).toHaveCount(0);
 
     await openSettings(page);
-    await page.getByLabel('Lägg till släktingar').check();
+    await page.getByLabel('Add relatives').check();
     await page.keyboard.press('Escape');
 
-    const plus = card.getByRole('button', { name: /Lägg till släkting till Sven-Erik Wedin/ });
+    const plus = card.getByRole('button', { name: /Add a relative to Sven-Erik Wedin/ });
     await expect(plus).toBeVisible();
     await plus.click();
 
     // dialogen erbjuder samma tre val som personsidan
-    const dialog = page.getByRole('dialog').filter({ hasText: 'Lägg till släkting till Sven-Erik Wedin' });
-    await expect(dialog.getByRole('button', { name: 'Lägg till barn' })).toBeVisible();
-    await expect(dialog.getByRole('button', { name: 'Lägg till partner' })).toBeVisible();
-    await expect(dialog.getByRole('button', { name: 'Lägg till förälder' })).toBeVisible();
+    const dialog = page.getByRole('dialog').filter({ hasText: 'Add a relative to Sven-Erik Wedin' });
+    await expect(dialog.getByRole('button', { name: 'Add child' })).toBeVisible();
+    await expect(dialog.getByRole('button', { name: 'Add partner' })).toBeVisible();
+    await expect(dialog.getByRole('button', { name: 'Add parent' })).toBeVisible();
 
-    // valet leder till samma formulär som personsidan använder — i samma
-    // dialog, eftersom en dialog i en dialog inte kan öppnas
-    await dialog.getByRole('button', { name: 'Lägg till barn' }).click();
-    await dialog.getByRole('radio', { name: 'Skapa ny person' }).check();
-    await dialog.getByLabel('Förnamn').fill('Testbarn');
-    await dialog.getByLabel('Efternamn').fill('Wedin');
-    await dialog.getByRole('button', { name: 'Spara' }).click();
+    // the choice leads to the same form the person page uses — in the same
+    // dialog, because a dialog inside a dialog cannot be opened
+    await dialog.getByRole('button', { name: 'Add child' }).click();
+    await dialog.getByRole('radio', { name: 'Create a new person' }).check();
+    await dialog.getByLabel('First name').fill('Testbarn');
+    await dialog.getByLabel('Surname').fill('Wedin');
+    await dialog.getByRole('button', { name: 'Save' }).click();
 
-    // dialogen stängs och trädet ritas om med den nya personen
+    // the dialog closes and the tree is redrawn with the new person
     await expect(dialog).toBeHidden();
     await expect(page.getByRole('button', { name: /Testbarn Wedin/ }).first()).toBeVisible();
   });

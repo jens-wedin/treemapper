@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { createTreesApi, treeResolver } from './trees';
@@ -27,6 +28,14 @@ app.route('/', createMergeApi(tree));
 app.route('/', createSourcesApi(tree));
 app.route('/', createExportApi(tree));
 app.route('/', createStatisticsApi(tree));
+
+/**
+ * Which database this server is actually serving. Exists so the e2e suite can
+ * assert it is talking to its own copy: a browser test that quietly reaches the
+ * development API edits the real family data, and the only sign is a row you
+ * did not put there.
+ */
+app.get('/api/health', c => c.json({ db: path.resolve(process.env.WEDIN_DB ?? 'wedin.db') }));
 
 const port = Number(process.env.API_PORT ?? 3001);
 serve({ fetch: app.fetch, port });

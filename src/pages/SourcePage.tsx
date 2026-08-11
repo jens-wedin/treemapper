@@ -10,6 +10,7 @@ import { t } from '../lib/i18n';
 import { ApiError, fetchJson, mutateJson } from '../lib/api';
 import { useTreeUrl } from '../lib/treeUrl';
 import RichText from '../components/RichText';
+import DeleteSourceButton from '../components/edit/DeleteSourceButton';
 
 const emptyToNull = (v: string) => (v.trim() === '' ? null : v.trim());
 
@@ -132,10 +133,11 @@ export default function SourcePage() {
         <p className="mt-1 text-muted-foreground">
           {[source.author, source.publication].filter(Boolean).join(' · ') || '–'}
         </p>
-        <p className="mt-2">
+        <p className="mt-2 flex flex-wrap items-center gap-2">
           <Button variant="outline" size="sm" aria-expanded={editing} onClick={() => setEditing(v => !v)}>
             {t('edit.edit')}
           </Button>
+          <DeleteSourceButton id={source.id} title={source.title ?? source.id} citationCount={citationTotal} />
         </p>
         {editing && (
           <SourceEditForm

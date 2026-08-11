@@ -16,6 +16,9 @@ const sv = {
   sources: {
     title: 'Källor', search: 'Sök källa', author: 'Författare', publication: 'Utgivare',
     new: 'Ny källa', newHint: 'Ett dokument du själv har. Avskriften skrivs på källans egen sida.',
+    delete: 'Ta bort källa', deleteConfirm: 'Ta bort ”{title}”?',
+    deleteCited: 'Källan används av {n} källhänvisningar. De tas bort med den — personerna blir kvar, men det som stödde uppgiften försvinner.',
+    deleteAlone: 'Inget hänvisar till den här källan.',
     transcription: 'Transkription',
     transcriptionHint: 'Källans egna ord — dokumentet avskrivet. Radbrytningar behålls.',
     citations: 'Källhänvisningar', usedBy: 'Används av', count: 'Antal hänvisningar',
@@ -207,6 +210,9 @@ const en: DeepPartial<Dict> = {
   sources: {
     title: 'Sources', search: 'Search sources', author: 'Author', publication: 'Publisher',
     new: 'New source', newHint: 'A document you hold yourself. The transcription goes on the source\'s own page.',
+    delete: 'Delete source', deleteConfirm: 'Delete “{title}”?',
+    deleteCited: 'This source is cited {n} times. Those citations go with it — the people remain, but what backed the claim is gone.',
+    deleteAlone: 'Nothing cites this source.',
     transcription: 'Transcription',
     transcriptionHint: "The source's own words — the document written out. Line breaks are kept.",
     citations: 'Citations', usedBy: 'Used by', count: 'Citations',
@@ -395,6 +401,9 @@ const de: DeepPartial<Dict> = {
   sources: {
     title: 'Quellen', search: 'Quelle suchen', author: 'Autor', publication: 'Herausgeber',
     new: 'Neue Quelle', newHint: 'Ein Dokument, das Sie selbst besitzen. Die Transkription steht auf der Seite der Quelle.',
+    delete: 'Quelle löschen', deleteConfirm: '„{title}“ löschen?',
+    deleteCited: 'Diese Quelle wird {n}-mal angeführt. Diese Angaben verschwinden mit ihr — die Personen bleiben, aber die Grundlage fehlt.',
+    deleteAlone: 'Nichts verweist auf diese Quelle.',
     transcription: 'Transkription',
     transcriptionHint: 'Die eigenen Worte der Quelle — das abgeschriebene Dokument. Zeilenumbrüche bleiben erhalten.',
     citations: 'Quellenangaben', usedBy: 'Verwendet von', count: 'Anzahl Angaben',
@@ -583,6 +592,9 @@ const es: DeepPartial<Dict> = {
   sources: {
     title: 'Fuentes', search: 'Buscar fuente', author: 'Autor', publication: 'Editorial',
     new: 'Nueva fuente', newHint: 'Un documento que usted mismo tiene. La transcripción va en la página de la fuente.',
+    delete: 'Eliminar fuente', deleteConfirm: '¿Eliminar «{title}»?',
+    deleteCited: 'Esta fuente se cita {n} veces. Esas citas se van con ella: las personas quedan, pero desaparece lo que respaldaba el dato.',
+    deleteAlone: 'Nada cita esta fuente.',
     transcription: 'Transcripción',
     transcriptionHint: 'Las palabras de la propia fuente — el documento transcrito. Se conservan los saltos de línea.',
     citations: 'Citas', usedBy: 'Usada por', count: 'Nº de citas',

@@ -14,6 +14,10 @@
 
 ### Fixed
 
+**En testkörning skrev i den riktiga databasen**
+- En källa med titeln "Test" dök upp i `wedin.db` under en Playwright-körning. Kopian under `.e2e/` togs vid 19:47 och saknar raden; `wedin.db` fick den 19:49 — mitt under körningen. Posten är borttagen och antalet är tillbaka på 520.
+- API:t svarar nu på `/api/health` med vilken databasfil det faktiskt betjänar, och sviten har ett test som kräver att det ligger under `.e2e/`. Vite vägrar dessutom starta en e2e-körning som pekar mot utvecklingsserverns port. Ett webbläsartest som tyst når utvecklings-API:t ändrar familjens riktiga uppgifter, och enda spåret är en rad ingen lagt dit.
+
 **220 dubblerade händelserader borttagna ur wedin.db**
 - Rester från sammanslagningar gjorda innan motorn slutade skriva in samma faktum två gånger: 149 grupper där en rad upprepade en annan exakt, över 58 personer. RESI 76, OCCU 48, BIRT 39, DEAT 37, EVEN 9, BURI 6, MARR 3, CHR 1, EMIG 1.
 - "Exakt" betyder varje kolumn utom id — ägare, typ, datum, år, plats, beskrivning, ålder och råa GEDCOM-taggar. Två födslar med *olika* datum är två källor som säger emot varandra och lämnas i fred.
@@ -42,6 +46,10 @@
 - **e2e läste en gammal ögonblicksbild.** Uppsättningen kopierade `wedin.db` men inte dess `-wal`, där de senaste skrivningarna ligger i WAL-läge. Sviten testade alltså mot data som saknade allt nyligen rättat. Med `-wal` med föll tre tester som byggde på data du sedan städat bort — en dubblett av Anders Bergqvist som är sammanslagen, och kategorin "Dubbla mellanslag i namnet" som är tömd. De hittar nu sina egna testdata i stället för att namnge poster som hinner försvinna.
 
 ### Added
+
+**Källor går att ta bort**
+- **Ta bort källa** på källans sida. En vanlig DELETE vägrar så länge något hänvisar till källan och svarar med antalet: en källhänvisning är det en uppgift vilar på, och att radera källan under den lämnar personer som påstår saker utan att skälet finns kvar.
+- Bekräftelsen säger hur många hänvisningar som följer med innan man godkänner, inte efteråt. Hela källan och varje borttagen hänvisning ligger i ändringsloggens före-bild, så beslutet går att läsa och återskapa.
 
 **Nya källor går att lägga till**
 - **Källor → Ny källa** skapar en källa för ett dokument du själv har. Fanns inte förut: API:t kunde lista, visa och ändra källor, men inte skapa någon — så ett dokument som inte kommit in med en import gick inte att skriva av någonstans.

@@ -111,3 +111,32 @@ test('en ny källa skapas och leder direkt till transkriptionen', async ({ page 
   await page.goto('/wedin/kallor?q=' + encodeURIComponent('Notarialakt, Hinspont'));
   await expect(page.getByRole('link', { name: /Notarialakt, Hinspont 1618/ })).toBeVisible();
 });
+
+test('en källa går att ta bort, och säger vad det kostar', async ({ page }) => {
+  // one we made ourselves, so nothing in the tree leans on it
+  await page.goto('/wedin/kallor');
+  await page.getByRole('button', { name: 'Ny källa' }).click();
+  await page.getByRole('dialog').getByLabel('Namn').fill('Att kasta bort');
+  await page.getByRole('dialog').getByRole('button', { name: 'Spara' }).click();
+  await expect(page).toHaveURL(/\/kalla\/S\d+$/);
+
+  await page.getByRole('button', { name: 'Ta bort källa' }).click();
+  const box = page.getByRole('alertdialog');
+  await expect(box).toContainText('Att kasta bort');
+  await expect(box).toContainText(/Inget hänvisar/);
+  await box.getByRole('button', { name: 'Ta bort källa' }).click();
+
+  await expect(page).toHaveURL(/\/wedin\/kallor$/);
+  await page.goto('/wedin/kallor?q=' + encodeURIComponent('Att kasta bort'));
+  await expect(page.getByRole('link', { name: 'Att kasta bort' })).toHaveCount(0);
+});
+
+test('en citerad källa säger hur många hänvisningar som följer med', async ({ page }) => {
+  await page.goto('/wedin/kallor');
+  await page.locator('tbody tr').first().getByRole('link').click();
+  await page.getByRole('button', { name: 'Ta bort källa' }).click();
+  // The number is in the confirmation, not discovered afterwards.
+  await expect(page.getByRole('alertdialog')).toContainText(/\d+ källhänvisningar/);
+  await page.getByRole('button', { name: 'Avbryt' }).click();
+  await expect(page.getByRole('alertdialog')).toHaveCount(0);
+});

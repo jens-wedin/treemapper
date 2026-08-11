@@ -7,7 +7,7 @@ import { eq } from 'drizzle-orm';
 import { runImport } from '../scripts/import';
 import { createDb, type Db } from '../db/client';
 import { persons, events, citations, auditLog, familyChildren, families, sources } from '../db/schema';
-import { updatePerson, createEvent, updateEvent, deleteEvent, addRelation, removeChildLink, MutationError, createSource } from './mutations';
+import { updatePerson, createEvent, updateEvent, deleteEvent, addRelation, removeChildLink, MutationError, createSource, deleteSource } from './mutations';
 
 const fixture = fileURLToPath(new URL('./gedcom/fixtures/mini.ged', import.meta.url));
 let dir: string;
@@ -227,5 +227,43 @@ describe('createSource', () => {
 
   it('kräver en titel — en källa utan namn går inte att hitta igen', () => {
     expect(() => createSource(db, { title: '  ' })).toThrow();
+  });
+});
+
+describe('deleteSource', () => {
+  it('vägrar ta bort en källa som något hänvisar till', () => {
+    const id = createSource(db, { title: 'Citerad' }).data.id;
+    db.insert(citations).values({ ownerType: 'person', ownerId: 'I1', sourceId: id }).run();
+
+    // The citations are the reason the source exists; losing them silently
+    // would strip the evidence from every record that leans on it.
+    expect(() => deleteSource(db, id)).toThrow(/hänvis/i);
+    expect(db.select().from(sources).where(eq(sources.id, id)).all()).toHaveLength(1);
+  });
+
+  it('tar bort källan och dess hänvisningar när det är uttryckligen begärt', () => {
+    const id = createSource(db, { title: 'Citerad ändå' }).data.id;
+    db.insert(citations).values({ ownerType: 'person', ownerId: 'I1', sourceId: id }).run();
+
+    const res = deleteSource(db, id, { withCitations: true });
+
+    expect(res.data).toMatchObject({ removedCitations: 1 });
+    expect(db.select().from(sources).where(eq(sources.id, id)).all()).toHaveLength(0);
+    expect(db.select().from(citations).where(eq(citations.sourceId, id)).all()).toHaveLength(0);
+    // recoverable: the source and every citation are in the before-image
+    const entry = db.select().from(auditLog).all().reverse()
+      .find(a => a.entityType === 'source' && a.action === 'delete' && a.entityId === id)!;
+    expect(entry.before).toContain('Citerad ändå');
+    expect(entry.before).toContain('"citations"');
+  });
+
+  it('tar bort en ociterad källa utan krusiduller', () => {
+    const id = createSource(db, { title: 'Ensam' }).data.id;
+    expect(deleteSource(db, id).data).toMatchObject({ removedCitations: 0 });
+    expect(db.select().from(sources).where(eq(sources.id, id)).all()).toHaveLength(0);
+  });
+
+  it('säger ifrån om källan inte finns', () => {
+    expect(() => deleteSource(db, 'S999999')).toThrow(/finns inte/i);
   });
 });

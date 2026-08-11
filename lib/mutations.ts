@@ -61,6 +61,39 @@ export function createSource(db: Db, input: SourceUpdate): MutationResult<{ id: 
   });
 }
 
+/**
+ * Removes a source.
+ *
+ * Refuses while anything still cites it, and says how many. A citation is the
+ * evidence a record rests on; deleting the source underneath one would leave a
+ * person asserting something with the reason quietly gone. Passing
+ * `withCitations` is how you say you mean it — and the before-image keeps every
+ * removed citation, so the decision is reversible from the change log.
+ */
+export function deleteSource(
+  db: Db,
+  id: string,
+  opts: { withCitations?: boolean } = {},
+): MutationResult<{ removedCitations: number }> {
+  return db.transaction(tx => {
+    const before = tx.select().from(sources).where(eq(sources.id, id)).all()[0];
+    if (!before) throw new MutationError('Källan finns inte', 404);
+
+    const cited = tx.select().from(citations).where(eq(citations.sourceId, id)).all();
+    if (cited.length && !opts.withCitations) {
+      throw new MutationError(
+        `Källan har ${cited.length} källhänvisningar. Ta bort dem också för att radera källan.`,
+        409,
+      );
+    }
+
+    tx.delete(citations).where(eq(citations.sourceId, id)).run();
+    tx.delete(sources).where(eq(sources.id, id)).run();
+    audit(tx, 'delete', 'source', id, { ...before, citations: cited }, null);
+    return { warnings: [], data: { removedCitations: cited.length } };
+  });
+}
+
 export function updateSource(db: Db, id: string, patch: SourceUpdate): MutationResult {
   return db.transaction(tx => {
     const before = tx.select().from(sources).where(eq(sources.id, id)).all()[0];

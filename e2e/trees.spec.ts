@@ -180,3 +180,14 @@ test('en adress säger vilket släktträd den gäller', async ({ page, context }
   // one this test is responsible for.
   await expect(page.getByRole('combobox', { name: 'Släktträd' })).not.toContainText('Grannsläkten');
 });
+
+/**
+ * The suite must be talking to its own copy of the database. A browser test
+ * that reaches the development API edits the real family records, and the only
+ * sign is a row nobody put there — which is exactly what happened once.
+ */
+test('sviten kör mot sin egen databas, inte den riktiga', async ({ request }) => {
+  const { db } = await (await request.get('/api/health')).json();
+  expect(db).toContain('.e2e');
+  expect(db).not.toMatch(/[/\\]wedin-tree[/\\]wedin\.db$/);
+});

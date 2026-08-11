@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { listSources, getSourceFull } from '../lib/sources';
 import { sourceUpdateSchema } from '../lib/schemas';
-import { MutationError, createSource, updateSource } from '../lib/mutations';
+import { MutationError, createSource, deleteSource, updateSource } from '../lib/mutations';
 import type { TreeResolver } from './trees';
 
 const querySchema = z.object({
@@ -34,6 +34,20 @@ export function createSourcesApi(tree: TreeResolver) {
     if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? 'Ogiltiga fält' }, 400);
     try {
       return c.json({ ok: true, ...createSource(db, parsed.data) });
+    } catch (err) {
+      if (err instanceof MutationError) return c.json({ error: err.message }, err.status);
+      throw err;
+    }
+  });
+
+  api.delete('/api/sources/:id', c => {
+    const { db } = tree(c);
+    // Removing the citations too is asked for in the URL rather than assumed:
+    // a plain DELETE refuses and reports how many records would lose their
+    // evidence, so the count is seen before it is agreed to.
+    const withCitations = c.req.query('citations') === 'remove';
+    try {
+      return c.json({ ok: true, ...deleteSource(db, c.req.param('id'), { withCitations }) });
     } catch (err) {
       if (err instanceof MutationError) return c.json({ error: err.message }, err.status);
       throw err;

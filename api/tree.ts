@@ -15,9 +15,9 @@ export function createTreeApi(activeTree: TreeResolver) {
   api.get('/api/tree/:id', c => {
     const { db } = activeTree(c);
     const parsed = querySchema.safeParse(c.req.query());
-    if (!parsed.success) return c.json({ error: 'Ogiltiga parametrar' }, 400);
+    if (!parsed.success) return c.json({ error: 'Invalid parameters' }, 400);
     const tree = getTree(db, c.req.param('id'), parsed.data.up, parsed.data.down);
-    return tree ? c.json(tree) : c.json({ error: 'Personen finns inte' }, 404);
+    return tree ? c.json(tree) : c.json({ error: 'That person does not exist' }, 404);
   });
 
   return api;

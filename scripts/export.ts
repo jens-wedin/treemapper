@@ -14,9 +14,9 @@ export function runExport(outPath: string, dbPath?: string): { path: string; byt
     path: outPath,
     bytes: Buffer.byteLength(text, 'utf-8'),
     counts: {
-      personer: db.select().from(persons).all().length,
-      familjer: db.select().from(families).all().length,
-      källor: db.select().from(sources).all().length,
+      persons: db.select().from(persons).all().length,
+      families: db.select().from(families).all().length,
+      sources: db.select().from(sources).all().length,
     },
   };
 }
@@ -25,7 +25,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const stamp = new Date().toISOString().slice(0, 10);
   const outPath = process.argv[2] ?? `data/wedin-export-${stamp}.ged`;
   const result = runExport(outPath, process.argv[3]);
-  const { personer, familjer, källor } = result.counts;
-  console.log(`Export klar: ${personer} personer, ${familjer} familjer, ${källor} källor.`);
-  console.log(`Fil: ${result.path} (${(result.bytes / 1024 / 1024).toFixed(1)} MB)`);
+  const { persons: people, families: fams, sources: srcs } = result.counts;
+  console.log(`Export done: ${people} people, ${fams} families, ${srcs} sources.`);
+  console.log(`File: ${result.path} (${(result.bytes / 1024 / 1024).toFixed(1)} MB)`);
 }

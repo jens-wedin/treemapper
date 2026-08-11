@@ -17,7 +17,7 @@ export function createSourcesApi(tree: TreeResolver) {
   api.get('/api/sources', c => {
     const { db } = tree(c);
     const parsed = querySchema.safeParse(c.req.query());
-    if (!parsed.success) return c.json({ error: 'Ogiltiga sökparametrar' }, 400);
+    if (!parsed.success) return c.json({ error: 'Invalid search parameters' }, 400);
     const { q, limit, offset } = parsed.data;
     return c.json(listSources(db, { q: q || undefined, limit, offset }));
   });
@@ -25,13 +25,13 @@ export function createSourcesApi(tree: TreeResolver) {
   api.get('/api/sources/:id/full', c => {
     const { db } = tree(c);
     const full = getSourceFull(db, c.req.param('id'));
-    return full ? c.json(full) : c.json({ error: 'Källan finns inte' }, 404);
+    return full ? c.json(full) : c.json({ error: 'That source does not exist' }, 404);
   });
 
   api.post('/api/sources', async c => {
     const { db } = tree(c);
     const parsed = sourceUpdateSchema.safeParse(await c.req.json().catch(() => ({})));
-    if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? 'Ogiltiga fält' }, 400);
+    if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? 'Invalid fields' }, 400);
     try {
       return c.json({ ok: true, ...createSource(db, parsed.data) });
     } catch (err) {
@@ -43,7 +43,7 @@ export function createSourcesApi(tree: TreeResolver) {
   api.post('/api/citations', async c => {
     const { db } = tree(c);
     const parsed = citationCreateSchema.safeParse(await c.req.json().catch(() => ({})));
-    if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? 'Ogiltiga fält' }, 400);
+    if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? 'Invalid fields' }, 400);
     try {
       return c.json({ ok: true, ...addCitation(db, parsed.data) });
     } catch (err) {
@@ -81,7 +81,7 @@ export function createSourcesApi(tree: TreeResolver) {
   api.patch('/api/sources/:id', async c => {
     const { db } = tree(c);
     const parsed = sourceUpdateSchema.safeParse(await c.req.json().catch(() => ({})));
-    if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? 'Ogiltiga fält' }, 400);
+    if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? 'Invalid fields' }, 400);
     try {
       const { warnings, data } = updateSource(db, c.req.param('id'), parsed.data);
       return c.json({ ok: true, warnings, data });

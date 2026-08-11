@@ -67,7 +67,7 @@ function grouped(db: Database.Database, table: string, key: readonly string[], c
 export function repairConc(gedPath: string, dbPath: string, apply: boolean) {
   const scratchDir = fs.mkdtempSync(path.join(os.tmpdir(), 'wedin-repair-'));
   const scratchDb = path.join(scratchDir, 'fresh.db');
-  console.log(`Läser om ${path.basename(gedPath)} med den rättade tolken …`);
+  console.log(`Re-reading ${path.basename(gedPath)} with the fixed parser …`);
   runImport(gedPath, scratchDb);
 
   const live = new Database(dbPath);
@@ -108,7 +108,7 @@ export function repairConc(gedPath: string, dbPath: string, apply: boolean) {
           const after = freshRow[column] as string | null;
           if (before === after) continue;
           if (!sameIgnoringBreaks(before, after)) {
-            skipped.push(`${name}#${liveRow.id}.${column}: skiljer sig på mer än radbrytningar`);
+            skipped.push(`${name}#${liveRow.id}.${column}: differs by more than line breaks`);
             continue;
           }
           updates.push({ table: name, id: liveRow.id as number, column, from: before ?? '', to: after ?? '' });
@@ -119,7 +119,7 @@ export function repairConc(gedPath: string, dbPath: string, apply: boolean) {
 
   const byTable: Record<string, number> = {};
   for (const u of updates) byTable[`${u.table}.${u.column}`] = (byTable[`${u.table}.${u.column}`] ?? 0) + 1;
-  console.log('\nFält som får tillbaka sina radbrytningar:');
+  console.log('\nFields getting their line breaks back:');
   for (const [what, n] of Object.entries(byTable).sort((a, b) => b[1] - a[1])) console.log(`  ${what.padEnd(24)} ${n}`);
   console.log(`  ${'TOTALT'.padEnd(24)} ${updates.length}`);
   if (skipped.length) {
@@ -130,33 +130,33 @@ export function repairConc(gedPath: string, dbPath: string, apply: boolean) {
       const m = /^(\w+)#[^.]+\.(\w+):/.exec(s);
       bySkip[m ? `${m[1]}.${m[2]}` : s.split(':')[0]!] = (bySkip[m ? `${m[1]}.${m[2]}` : s.split(':')[0]!] ?? 0) + 1;
     }
-    console.log(`\nOrörda, skiljer sig på mer än radbrytningar (${skipped.length}):`);
+    console.log(`\nUntouched, differing by more than line breaks (${skipped.length}):`);
     for (const [what, n] of Object.entries(bySkip).sort((a, b) => b[1] - a[1])) console.log(`  ${what.padEnd(24)} ${n}`);
   }
 
   const example = updates.find(u => u.table === 'citations' && u.column === 'text');
   if (example) {
     console.log('\nExempel:');
-    console.log('  före:', JSON.stringify(example.from.slice(0, 90)));
+    console.log('  before:', JSON.stringify(example.from.slice(0, 90)));
     console.log('  efter:', JSON.stringify(example.to.slice(0, 90)));
   }
 
   if (!apply) {
-    console.log('\nTorrkörning — inget skrevs. Kör med --apply för att spara.');
+    console.log('\nDry run — nothing was written. Run with --apply to save.');
   } else if (updates.length) {
     // Never clobber an earlier backup — a second run would otherwise replace
     // the pristine copy with an already-repaired one.
     let backup = `${dbPath}.before-repair-conc`;
     for (let n = 2; fs.existsSync(backup); n++) backup = `${dbPath}.before-repair-conc.${n}`;
     fs.copyFileSync(dbPath, backup);
-    console.log(`\nSäkerhetskopia: ${backup}`);
+    console.log(`\nBackup: ${backup}`);
     const run = live.transaction(() => {
       for (const u of updates) {
         live.prepare(`update ${u.table} set ${u.column} = ? where id = ?`).run(u.to, u.id);
       }
     });
     run();
-    console.log(`Uppdaterade ${updates.length} fält.`);
+    console.log(`Updated ${updates.length} fields.`);
   }
 
   live.close();

@@ -17,7 +17,7 @@ export function createPersonsApi(tree: TreeResolver) {
   api.get('/api/persons', c => {
     const { db } = tree(c);
     const parsed = querySchema.safeParse(c.req.query());
-    if (!parsed.success) return c.json({ error: 'Ogiltiga sökparametrar' }, 400);
+    if (!parsed.success) return c.json({ error: 'Invalid search parameters' }, 400);
     const { q, birthYear, place, limit, offset } = parsed.data;
     return c.json(searchPersons(db, { q: q || undefined, birthYear, place: place || undefined, limit, offset }));
   });
@@ -25,7 +25,7 @@ export function createPersonsApi(tree: TreeResolver) {
   api.get('/api/persons/:id/full', c => {
     const { db } = tree(c);
     const full = getPersonFull(db, c.req.param('id'));
-    return full ? c.json(full) : c.json({ error: 'Personen finns inte' }, 404);
+    return full ? c.json(full) : c.json({ error: 'That person does not exist' }, 404);
   });
 
   return api;

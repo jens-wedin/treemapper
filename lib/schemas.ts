@@ -22,7 +22,7 @@ export const eventFieldsSchema = z.object({
   age: z.string().trim().max(30).nullable(),
 });
 export const eventCreateSchema = eventFieldsSchema.extend({
-  type: z.string().trim().regex(/^[A-Z][A-Z_]{1,11}$/, 'Okänd händelsetyp'),
+  type: z.string().trim().regex(/^[A-Z][A-Z_]{1,11}$/, 'Unknown event type'),
   ownerType: z.enum(['person', 'family']),
   ownerId: z.string().trim().min(2),
 });
@@ -31,7 +31,7 @@ export type EventCreate = z.infer<typeof eventCreateSchema>;
 export type EventUpdate = z.infer<typeof eventUpdateSchema>;
 
 export const newPersonSchema = z.object({
-  givenName: z.string().trim().min(1, 'Förnamn krävs').max(120),
+  givenName: z.string().trim().min(1, 'A first name is required').max(120),
   surname: z.string().trim().max(120).default(''),
   sex: sexSchema.default('U'),
 });

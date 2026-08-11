@@ -18,7 +18,7 @@ import { familyChildren, auditLog } from '../db/schema';
 
 const [treeId, childId, familyId, reason] = process.argv.slice(2);
 if (!treeId || !childId || !familyId) {
-  console.error('Användning: detach-child.ts <träd> <person> <familj> "<skäl>"');
+  console.error('Usage: detach-child.ts <tree> <person> <family> "<reason>"');
   process.exit(1);
 }
 
@@ -27,8 +27,8 @@ const db = openTree(treeId);
 db.transaction(tx => {
   const links = tx.select().from(familyChildren).where(eq(familyChildren.childId, childId)).all();
   const target = links.find(l => l.familyId === familyId);
-  if (!target) throw new Error(`${childId} är inte barn i ${familyId}`);
-  if (links.length < 2) throw new Error(`${childId} har bara ${familyId} — skulle bli föräldralös, avbryter`);
+  if (!target) throw new Error(`${childId} is not a child in ${familyId}`);
+  if (links.length < 2) throw new Error(`${childId} has only ${familyId} — this would orphan them, stopping`);
 
   tx.delete(familyChildren).where(eq(familyChildren.id, target.id)).run();
 
@@ -42,5 +42,5 @@ db.transaction(tx => {
   }).run();
 
   const left = links.filter(l => l.id !== target.id).map(l => l.familyId);
-  console.log(`${childId}: kopplingen till ${familyId} borttagen, kvar i ${left.join(', ')}`);
+  console.log(`${childId}: link to ${familyId} removed, still in ${left.join(', ')}`);
 });

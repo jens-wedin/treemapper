@@ -24,7 +24,7 @@ export function createMutationsApi(tree: TreeResolver) {
   api.patch('/api/persons/:id', async c => {
     const { db } = tree(c);
     const parsed = personUpdateSchema.safeParse(await parseBody(c));
-    if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? 'Ogiltiga fält' }, 400);
+    if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? 'Invalid fields' }, 400);
     return run(c, () => updatePerson(db, c.req.param('id'), parsed.data));
   });
 
@@ -32,21 +32,21 @@ export function createMutationsApi(tree: TreeResolver) {
   api.post('/api/persons', async c => {
     const { db } = tree(c);
     const parsed = newPersonSchema.safeParse(await parseBody(c));
-    if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? 'Ogiltiga fält' }, 400);
+    if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? 'Invalid fields' }, 400);
     return run(c, () => createPerson(db, parsed.data));
   });
 
   api.post('/api/events', async c => {
     const { db } = tree(c);
     const parsed = eventCreateSchema.safeParse(await parseBody(c));
-    if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? 'Ogiltiga fält' }, 400);
+    if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? 'Invalid fields' }, 400);
     return run(c, () => createEvent(db, parsed.data));
   });
 
   api.patch('/api/events/:id', async c => {
     const { db } = tree(c);
     const parsed = eventUpdateSchema.safeParse(await parseBody(c));
-    if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? 'Ogiltiga fält' }, 400);
+    if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? 'Invalid fields' }, 400);
     return run(c, () => updateEvent(db, Number(c.req.param('id')), parsed.data));
   });
 
@@ -55,7 +55,7 @@ export function createMutationsApi(tree: TreeResolver) {
   api.post('/api/relations', async c => {
     const { db } = tree(c);
     const parsed = relationSchema.safeParse(await parseBody(c));
-    if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? 'Ogiltiga fält' }, 400);
+    if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? 'Invalid fields' }, 400);
     return run(c, () => addRelation(db, parsed.data));
   });
 

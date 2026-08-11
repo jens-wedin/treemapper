@@ -14,9 +14,9 @@ export function createStatisticsApi(tree: TreeResolver) {
   api.get('/api/statistics', c => {
     const { db } = tree(c);
     const parsed = querySchema.safeParse(c.req.query());
-    if (!parsed.success) return c.json({ error: 'Ogiltiga parametrar' }, 400);
+    if (!parsed.success) return c.json({ error: 'Invalid parameters' }, 400);
     const data = getStatistics(db, parsed.data.person);
-    return data ? c.json(data) : c.json({ error: 'Personen finns inte' }, 404);
+    return data ? c.json(data) : c.json({ error: 'That person does not exist' }, 404);
   });
 
   return api;

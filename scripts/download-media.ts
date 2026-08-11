@@ -22,11 +22,11 @@ const fileFor = (m: { id: number; form: string | null }) => path.join(mediaDir, 
 
 const pending = db.select().from(media).where(ne(media.downloadStatus, 'done')).all();
 if (!pending.length) {
-  console.log('Alla foton är redan nedladdade.');
+  console.log('Every photo has already been downloaded.');
   process.exit(0);
 }
 fs.mkdirSync(mediaDir, { recursive: true });
-console.log(`Träd: ${treeId === DEFAULT_TREE ? defaultTreeId() : treeId} → ${mediaDir}`);
+console.log(`Tree: ${treeId === DEFAULT_TREE ? defaultTreeId() : treeId} → ${mediaDir}`);
 console.log(`Laddar ner ${pending.length} foton …`);
 
 const tasks: DownloadTask[] = pending.map(m => ({
@@ -58,16 +58,16 @@ if (failed.length) {
 const reportLines = [
   `# Mediarapport — ${now}`,
   '',
-  `Totalt i kön: ${pending.length} · Nedladdade: ${okIds.length} · Misslyckade: ${failed.length}`,
+  `Queued: ${pending.length} · Downloaded: ${okIds.length} · Failed: ${failed.length}`,
   '',
 ];
 if (failed.length) {
   const with403 = failed.filter(f => f.error?.includes('403')).length;
   if (with403) {
     reportLines.push(
-      `**${with403} fel är HTTP 403 — troligen utgångna signerade CDN-länkar.**`,
-      'Skaffa en färsk GEDCOM-export från MyHeritage och kör:',
-      '`npm run refresh-media -- data/<färsk-export>.ged` följt av `npm run media`.',
+      `**${with403} of the failures are HTTP 403 — most likely expired signed CDN links.**`,
+      'Take a fresh GEDCOM export from MyHeritage and run:',
+      '`npm run refresh-media -- data/<fresh-export>.ged` followed by `npm run media`.',
       '',
     );
   }

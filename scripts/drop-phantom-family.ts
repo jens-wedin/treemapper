@@ -19,7 +19,7 @@ import { families, familyChildren, events, citations, media, auditLog } from '..
 
 const [treeId, victimId, keeperId] = process.argv.slice(2);
 if (!treeId || !victimId || !keeperId) {
-  console.error('Användning: drop-phantom-family.ts <träd> <familj-att-ta-bort> <familj-som-blir-kvar>');
+  console.error('Usage: drop-phantom-family.ts <tree> <family-to-remove> <family-to-keep>');
   process.exit(1);
 }
 

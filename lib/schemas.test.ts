@@ -28,10 +28,10 @@ describe('eventCreateSchema', () => {
 });
 
 describe('newPersonSchema', () => {
-  it('requires a first name in Swedish', () => {
+  it('requires a first name', () => {
     const r = newPersonSchema.safeParse({ givenName: '' });
     expect(r.success).toBe(false);
-    if (!r.success) expect(r.error.issues[0]!.message).toBe('Förnamn krävs');
+    if (!r.success) expect(r.error.issues[0]!.message).toBe('A first name is required');
   });
   it('defaults surname and sex', () => {
     expect(newPersonSchema.parse({ givenName: 'Test' })).toEqual({ givenName: 'Test', surname: '', sex: 'U' });

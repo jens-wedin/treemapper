@@ -42,10 +42,10 @@ const dupes = [...groups.values()].filter(g => g.length > 1)
   .map(g => [...g].sort((a, b) => a.id - b.id));
 
 const redundant = dupes.flatMap(g => g.slice(1));
-console.log(`Träd            : ${treeId}`);
-console.log(`Händelser totalt: ${all.length}`);
+console.log(`Tree             : ${treeId}`);
+console.log(`Events in total  : ${all.length}`);
 console.log(`Identiska grupper: ${dupes.length}`);
-console.log(`Rader att ta bort: ${redundant.length}  (lägsta id:t i varje grupp behålls)`);
+console.log(`Rows to remove   : ${redundant.length}  (the lowest id in each group is kept)`);
 
 const byType = new Map<string, number>();
 for (const e of redundant) byType.set(e.type, (byType.get(e.type) ?? 0) + 1);
@@ -56,11 +56,11 @@ console.log('\nExempel:');
 for (const g of dupes.slice(0, 4)) {
   const [keep, ...drop] = g;
   console.log(`   ${keep!.ownerId} ${keep!.type} ${keep!.dateRaw ?? '—'} ${keep!.place ?? ''}`.slice(0, 90));
-  console.log(`      behåller ${keep!.id}, tar bort ${drop.map(d => d.id).join(', ')}`);
+  console.log(`      keeping ${keep!.id}, removing ${drop.map(d => d.id).join(', ')}`);
 }
 
 if (!apply) {
-  console.log('\nTorrkörning. Lägg till --apply för att göra det på riktigt.');
+  console.log('\nDry run. Add --apply to do it for real.');
   process.exit(0);
 }
 
@@ -93,4 +93,4 @@ db.transaction(tx => {
 });
 
 console.log(`\nTog bort ${redundant.length} rader.`);
-if (movedCitations) console.log(`Flyttade ${movedCitations} källhänvisningar till raden som blev kvar.`);
+if (movedCitations) console.log(`Moved ${movedCitations} citations onto the row that was kept.`);

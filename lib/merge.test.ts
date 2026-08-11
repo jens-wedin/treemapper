@@ -187,7 +187,7 @@ describe('mergePersons — skydd', () => {
   it('avvisar sammanslagning med sig själv och okända personer', () => {
     person('A');
     expect(() => mergePersons(db, { survivorId: 'A', duplicateId: 'A' })).toThrowError('sig själv');
-    expect(() => mergePersons(db, { survivorId: 'A', duplicateId: 'SAKNAS' })).toThrowError('finns inte');
+    expect(() => mergePersons(db, { survivorId: 'A', duplicateId: 'SAKNAS' })).toThrowError('does not exist');
   });
 
   it('avvisar sammanslagning inom samma släktlinje', () => {

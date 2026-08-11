@@ -35,7 +35,7 @@ describe('updatePerson', () => {
   });
 
   it('404s in Swedish for unknown persons', () => {
-    expect(() => updatePerson(db, 'I999', {})).toThrowError('Personen finns inte');
+    expect(() => updatePerson(db, 'I999', {})).toThrowError('That person does not exist');
   });
 });
 
@@ -58,14 +58,14 @@ describe('events', () => {
 
   it('accepts yearless dates with a warning — never rejects', () => {
     const r = createEvent(db, { type: 'EVEN', ownerType: 'person', ownerId: 'I1', dateRaw: 'okänt datum', place: null, description: null, age: null });
-    expect(r.warnings[0]).toContain('kunde inte tolkas');
+    expect(r.warnings[0]).toContain('could not be read');
     const e = db.select().from(events).where(eq(events.id, r.data.id)).all()[0];
     expect(e.dateRaw).toBe('okänt datum');
     expect(e.dateYear).toBeNull();
   });
 
   it('rejects events on missing owners', () => {
-    expect(() => createEvent(db, { type: 'OCCU', ownerType: 'person', ownerId: 'I999', dateRaw: null, place: null, description: null, age: null })).toThrowError('Ägaren finns inte');
+    expect(() => createEvent(db, { type: 'OCCU', ownerType: 'person', ownerId: 'I999', dateRaw: null, place: null, description: null, age: null })).toThrowError('That owner does not exist');
   });
 
   it('updates recomputing the year', () => {
@@ -98,11 +98,11 @@ describe('addRelation', () => {
     expect(p4).toMatchObject({ givenName: 'Nya', sex: 'F' });
   });
 
-  it('rejects duplicates, self-relations, cycles and re-marriage in Swedish', () => {
-    expect(() => addRelation(db, { type: 'child', personId: 'I1', relativeId: 'I3' })).toThrowError('redan barn');
-    expect(() => addRelation(db, { type: 'child', personId: 'I1', relativeId: 'I1' })).toThrowError('sin egen släkting');
-    expect(() => addRelation(db, { type: 'child', personId: 'I3', relativeId: 'I1' })).toThrowError('omöjlig släktlinje');
-    expect(() => addRelation(db, { type: 'spouse', personId: 'I1', relativeId: 'I2' })).toThrowError('redan partner');
+  it('rejects duplicates, self-relations, cycles and re-marriage', () => {
+    expect(() => addRelation(db, { type: 'child', personId: 'I1', relativeId: 'I3' })).toThrowError('already a child');
+    expect(() => addRelation(db, { type: 'child', personId: 'I1', relativeId: 'I1' })).toThrowError('their own relative');
+    expect(() => addRelation(db, { type: 'child', personId: 'I3', relativeId: 'I1' })).toThrowError('impossible line of descent');
+    expect(() => addRelation(db, { type: 'spouse', personId: 'I1', relativeId: 'I2' })).toThrowError('already partners');
   });
 
   it('creates a new family for a spouse', () => {
@@ -126,7 +126,7 @@ describe('addRelation', () => {
     const fill = addRelation(db, { type: 'parent', personId: 'I7', relativeId: 'I2' });
     expect(fill.data.familyId).toBe('F3');
     expect(db.select().from(families).where(eq(families.id, 'F3')).all()[0].wifeId).toBe('I2');
-    expect(() => addRelation(db, { type: 'parent', personId: 'I7', newPerson: { givenName: 'Tredje', surname: 'X', sex: 'M' } })).toThrowError('redan två föräldrar');
+    expect(() => addRelation(db, { type: 'parent', personId: 'I7', newPerson: { givenName: 'Tredje', surname: 'X', sex: 'M' } })).toThrowError('already has two parents');
   });
 
   it('creates a parent family when none exists', () => {
@@ -231,13 +231,13 @@ describe('createSource', () => {
 });
 
 describe('deleteSource', () => {
-  it('vägrar ta bort en källa som något hänvisar till', () => {
+  it('refuses to delete a source something still cites', () => {
     const id = createSource(db, { title: 'Citerad' }).data.id;
     db.insert(citations).values({ ownerType: 'person', ownerId: 'I1', sourceId: id }).run();
 
     // The citations are the reason the source exists; losing them silently
     // would strip the evidence from every record that leans on it.
-    expect(() => deleteSource(db, id)).toThrow(/hänvis/i);
+    expect(() => deleteSource(db, id)).toThrow(/still cites/i);
     expect(db.select().from(sources).where(eq(sources.id, id)).all()).toHaveLength(1);
   });
 
@@ -263,8 +263,8 @@ describe('deleteSource', () => {
     expect(db.select().from(sources).where(eq(sources.id, id)).all()).toHaveLength(0);
   });
 
-  it('säger ifrån om källan inte finns', () => {
-    expect(() => deleteSource(db, 'S999999')).toThrow(/finns inte/i);
+  it('says so when the source does not exist', () => {
+    expect(() => deleteSource(db, 'S999999')).toThrow(/does not exist/i);
   });
 });
 
@@ -282,10 +282,10 @@ describe('addCitation / removeCitation', () => {
       .some(a => a.entityType === 'citation' && a.action === 'create')).toBe(true);
   });
 
-  it('vägrar peka på en person eller källa som inte finns', () => {
+  it('refuses to point at a person or source that does not exist', () => {
     const sourceId = createSource(db, { title: 'Finns' }).data.id;
-    expect(() => addCitation(db, { ownerType: 'person', ownerId: 'I999999', sourceId })).toThrow(/finns inte/i);
-    expect(() => addCitation(db, { ownerType: 'person', ownerId: 'I1', sourceId: 'S999999' })).toThrow(/finns inte/i);
+    expect(() => addCitation(db, { ownerType: 'person', ownerId: 'I999999', sourceId })).toThrow(/does not exist/i);
+    expect(() => addCitation(db, { ownerType: 'person', ownerId: 'I1', sourceId: 'S999999' })).toThrow(/does not exist/i);
   });
 
   it('tas bort igen, med sin före-bild kvar i loggen', () => {

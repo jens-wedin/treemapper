@@ -10,7 +10,7 @@ export function createMergeApi(tree: TreeResolver) {
   api.post('/api/merge', async c => {
     const { db } = tree(c);
     const parsed = mergeSchema.safeParse(await c.req.json().catch(() => ({})));
-    if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? 'Ogiltiga fält' }, 400);
+    if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? 'Invalid fields' }, 400);
     try {
       const { warnings, data } = mergePersons(db, parsed.data);
       return c.json({ ok: true, warnings, data });

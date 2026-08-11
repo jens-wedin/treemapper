@@ -55,7 +55,7 @@ export function refreshMediaUrls(gedPath: string, dbPath: string): RefreshResult
         .run();
       matched++;
     } else {
-      unmatched.push({ id: row.id, reason: 'ingen träff i den nya exporten' });
+      unmatched.push({ id: row.id, reason: 'no match in the new export' });
     }
   }
   return { matched, unmatched, total: rows.length };

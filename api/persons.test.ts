@@ -44,9 +44,9 @@ describe('GET /api/persons/:id/full', () => {
     expect(body.events.length).toBeGreaterThan(0);
   });
 
-  it('404s in Swedish for unknown persons', async () => {
+  it('404s for an unknown person', async () => {
     const res = await api.request('/api/persons/I999/full');
     expect(res.status).toBe(404);
-    expect((await res.json()).error).toBe('Personen finns inte');
+    expect((await res.json()).error).toBe('That person does not exist');
   });
 });

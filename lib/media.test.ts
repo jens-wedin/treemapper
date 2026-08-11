@@ -54,11 +54,11 @@ describe('adding a photo', () => {
 
   it('refuses what is not an image, an empty file, and an unknown person', () => {
     expect(() => addPhoto(db, { ownerId: 'I1', title: null, mimeType: 'application/pdf', bytes: PIXEL }, photoDir()))
-      .toThrow(/stöds inte/);
+      .toThrow(/not supported/);
     expect(() => addPhoto(db, { ownerId: 'I1', title: null, mimeType: 'image/png', bytes: Buffer.alloc(0) }, photoDir()))
-      .toThrow(/tom/);
+      .toThrow(/empty/);
     expect(() => addPhoto(db, { ownerId: 'I999', title: null, mimeType: 'image/png', bytes: PIXEL }, photoDir()))
-      .toThrow(/finns inte/);
+      .toThrow(/does not exist/);
     expect(db.select().from(media).all()).toHaveLength(0);
   });
 });
@@ -77,6 +77,6 @@ describe('removing a photo', () => {
   });
 
   it('says so when the photo is not there', () => {
-    expect(() => removePhoto(db, 999)).toThrow(/finns inte/);
+    expect(() => removePhoto(db, 999)).toThrow(/does not exist/);
   });
 });

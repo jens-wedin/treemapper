@@ -51,7 +51,7 @@ export function createTreesApi() {
   api.post('/api/trees', async c => {
     const body = await c.req.json().catch(() => ({}));
     const name = typeof body.name === 'string' ? body.name.trim() : '';
-    if (!name) return c.json({ error: 'Ge släktträdet ett namn' }, 400);
+    if (!name) return c.json({ error: 'Give the family tree a name' }, 400);
     return c.json({ ok: true, tree: createEmptyTree(name) });
   });
 
@@ -59,7 +59,7 @@ export function createTreesApi() {
     '/api/trees/import',
     bodyLimit({
       maxSize: MAX_UPLOAD,
-      onError: c => c.json({ error: 'Filen är för stor — högst 50 MB' }, 413),
+      onError: c => c.json({ error: 'That file is too large — 50 MB at most' }, 413),
     }),
     async c => {
       const body = await c.req.parseBody();
@@ -86,7 +86,7 @@ export function createTreesApi() {
           hasPeople = false;   // unreadable is the same answer as empty, to the person uploading
         }
         if (!hasPeople) {
-          return c.json({ error: 'Filen innehåller inga personer — är det verkligen en GEDCOM-fil?' }, 400);
+          return c.json({ error: 'That file contains no people — is it really a GEDCOM file?' }, 400);
         }
         const { tree, summary } = createTree(name, tmp, file.name);
         return c.json({ ok: true, tree, summary });

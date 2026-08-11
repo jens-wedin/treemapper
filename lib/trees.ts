@@ -31,7 +31,7 @@ export interface TreeInfo {
 
 export class TreeNotFound extends Error {
   constructor(id: string) {
-    super(`Släktträdet finns inte: ${id}`);
+    super(`That family tree does not exist: ${id}`);
     this.name = 'TreeNotFound';
   }
 }
@@ -295,7 +295,7 @@ export function createEmptyTree(name: string): TreeInfo {
 
 export function renameTree(id: string, name: string): TreeInfo {
   const trimmed = name.trim();
-  if (!trimmed) throw new Error('Ett släktträd måste ha ett namn');
+  if (!trimmed) throw new Error('A family tree must have a name');
   const db = openTree(id);
   db.update(treeMeta).set({ name: trimmed }).where(eq(treeMeta.id, 1)).run();
   return infoFor(id);
@@ -308,7 +308,7 @@ export function deleteTree(id: string) {
   // family database.
   const file = fileFor(id);
   if (path.resolve(file) === path.resolve(defaultDbPath())) {
-    throw new Error('Det ursprungliga släktträdet kan inte tas bort');
+    throw new Error('The original family tree cannot be removed');
   }
   if (!fs.existsSync(file)) throw new TreeNotFound(id);
 

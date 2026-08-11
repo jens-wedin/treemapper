@@ -29,7 +29,7 @@ const target = mediaDirFor(treeId);
 const root = path.dirname(target);
 
 if (path.resolve(target) === path.resolve(root)) {
-  throw new Error(`${treeId} pekar redan på mediaroten — inget att flytta`);
+  throw new Error(`${treeId} already points at the media root — nothing to move`);
 }
 
 const rows = db.select().from(media).all();
@@ -47,18 +47,18 @@ const loose = fs.existsSync(root)
 const orphans = loose.filter(name => !wanted.has(name));
 const missing = [...wanted.keys()].filter(name => !loose.includes(name) && !fs.existsSync(path.join(target, name)));
 
-console.log(`Träd            : ${treeId}`);
-console.log(`Från            : ${root}/`);
+console.log(`Tree            : ${treeId}`);
+console.log(`From            : ${root}/`);
 console.log(`Till            : ${target}/`);
 console.log(`Rader i databasen: ${rows.length}`);
 console.log(`Filer att flytta : ${loose.length}  (varav ${orphans.length} utan rad — borttagna foton vars fil sparats)`);
 if (missing.length) {
-  console.log(`\nSAKNAS PÅ DISK (${missing.length}) — flyttas inte, rader lämnas orörda:`);
+  console.log(`\nMISSING ON DISK (${missing.length}) — not moved, rows left untouched:`);
   for (const m of missing.slice(0, 10)) console.log(`   ${m}`);
 }
 
 if (!apply) {
-  console.log('\nTorrkörning. Lägg till --apply för att göra det på riktigt.');
+  console.log('\nDry run. Add --apply to do it for real.');
   process.exit(0);
 }
 
@@ -68,7 +68,7 @@ let moved = 0;
 for (const name of loose) {
   const from = path.join(root, name);
   const to = path.join(target, name);
-  if (fs.existsSync(to)) throw new Error(`${to} finns redan — avbryter innan något skrivs över`);
+  if (fs.existsSync(to)) throw new Error(`${to} already exists — stopping before anything is overwritten`);
   fs.renameSync(from, to);
   moved++;
 }

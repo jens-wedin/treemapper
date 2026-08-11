@@ -30,7 +30,7 @@ export function createIssuesApi(tree: TreeResolver) {
   api.get('/api/issues', c => {
     const { db } = tree(c);
     const parsed = querySchema.safeParse(c.req.query());
-    if (!parsed.success) return c.json({ error: 'Ogiltiga parametrar' }, 400);
+    if (!parsed.success) return c.json({ error: 'Invalid parameters' }, 400);
     const { category, severity, includeDismissed, limit } = parsed.data;
 
     const dismissed = new Set(db.select().from(issueDismissals).all().map(d => d.fingerprint));
@@ -82,7 +82,7 @@ export function createIssuesApi(tree: TreeResolver) {
   api.post('/api/issues/dismiss', async c => {
     const { db } = tree(c);
     const parsed = dismissSchema.safeParse(await c.req.json().catch(() => ({})));
-    if (!parsed.success) return c.json({ error: 'Ogiltigt fingeravtryck' }, 400);
+    if (!parsed.success) return c.json({ error: 'Invalid fingerprint' }, 400);
     const { fingerprint, note } = parsed.data;
     db.insert(issueDismissals)
       .values({ fingerprint, dismissedAt: new Date().toISOString(), note: note ?? null })

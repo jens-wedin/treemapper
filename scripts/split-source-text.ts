@@ -46,11 +46,11 @@ const movable = rows.filter(s => {
   return text !== null && text === s.note;
 });
 
-console.log(`Träd              : ${treeId}`);
-console.log(`Källor            : ${rows.length}`);
+console.log(`Tree               : ${treeId}`);
+console.log(`Sources            : ${rows.length}`);
 console.log(`Har en anteckning : ${rows.filter(s => s.note).length}`);
-console.log(`Kom från SOUR.TEXT: ${movable.length}  ← flyttas till transkription`);
-console.log(`Egna anteckningar : ${rows.filter(s => s.note).length - movable.length}  ← lämnas i fred`);
+console.log(`Came from SOUR.TEXT: ${movable.length}  ← moved to the transcription`);
+console.log(`Your own notes     : ${rows.filter(s => s.note).length - movable.length}  ← left alone`);
 
 if (!apply) {
   console.log('\nExempel:');
@@ -58,7 +58,7 @@ if (!apply) {
     console.log(`   ${s.id}  ${(s.title ?? '').slice(0, 50)}`);
     console.log(`      ${(s.note ?? '').replace(/\s+/g, ' ').slice(0, 100)}`);
   }
-  console.log('\nTorrkörning. Lägg till --apply för att göra det på riktigt.');
+  console.log('\nDry run. Add --apply to do it for real.');
   process.exit(0);
 }
 
@@ -83,4 +83,4 @@ db.transaction(tx => {
   }
 });
 
-console.log(`\nFlyttade ${movable.length} källtexter.`);
+console.log(`\nMoved ${movable.length} source texts.`);

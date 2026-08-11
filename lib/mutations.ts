@@ -28,14 +28,14 @@ export function audit(tx: Tx, action: 'create' | 'update' | 'delete', entityType
 // saved verbatim with a warning, never rejected.
 function dateWarnings(dateRaw: string | null | undefined): string[] {
   return dateRaw && extractYear(dateRaw) == null
-    ? ['Datumet kunde inte tolkas – året lämnas tomt.']
+    ? ['The date could not be read — the year is left empty.']
     : [];
 }
 
 export function updatePerson(db: Db, id: string, patch: PersonUpdate): MutationResult {
   return db.transaction(tx => {
     const before = tx.select().from(persons).where(eq(persons.id, id)).all()[0];
-    if (!before) throw new MutationError('Personen finns inte', 404);
+    if (!before) throw new MutationError('That person does not exist', 404);
     tx.update(persons).set({ ...patch, updatedAt: new Date().toISOString() }).where(eq(persons.id, id)).run();
     const after = tx.select().from(persons).where(eq(persons.id, id)).all()[0];
     audit(tx, 'update', 'person', id, before, after);
@@ -52,7 +52,7 @@ export function updatePerson(db: Db, id: string, patch: PersonUpdate): MutationR
  */
 export function createSource(db: Db, input: SourceUpdate): MutationResult<{ id: string }> {
   const title = input.title?.trim();
-  if (!title) throw new MutationError('Källan behöver en titel', 400);
+  if (!title) throw new MutationError('A source needs a title', 400);
   return db.transaction(tx => {
     const id = nextId(tx, sources, 'S');
     tx.insert(sources).values({ ...input, id, title }).run();
@@ -79,10 +79,10 @@ export function createSource(db: Db, input: SourceUpdate): MutationResult<{ id: 
 export function addCitation(db: Db, input: CitationCreate): MutationResult<{ id: number }> {
   return db.transaction(tx => {
     if (!tx.select().from(persons).where(eq(persons.id, input.ownerId)).all().length) {
-      throw new MutationError('Personen finns inte', 404);
+      throw new MutationError('That person does not exist', 404);
     }
     if (!tx.select().from(sources).where(eq(sources.id, input.sourceId)).all().length) {
-      throw new MutationError('Källan finns inte', 404);
+      throw new MutationError('That source does not exist', 404);
     }
     const row = {
       ownerType: input.ownerType,
@@ -102,7 +102,7 @@ export function addCitation(db: Db, input: CitationCreate): MutationResult<{ id:
 export function removeCitation(db: Db, id: number): MutationResult {
   return db.transaction(tx => {
     const before = tx.select().from(citations).where(eq(citations.id, id)).all()[0];
-    if (!before) throw new MutationError('Källhänvisningen finns inte', 404);
+    if (!before) throw new MutationError('That citation does not exist', 404);
     tx.delete(citations).where(eq(citations.id, id)).run();
     audit(tx, 'delete', 'citation', id, before, null);
     return { warnings: [], data: null };
@@ -116,12 +116,12 @@ export function deleteSource(
 ): MutationResult<{ removedCitations: number }> {
   return db.transaction(tx => {
     const before = tx.select().from(sources).where(eq(sources.id, id)).all()[0];
-    if (!before) throw new MutationError('Källan finns inte', 404);
+    if (!before) throw new MutationError('That source does not exist', 404);
 
     const cited = tx.select().from(citations).where(eq(citations.sourceId, id)).all();
     if (cited.length && !opts.withCitations) {
       throw new MutationError(
-        `Källan har ${cited.length} källhänvisningar. Ta bort dem också för att radera källan.`,
+        `Something still cites that source — ${cited.length} in total. Remove those citations too if you mean to delete it.`,
         409,
       );
     }
@@ -136,7 +136,7 @@ export function deleteSource(
 export function updateSource(db: Db, id: string, patch: SourceUpdate): MutationResult {
   return db.transaction(tx => {
     const before = tx.select().from(sources).where(eq(sources.id, id)).all()[0];
-    if (!before) throw new MutationError('Källan finns inte', 404);
+    if (!before) throw new MutationError('That source does not exist', 404);
     tx.update(sources).set(patch).where(eq(sources.id, id)).run();
     const after = tx.select().from(sources).where(eq(sources.id, id)).all()[0];
     audit(tx, 'update', 'source', id, before, after);
@@ -147,7 +147,7 @@ export function updateSource(db: Db, id: string, patch: SourceUpdate): MutationR
 function assertOwnerExists(tx: Tx, ownerType: 'person' | 'family', ownerId: string) {
   const table = ownerType === 'person' ? persons : families;
   if (!tx.select().from(table).where(eq(table.id, ownerId)).all().length) {
-    throw new MutationError('Ägaren finns inte', 404);
+    throw new MutationError('That owner does not exist', 404);
   }
 }
 
@@ -180,7 +180,7 @@ export function createEvent(db: Db, input: EventCreate): MutationResult<{ id: nu
 export function updateEvent(db: Db, id: number, patch: EventUpdate): MutationResult {
   return db.transaction(tx => {
     const before = tx.select().from(events).where(eq(events.id, id)).all()[0];
-    if (!before) throw new MutationError('Händelsen finns inte', 404);
+    if (!before) throw new MutationError('That event does not exist', 404);
     const set = { ...patch, ...(patch.dateRaw !== undefined ? { dateYear: extractYear(patch.dateRaw) } : {}) };
     tx.update(events).set(set).where(eq(events.id, id)).run();
     const after = tx.select().from(events).where(eq(events.id, id)).all()[0];
@@ -192,7 +192,7 @@ export function updateEvent(db: Db, id: number, patch: EventUpdate): MutationRes
 export function deleteEvent(db: Db, id: number): MutationResult {
   return db.transaction(tx => {
     const before = tx.select().from(events).where(eq(events.id, id)).all()[0];
-    if (!before) throw new MutationError('Händelsen finns inte', 404);
+    if (!before) throw new MutationError('That event does not exist', 404);
     const cits = tx.select().from(citations)
       .where(and(eq(citations.ownerType, 'event'), eq(citations.ownerId, String(id)))).all();
     for (const c of cits) {
@@ -205,7 +205,7 @@ export function deleteEvent(db: Db, id: number): MutationResult {
   });
 }
 
-const CYCLE_MSG = 'Detta skulle skapa en omöjlig släktlinje (personen skulle bli sin egen förfader).';
+const CYCLE_MSG = 'This would create an impossible line of descent (the person would become their own ancestor).';
 
 // MyHeritage seeds sentinel records far outside the real sequence (e.g.
 // I88888888 "Unassociated photos"); ignore those so new ids continue the
@@ -245,13 +245,13 @@ export function isAncestor(tx: Tx, ancestorId: string, personId: string): boolea
 export function addRelation(db: Db, input: RelationInput): MutationResult<{ relativeId: string; familyId: string }> {
   return db.transaction(tx => {
     const person = tx.select().from(persons).where(eq(persons.id, input.personId)).all()[0];
-    if (!person) throw new MutationError('Personen finns inte', 404);
+    if (!person) throw new MutationError('That person does not exist', 404);
 
     let relativeId: string;
     let relativeSex: 'M' | 'F' | 'U';
     if (input.relativeId) {
       const rel = tx.select().from(persons).where(eq(persons.id, input.relativeId)).all()[0];
-      if (!rel) throw new MutationError('Personen finns inte', 404);
+      if (!rel) throw new MutationError('That person does not exist', 404);
       relativeId = rel.id;
       relativeSex = rel.sex;
     } else {
@@ -261,7 +261,7 @@ export function addRelation(db: Db, input: RelationInput): MutationResult<{ rela
       tx.insert(persons).values({ id: relativeId, givenName: np.givenName, surname: np.surname, sex: np.sex }).run();
       audit(tx, 'create', 'person', relativeId, null, tx.select().from(persons).where(eq(persons.id, relativeId)).all()[0]);
     }
-    if (relativeId === input.personId) throw new MutationError('En person kan inte vara sin egen släkting.');
+    if (relativeId === input.personId) throw new MutationError('A person cannot be their own relative.');
 
     const createFamily = (husbandId: string | null, wifeId: string | null): string => {
       const fid = nextId(tx, families, 'F');
@@ -286,7 +286,7 @@ export function addRelation(db: Db, input: RelationInput): MutationResult<{ rela
 
     const addChildLink = (familyId: string, childId: string) => {
       const links = tx.select().from(familyChildren).where(eq(familyChildren.familyId, familyId)).all();
-      if (links.some(l => l.childId === childId)) throw new MutationError('Personen är redan barn i den här familjen.', 409);
+      if (links.some(l => l.childId === childId)) throw new MutationError('That person is already a child in this family.', 409);
       const seq = links.length ? Math.max(...links.map(l => l.seq)) + 1 : 0;
       tx.insert(familyChildren).values({ familyId, childId, seq }).run();
       audit(tx, 'create', 'family_child', `${familyId}:${childId}`, null, { familyId, childId, seq });
@@ -299,7 +299,7 @@ export function addRelation(db: Db, input: RelationInput): MutationResult<{ rela
         .where(or(eq(families.husbandId, input.personId), eq(families.wifeId, input.personId))).all();
       if (input.familyId) {
         const f = own.find(f => f.id === input.familyId);
-        if (!f) throw new MutationError('Familjen finns inte', 404);
+        if (!f) throw new MutationError('That family does not exist', 404);
         familyId = f.id;
       } else if (own.length === 1) {
         familyId = own[0]!.id;
@@ -307,7 +307,7 @@ export function addRelation(db: Db, input: RelationInput): MutationResult<{ rela
         const slots = slotsFor(input.personId, person.sex);
         familyId = createFamily(slots.husbandId, slots.wifeId);
       } else {
-        throw new MutationError('Ange vilken familj barnet ska läggas i.');
+        throw new MutationError('Say which family the child should join.');
       }
       addChildLink(familyId, relativeId);
     } else if (input.type === 'spouse') {
@@ -316,12 +316,12 @@ export function addRelation(db: Db, input: RelationInput): MutationResult<{ rela
       if (own.some(f =>
         (f.husbandId === input.personId && f.wifeId === relativeId) ||
         (f.wifeId === input.personId && f.husbandId === relativeId))) {
-        throw new MutationError('Personerna är redan partner.', 409);
+        throw new MutationError('Those people are already partners.', 409);
       }
       if (input.familyId) {
         const f = own.find(f => f.id === input.familyId);
-        if (!f) throw new MutationError('Familjen finns inte', 404);
-        fillSpouseSlot(f.id, relativeId, relativeSex, 'Familjen har redan två partner.');
+        if (!f) throw new MutationError('That family does not exist', 404);
+        fillSpouseSlot(f.id, relativeId, relativeSex, 'That family already has two partners.');
         familyId = f.id;
       } else {
         const slots = slotsFor(input.personId, person.sex);
@@ -336,15 +336,15 @@ export function addRelation(db: Db, input: RelationInput): MutationResult<{ rela
         ? tx.select().from(families).where(inArray(families.id, links.map(l => l.familyId))).all()
         : [];
       if (parentFams.some(f => f.husbandId === relativeId || f.wifeId === relativeId)) {
-        throw new MutationError('Personen är redan förälder.', 409);
+        throw new MutationError('That person is already a parent.', 409);
       }
       const target = input.familyId
         ? parentFams.find(f => f.id === input.familyId)
         : parentFams.find(f => !f.husbandId || !f.wifeId);
-      if (input.familyId && !target) throw new MutationError('Familjen finns inte', 404);
-      if (!target && parentFams.length) throw new MutationError('Personen har redan två föräldrar.', 409);
+      if (input.familyId && !target) throw new MutationError('That family does not exist', 404);
+      if (!target && parentFams.length) throw new MutationError('That person already has two parents.', 409);
       if (target) {
-        fillSpouseSlot(target.id, relativeId, relativeSex, 'Familjen har redan två föräldrar.');
+        fillSpouseSlot(target.id, relativeId, relativeSex, 'That family already has two parents.');
         familyId = target.id;
       } else {
         const slots = slotsFor(relativeId, relativeSex);
@@ -370,7 +370,7 @@ export function removeChildLink(db: Db, familyId: string, childId: string): Muta
     const link = tx.select().from(familyChildren)
       .where(and(eq(familyChildren.familyId, familyId), eq(familyChildren.childId, childId)))
       .all()[0];
-    if (!link) throw new MutationError('Barnet finns inte i familjen', 404);
+    if (!link) throw new MutationError('That child is not in that family', 404);
 
     tx.delete(familyChildren).where(eq(familyChildren.id, link.id)).run();
     audit(tx, 'delete', 'familyChild', `${familyId}/${childId}`, link, null);

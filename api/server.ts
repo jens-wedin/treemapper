@@ -39,4 +39,4 @@ app.get('/api/health', c => c.json({ db: path.resolve(process.env.WEDIN_DB ?? 'w
 
 const port = Number(process.env.API_PORT ?? 3001);
 serve({ fetch: app.fetch, port });
-console.log(`API igång på http://localhost:${port}`);
+console.log(`API listening on http://localhost:${port}`);

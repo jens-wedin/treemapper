@@ -43,10 +43,10 @@ describe('GET /api/statistics', () => {
     expect(body.lives.total).toBe(2);          // jag + mor, inte utom
   });
 
-  it('ger 404 för en okänd person', async () => {
+  it('gives a 404 for an unknown person', async () => {
     const res = await get('/api/statistics?person=finns-inte');
     expect(res.status).toBe(404);
-    expect((await res.json()).error).toBe('Personen finns inte');
+    expect((await res.json()).error).toBe('That person does not exist');
   });
 
   it('ger 400 för ett tomt person-id', async () => {

@@ -48,7 +48,7 @@ describe('GET /api/sources/:id/full', () => {
   it('404 på svenska för okänd källa', async () => {
     const res = await api.request('/api/sources/S999/full');
     expect(res.status).toBe(404);
-    expect((await res.json()).error).toBe('Källan finns inte');
+    expect((await res.json()).error).toBe('That source does not exist');
   });
 });
 

@@ -44,7 +44,7 @@ export function createMediaApi(tree: TreeResolver, dirFor = mediaDirFor) {
     '/api/media',
     bodyLimit({
       maxSize: MAX_PHOTO_BYTES,
-      onError: c => c.json({ error: 'Bilden är för stor — högst 25 MB' }, 413),
+      onError: c => c.json({ error: 'That image is too large — 25 MB at most' }, 413),
     }),
     async c => {
       const { id: treeId, db } = tree(c);

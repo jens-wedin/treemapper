@@ -46,7 +46,7 @@ export function mergeDuplicates(dbPath: string, seed: string[], apply: boolean) 
   });
 
   const before = count();
-  console.log(`Utgångsläge: ${before.persons} personer, ${before.families} familjer, ${before.issues} konsekvensproblem`);
+  console.log(`Starting point: ${before.persons} people, ${before.families} families, ${before.issues} problems`);
 
   const scope = branchMembers(db, seed);
   console.log(`Grenen omfattar ${scope.size} personer.\n`);
@@ -70,25 +70,25 @@ export function mergeDuplicates(dbPath: string, seed: string[], apply: boolean) 
       const parentInCluster = [family.husbandId, family.wifeId]
         .find(p => p && p !== link.childId && ids.includes(p));
       if (!parentInCluster) continue;
-      console.log(`  lossar ${link.childId} ur ${link.familyId}: står som barn till ${parentInCluster}, som är samma person`);
+      console.log(`  detaching ${link.childId} from ${link.familyId}: recorded as a child of ${parentInCluster}, who is the same person`);
       if (apply) removeChildLink(db, link.familyId, link.childId);
     }
   };
 
-  // Barnen först, i rundor: varje sammanslagning kan avslöja nya dubbletter en
-  // generation ned, när två grenar plötsligt sitter under samma förälder.
+  // Children first, in rounds: every merge can reveal new duplicates a
+  // generation down, when two branches suddenly sit under the same parent.
   for (let round = 1; round <= MAX_ROUNDS; round++) {
     const members = branchMembers(db, seed);
     for (const id of seed) members.delete(id);
     const clusters = duplicateClusters(db, members);
     if (!clusters.length) {
-      console.log(`Runda ${round}: inget mer att slå ihop bland ättlingarna.`);
+      console.log(`Round ${round}: nothing left to merge among the descendants.`);
       break;
     }
     console.log(`Runda ${round}: ${clusters.length} klungor`);
     for (const { ids } of clusters) {
       const [survivor, ...duplicates] = ids;
-      console.log(`  behåll ${survivor} ${name(db, survivor!).padEnd(34)} ← ${duplicates.join(', ')}`);
+      console.log(`  keep ${survivor} ${name(db, survivor!).padEnd(34)} ← ${duplicates.join(', ')}`);
       detachInsideCluster(ids);
       for (const duplicate of duplicates) {
         try {
@@ -99,12 +99,12 @@ export function mergeDuplicates(dbPath: string, seed: string[], apply: boolean) 
         }
       }
     }
-    if (!apply) break;   // utan skrivning ser nästa runda exakt likadan ut
+    if (!apply) break;   // without writing, the next round would look exactly the same
   }
 
-  // … och sedan utgångspersonerna själva, vilket fäller ihop deras familjer.
-  // Flera varv: fäderna kan bara paras ihop på partner, och partnern blir en
-  // enda person först när modern har slagits ihop.
+  // … then the starting people themselves, which collapses their families.
+  // Several rounds: fathers can only be paired on their spouse, and the spouse
+  // becomes one person only once the mother has been merged.
   const living = () => new Set(seed.filter(id => db.select().from(persons).where(eq(persons.id, id)).all().length));
   for (let round = 1; round <= MAX_ROUNDS; round++) {
     const clusters = duplicateClusters(db, living());
@@ -112,7 +112,7 @@ export function mergeDuplicates(dbPath: string, seed: string[], apply: boolean) 
     let progress = 0;
     for (const { ids } of clusters) {
       const [survivor, ...duplicates] = ids;
-      console.log(`\nUtgångspersoner: behåll ${survivor} ${name(db, survivor!)} ← ${duplicates.join(', ')}`);
+      console.log(`\nStarting people: keep ${survivor} ${name(db, survivor!)} ← ${duplicates.join(', ')}`);
       detachInsideCluster(ids);
       for (const duplicate of duplicates) {
         try {
@@ -127,9 +127,10 @@ export function mergeDuplicates(dbPath: string, seed: string[], apply: boolean) 
     if (!apply || !progress) break;   // ett varv utan framsteg upprepar sig i evighet
   }
 
-  // Vad som blev kvar och behöver en människas omdöme. Klustringen kräver
-  // exakt samma födelsedatum, så den som skrivits av med olika noggrannhet
-  // ("1784" mot "11 NOV 1784") eller rent olika ("5 MAR 1785") står kvar. Den
+  // What is left and needs human judgement. The clustering requires exactly
+  // the same birth date, so anyone transcribed at a different precision
+  // ("1784" against "11 NOV 1784") or plainly differently ("5 MAR 1785")
+  // remains. The
   // gissar inte — den pekar.
   const left = branchMembers(db, seed);
   const people = new Map(db.select().from(persons).all().map(p => [p.id, p]));
@@ -140,8 +141,8 @@ export function mergeDuplicates(dbPath: string, seed: string[], apply: boolean) 
   for (const e of evNow) {
     if (e.ownerType === 'person' && e.type === 'BIRT' && e.dateRaw && !birthOf.has(e.ownerId)) birthOf.set(e.ownerId, e.dateRaw);
   }
-  // Uppslag byggda en gång: paret-mot-paret-jämförelsen nedan är kvadratisk,
-  // och en tabellgenomsökning per jämförelse tar minuter i stället för
+  // Lookups built once: the pair-against-pair comparison below is quadratic,
+  // and a table scan per comparison takes minutes instead of
   // millisekunder.
   const partnerSet = new Map<string, Set<string>>();
   const childSet = new Map<string, Set<string>>();
@@ -171,16 +172,16 @@ export function mergeDuplicates(dbPath: string, seed: string[], apply: boolean) 
     for (let j = i + 1; j < members.length; j++) {
       const a = people.get(members[i]!), b = people.get(members[j]!);
       if (!a || !b) continue;
-      // Båda kraven behövs. Att dela barn säger ingenting i sig — det gör
-      // varje gift par. Att dela partner räcker inte heller: en änka som gifte
-      // om sig ger två män med samma hustru. Men två poster som både är gifta
-      // med samma tredje person OCH har samma barn är samma människa.
+      // Both conditions are needed. Sharing children says nothing on its own —
+      // every married couple does. Sharing a spouse is not enough either: a
+      // widow who remarried gives two men with the same wife. But two records
+      // married to the same third person AND sharing children are one person.
       if (!overlaps(partnerSet.get(a.id), partnerSet.get(b.id))) continue;
       if (!overlaps(childSet.get(a.id), childSet.get(b.id))) continue;
       if (birthOf.get(a.id) && birthOf.get(a.id) === birthOf.get(b.id)) continue;   // hade klustrats
       candidates.push(
         `${a.id} ${name(db, a.id)} (f. ${birthOf.get(a.id) ?? '—'}) och ${b.id} ${name(db, b.id)} (f. ${birthOf.get(b.id) ?? '—'})`
-        + ' — gifta med samma person och med samma barn, men olika födelsedatum',
+        + ' — married to the same person and sharing children, but with different birth dates',
       );
     }
   }
@@ -195,11 +196,11 @@ export function mergeDuplicates(dbPath: string, seed: string[], apply: boolean) 
       return other && other.id !== id
         && `${other.givenName} ${other.surname}`.trim().toLowerCase() === `${p.givenName} ${p.surname}`.trim().toLowerCase();
     });
-    if (namesakes.length) twins.push(`${id} ${name(db, id)} — samma namn som ${namesakes.map(l => l.childId).join(', ')} i samma familj, ingen av dem har födelsedatum`);
+    if (namesakes.length) twins.push(`${id} ${name(db, id)} — same name as ${namesakes.map(l => l.childId).join(', ')} in the same family, and none of them has a birth date`);
   }
 
   if (candidates.length || twins.length) {
-    console.log('\nKvar för handpåläggning (slås ihop i Konsekvensbänken om du håller med):');
+    console.log('\nLeft for a human (merge them in Konsekvensbänken if you agree):');
     for (const line of [...new Set([...candidates, ...twins])]) console.log('  ' + line);
   }
   if (failures.length) {
@@ -208,11 +209,11 @@ export function mergeDuplicates(dbPath: string, seed: string[], apply: boolean) 
   }
 
   const after = count();
-  console.log(`\n${merged} sammanslagningar${apply ? '' : ' (torrkörning)'}`);
+  console.log(`\n${merged} merges${apply ? '' : ' (dry run)'}`);
   console.log(`Efter: ${after.persons} personer, ${after.families} familjer, ${after.issues} konsekvensproblem`);
   console.log(`Skillnad: ${after.persons - before.persons} personer, ${after.families - before.families} familjer, ${after.issues - before.issues} problem`);
 
-  if (!apply) console.log('\nTorrkörning — inget skrevs. Kör med --apply för att spara.');
+  if (!apply) console.log('\nDry run — nothing was written. Run with --apply to save.');
   return { merged, failures, before, after };
 }
 
@@ -221,15 +222,15 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   const seed = process.argv.slice(2).filter(a => !a.startsWith('--'));
   const dbPath = process.env.WEDIN_DB ?? 'wedin.db';
   if (!seed.length) {
-    console.error('Ange minst en person att utgå från: npm run merge-duplicates -- I500101 I500102');
+    console.error('Name at least one person to start from: npm run merge-duplicates -- I500101 I500102');
     process.exit(1);
   }
   if (apply) {
-    // Aldrig skriva över en tidigare säkerhetskopia.
+    // Never overwrite an earlier backup.
     let backup = `${dbPath}.before-merge`;
     for (let n = 2; fs.existsSync(backup); n++) backup = `${dbPath}.before-merge.${n}`;
     fs.copyFileSync(dbPath, backup);
-    console.log(`Säkerhetskopia: ${backup}\n`);
+    console.log(`Backup: ${backup}\n`);
   }
   mergeDuplicates(dbPath, seed, apply);
 }

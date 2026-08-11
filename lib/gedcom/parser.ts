@@ -51,7 +51,7 @@ export function parseGedcom(text: string, warnings?: string[]): GedcomNode[] {
     if (!m || (level > 0 && !parent)) {
       if (!last) throw new Error(`Malformed GEDCOM line: ${JSON.stringify(line)}`);
       last.value = (last.value ?? '') + '\n' + line;
-      warnings?.push(`rad ${lineNo}: oigenkännlig rad tolkad som fortsättning: ${JSON.stringify(line)}`);
+      warnings?.push(`line ${lineNo}: unrecognisable line read as a continuation: ${JSON.stringify(line)}`);
       continue;
     }
 

@@ -15,7 +15,7 @@ import { families, familyChildren, auditLog } from '../db/schema';
 
 const [treeId, childId, fromId, toId, reason] = process.argv.slice(2);
 if (!treeId || !childId || !fromId || !toId) {
-  console.error('Användning: move-child.ts <träd> <person> <från-familj> <till-familj> "<skäl>"');
+  console.error('Usage: move-child.ts <tree> <person> <from-family> <to-family> "<reason>"');
   process.exit(1);
 }
 
@@ -27,11 +27,11 @@ db.transaction(tx => {
   }
   const link = tx.select().from(familyChildren)
     .where(and(eq(familyChildren.childId, childId), eq(familyChildren.familyId, fromId))).all()[0];
-  if (!link) throw new Error(`${childId} är inte barn i ${fromId}`);
+  if (!link) throw new Error(`${childId} is not a child in ${fromId}`);
 
   const already = tx.select().from(familyChildren)
     .where(and(eq(familyChildren.childId, childId), eq(familyChildren.familyId, toId))).all()[0];
-  if (already) throw new Error(`${childId} står redan i ${toId}`);
+  if (already) throw new Error(`${childId} is already in ${toId}`);
 
   const seq = tx.select().from(familyChildren).where(eq(familyChildren.familyId, toId)).all().length;
   tx.update(familyChildren).set({ familyId: toId, seq })
@@ -46,5 +46,5 @@ db.transaction(tx => {
     after: JSON.stringify({ ...link, familyId: toId, seq, reason: reason ?? null }),
   }).run();
 
-  console.log(`${childId}: flyttad från ${fromId} till ${toId}`);
+  console.log(`${childId}: moved from ${fromId} to ${toId}`);
 });

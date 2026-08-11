@@ -31,11 +31,11 @@ export function addPhoto(db: Db, input: {
   bytes: Buffer;
 }, mediaDir: string): { id: number } {
   const form = formOf(input.mimeType);
-  if (!form) throw new MutationError('Filformatet stöds inte — välj en bild', 400);
-  if (!input.bytes.length) throw new MutationError('Filen är tom', 400);
-  if (input.bytes.length > MAX_PHOTO_BYTES) throw new MutationError('Bilden är för stor — högst 25 MB', 400);
+  if (!form) throw new MutationError('That file format is not supported — choose an image', 400);
+  if (!input.bytes.length) throw new MutationError('That file is empty', 400);
+  if (input.bytes.length > MAX_PHOTO_BYTES) throw new MutationError('That image is too large — 25 MB at most', 400);
   if (!db.select().from(persons).where(eq(persons.id, input.ownerId)).all().length) {
-    throw new MutationError('Personen finns inte', 404);
+    throw new MutationError('That person does not exist', 404);
   }
 
   const id = db.transaction(tx => {
@@ -75,7 +75,7 @@ export function addPhoto(db: Db, input: {
 export function removePhoto(db: Db, id: number): void {
   db.transaction(tx => {
     const before = tx.select().from(media).where(eq(media.id, id)).all()[0];
-    if (!before) throw new MutationError('Fotot finns inte', 404);
+    if (!before) throw new MutationError('That photo does not exist', 404);
     tx.delete(media).where(eq(media.id, id)).run();
     audit(tx, 'delete', 'media', id, before, null);
   });

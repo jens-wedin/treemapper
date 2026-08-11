@@ -46,7 +46,7 @@ describe('event endpoints', () => {
     });
     expect(created.status).toBe(200);
     const body = await created.json();
-    expect(body.warnings[0]).toContain('kunde inte tolkas');
+    expect(body.warnings[0]).toContain('could not be read');
     const id = body.data.id;
 
     expect((await patch(`/api/events/${id}`, { place: 'Sundsvall' })).status).toBe(200);
@@ -57,7 +57,7 @@ describe('event endpoints', () => {
   it('400s on malformed event bodies', async () => {
     const res = await post('/api/events', { type: 'lower', ownerType: 'person', ownerId: 'I1', dateRaw: null, place: null, description: null, age: null });
     expect(res.status).toBe(400);
-    expect((await res.json()).error).toBe('Okänd händelsetyp');
+    expect((await res.json()).error).toBe('Unknown event type');
   });
 });
 
@@ -70,9 +70,9 @@ describe('POST /api/relations', () => {
     expect((await res.json()).data).toMatchObject({ familyId: 'F1' });
   });
 
-  it('rejects self-relations with a Swedish message', async () => {
+  it('rejects self-relations, saying why', async () => {
     const res = await post('/api/relations', { type: 'child', personId: 'I1', relativeId: 'I1' });
     expect(res.status).toBe(400);
-    expect((await res.json()).error).toContain('sin egen släkting');
+    expect((await res.json()).error).toContain('their own relative');
   });
 });

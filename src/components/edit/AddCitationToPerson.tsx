@@ -55,9 +55,9 @@ export default function AddCitationToPerson({ personId, onAdded }: {
 
   return (
     <div className="mt-3 rounded-lg border p-3">
-      <label htmlFor="person-kalla" className="block text-sm font-medium">{t('sources.search')}</label>
+      <label htmlFor="person-source" className="block text-sm font-medium">{t('sources.search')}</label>
       <Input
-        id="person-kalla"
+        id="person-source"
         value={source ? (source.title ?? source.id) : query}
         onChange={e => { setSource(null); setQuery(e.target.value); }}
         className="mt-1 max-w-md"

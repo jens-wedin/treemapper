@@ -9,7 +9,7 @@ import { useTreeUrl } from '../lib/treeUrl';
 interface Stats { persons: number; families: number; sources: number; media: number; mediaDone: number }
 interface IssueSummary { total: number; totalAll: number; dismissed: number }
 
-export default function Hem() {
+export default function Home() {
   const link = useTreeUrl();
   const [q, setQ] = useState('');
   const [stats, setStats] = useState<Stats | null>(null);
@@ -31,8 +31,8 @@ export default function Hem() {
         onSubmit={e => { e.preventDefault(); navigate(link(`/people?q=${encodeURIComponent(q)}`)); }}
       >
         <div className="flex-1">
-          <label htmlFor="hem-sok" className="block text-sm font-medium">{t('home.searchLabel')}</label>
-          <Input id="hem-sok" value={q} onChange={e => setQ(e.target.value)} className="mt-1" />
+          <label htmlFor="home-search" className="block text-sm font-medium">{t('home.searchLabel')}</label>
+          <Input id="home-search" value={q} onChange={e => setQ(e.target.value)} className="mt-1" />
         </div>
         <Button type="submit" className="self-end">{t('search.button')}</Button>
       </form>

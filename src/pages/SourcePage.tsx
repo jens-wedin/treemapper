@@ -73,9 +73,9 @@ function SourceEditForm({ source, onSaved, onCancel }: {
       <div className="mt-3">
         {/* Tall by default: this is where a whole document goes, and a box that
             shows four lines of forty invites you to stop after four. */}
-        <label htmlFor="kalla-transkription" className="block text-sm font-medium">{t('sources.transcription')}</label>
+        <label htmlFor="source-transcription" className="block text-sm font-medium">{t('sources.transcription')}</label>
         <Textarea
-          id="kalla-transkription"
+          id="source-transcription"
           value={form.transcription}
           onChange={e => setForm({ ...form, transcription: e.target.value })}
           className="mt-1 font-mono text-sm"
@@ -84,8 +84,8 @@ function SourceEditForm({ source, onSaved, onCancel }: {
         <p className="mt-1 text-sm text-muted-foreground">{t('sources.transcriptionHint')}</p>
       </div>
       <div className="mt-3">
-        <label htmlFor="kalla-anteckning" className="block text-sm font-medium">{t('edit.note')}</label>
-        <Textarea id="kalla-anteckning" value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} className="mt-1" rows={4} />
+        <label htmlFor="source-note" className="block text-sm font-medium">{t('edit.note')}</label>
+        <Textarea id="source-note" value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} className="mt-1" rows={4} />
       </div>
       {error && <p role="alert" className="mt-3 text-destructive">{error}</p>}
       <div className="mt-4 flex gap-2">

@@ -62,17 +62,17 @@ export default function NewPersonDialog({ onCreated }: { onCreated?: () => void 
         </DialogHeader>
         <form onSubmit={submit} className="space-y-3">
           <div>
-            <label htmlFor="ny-fornamn" className="block text-sm font-medium">{t('edit.firstName')}</label>
-            <Input id="ny-fornamn" value={form.givenName} onChange={e => setForm({ ...form, givenName: e.target.value })} className="mt-1" />
+            <label htmlFor="new-given-name" className="block text-sm font-medium">{t('edit.firstName')}</label>
+            <Input id="new-given-name" value={form.givenName} onChange={e => setForm({ ...form, givenName: e.target.value })} className="mt-1" />
           </div>
           <div>
-            <label htmlFor="ny-efternamn" className="block text-sm font-medium">{t('edit.lastName')}</label>
-            <Input id="ny-efternamn" value={form.surname} onChange={e => setForm({ ...form, surname: e.target.value })} className="mt-1" />
+            <label htmlFor="new-surname" className="block text-sm font-medium">{t('edit.lastName')}</label>
+            <Input id="new-surname" value={form.surname} onChange={e => setForm({ ...form, surname: e.target.value })} className="mt-1" />
           </div>
           <div>
-            <label htmlFor="ny-kon" className="block text-sm font-medium">{t('edit.sex')}</label>
+            <label htmlFor="new-sex" className="block text-sm font-medium">{t('edit.sex')}</label>
             <select
-              id="ny-kon"
+              id="new-sex"
               value={form.sex}
               onChange={e => setForm({ ...form, sex: e.target.value as 'M' | 'F' | 'U' })}
               className="mt-1 w-full rounded-md border px-2 py-1.5"

@@ -54,8 +54,8 @@ export default function SourcesPage() {
 
       <form onSubmit={submit} className="mt-4 flex items-end gap-3">
         <div>
-          <label htmlFor="sok-kalla" className="block text-sm font-medium">{t('sources.search')}</label>
-          <Input id="sok-kalla" value={form} onChange={e => setForm(e.target.value)} className="mt-1 w-72" />
+          <label htmlFor="search-source" className="block text-sm font-medium">{t('sources.search')}</label>
+          <Input id="search-source" value={form} onChange={e => setForm(e.target.value)} className="mt-1 w-72" />
         </div>
         <Button type="submit">{t('search.button')}</Button>
       </form>

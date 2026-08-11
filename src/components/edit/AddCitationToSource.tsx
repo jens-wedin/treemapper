@@ -38,7 +38,7 @@ export default function AddCitationToSource({ sourceId, onAdded }: {
     <div className="mt-3 rounded-lg border p-3">
       <div className="max-w-md">
         <PersonSearch
-          id="kalla-person"
+          id="source-person"
           label={t('sources.addPerson')}
           picked={person?.id}
           onPick={setPerson}

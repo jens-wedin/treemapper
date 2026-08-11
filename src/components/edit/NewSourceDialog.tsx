@@ -58,9 +58,9 @@ export default function NewSourceDialog({ onCreated }: { onCreated?: () => void 
           <DialogDescription>{t('sources.newHint')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit}>
-          <label htmlFor="ny-kalla-titel" className="block text-sm font-medium">{t('person.name')}</label>
+          <label htmlFor="new-source-title" className="block text-sm font-medium">{t('person.name')}</label>
           <Input
-            id="ny-kalla-titel"
+            id="new-source-title"
             value={title}
             onChange={e => setTitle(e.target.value)}
             className="mt-1"

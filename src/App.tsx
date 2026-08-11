@@ -7,7 +7,7 @@ import {
 import { rescueUrl, treeUrl } from './lib/treeUrl';
 import ThemePicker from './components/ThemePicker';
 import TreePicker from './components/TreePicker';
-import Hem from './pages/Hem';
+import Home from './pages/Home';
 import PersonList from './pages/PersonList';
 import PersonPage from './pages/PersonPage';
 import TreePage from './pages/TreePage';
@@ -65,7 +65,7 @@ function TreeScope() {
     // Keyed on the tree: switching means every page is showing records that no
     // longer exist, so they are remounted rather than refetched.
     <Routes key={tree}>
-      <Route path="/" element={<Hem />} />
+      <Route path="/" element={<Home />} />
       <Route path="people" element={<PersonList />} />
       <Route path="person/:id" element={<PersonPage />} />
       <Route path="tree" element={<TreePage />} />
@@ -107,7 +107,7 @@ export default function App() {
     // other page grows and scrolls normally.
     <div className={`flex flex-col ${isTree ? 'h-dvh overflow-hidden' : 'min-h-dvh'}`}>
       <a
-        href="#innehall"
+        href="#content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-background focus:p-2 focus:shadow"
       >
         {t('nav.skip')}
@@ -157,7 +157,7 @@ export default function App() {
         </nav>
       </header>
       <main
-        id="innehall"
+        id="content"
         className={`${container} flex min-h-0 flex-1 flex-col ${isTree ? 'overflow-auto py-4' : 'py-8'}`}
       >
         {/* Which tree an address names can only be answered against the list of

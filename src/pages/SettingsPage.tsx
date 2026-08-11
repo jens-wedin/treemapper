@@ -14,7 +14,7 @@ export default function SettingsPage() {
     <section>
       <h1 className="text-2xl font-bold">{t('export.title')}</h1>
 
-      <section id="importera" className="mt-6 rounded-lg border p-4">
+      <section id="import" className="mt-6 rounded-lg border p-4">
         <h2 className="text-lg font-semibold">{t('trees.import')}</h2>
         <p className="mt-2 text-foreground">{t('trees.importHelp')}</p>
         <ImportForm />

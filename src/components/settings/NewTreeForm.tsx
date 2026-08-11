@@ -49,9 +49,9 @@ export default function NewTreeForm() {
   return (
     <form onSubmit={submit} className="mt-4 space-y-4">
       <div>
-        <label htmlFor="nytt-trad" className="block text-sm font-medium">{t('trees.createName')}</label>
+        <label htmlFor="new-tree" className="block text-sm font-medium">{t('trees.createName')}</label>
         <input
-          id="nytt-trad"
+          id="new-tree"
           value={name}
           onChange={e => setName(e.target.value)}
           className="mt-1 block w-full rounded-md border px-3 py-2 text-sm"

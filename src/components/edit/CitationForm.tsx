@@ -52,15 +52,15 @@ export default function CitationForm({ ownerId, sourceId, onSaved, onCancel }: {
     <form onSubmit={submit} className="mt-3 rounded-lg border p-3">
       <div className="flex flex-wrap gap-3">
         <div>
-          <label htmlFor="cit-sida" className="block text-sm font-medium">{t('sources.page')}</label>
-          <Input id="cit-sida" value={page} onChange={e => setPage(e.target.value)} className="mt-1 w-48" />
+          <label htmlFor="cit-page" className="block text-sm font-medium">{t('sources.page')}</label>
+          <Input id="cit-page" value={page} onChange={e => setPage(e.target.value)} className="mt-1 w-48" />
         </div>
         <div>
-          <label htmlFor="cit-kvalitet" className="block text-sm font-medium">{t('sources.quality')}</label>
+          <label htmlFor="cit-quality" className="block text-sm font-medium">{t('sources.quality')}</label>
           {/* GEDCOM QUAY, named rather than numbered: "3" tells you nothing
               about whether that is the good end of the scale. */}
           <select
-            id="cit-kvalitet"
+            id="cit-quality"
             value={quality}
             onChange={e => setQuality(e.target.value)}
             className="mt-1 rounded-md border px-2 py-1"

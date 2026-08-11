@@ -61,16 +61,16 @@ export default function PersonList() {
       </div>
       <form onSubmit={submit} className="mt-4 flex flex-wrap items-end gap-3">
         <div>
-          <label htmlFor="sok-namn" className="block text-sm font-medium">{t('search.name')}</label>
-          <Input id="sok-namn" value={form.q} onChange={e => setForm({ ...form, q: e.target.value })} className="mt-1 w-64" />
+          <label htmlFor="search-name" className="block text-sm font-medium">{t('search.name')}</label>
+          <Input id="search-name" value={form.q} onChange={e => setForm({ ...form, q: e.target.value })} className="mt-1 w-64" />
         </div>
         <div>
-          <label htmlFor="sok-fodd" className="block text-sm font-medium">{t('search.birthYear')}</label>
-          <Input id="sok-fodd" inputMode="numeric" value={form.born} onChange={e => setForm({ ...form, born: e.target.value })} className="mt-1 w-28" />
+          <label htmlFor="search-birth-year" className="block text-sm font-medium">{t('search.birthYear')}</label>
+          <Input id="search-birth-year" inputMode="numeric" value={form.born} onChange={e => setForm({ ...form, born: e.target.value })} className="mt-1 w-28" />
         </div>
         <div>
-          <label htmlFor="sok-ort" className="block text-sm font-medium">{t('search.place')}</label>
-          <Input id="sok-ort" value={form.place} onChange={e => setForm({ ...form, place: e.target.value })} className="mt-1 w-56" />
+          <label htmlFor="search-place" className="block text-sm font-medium">{t('search.place')}</label>
+          <Input id="search-place" value={form.place} onChange={e => setForm({ ...form, place: e.target.value })} className="mt-1 w-56" />
         </div>
         <Button type="submit">{t('search.button')}</Button>
       </form>

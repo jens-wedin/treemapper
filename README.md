@@ -12,7 +12,7 @@ Design spec: `docs/superpowers/specs/2026-08-05-wedin-tree-design.md`.
 npm install
 npm run import   # one-time: data/Wedin_Family_Tree_CLEANED.ged → wedin.db
                  # (further trees are imported in the app, see Flera släktträd)
-npm run media    # download photos from MyHeritage CDN → media/
+npm run media    # download photos from MyHeritage CDN → media/<tree>/
 npm run dev      # http://localhost:5173 (API on :3001)
 npm test         # vitest unit tests
 npm run test:e2e # Playwright browse flow (needs wedin.db)
@@ -116,28 +116,6 @@ moves an old layout across — renaming rather than copying, and rewriting each
 MyHeritage's links are **signed and expire**. If the download reports HTTP 403,
 take a fresh GEDCOM export and run `npm run refresh-media -- data/<export>.ged`
 before trying again. The report lands in `data/media-report-<tree>.md`.
-
-### Källans egna ord
-
-**Källor → Ny källa** lägger till ett dokument du själv har; dialogen frågar
-bara efter titeln och lämnar dig på källans sida, där avskriften skrivs.
-
-
-A source has a **Transkription** — the document written out — separate from
-**Anteckning**, which is what *you* say about it. Line breaks are kept: in a
-transcription they are where the lines break on the page.
-
-It maps to GEDCOM's `SOUR.TEXT`, so a transcription survives an export and comes
-back on re-import. The importer used to fall `TEXT` back into `note` when a
-source had no `NOTE`, which filled 478 of 520 sources with MyHeritage's own
-blurbs and left nowhere to write a remark of your own.
-`npx tsx scripts/split-source-text.ts <tree> --apply` separates an old database,
-moving only rows whose note provably came from a `TEXT` node — checked against
-the raw tags kept at import, not guessed from the words.
-
-For a document naming several people, transcribe it **once on the source** and
-add a citation from it to each person: the text lives in one place, and each
-person's page shows the source and the line naming them.
 
 ## Språk / Language
 
@@ -385,6 +363,16 @@ page shows its fields (editable, audit-logged) and every citation that uses it,
 linked back to the person and event. Citations on a Personsida link the other
 way, to the source.
 
+**Ny källa** adds a document you hold yourself, and **Ta bort källa** removes
+one — refusing while anything still cites it, and saying how many would lose
+their evidence. **Citations are made by hand from either side**: *Lägg till
+person* on the source, for a document that names several people; *Lägg till
+källhänvisning* on a person, for the record you just found. Each carries the
+page, GEDCOM's quality (QUAY, shown as words rather than 0–3) and the quotation
+— the passage naming that person, which is what makes a citation worth more
+than a pointer at a whole document. Removing a citation unties the link and
+leaves the document.
+
 `/installningar` exports the whole tree as **GEDCOM 5.5.1** — the backup and the
 escape hatch out of this app, readable by MyHeritage, Ancestry, Gramps and
 others. `npm run export -- [sökväg]` does the same from the terminal.
@@ -433,6 +421,28 @@ connection it cannot prove. The GEDCOM import is left out; it is not work done
 on a problem. A dismissal names the problem it set aside by resolving its
 fingerprint against the current detection, which the same request has already
 run; where the problem no longer occurs, the entry says that instead.
+
+### Källans egna ord
+
+**Källor → Ny källa** lägger till ett dokument du själv har; dialogen frågar
+bara efter titeln och lämnar dig på källans sida, där avskriften skrivs.
+
+
+A source has a **Transkription** — the document written out — separate from
+**Anteckning**, which is what *you* say about it. Line breaks are kept: in a
+transcription they are where the lines break on the page.
+
+It maps to GEDCOM's `SOUR.TEXT`, so a transcription survives an export and comes
+back on re-import. The importer used to fall `TEXT` back into `note` when a
+source had no `NOTE`, which filled 478 of 520 sources with MyHeritage's own
+blurbs and left nowhere to write a remark of your own.
+`npx tsx scripts/split-source-text.ts <tree> --apply` separates an old database,
+moving only rows whose note provably came from a `TEXT` node — checked against
+the raw tags kept at import, not guessed from the words.
+
+For a document naming several people, transcribe it **once on the source** and
+add a citation from it to each person: the text lives in one place, and each
+person's page shows the source and the line naming them.
 
 ### En gren som importerats flera gånger
 
@@ -497,7 +507,7 @@ Fuzzy dates are always accepted — `ABT 1715`, `17xx`, free text — and only t
 sortable year is left blank when it can't be parsed.
 
 Note: `npm run test:e2e` mutates data, so it runs against a **copy**
-(`.e2e.db`, recreated from `wedin.db` at the start of each run) on ports
+(`.e2e/wedin.db`, recreated from `wedin.db` at the start of each run) on ports
 5199/3199 — the real database is never touched by tests.
 
 API: `GET /api/stats` · `GET /api/persons` · `GET /api/persons/:id/full` ·
@@ -535,17 +545,25 @@ export. If links ever need refreshing again:
 2. a copy of the `media/` folder (photos are not inside the GEDCOM).
 
 Copying `wedin.db` itself also works and additionally preserves the audit log
-and dismissed Konsekvens issues, which the GEDCOM does not carry.
+and dismissed Konsekvens issues, which the GEDCOM does not carry. **Copy the
+`-wal` and `-shm` files with it** — in WAL mode the newest writes live there,
+and copying the `.db` alone hands you a stale database with recent edits simply
+missing. `backups/` holds dated copies taken before each repair run.
 
 ## Project state
 
 All six phases of the design spec are built: import + photos, browse, tree,
-editing, Konsekvensbänken, and sources + export — plus two rounds of tree UX
-work, the Statistik page, and the shadcn `radix-luma`/`olive` theme. Specs live
-in `docs/superpowers/specs/` and plans in `docs/superpowers/plans/`.
+editing, Konsekvensbänken, and sources + export — plus the tree UX work, the
+Statistik page, the shadcn `radix-luma`/`olive` theme, several unconnected
+family trees, the tree in every URL, and sources you can transcribe and cite by
+hand. Specs live in `docs/superpowers/specs/` and plans in
+`docs/superpowers/plans/`.
+
+`MEMORY.md` in the repo root is the working handoff — decisions worth not
+re-litigating, gotchas that cost real time, and the open threads.
 
 **313 unit tests and 37 end-to-end tests**, `tsc -b` and `npm run build` clean.
-The e2e suite runs single-worker against a copy of the database (`.e2e.db`), so
+The e2e suite runs single-worker against a copy of the database (`.e2e/wedin.db`), so
 it never touches the real one.
 
 Note that `main` is stale — it points at an early Phase 1 commit. The work lives

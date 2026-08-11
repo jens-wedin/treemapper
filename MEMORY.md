@@ -1,14 +1,96 @@
 # MEMORY — where the project stands
 
-_Last updated: 2026-08-08. All six spec phases are built, plus two rounds of
-tree UX work, three data-integrity fixes, a shadcn theme and a Statistik page._
+_Last updated: 2026-08-11. All six spec phases are built, plus tree UX work, a
+shadcn theme, Statistik, multiple family trees, the tree in every URL, sources
+you can write out and cite by hand, and several rounds of data repair._
 
 ## Where the work lives — read this first
 
 `main` is **stale**: it points at an early Phase 1 commit. All real work is on
-**`feat/phase1-scaffold-import`**. The Statistik page sits on **`statistik`**,
-11 commits ahead of that branch and not yet merged. Check `git branch` before
+**`feat/phase1-scaffold-import`**. Everything since then sits on **`statistik`**
+— by now far more than statistics — still unmerged. Check `git branch` before
 assuming you are somewhere sensible.
+
+## The tree is in the address (2026-08-09)
+
+Every page is `/<tree>/<page>`: `/wedin/personer?q=jens+wedin`,
+`/andersson/person/I500001`. **A link means one thing.**
+
+Before this the tree lived only in `localStorage`, so `/person/I500001` meant
+whichever tree the picker was last left on. That is not a hypothetical: Jens
+pasted two person URLs, I resolved them against the wrong tree, and produced a
+confident, coherent, wrong answer about his own family. Read
+`src/lib/treeUrl.ts` before touching routing.
+
+Decisions worth not re-litigating:
+
+- **A tree's id comes from its database filename, never its display name.**
+  `wedin.db` → `wedin`. Renaming a tree therefore cannot break a saved link.
+  `default` still resolves as a legacy alias for the CLI and old browser state.
+- **Route names are reserved ids** (`personer`, `trad`, `kalla` …) so
+  `/personer` can only mean the People page.
+- **Two kinds of bad address need opposite treatment.** `/personer` is *missing*
+  a tree → put one in front. `/deleted-tree/personer` is *wrong* → swap it out.
+  Prefixing the second gives `/wedin/deleted-tree/personer`, which is no page.
+- **The tree is adopted during render, not in an effect.** A page fetches on
+  mount; an effect runs after that fetch has already gone out under the previous
+  tree. `adoptTree()` sets it synchronously above the routes.
+- Guards compare **resolved paths, not strings**. Once `wedin` and `default`
+  both mean one file, a string check stops protecting it — the same shape as the
+  `..%2Fwedin` traversal fixed the day before.
+
+## Sources you can actually use (2026-08-11)
+
+- **Transkription** on a source is the document written out, separate from
+  **Anteckning**, which is what *you* say about it. Maps to GEDCOM `SOUR.TEXT`
+  and round-trips (there is a test with multi-line French, because CONC/CONT
+  splitting is what mangles long text).
+- **Fixed on the way:** the importer fell `TEXT` back into `note`, so 478 of 520
+  sources held MyHeritage's own blurbs where a remark of your own belongs.
+  `scripts/split-source-text.ts` separates them, moving only rows whose note
+  provably came from a TEXT node — checked against raw tags, not guessed.
+- **Ny källa** and **Ta bort källa** exist now; before, sources could only
+  arrive by import. Deletion refuses while anything cites the source and says
+  how many; 515 of 521 are cited, the heaviest 875 times.
+- **Citations can be made by hand**, from either side. Every one of the 5 804
+  imported citations was created by the importer and nothing in the app could
+  add one — so a transcription was an island.
+
+## Photos, one folder per tree (2026-08-10)
+
+`media/wedin/`, `media/andersson/`. Media ids are per-database
+integers, so **every tree owns a media 1**; the original tree used to sit loose
+in `media/`, which is exactly where a collision would land on the photographs
+that cannot be re-downloaded. `npm run media -- <tree>` downloads a tree's
+photos; `scripts/move-media-into-tree-folder.ts` migrates an old layout by
+rename, never copy.
+
+## Data repair (2026-08-09 … 11)
+
+- **Andersson: 504 → 486 people, 0 duplicate findings.** One branch
+  imported twice, showing at three levels: Jens himself, his grandparents
+  (invisible to the detector because one copy said "Anders Andersson" and the
+  other "Anders **Bertil** Andersson"), and six Bergqvist children recorded
+  under both of Anders Bergqvist's wives. The last were assigned by arithmetic:
+  Karin was 6 in 1719, Elisabet died in 1733.
+- **wedin.db: 220 duplicate event rows removed** across 58 people — leftovers
+  from merges made before the engine stopped copying identical facts. Distinct
+  facts before and after: 14 363 both times.
+- `scripts/dedupe-events.ts`, `detach-child.ts`, `move-child.ts`,
+  `drop-phantom-family.ts` all dry-run by default and write to the change log.
+
+**The detector cannot see duplicates whose names differ.** Every hidden pair
+found this week was one spelling variant apart. There are more in `wedin.db` —
+Ingrid Katarina Nyström is two records (I501539/I501619), her father "Karl" in
+one and "Carl" in the other.
+
+## An incident worth remembering (2026-08-11)
+
+A source titled "Test" appeared in the **real `wedin.db`** during a Playwright
+run. Removed, and `/api/health` now reports which database the server is
+serving, with an e2e test asserting it is the `.e2e/` copy and vite refusing to
+start an e2e run pointed at the development port. I never identified the test
+that did it — if it recurs, that guard is what will say so.
 
 ## Statistik (2026-08-08)
 
@@ -141,20 +223,43 @@ absolut zoom, helskärmslayout, och personpanel vid klick.
 - Playwright `.check()`/`.uncheck()` fight React checkboxes driven by URL state;
   use `.click()` + `toBeChecked()`.
 - `wedin.db` lives in the **repo root**, not `db/`.
+- **`sqlite3 -readonly` fails on a WAL database with no `-shm`** ("unable to
+  open database file (14)") and prints *nothing* — easy to misread as "verified,
+  no rows". Drop `-readonly` when checking a copy.
+- **Copy `-wal` and `-shm` with the `.db`.** `e2e/global-setup.ts` copied only
+  the main file for months, so the suite tested a stale snapshot; fixing it made
+  three tests fail on data Jens had since cleaned up.
+- **The i18n key-parity test does not catch a key in the wrong namespace.** It
+  checks the four dictionaries agree with each other, not that `t()` looks where
+  the key sits. Twice this week keys landed beside `category:` — which is
+  `issues`, not `sources` — and rendered as raw key names.
+- **A `<label>` wrapping a `<select>` takes the chosen option into its
+  accessible name**, so the field announces itself as "Visa Alla (58)". Use
+  `htmlFor` + `id`.
+- Compare checksums with the **same algorithm** on both sides. `md5` before and
+  `shasum` after is not a comparison; use file mtimes for "was this touched".
 
 ## Open threads
 
-- **`statistik` is unmerged.** Merge into `feat/phase1-scaffold-import` when
-  Jens has looked at it.
-- **`wedin.db.before-repair-conc` and `.2`** are pristine pre-repair backups in
-  the repo root, untracked and safe to delete once the repaired data is trusted.
+- **`statistik` is unmerged** into `feat/phase1-scaffold-import`. It now carries
+  the whole week's work, not just statistics.
+- **Hidden duplicates in `wedin.db`.** The name+year detector misses pairs one
+  spelling apart. Ingrid Katarina Nyström (I501539 / I501619) is a known one.
+  A sweep for same-birth-date, near-identical-name records is the natural next
+  data job — but show Jens candidates before merging anything.
+- **Andersson leftovers:** Erik Andersson (b. 1839) is now childless and
+  is probably Anders's *grandfather*, a generation collapsed at import; two
+  people are attached to no family at all; Karin Elisabet Bergqvist has two
+  death dates (1763 and 1812) and a christening eight days before her birth.
+- **Immigration events that are moves within Sweden.** MyHeritage mapped
+  Swedish parish moves onto `IMMI`, so "Immigration · Mariestad · 1849" is a
+  household move. Relabelling would mean overriding the export; ask first.
+- **The scan of a document cannot be attached to its source.**
+  `media.ownerType` is `person | family`. Jens chose to hang scans on a person
+  for now; widening it is a small migration when he wants it.
+- **Backups in `backups/`** from this week's repairs — safe to delete once the
+  data is trusted. Also the older `wedin.db.before-*` files in the repo root.
 - **Jens has more UX/UI feedback coming** — that is the natural next work.
-- The live MyHeritage tree drifted after the July export (4 572/985/522 vs our
-  4 561/983/520). Decide whether to re-import from a fresh cleaned export
-  before doing serious editing here.
-- Country flags cover the Nordics plus common emigration destinations; add more
-  in `src/components/CountryFlag.tsx` if a card turns up unflagged that
-  shouldn't be.
-- Konsekvens category "Vid liv men för gammal" reports 650 where MyHeritage
-  says 200 — ours flags everyone missing death info who would be 111+. Narrow
-  it if the queue feels noisy.
+- The live MyHeritage tree drifted after the July export. Decide whether to
+  re-import from a fresh cleaned export before doing serious editing here.
+- Konsekvens category names stay Swedish in the other three languages.

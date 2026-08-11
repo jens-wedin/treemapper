@@ -79,8 +79,8 @@ describe('exportGedcom — struktur', () => {
   it('writes FAMC/FAMS so other programs see the relationships', () => {
     buildTree();
     const lines = exportGedcom(db).split('\r\n');
-    expect(lines).toContain('1 FAMS @F1@');   // I1 är make
-    expect(lines).toContain('1 FAMC @F1@');   // I3 är barn
+    expect(lines).toContain('1 FAMS @F1@');   // I1 is a spouse
+    expect(lines).toContain('1 FAMC @F1@');   // I3 is a child
   });
 });
 
@@ -169,7 +169,7 @@ describe('exportGedcom — round trip through our own parser', () => {
   });
 
   it('survives embedded CR — Windows line breaks in imported text', () => {
-    // Riktig data innehåller \r\n inuti värden — de får inte läcka ut i filen
+    // Real data has \r\n inside values — they must not leak into the file
     db.insert(sources).values({
       id: 'S1', title: 'Testkälla',
       note: '<p>Data från anarkiv</p>\r\n<p>Andra stycket</p>',
@@ -177,16 +177,16 @@ describe('exportGedcom — round trip through our own parser', () => {
     }).run();
     const text = exportGedcom(db);
     const bad = text.split('\r\n').filter(l => l.includes('\r'));
-    expect(bad).toEqual([]);   // ingen rad får innehålla ett löst CR
+    expect(bad).toEqual([]);   // no line may contain a stray CR
     const back = roundTrip();
     expect(back.sources[0]!.note).toBe('<p>Data från anarkiv</p>\n<p>Andra stycket</p>');
   });
 
   /**
-   * Tolken lyfter ut TEXT ur DATA och lägger DATA:s övriga barn i raw_tags.
-   * Skrivs de sedan ut som två skilda DATA-noder läser inläsningen den sista
-   * och texten faller bort — det drabbade 3 519 källhänvisningar i det riktiga
-   * trädet, alla med både text och ett DATE.
+   * The parser lifts TEXT out of DATA and puts DATA's other children in raw_tags.
+   * Written back out as two separate DATA nodes, reading picks up the last
+   * one and the text is lost — this hit 3,519 citations in the real
+   * tree, every one of them carrying both text and a DATE.
    */
   it('does not lose the text when DATA carries both TEXT and something else', () => {
     db.insert(sources).values({ id: 'S9', title: 'Källa', author: null, publication: null, note: null, rawTags: null }).run();
@@ -200,7 +200,7 @@ describe('exportGedcom — round trip through our own parser', () => {
     }).run();
 
     const text = exportGedcom(db);
-    // en enda DATA under källhänvisningen, med både TEXT och DATE i sig
+    // a single DATA under the citation, holding both TEXT and DATE
     const block = text.split('\r\n').slice(text.split('\r\n').findIndex(l => l === '1 SOUR @S9@'));
     const dataLines = block.slice(0, 8).filter(l => /^\d+ DATA$/.test(l));
     expect(dataLines).toHaveLength(1);

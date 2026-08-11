@@ -27,7 +27,7 @@ describe('applyExpansions', () => {
   it('inserts fetched ancestors in the right place', () => {
     const r = applyExpansions(base, [up([0], A('far', [A('farfar'), A('farmor')]))]);
     expect(r.ancestors.parents[0]!.parents.map(p => p.person.id)).toEqual(['farfar', 'farmor']);
-    expect(r.ancestors.parents[1]!.parents).toEqual([]);      // modern rörs inte
+    expect(r.ancestors.parents[1]!.parents).toEqual([]);      // the mother is untouched
   });
 
   it('inserts fetched descendants and their partners', () => {
@@ -40,7 +40,7 @@ describe('applyExpansions', () => {
   it('clears the continuation flag where the branch is now drawn', () => {
     const r = applyExpansions(base, [up([0], A('far', [A('farfar')]))]);
     expect(r.ancestors.parents[0]!.hasMoreAncestors).toBeFalsy();
-    expect(r.ancestors.parents[1]!.hasMoreAncestors).toBe(true);   // orörd
+    expect(r.ancestors.parents[1]!.hasMoreAncestors).toBe(true);   // untouched
   });
 
   it('leaves the other branches unchanged, so their cards can glide rather than be redrawn', () => {
@@ -58,7 +58,7 @@ describe('applyExpansions', () => {
   });
 
   it('ignores a branch whose host has been collapsed', () => {
-    // ingen utfällning av 'far' först, så vägen [0,0] finns inte
+    // 'far' was never expanded, so the path [0,0] does not exist
     const r = applyExpansions(base, [up([0, 0], A('farfar', [A('farfars far')]))]);
     expect(r.ancestors.parents[0]!.parents).toEqual([]);
   });

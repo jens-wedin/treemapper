@@ -15,7 +15,7 @@ beforeEach(() => {
   db = createDb(':memory:');
   api = createIssuesApi(fixedTree(db));
   mergeApi = createMergeApi(fixedTree(db));
-  // två personer med tydliga problem
+  // two people with obvious problems
   db.insert(persons).values([
     { id: 'I1', givenName: 'Fel', surname: 'Person', sex: 'M' },
     { id: 'I2', givenName: 'Utan', surname: 'Födelse', sex: 'F' },

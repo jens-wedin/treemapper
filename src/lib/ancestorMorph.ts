@@ -5,7 +5,7 @@ import type { ChartBounds } from './useChartViewport';
 import type { TreePerson } from '../../lib/tree';
 
 /**
- * Where each ancestor travels when the antavla becomes the solfjäder.
+ * Where each ancestor travels when the pedigree chart becomes the fan chart.
  *
  * The two charts draw the same people under the same Ahnentafel numbers, so
  * every person has a real start and a real end — which is what makes a morph
@@ -73,7 +73,7 @@ interface Travel {
 }
 
 export function planMorph(pedigree: PedigreeLayout, fan: FanLayout): MorphPlan {
-  // The solfjäder is built around the origin; the antavla's focus card is
+  // The fan chart is built around the origin; the pedigree's focus card is
   // wherever its rows put it. Shifting the antavla so the two centres coincide
   // gives one space, and one point to be polar about.
   const focus = pedigree.nodes.find(node => node.isFocus);

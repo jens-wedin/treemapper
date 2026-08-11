@@ -16,7 +16,7 @@ describe('countryFromPlace', () => {
   });
 
   it('gives null when the place names no country', () => {
-    // socken utan land → okänt, ingen gissning
+    // a parish with no country → unknown, no guessing
     expect(countryFromPlace('Bjuråker')).toBeNull();
     expect(countryFromPlace('Sundsvalls Gustav Adolf')).toBeNull();
     expect(countryFromPlace('Lovvik 2, Undersvik, X')).toBeNull();
@@ -25,7 +25,7 @@ describe('countryFromPlace', () => {
   });
 
   it('trusts only the last segment', () => {
-    // "Sverige" som ortnamn först ska inte styra landet
+    // "Sverige" as the first part of the place must not decide the country
     expect(countryFromPlace('Sverige, Bjuråker')).toBeNull();
   });
 });

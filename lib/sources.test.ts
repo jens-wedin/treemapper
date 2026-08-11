@@ -26,7 +26,7 @@ describe('listSources', () => {
     expect(items[0]).toMatchObject({
       id: 'S1', title: 'Kyrkbok Hälsingland', author: 'Svenska kyrkan',
     });
-    expect(items[0].citationCount).toBe(2); // en på händelse, en på person
+    expect(items[0].citationCount).toBe(2); // one on an event, one on a person
   });
 
   it('searches title and author', () => {

@@ -65,7 +65,7 @@ describe('mapGedcom', () => {
 
   it('keeps the text even when a second DATA follows with no TEXT', () => {
     // Ett par program delar upp DATA i flera noder. Sist-vinner gjorde att den
-    // tomma nollställde texten — samma fälla som vår egen export gick i.
+    // an empty one used to blank the text — the same trap our own export fell into.
     const [rec] = parseGedcom([
       '0 @I9@ INDI',
       '1 SOUR @S1@',

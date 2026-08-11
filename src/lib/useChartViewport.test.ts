@@ -7,7 +7,7 @@ describe('computeFit', () => {
   it('shrinks large content so that it fits', () => {
     const fit = computeFit({ minX: -2000, maxX: 2000, minY: -600, maxY: 600 }, size);
     expect(fit.k).toBeCloseTo(1000 / 4000, 5);
-    // innehållets mitt hamnar i vyns mitt
+    // the content's centre lands in the view's centre
     expect(fit.x).toBeCloseTo(size.w / 2, 5);
     expect(fit.y).toBeCloseTo(size.h / 2, 5);
   });

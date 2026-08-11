@@ -45,7 +45,7 @@ describe('relativesOf', () => {
   });
 
   it('does not hang when somebody is their own ancestor', () => {
-    // självförälderskap finns som konsekvenskategori i riktiga data
+    // self-parenthood exists as a problem category in real data
     db.insert(families).values({ id: 'F9', husbandId: 'barnbarn', wifeId: null }).run();
     db.insert(familyChildren).values({ familyId: 'F9', childId: 'mormor', seq: 0 }).run();
     const set = relativesOf(db, 'jag')!;

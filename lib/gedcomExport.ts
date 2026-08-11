@@ -104,7 +104,7 @@ function writeCitations(w: Writer, level: number, rows: typeof citations.$inferS
 
 function writeEvents(w: Writer, rows: typeof events.$inferSelect[], citationsByEvent: Map<string, typeof citations.$inferSelect[]>) {
   for (const e of rows) {
-    // The mapper folded an EVEN's TYPE into "TYPE: värde" — split it back out.
+    // The mapper folded an EVEN's TYPE into "TYPE: value" — split it back out.
     let value = e.description;
     let type: string | null = null;
     if (e.type === 'EVEN' && e.description) {

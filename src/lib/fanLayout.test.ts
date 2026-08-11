@@ -28,7 +28,7 @@ describe('layoutFan', () => {
     expect(gen1).toHaveLength(2);
     const width = gen1[0]!.endAngle - gen1[0]!.startAngle;
     expect(width).toBeCloseTo(FAN_SPAN / 2, 6);
-    // skivorna gränsar till varandra och håller sig inom solfjäderns vinkel
+    // the slices abut one another and stay inside the fan's angle
     expect(gen1[0]!.endAngle).toBeCloseTo(gen1[1]!.startAngle, 6);
     expect(gen1[0]!.startAngle).toBeCloseTo(-FAN_SPAN / 2, 6);
     expect(gen1[1]!.endAngle).toBeCloseTo(FAN_SPAN / 2, 6);
@@ -36,7 +36,7 @@ describe('layoutFan', () => {
 
   it('puts the father on the left and the mother on the right', () => {
     expect(at('far').startAngle).toBeLessThan(at('mor').startAngle);
-    // och far-/morföräldrarna hamnar inom respektive förälders sektor
+    // and the grandparents land inside their own parent's sector
     expect(at('farfar').startAngle).toBeGreaterThanOrEqual(at('far').startAngle - 1e-9);
     expect(at('farmor').endAngle).toBeLessThanOrEqual(at('far').endAngle + 1e-9);
     expect(at('morfar').startAngle).toBeGreaterThanOrEqual(at('mor').startAngle - 1e-9);
@@ -52,13 +52,13 @@ describe('layoutFan', () => {
     const gaps = layoutFan([slot(1, 'jag'), slot(3, 'mor'), slot(7, 'mormor')], 2);
     expect(gaps.slices.map(s => s.person.id).sort()).toEqual(['mor', 'mormor']);
     const mor = gaps.slices.find(s => s.person.id === 'mor')!;
-    expect(mor.startAngle).toBeCloseTo(at('mor').startAngle, 6);   // samma plats som förut
+    expect(mor.startAngle).toBeCloseTo(at('mor').startAngle, 6);   // the same place as before
   });
 
   it('gives every slice a drawable wedge and a branch colour', () => {
     for (const s of r.slices) {
       expect(s.wedgePath.startsWith('M ')).toBe(true);
-      expect(s.wedgePath).toContain('A');           // bågsegment
+      expect(s.wedgePath).toContain('A');           // an arc segment
     }
     expect(at('farfar').branch).toBe('ff');
     expect(at('mormor').branch).toBe('mm');
@@ -77,7 +77,7 @@ describe('layoutFan', () => {
   });
 
   it('flips the arc text on the lower half so it is not upside down', () => {
-    // 3 generationer ger skivor både uppe och nere med bågtext
+    // 3 generations give slices above and below, both with arc text
     const deep = layoutFan(
       Array.from({ length: 15 }, (_, i) => slot(i + 1, `p${i + 1}`)),
       3,
@@ -87,7 +87,7 @@ describe('layoutFan', () => {
     for (const s of withArc) {
       const mid = (s.startAngle + s.endAngle) / 2;
       const sweep = /A [\d.]+ [\d.]+ 0 \d (\d)/.exec(s.labelPath!)![1];
-      // nedre halvan ritas moturs (sweep 0), övre medurs (sweep 1)
+      // the lower half is drawn anticlockwise (sweep 0), the upper clockwise (sweep 1)
       expect(sweep).toBe(Math.abs(mid) > Math.PI / 2 ? '0' : '1');
     }
   });
@@ -97,14 +97,14 @@ describe('layoutFan', () => {
       expect(s.labelMaxChars).toBeGreaterThan(3);
       expect(Number.isFinite(s.labelMaxChars)).toBe(true);
     }
-    // yttre generationen har smalare skivor än den inre
+    // the outer generation has narrower slices than the inner one
     const gen1 = r.slices.find(s => s.generation === 1)!;
     const gen2 = r.slices.find(s => s.generation === 2)!;
     expect(gen1.labelMaxChars).toBeGreaterThan(gen2.labelMaxChars);
   });
 
   it('drops the labels where the slices get too thin', () => {
-    // 8 generationer: yttre ringen har 256 skivor på 270°
+    // 8 generations: the outer ring has 256 slices across 270°
     const deep = layoutFan(
       Array.from({ length: 511 }, (_, i) => slot(i + 1, `p${i + 1}`)),
       8,
@@ -114,10 +114,10 @@ describe('layoutFan', () => {
 
     expect(inner.fontSize).toBeGreaterThan(outer.fontSize);
     expect(inner.showYears).toBe(true);
-    expect(outer.showYears).toBe(false);   // årtal får inte plats
+    expect(outer.showYears).toBe(false);   // there is no room for years
     expect(outer.showFlag).toBe(false);    // flaggan skulle krocka med grannen
 
-    // texthöjden måste rymmas i skivans bredd, annars överlappar raderna
+    // the text height must fit the slice's width, or the lines overlap
     for (const s of deep.slices) {
       const thickness = (s.endAngle - s.startAngle) * s.innerR;
       expect(s.fontSize).toBeLessThanOrEqual(Math.max(9, thickness));
@@ -127,10 +127,10 @@ describe('layoutFan', () => {
   it('puts the problem mark in the slice\'s inner corner, clear of both name and flag', () => {
     for (const s of r.slices) {
       const radius = Math.hypot(s.mark.cx, s.mark.cy);
-      // innanför skivan i höjdled …
+      // inside the slice vertically …
       expect(radius).toBeGreaterThan(s.innerR);
       expect(radius).toBeLessThan(s.outerR);
-      // … och undan mittlinjen där namnet och flaggan sitter
+      // … and clear of the centre line, where the name and flag sit
       const mid = Math.hypot(s.flag.cx - s.mark.cx, s.flag.cy - s.mark.cy);
       expect(mid).toBeGreaterThan(8);
     }

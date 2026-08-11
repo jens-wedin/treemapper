@@ -75,7 +75,7 @@ describe('mergePersons — moving data across', () => {
     expect(rows.events().every(e => e.ownerId === 'KEEP' || e.ownerType === 'family')).toBe(true);
     expect(rows.citations().find(c => c.ownerType === 'person')!.ownerId).toBe('KEEP');
     expect(rows.media().find(m => m.id === dupPhoto)!.ownerId).toBe('KEEP');
-    // händelsens egen citation ska fortfarande peka på händelsen
+    // the event's own citation must still point at the event
     expect(rows.citations().find(c => c.ownerType === 'event')!.ownerId).toBe(String(dupEvent));
   });
 
@@ -120,9 +120,9 @@ describe('mergePersons — moving data across', () => {
     person('FRU', { sex: 'F' });
     person('BARN1');
     person('BARN2');
-    family('F1', 'DUP', 'FRU', ['BARN1', 'BARN2']);   // DUP är make och förälder
+    family('F1', 'DUP', 'FRU', ['BARN1', 'BARN2']);   // DUP is a spouse and a parent
     person('MOR', { sex: 'F' });
-    family('F2', null, 'MOR', ['DUP']);                // DUP är barn
+    family('F2', null, 'MOR', ['DUP']);                // DUP is a child
 
     const res = mergePersons(db, { survivorId: 'KEEP', duplicateId: 'DUP' });
 
@@ -137,7 +137,7 @@ describe('mergePersons — moving data across', () => {
     person('KEEP');
     person('DUP');
     person('MOR', { sex: 'F' });
-    family('F1', null, 'MOR', ['KEEP', 'DUP']);   // båda är barn i samma familj
+    family('F1', null, 'MOR', ['KEEP', 'DUP']);   // both are children in the same family
 
     const res = mergePersons(db, { survivorId: 'KEEP', duplicateId: 'DUP' });
 
@@ -155,7 +155,7 @@ describe('mergePersons — moving data across', () => {
 
     const f1 = rows.families().find(f => f.id === 'F1')!;
     expect(f1.husbandId).toBe('KEEP');
-    expect(f1.wifeId).toBeNull();          // platsen töms i stället för att peka på KEEP
+    expect(f1.wifeId).toBeNull();          // the slot is emptied rather than pointed at KEEP
     expect(res.warnings.join(' ')).toMatch(/[Pp]artnerplats/);
   });
 });
@@ -168,8 +168,8 @@ describe('mergePersons — choosing fields', () => {
     mergePersons(db, { survivorId: 'KEEP', duplicateId: 'DUP' });
 
     const keep = rows.persons()[0]!;
-    expect(keep.givenName).toBe('Anders');          // överlevaren vinner
-    expect(keep.note).toBe('Viktig anteckning');    // tomt fält fylls
+    expect(keep.givenName).toBe('Anders');          // the survivor wins
+    expect(keep.note).toBe('Viktig anteckning');    // an empty field is filled
     expect(keep.marriedName).toBe('Lund');
   });
 
@@ -232,8 +232,8 @@ describe('mergePersons — traceability', () => {
     family('F1', 'DUP', null, []);
     const personCount = rows.persons().length;
 
-    // Felinjektion: låt sista steget (radera dubbletten) kasta, efter att
-    // händelser/källor/familjer redan flyttats — allt måste rullas tillbaka.
+    // Fault injection: make the last step (deleting the duplicate) throw, after
+    // events, sources and families have moved — all of it must roll back.
     const failing = new Proxy(db, {
       get(target, prop, receiver) {
         if (prop === 'transaction') {
@@ -263,8 +263,8 @@ describe('mergePersons — traceability', () => {
 describe('mergePersons — duplicate families for one couple', () => {
   /**
    * Det verkliga fallet i wedin.db: samma par och samma barnaskara finns
-   * flera gånger. När andra maken slås ihop står paret plötsligt i två
-   * familjer, och barnen hamnar under båda om ingen städar.
+   * several times. When the second spouse is merged the couple suddenly sits
+   * in two families, and the children hang under both unless something tidies up.
    */
   function twinFamilies() {
     person('H', { given: 'Anders' });
@@ -328,7 +328,7 @@ describe('mergePersons — duplicate families for one couple', () => {
   });
 
   it('does not merge families whose other partner is unknown', () => {
-    // två barnaskaror med okänd far är inte självklart samma familj
+    // two sets of children with an unknown father are not obviously one family
     person('W1'); person('W2'); person('C1'); person('C2');
     family('F1', null, 'W1', ['C1']);
     family('F2', null, 'W2', ['C2']);
@@ -341,7 +341,7 @@ describe('mergePersons — duplicate families for one couple', () => {
     mergePersons(db, { survivorId: 'W1', duplicateId: 'W2' });
     const row = db.select().from(auditLog).all().at(-1)!;
     const before = JSON.parse(row.before!);
-    // familjen som försvann måste gå att återskapa ur before-bilden
+    // the family that disappeared must be recoverable from the before-image
     expect(before.families.map((f: { id: string }) => f.id).sort()).toEqual(['F1', 'F2']);
     expect(before.childLinks.map((l: { childId: string }) => l.childId).sort()).toEqual(['C1', 'C2']);
   });

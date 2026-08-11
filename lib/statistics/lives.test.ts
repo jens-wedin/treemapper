@@ -39,11 +39,11 @@ describe('getLives', () => {
 
   it('excludes impossible ages — they are data errors, which Konsekvens flags', () => {
     person('rimlig', 'F', 1800, 1890);
-    person('orimlig', 'M', 1700, 1830);            // 130 år
+    person('orimlig', 'M', 1700, 1830);            // 130 years
     const r = getLives(db, null);
     expect(MAX_PLAUSIBLE_AGE).toBe(110);
     expect(r.longestLives.map(l => l.id)).toEqual(['rimlig']);
-    expect(r.withBothYears).toBe(1);               // räknas inte heller in i underlaget
+    expect(r.withBothYears).toBe(1);               // is left out of the basis too
   });
 
   it('gives the earliest and latest birth year', () => {
@@ -55,9 +55,9 @@ describe('getLives', () => {
   });
 
   it('groups average lifespan and births by century', () => {
-    person('a', 'F', 1801, 1851);                  // 1800-talet, 50 år
-    person('b', 'M', 1802, 1872);                  // 1800-talet, 70 år
-    person('c', 'F', 1901, 1981);                  // 1900-talet, 80 år
+    person('a', 'F', 1801, 1851);                  // the 1800s, 50 years
+    person('b', 'M', 1802, 1872);                  // the 1800s, 70 years
+    person('c', 'F', 1901, 1981);                  // the 1900s, 80 years
     const r = getLives(db, null);
     expect(r.lifespanByCentury).toEqual([
       { century: 1800, averageAge: 60, people: 2 },

@@ -120,15 +120,15 @@ export function summarizeByPerson(issues: Issue[]): Record<string, PersonIssueMa
 
 // Thresholds calibrated against MyHeritage's own "Konsekvenskontroll av träd"
 // (data/konsekvensproblem.pdf, 2026-07-09, 894 problems / 24 categories).
-const MAX_AGE = 110;              // vid liv / dog för gammal
-const PARENT_MIN_GAP = 15;        // föräldrar för unga (≤ 15 år emellan)
-const PARENT_MAX_GAP = 65;        // förälder för gammal (≥ 65 år emellan)
-const SIBLING_MIN_DAYS = 300;     // syskon med nära ålder (< 300 dagar, tvillingar undantagna)
-const SPOUSE_MAX_GAP = 35;        // stor åldersskillnad mellan makar
-const MARRY_MIN_AGE = 16;         // gift för ung
-const MARRIED_MIN_DEATH_AGE = 14; // dog för ung för att vara gift
-const SPELLING_RARE_MAX = 1;      // stavningsvariant som förekommer högst 1 gång …
-const SPELLING_COMMON_MIN = 3;    // … mot en variant som förekommer minst 3 gånger
+const MAX_AGE = 110;              // alive / died too old
+const PARENT_MIN_GAP = 15;        // parents too young (15 years or less between)
+const PARENT_MAX_GAP = 65;        // parent too old (65 years or more between)
+const SIBLING_MIN_DAYS = 300;     // siblings born close (< 300 days, twins excepted)
+const SPOUSE_MAX_GAP = 35;        // large age gap between spouses
+const MARRY_MIN_AGE = 16;         // married too young
+const MARRIED_MIN_DEATH_AGE = 14; // died too young to have married
+const SPELLING_RARE_MAX = 1;      // a spelling variant occurring at most once …
+const SPELLING_COMMON_MIN = 3;    // … against one occurring at least 3 times
 
 /** MyHeritage placeholder record, not a real person. */
 const SENTINEL_ID = 'I88888888';
@@ -458,7 +458,7 @@ export function detectIssues(db: Db, opts: DetectOptions = {}): Issue[] {
     'inconsistent-place-spelling',
   );
 
-  // ---- 6. Möjliga dubbletter ----
+  // ---- 6. Possible duplicates ----
   const parentsOf = new Map<string, string[]>();
   for (const l of childLinks) {
     const f = fams.find(x => x.id === l.familyId);

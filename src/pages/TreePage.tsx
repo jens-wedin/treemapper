@@ -69,7 +69,7 @@ export default function TreePage() {
   const panel = useLingering(view === 'list' ? null : selectedId, PANEL_OUT_MS);
 
   /**
-   * The antavla and the solfjäder draw the same people under the same
+   * The pedigree and fan charts draw the same people under the same
    * Ahnentafel numbers, so switching between those two can be a morph rather
    * than a fade. Every other pair has cards with nowhere to travel to.
    */
@@ -83,7 +83,7 @@ export default function TreePage() {
   /**
    * Decided as the view is chosen, not afterwards in an effect. An effect runs
    * a render too late: the charts would already have started their 240 ms
-   * cross-fade and the solfjäder would be fully drawn while the markers were
+   * cross-fade and the fan would be fully drawn while the markers were
    * still travelling. Batched with the URL change, both land together.
    */
   function chooseView(next: View) {

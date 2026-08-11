@@ -36,7 +36,7 @@ describe('getTree', () => {
   });
 
   it('includes the partners of people whose descendants are shown', () => {
-    // I1 + I2 är gifta i F1 med barnet I3
+    // I1 and I2 are married in F1, with the child I3
     const tree = getTree(db, 'I1', 0, 2)!;
     expect(tree.descendants.spouses.map(s => s.id)).toEqual(['I2']);
     expect(tree.descendants.children.map(c => c.person.id)).toEqual(['I3']);
@@ -55,27 +55,27 @@ describe('getTree', () => {
   });
 
   it('says so when the descendants continue beyond the depth limit', () => {
-    // I1 har barnet I3, men vi frågar inte efter honom
+    // I1 has the child I3, but we are not asking for him
     const stopped = getTree(db, 'I1', 0, 0)!;
     expect(stopped.descendants.hasMoreDescendants).toBe(true);
 
     // I3 saknar egna barn
     expect(getTree(db, 'I3', 0, 0)!.descendants.hasMoreDescendants).toBe(false);
 
-    // och när barnen ritas ut behövs ingen fortsättningsmarkering
+    // and when the children are drawn, no continuation marker is needed
     const shown = getTree(db, 'I1', 0, 1)!;
     expect(shown.descendants.hasMoreDescendants).toBeFalsy();
   });
 
   it('says so when the line of descent continues beyond the depth limit', () => {
-    // I3 har föräldrarna I1 och I2, men vi frågar inte efter dem
+    // I3 has the parents I1 and I2, but we are not asking for them
     const stopped = getTree(db, 'I3', 0, 0)!;
     expect(stopped.ancestors.hasMoreAncestors).toBe(true);
 
-    // I1 saknar registrerade föräldrar — där tar linjen faktiskt slut
+    // I1 has no recorded parents — the line really does end there
     expect(getTree(db, 'I1', 0, 0)!.ancestors.hasMoreAncestors).toBe(false);
 
-    // och när föräldrarna ritas ut behövs ingen fortsättningsmarkering
+    // and when the parents are drawn, no continuation marker is needed
     const shown = getTree(db, 'I3', 1, 0)!;
     expect(shown.ancestors.hasMoreAncestors).toBeFalsy();
     expect(shown.ancestors.parents.every(p => p.hasMoreAncestors === false)).toBe(true);
@@ -90,7 +90,7 @@ describe('getTree', () => {
     ]).run();
     const prim = JSON.stringify([{ tag: '_PRIM', value: 'Y', children: [] }]);
     pdb.insert(media).values([
-      // P1: två foton, det andra är markerat som primärt
+      // P1: two photos, the second marked as primary
       { id: 1, ownerType: 'person', ownerId: 'P1', originalUrl: 'u1', downloadStatus: 'done', localPath: 'media/1.jpg' },
       { id: 2, ownerType: 'person', ownerId: 'P1', originalUrl: 'u2', downloadStatus: 'done', localPath: 'media/2.jpg', rawTags: prim },
       // P2: bara ett nedladdat foto, plus ett som misslyckades
@@ -100,8 +100,8 @@ describe('getTree', () => {
       { id: 5, ownerType: 'person', ownerId: 'P3', originalUrl: 'u5', downloadStatus: 'failed' },
     ]).run();
 
-    expect(getTree(pdb, 'P1')!.focus.photoId).toBe(2);   // primärt vinner över lägre id
-    expect(getTree(pdb, 'P2')!.focus.photoId).toBe(4);   // hoppar över failed
+    expect(getTree(pdb, 'P1')!.focus.photoId).toBe(2);   // primary beats the lower id
+    expect(getTree(pdb, 'P2')!.focus.photoId).toBe(4);   // skips the failed one
     expect(getTree(pdb, 'P3')!.focus.photoId).toBeNull();
   });
 
@@ -117,7 +117,7 @@ describe('getTree', () => {
       { id: 1, ownerType: 'person', ownerId: 'C1', type: 'BIRT', place: 'Alnön, Västernorrland, Sverige' },
       { id: 2, ownerType: 'person', ownerId: 'C2', type: 'BIRT', place: 'Bjuråker' },
       { id: 3, ownerType: 'person', ownerId: 'C3', type: 'CHR', place: 'Vasa, Finland' },
-      // bosättning i USA ska INTE ge flagga — säger inget om var personen föddes
+      // a residence in the USA must NOT set a flag — it says nothing about where they were born
       { id: 4, ownerType: 'person', ownerId: 'C4', type: 'RESI', place: 'Chicago, Illinois, USA' },
     ]).run();
 

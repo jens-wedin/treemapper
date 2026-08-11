@@ -25,13 +25,13 @@ describe('textBlocks', () => {
 
   it('turns br into a line break but keeps the paragraph together', () => {
     expect(textBlocks('<p>Först<br>Sedan<br/>Sist</p>')).toEqual(['Först\nSedan\nSist']);
-    // exporten hänger ofta med en style-attribut på sina br
+    // the export often hangs a style attribute on its br
     expect(textBlocks('Ett<br style="font-family: Times; font-size: small;" />Två'))
       .toEqual(['Ett\nTvå']);
   });
 
   it('decodes text that was escaped twice over', () => {
-    // stora delar av källhänvisningarna ser ut så här i exporten
+    // large parts of the citations look like this in the export
     expect(textBlocks('Kön: Man&amp;lt;br&amp;gt;Födelse: 1942')).toEqual(['Kön: Man\nFödelse: 1942']);
     expect(textBlocks('Bj&amp;ouml;rn')).toEqual(['Björn']);
   });
@@ -45,13 +45,13 @@ describe('textBlocks', () => {
 
   it('treats escaped markup as markup', () => {
     // exporten skriver en del av sina egna radbrytningar som &lt;br&gt;;
-    // avkodade sist hade de blivit stående som text på skärmen
+    // decoded last, they would have stood on screen as text
     expect(textBlocks('Elsa Viola&lt;br&gt;Födelse: 10 jan 1919&lt;br&gt;Bjuråker'))
       .toEqual(['Elsa Viola\nFödelse: 10 jan 1919\nBjuråker']);
   });
 
   it('leaves angle brackets that are not markup alone', () => {
-    // MyHeritage döljer levande personer bakom <Privat>, ofta maskerat
+    // MyHeritage hides living people behind <Privat>, often escaped
     expect(textBlocks('Förälder: &lt;Privat&gt; Vedin')).toEqual(['Förälder: <Privat> Vedin']);
     expect(textBlocks('Far: <Privat> Hammarstedt')).toEqual(['Far: <Privat> Hammarstedt']);
     expect(textBlocks('Yrke: <okänt>')).toEqual(['Yrke: <okänt>']);
@@ -70,7 +70,7 @@ describe('textBlocks', () => {
   it('keeps the text of links', () => {
     expect(textBlocks('Se <a href="http://exempel.se">Riksarkivet</a> för mer'))
       .toEqual(['Se Riksarkivet för mer']);
-    // MyHeritages egna pseudotaggar lämnar kvar adressen som läsbar text
+    // MyHeritage's own pseudo-tags leave the address behind as readable text
     expect(textBlocks('<linkurl>http://exempel.se</linkurl>')).toEqual(['http://exempel.se']);
   });
 

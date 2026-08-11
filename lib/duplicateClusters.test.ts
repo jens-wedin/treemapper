@@ -97,7 +97,7 @@ describe('duplicateClusters', () => {
   });
 
   it('joins groups that share a person', () => {
-    // W1 matchar W2 på namn och W3 på partner — en klunga, inte två
+    // W1 matches W2 on name and W3 on spouse — one cluster, not two
     person('H1', 'Jonas', 'Ek', '1834');
     person('W1', 'Brita', 'Forss', '6 JUN 1838');
     person('W2', 'Brita', 'Forss', '6 JUN 1838');

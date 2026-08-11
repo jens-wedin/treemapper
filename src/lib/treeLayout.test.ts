@@ -79,18 +79,18 @@ describe('layoutTree', () => {
 
     expect(spouseNode.isSpouse).toBe(true);
     expect(spouseNode.y).toBe(focusNode.y);              // samma generation
-    expect(spouseNode.x).toBeGreaterThan(focusNode.x);   // till höger om personen
+    expect(spouseNode.x).toBeGreaterThan(focusNode.x);   // to the right of the person
 
     // vigsellinje mellan korten
     const marriage = r2.links.filter(l => l.type === 'marriage');
     expect(marriage).toHaveLength(1);
     expect(marriage[0]!.y1).toBe(marriage[0]!.y2);
 
-    // barnets länk utgår från mitten mellan makarna, inte från ena kortet
+    // the child's link starts midway between the spouses, not at one card
     const childLink = r2.links.find(l => l.type !== 'marriage' && l.y2 === child.y)!;
     expect(childLink.x1).toBeCloseTo((focusNode.x + spouseNode.x) / 2, 5);
 
-    // partnern kan nås med tangentbordet och leder ned till barnet
+    // the partner is reachable by keyboard and leads down to the child
     expect(r2.nav[spouseNode.key]?.down).toBe(child.key);
   });
 
@@ -129,7 +129,7 @@ describe('layoutTree', () => {
     });
 
     it('leaves room for cousins in different families', () => {
-      // syskonen ligger i skilda undergrenar — d3 jämför då konturer, inte syskon
+      // the siblings sit in separate subtrees — d3 then compares contours, not siblings
       const r2 = layoutTree({
         focus: P('F'),
         ancestors: { person: P('F'), parents: [] },
@@ -165,9 +165,9 @@ describe('layoutTree', () => {
     const linkFor = (child: typeof b1) =>
       r2.links.find(l => l.type !== 'marriage' && l.x2 === child.x && l.y2 === child.y)!;
 
-    // barn 1 utgår från vigselstrecket mellan F och make1
+    // child 1 starts from the marriage line between F and spouse 1
     expect(linkFor(b1).x1).toBeCloseTo((focusNode.x + s1.x) / 2, 5);
-    // barn 2 från strecket mellan make1 och make2 — inte från första äktenskapet
+    // child 2 from the line between spouse 1 and spouse 2 — not from the first marriage
     expect(linkFor(b2).x1).toBeCloseTo((s1.x + s2.x) / 2, 5);
     expect(linkFor(b2).x1).not.toBeCloseTo(linkFor(b1).x1, 5);
   });
@@ -192,7 +192,7 @@ describe('layoutTree', () => {
     });
 
     it('places a lone parent by sex, exactly as ahnentafel numbering does', () => {
-      // bara modern känd: hon hör till mödernet, inte fädernet
+      // only the mother known: she belongs to the maternal side, not the paternal
       const motherOnly: TreeData = {
         focus: P('F'),
         ancestors: { person: P('F'), parents: [{ person: { ...P('mor'), sex: 'F' }, parents: [
@@ -206,8 +206,8 @@ describe('layoutTree', () => {
     });
 
     it('gives the same branch as the pedigree chart for the same person', () => {
-      // Vyerna räknar ut grenen var för sig; går de isär färgas samma
-      // förfader olika beroende på vilken vy man råkar titta i.
+      // The views work the branch out separately; if they disagree, the same
+      // ancestor is coloured differently depending on which view you happen to be in.
       const mixed: TreeData = {
         focus: P('F'),
         ancestors: { person: P('F'), parents: [
@@ -226,7 +226,7 @@ describe('layoutTree', () => {
         flattenAncestors(mixed.ancestors, 5).map(s => [s.person.id, branchOf(s.ahnentafel)]),
       );
       for (const [id, branch] of fromPedigree) expect([id, fromTree.get(id)]).toEqual([id, branch]);
-      expect(fromTree.get('farmor')).toBe('fm');     // placerad efter kön, inte position
+      expect(fromTree.get('farmor')).toBe('fm');     // placed by sex, not by position
     });
 
     it('tells the four grandparent branches apart', () => {
@@ -285,8 +285,8 @@ describe('layoutTree', () => {
     });
 
     it('points out where in the tree a fetched branch should be inserted', () => {
-      expect(handleFor('far')!.path).toEqual([0]);        // första föräldern
-      expect(handleFor('barn1')!.path).toEqual([0]);      // första barnet
+      expect(handleFor('far')!.path).toEqual([0]);        // the first parent
+      expect(handleFor('barn1')!.path).toEqual([0]);      // the first child
     });
 
     it('makes the button a stop on the keyboard path', () => {

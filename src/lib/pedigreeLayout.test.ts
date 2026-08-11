@@ -59,20 +59,20 @@ describe('layoutPedigree', () => {
   });
 
   it('holds an empty row for the parent that is missing', () => {
-    // bara modern känd → hon ska ligga under den tomma faderns plats
+    // only the mother known → she sits below the empty father's slot
     const motherOnly = layoutPedigree([slot(1, 'jag'), slot(3, 'mor')]);
     const m = motherOnly.nodes.find(n => n.person.id === 'mor')!;
     expect(m.y).toBeGreaterThan(motherOnly.nodes.find(n => n.isFocus)!.y);
 
-    // bara fadern känd → han ligger över den tomma moderns plats
+    // only the father known → he sits above the empty mother's slot
     const fatherOnly = layoutPedigree([slot(1, 'jag'), slot(2, 'far')]);
     const f = fatherOnly.nodes.find(n => n.person.id === 'far')!;
     expect(f.y).toBeLessThan(fatherOnly.nodes.find(n => n.isFocus)!.y);
   });
 
   it('reserves no room for branches that are missing entirely', () => {
-    // en rak fäderlinje genom fem generationer: rutnätet har 32 rader,
-    // men linjen behöver bara en handfull — annars blir tavlan oläsligt liten
+    // a straight paternal line through five generations: the grid has 32 rows,
+    // but the line needs only a handful — otherwise the chart shrinks past reading
     const line = [1, 2, 4, 8, 16, 32].map((n, i) => slot(n, `g${i}`));
     const l = layoutPedigree(line);
     const ys = l.nodes.map(n => n.y);
@@ -82,7 +82,7 @@ describe('layoutPedigree', () => {
   it('gives unique keys even when the same person appears twice', () => {
     const collapse: AncestorSlot[] = [
       slot(1, 'jag'), slot(2, 'far'), slot(3, 'mor'),
-      slot(4, 'anfader'), slot(6, 'anfader'),   // samma person i två grenar
+      slot(4, 'anfader'), slot(6, 'anfader'),   // the same person in two branches
     ];
     const c = layoutPedigree(collapse);
     const keys = c.nodes.filter(n => n.person.id === 'anfader').map(n => n.key);
@@ -93,9 +93,9 @@ describe('layoutPedigree', () => {
   it('bygger en navigeringskarta', () => {
     const jag = at('jag');
     const far = at('far');
-    expect(r.nav[jag.key]?.right).toBe(far.key);          // höger = uppåt i släkten
+    expect(r.nav[jag.key]?.right).toBe(far.key);          // right = up the family
     expect(r.nav[far.key]?.left).toBe(jag.key);
-    expect(r.nav[far.key]?.down).toBe(at('mor').key);     // nästa i samma generation
+    expect(r.nav[far.key]?.down).toBe(at('mor').key);     // the next in the same generation
     expect(r.nav[at('mor').key]?.up).toBe(far.key);
   });
 
@@ -140,11 +140,11 @@ describe('layoutPedigree', () => {
     it('lets the right arrow go to a real ancestor when one is drawn', () => {
       const far = r.nodes.find(n => n.person.id === 'far')!;
       expect(r.nav[far.key]?.right).toBe(r.nodes.find(n => n.person.id === 'farfar')!.key);
-      expect(r.handles).toEqual([]);   // inga flaggade slut i det fullständiga trädet
+      expect(r.handles).toEqual([]);   // no flagged endings in the complete tree
     });
 
     it('switches to a collapse button for the branch that was opened', () => {
-      // farfar (4) är utfälld: hans föräldrar ritas nu ut
+      // the paternal grandfather (4) is expanded: his parents are drawn now
       const opened: AncestorSlot[] = [
         ...edge,
         slot(8, 'farfars far'), { ...slot(9, 'farfars mor'), hasMoreAncestors: true },
@@ -152,7 +152,7 @@ describe('layoutPedigree', () => {
       const o = layoutPedigree(opened, new Set([4]));
       const farfar = o.handles.find(h => h.person.id === 'farfar')!;
       expect(farfar.action).toBe('collapse');
-      // och de nya yttersta korten erbjuder i sin tur att fortsätta
+      // and the new outermost cards offer to continue in their turn
       expect(o.handles.filter(h => h.action === 'expand').map(h => h.person.id).sort())
         .toEqual(['farfars mor', 'mormor']);
     });
@@ -164,7 +164,7 @@ describe('layoutPedigree', () => {
       const parent = opened.nodes.find(n => n.person.id === 'farfars far')!;
       expect(button.x).toBeGreaterThan(node.x + PED_W / 2);
       expect(button.x).toBeLessThan(parent.x - PED_W / 2);
-      // högerpilen stannar vid knappen och går sedan vidare till föräldern
+      // the right arrow stops at the button, then carries on to the parent
       expect(opened.nav[node.key]?.right).toBe(button.key);
       expect(opened.nav[button.key]?.right).toBe(parent.key);
     });

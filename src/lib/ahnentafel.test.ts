@@ -10,7 +10,7 @@ const A = (id: string, sex: 'M' | 'F' | 'U', parents: AncestorNode[] = []): Ance
 
 describe('generationOf', () => {
   it('follows ahnentafel numbering', () => {
-    expect(generationOf(1)).toBe(0);       // personen själv
+    expect(generationOf(1)).toBe(0);       // the person themselves
     expect(generationOf(2)).toBe(1);       // far
     expect(generationOf(3)).toBe(1);       // mor
     expect(generationOf(4)).toBe(2);
@@ -32,7 +32,7 @@ describe('branchOf', () => {
   });
 
   it('inherits the branch downward through deeper generations', () => {
-    // 10 = 1010b → efter ledande 1: 010 → första två bitarna 01 = farmors gren
+    // 10 = 1010b → after the leading 1: 010 → the first two bits 01 = the paternal grandmother's branch
     expect(branchOf(10)).toBe('fm');
     expect(branchOf(11)).toBe('fm');
     expect(branchOf(21)).toBe('fm');
@@ -72,7 +72,7 @@ describe('flattenAncestors', () => {
   });
 
   it('copes with gaps without moving sibling slots', () => {
-    // ingen far alls, men mor med sina föräldrar
+    // no father at all, but a mother with her own parents
     const tree = A('barn', 'U', [A('mor', 'F', [A('morfar', 'M'), A('mormor', 'F')])]);
     const byNumber = Object.fromEntries(flattenAncestors(tree, 3).map(s => [s.ahnentafel, s.person.id]));
     expect(byNumber).toEqual({ 1: 'barn', 3: 'mor', 6: 'morfar', 7: 'mormor' });
@@ -86,7 +86,7 @@ describe('graftAt', () => {
   );
 
   it('renumbers a fetched branch as though it had been there all along', () => {
-    // grenen hängs under mormor (nr 7): hennes far blir 14, hennes farfar 28
+    // the branch hangs under the maternal grandmother (7): her father becomes 14, her grandfather 28
     const grafted = Object.fromEntries(graftAt(7, sub).map(s => [s.ahnentafel, s.person.id]));
     expect(grafted).toEqual({ 7: 'rot', 14: 'far', 15: 'mor', 28: 'farfar', 29: 'farmor' });
   });
@@ -97,7 +97,7 @@ describe('graftAt', () => {
   });
 
   it('keeps the branch colour from the main chart', () => {
-    // allt som hängs under en morfar (nr 6) tillhör mf-grenen
+    // everything hung under a maternal grandfather (6) belongs to the mf branch
     for (const slot of graftAt(6, sub)) expect(branchOf(slot.ahnentafel)).toBe('mf');
   });
 });

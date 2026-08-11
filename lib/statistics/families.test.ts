@@ -54,8 +54,8 @@ describe('getFamilies', () => {
   });
 
   it('gives the average and largest age gap within a couple', () => {
-    person('m1', 'M', 1800); person('k1', 'F', 1802);   // 2 år
-    person('m2', 'M', 1800); person('k2', 'F', 1820);   // 20 år
+    person('m1', 'M', 1800); person('k1', 'F', 1802);   // 2 years
+    person('m2', 'M', 1800); person('k2', 'F', 1820);   // 20 years
     family('F1', 'm1', 'k1', []);
     family('F2', 'm2', 'k2', []);
     const r = getFamilies(db, null);
@@ -64,19 +64,19 @@ describe('getFamilies', () => {
   });
 
   it('excludes impossible age gaps, as it does impossible lifespans', () => {
-    person('m1', 'M', 1800); person('k1', 'F', 1804);     // 4 år, rimligt
-    person('m2', 'M', 1700); person('k2', 'F', 1811);     // 111 år, datafel
+    person('m1', 'M', 1800); person('k1', 'F', 1804);     // 4 years, plausible
+    person('m2', 'M', 1700); person('k2', 'F', 1811);     // 111 years, a data error
     family('F1', 'm1', 'k1', []);
     family('F2', 'm2', 'k2', []);
     const r = getFamilies(db, null);
     expect(MAX_PLAUSIBLE_AGE_GAP).toBe(50);
     expect(r.averageAgeGap).toBe(4);
     expect(r.largestAgeGap).toMatchObject({ familyId: 'F1', gap: 4 });
-    expect(r.couplesWithBothBirths).toBe(1);              // datafelet räknas inte
+    expect(r.couplesWithBothBirths).toBe(1);              // the data error is not counted
   });
 
   it('states the basis for the age gap separately from the number of dated marriages', () => {
-    // paret har båda födelseår men ingen vigseldatering
+    // the couple have both birth years but no dated marriage
     person('m', 'M', 1800); person('k', 'F', 1805);
     family('F1', 'm', 'k', []);
     const r = getFamilies(db, null);

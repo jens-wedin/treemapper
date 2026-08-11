@@ -112,8 +112,8 @@ describe('buildIssueLog — order', () => {
 describe('buildPersonLog', () => {
   it('includes edits to the person and to their events', () => {
     updatePerson(db, 'I1', { givenName: 'Jonas' });
-    updateEvent(db, 1, { dateRaw: '17 mar 1942' });   // I1:s dödsfall
-    updatePerson(db, 'I2', { surname: 'Larsdotter' }); // någon annan
+    updateEvent(db, 1, { dateRaw: '17 mar 1942' });   // I1's death
+    updatePerson(db, 'I2', { surname: 'Larsdotter' }); // somebody else
 
     const log = buildPersonLog(db, 'I1');
     expect(log).toHaveLength(2);
@@ -135,7 +135,7 @@ describe('buildPersonLog', () => {
     expect(log[0]!.code).toBe('log.photoRemovedNamed');    // newest first
     expect(log[0]!.params.title).toBe('Farmor');
     expect(log[1]!.code).toBe('log.photoAddedNamed');
-    // och det hamnar hos rätt person
+    // and it lands on the right person
     expect(buildPersonLog(db, 'I2')).toEqual([]);
   });
 

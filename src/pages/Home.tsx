@@ -19,7 +19,7 @@ export default function Home() {
   useEffect(() => {
     document.title = t('appTitle');
     fetchJson<Stats>('/api/stats').then(setStats).catch(() => setStats(null));
-    // limit=0: vi behöver bara summorna till resultattavlan
+    // limit=0: only the totals are needed, for the scoreboard
     fetchJson<IssueSummary>('/api/issues?limit=0').then(setIssues).catch(() => setIssues(null));
   }, []);
 

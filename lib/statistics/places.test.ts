@@ -46,7 +46,7 @@ describe('getPlaces', () => {
   it('rangordnar yrken', () => {
     person('a'); person('b');
     event('a', 'OCCU', undefined, 'Bonde');
-    event('b', 'OCCU', undefined, 'bonde');       // samma yrke, annan skiftläge
+    event('b', 'OCCU', undefined, 'bonde');       // the same occupation in a different case
     const r = getPlaces(db, null);
     expect(r.occupations).toEqual([{ place: 'Bonde', count: 2 }]);
   });

@@ -18,7 +18,7 @@ const HANDOVER = 0.15;
  * The chart glides elsewhere use a pure ease-out, because they start the moment
  * you click. This one has a handover at both ends: the markers have to sit
  * still on their cards while the antavla fades, and settle onto their wedges
- * before the solfjäder appears. An ease-out sent them 61 % of the way in the
+ * before the fan chart appears. An ease-out sent them 61 % of the way in the
  * first 21 % of the time, so they never appeared to leave anything.
  */
 const ease = (t: number) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
@@ -37,11 +37,11 @@ export const markerOpacity = (linear: number) =>
   Math.max(0, Math.min(1, linear / HANDOVER, (0.9 - linear) / HANDOVER));
 
 /**
- * The antavla winding into the solfjäder, and back.
+ * The pedigree chart winding into the fan chart, and back.
  *
  * Only the position travels. A rectangle cannot become a wedge, and morphing
  * the shapes would mean rewriting both layouts against one parameterised
- * geometry — at the cost of the antavla's portraits and the solfjäder's labels
+ * geometry — at the cost of the pedigree's portraits and the fan's labels
  * along arcs. Carrying the position keeps the part that means something: where
  * each person goes.
  *

@@ -6,7 +6,7 @@ import { switchTreeUrl } from '../lib/treeUrl';
 /**
  * Which family tree the app is showing.
  *
- * Only the picker — importing lives in Inställningar. A shortcut in the header
+ * Only the picker — importing lives in Settings. A shortcut in the header
  * would sit beside every page for the sake of something done once or twice.
  */
 export default function TreePicker() {

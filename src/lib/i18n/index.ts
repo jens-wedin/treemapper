@@ -107,7 +107,7 @@ export const formatNumber = (n: number): string => n.toLocaleString(uiLocale());
 /**
  * "1 familj" and "2 familjer" — the count with the right form of its noun.
  * Swedish, German and Spanish all inflect these, so composing the sentence from
- * a singular and a plural key is the only way to avoid writing "1 källor".
+ * a singular and a plural key is the only way to avoid writing "1 sources".
  */
 export const plural = (n: number, oneKey: string, manyKey: string): string =>
   `${n} ${t(n === 1 ? oneKey : manyKey)}`;

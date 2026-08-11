@@ -13,7 +13,7 @@ export const CENTRE_R = 96;
 export const RING = 80;
 const LABEL_MIN_ARC = 96;      // px of arc needed before a name is set along it
 const FLAG_INSET = 15;
-const MARK_INSET = 11;         // konsekvensprickens avstånd från skivans hörn
+const MARK_INSET = 11;         // how far the problem dot sits from the slice's corner
 
 export interface FanSlice {
   key: string;

@@ -12,7 +12,8 @@ import FamiliesSection from '../components/statistics/FamiliesSection';
 import PlacesSection from '../components/statistics/PlacesSection';
 
 /**
- * "Statistik för X" with X linked. The sentence is split around its
+ * "Statistics for X with ancestors and descendants", X linked. The sentence
+ * is split around its
  * placeholder rather than assembled by replace(), because a link is an element
  * and cannot be spliced into a string — and the word order around the name
  * differs between the four languages.

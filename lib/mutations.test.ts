@@ -147,7 +147,7 @@ describe('addRelation', () => {
 });
 
 describe('removeChildLink', () => {
-  // delad databas i den här filen — egna id:n per test
+  // one database shared across this file — each test uses its own ids
   const setup = (n: number, extraFamily = false) => {
     const parent = `RP${n}`, child = `RC${n}`;
     db.insert(persons).values([

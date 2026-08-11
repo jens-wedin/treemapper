@@ -43,6 +43,24 @@ export function updatePerson(db: Db, id: string, patch: PersonUpdate): MutationR
   });
 }
 
+/**
+ * A source you are adding yourself — a document you hold rather than one that
+ * came in with an import.
+ *
+ * The title is required: a source is found again by its name, and an untitled
+ * row is one you have to open to identify.
+ */
+export function createSource(db: Db, input: SourceUpdate): MutationResult<{ id: string }> {
+  const title = input.title?.trim();
+  if (!title) throw new MutationError('Källan behöver en titel', 400);
+  return db.transaction(tx => {
+    const id = nextId(tx, sources, 'S');
+    tx.insert(sources).values({ ...input, id, title }).run();
+    audit(tx, 'create', 'source', id, null, tx.select().from(sources).where(eq(sources.id, id)).all()[0]);
+    return { warnings: [], data: { id } };
+  });
+}
+
 export function updateSource(db: Db, id: string, patch: SourceUpdate): MutationResult {
   return db.transaction(tx => {
     const before = tx.select().from(sources).where(eq(sources.id, id)).all()[0];
@@ -122,7 +140,7 @@ const CYCLE_MSG = 'Detta skulle skapa en omöjlig släktlinje (personen skulle b
 // actual numbering instead of jumping to 88888889.
 const ID_SENTINEL_FLOOR = 10_000_000;
 
-function nextId(tx: Tx, table: typeof persons | typeof families, prefix: 'I' | 'F'): string {
+function nextId(tx: Tx, table: typeof persons | typeof families | typeof sources, prefix: 'I' | 'F' | 'S'): string {
   const row = tx.select({ n: sql<number>`coalesce(max(cast(substr(id, 2) as integer)), 0)` })
     .from(table)
     .where(sql`id like ${prefix + '%'} and cast(substr(id, 2) as integer) < ${ID_SENTINEL_FLOOR}`)

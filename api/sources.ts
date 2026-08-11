@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { listSources, getSourceFull } from '../lib/sources';
 import { sourceUpdateSchema } from '../lib/schemas';
-import { MutationError, updateSource } from '../lib/mutations';
+import { MutationError, createSource, updateSource } from '../lib/mutations';
 import type { TreeResolver } from './trees';
 
 const querySchema = z.object({
@@ -26,6 +26,18 @@ export function createSourcesApi(tree: TreeResolver) {
     const { db } = tree(c);
     const full = getSourceFull(db, c.req.param('id'));
     return full ? c.json(full) : c.json({ error: 'Källan finns inte' }, 404);
+  });
+
+  api.post('/api/sources', async c => {
+    const { db } = tree(c);
+    const parsed = sourceUpdateSchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) return c.json({ error: parsed.error.issues[0]?.message ?? 'Ogiltiga fält' }, 400);
+    try {
+      return c.json({ ok: true, ...createSource(db, parsed.data) });
+    } catch (err) {
+      if (err instanceof MutationError) return c.json({ error: err.message }, err.status);
+      throw err;
+    }
   });
 
   api.patch('/api/sources/:id', async c => {

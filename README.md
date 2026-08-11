@@ -119,6 +119,10 @@ before trying again. The report lands in `data/media-report-<tree>.md`.
 
 ### Källans egna ord
 
+**Källor → Ny källa** lägger till ett dokument du själv har; dialogen frågar
+bara efter titeln och lämnar dig på källans sida, där avskriften skrivs.
+
+
 A source has a **Transkription** — the document written out — separate from
 **Anteckning**, which is what *you* say about it. Line breaks are kept: in a
 transcription they are where the lines break on the page.

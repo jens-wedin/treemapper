@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import type { SourceListItem } from '../../lib/sources';
 import { t } from '../lib/i18n';
 import { fetchJson } from '../lib/api';
+import NewSourceDialog from '../components/edit/NewSourceDialog';
 import { useTreeUrl } from '../lib/treeUrl';
 
 const PAGE_SIZE = 50;
@@ -46,7 +47,10 @@ export default function SourcesPage() {
 
   return (
     <section>
-      <h1 className="text-2xl font-bold">{t('sources.title')}</h1>
+      <div className="flex flex-wrap items-center gap-3">
+        <h1 className="text-2xl font-bold">{t('sources.title')}</h1>
+        <NewSourceDialog onCreated={() => setResult(null)} />
+      </div>
 
       <form onSubmit={submit} className="mt-4 flex items-end gap-3">
         <div>

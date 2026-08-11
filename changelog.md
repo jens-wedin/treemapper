@@ -43,6 +43,10 @@
 
 ### Added
 
+**Nya källor går att lägga till**
+- **Källor → Ny källa** skapar en källa för ett dokument du själv har. Fanns inte förut: API:t kunde lista, visa och ändra källor, men inte skapa någon — så ett dokument som inte kommit in med en import gick inte att skriva av någonstans.
+- Dialogen frågar bara efter titeln och skickar dig till källans sida, där avskriften har plats. En dialog är fel form för en sida handskrift.
+
 **Källor kan skrivas av**
 - Ett nytt fält **Transkription** rymmer dokumentet avskrivet, skilt från **Anteckning** som är vad *du* säger om källan. Radbrytningar behålls — i en avskrift är de var raderna bryts på sidan.
 - Motsvarar GEDCOM:s `SOUR.TEXT`, så en avskrift överlever export och kommer tillbaka vid återimport. Ett rundturstest skickar en flerradig text hela vägen ut och in igen.

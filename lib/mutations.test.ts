@@ -6,8 +6,8 @@ import { fileURLToPath } from 'node:url';
 import { eq } from 'drizzle-orm';
 import { runImport } from '../scripts/import';
 import { createDb, type Db } from '../db/client';
-import { persons, events, citations, auditLog, familyChildren, families } from '../db/schema';
-import { updatePerson, createEvent, updateEvent, deleteEvent, addRelation, removeChildLink, MutationError } from './mutations';
+import { persons, events, citations, auditLog, familyChildren, families, sources } from '../db/schema';
+import { updatePerson, createEvent, updateEvent, deleteEvent, addRelation, removeChildLink, MutationError, createSource } from './mutations';
 
 const fixture = fileURLToPath(new URL('./gedcom/fixtures/mini.ged', import.meta.url));
 let dir: string;
@@ -193,5 +193,39 @@ describe('removeChildLink', () => {
   it('säger ifrån när barnet inte finns i familjen', () => {
     const { family } = setup(4);
     expect(() => removeChildLink(db, family, 'RC-saknas')).toThrow(MutationError);
+  });
+});
+
+describe('createSource', () => {
+  /** The fixture already holds sources, so expectations are derived, not hardcoded. */
+  const nextExpected = () => {
+    const ns = db.select().from(sources).all()
+      .map(r => Number(r.id.slice(1)))
+      .filter(n => Number.isFinite(n) && n < 10_000_000);
+    return `S${Math.max(0, ...ns) + 1}`;
+  };
+
+  it('ger källan nästa lediga id och sparar den i ändringsloggen', () => {
+    const expected = nextExpected();
+    const res = createSource(db, { title: 'Notarialakt, Hinspont', transcription: 'Pardevant moy…' });
+
+    expect(res.data.id).toBe(expected);
+    const row = db.select().from(sources).where(eq(sources.id, expected)).all()[0]!;
+    expect(row).toMatchObject({ title: 'Notarialakt, Hinspont', transcription: 'Pardevant moy…' });
+    expect(db.select().from(auditLog).all()
+      .some(a => a.entityType === 'source' && a.action === 'create' && a.entityId === expected)).toBe(true);
+  });
+
+  it('hoppar över MyHeritage spärrposter när nästa id räknas ut', () => {
+    // S88888888 "Unassociated photos" and friends must not push new ids there
+    db.insert(sources).values({ id: 'S88888888', title: 'Spärrpost' }).run();
+    // Read the expectation before creating: arguments evaluate left to right,
+    // so calling it inline would count the row this line is about to add.
+    const expected = nextExpected();
+    expect(createSource(db, { title: 'Ny' }).data.id).toBe(expected);
+  });
+
+  it('kräver en titel — en källa utan namn går inte att hitta igen', () => {
+    expect(() => createSource(db, { title: '  ' })).toThrow();
   });
 });

@@ -94,3 +94,20 @@ test('en källa kan skrivas av, med anteckningen som eget fält', async ({ page 
   await expect(page.getByRole('heading', { name: 'Transkription' })).toBeVisible();
   await expect(page.getByText('Erik Nilsson')).toBeVisible();
 });
+
+test('en ny källa skapas och leder direkt till transkriptionen', async ({ page }) => {
+  await page.goto('/wedin/kallor');
+  await page.getByRole('button', { name: 'Ny källa' }).click();
+  await page.getByRole('dialog').getByLabel('Namn').fill('Notarialakt, Hinspont 1618');
+  await page.getByRole('dialog').getByRole('button', { name: 'Spara' }).click();
+
+  // lands on the new source, where the transcription field lives
+  await expect(page).toHaveURL(/\/wedin\/kalla\/S\d+$/);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Notarialakt, Hinspont 1618');
+  await page.getByRole('button', { name: 'Redigera' }).click();
+  await expect(page.getByLabel('Transkription')).toBeVisible();
+
+  // and it is in the list afterwards
+  await page.goto('/wedin/kallor?q=' + encodeURIComponent('Notarialakt, Hinspont'));
+  await expect(page.getByRole('link', { name: /Notarialakt, Hinspont 1618/ })).toBeVisible();
+});

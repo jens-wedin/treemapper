@@ -1,10 +1,12 @@
 import { useSyncExternalStore } from 'react';
+import { readPreference } from './storage';
 
 export type Theme = 'light' | 'dark' | 'system';
 export type Resolved = 'light' | 'dark';
 
 export const THEMES: Theme[] = ['system', 'light', 'dark'];
-const STORAGE_KEY = 'wedin-tree-tema';
+const STORAGE_KEY = 'wedin-tree-theme';
+const LEGACY_KEY = 'wedin-tree-tema';
 const DARK_QUERY = '(prefers-color-scheme: dark)';
 
 /** Anything unrecognised — including nothing stored — means "follow the OS". */
@@ -22,11 +24,7 @@ function systemPrefersDark(): boolean {
 }
 
 function read(): Theme {
-  try {
-    return parseTheme(localStorage.getItem(STORAGE_KEY));
-  } catch {
-    return 'system';
-  }
+  return parseTheme(readPreference(STORAGE_KEY, LEGACY_KEY));
 }
 
 let current: Theme = typeof window === 'undefined' ? 'system' : read();

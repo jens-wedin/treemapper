@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { DICTIONARIES, FALLBACK, EVENT_LABELS, MONTHS, QUALIFIERS, type Lang } from './dictionaries';
+import { readPreference, writePreference } from '../storage';
 
 export type { Lang };
 export const LANGUAGES: { code: Lang; label: string }[] = [
@@ -12,16 +13,13 @@ export const LANGUAGES: { code: Lang; label: string }[] = [
 /** For Intl. The app's own language codes are deliberately shorter than these. */
 const LOCALES: Record<Lang, string> = { en: 'en-GB', sv: 'sv-SE', de: 'de-DE', es: 'es-ES' };
 
-const STORAGE_KEY = 'wedin-tree-sprak';
+const STORAGE_KEY = 'wedin-tree-language';
+const LEGACY_KEY = 'wedin-tree-sprak';
 const listeners = new Set<() => void>();
 
 function readStored(): Lang {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY) as Lang | null;
-    if (stored && stored in DICTIONARIES) return stored;
-  } catch {
-    /* storage unavailable — fall through */
-  }
+  const stored = readPreference(STORAGE_KEY, LEGACY_KEY) as Lang | null;
+  if (stored && stored in DICTIONARIES) return stored;
   return 'en';
 }
 
@@ -43,11 +41,7 @@ export function startLanguage(): void {
 export function setLanguage(lang: Lang): void {
   if (!(lang in DICTIONARIES) || lang === current) return;
   current = lang;
-  try {
-    localStorage.setItem(STORAGE_KEY, lang);
-  } catch {
-    /* a preference is a nicety — ignore storage failures */
-  }
+  writePreference(STORAGE_KEY, lang);
   if (typeof document !== 'undefined') document.documentElement.lang = lang;
   listeners.forEach(notify => notify());
 }

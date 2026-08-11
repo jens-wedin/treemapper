@@ -23,3 +23,27 @@ export const SAFE_ENV = {
 };
 
 for (const [key, value] of Object.entries(SAFE_ENV)) process.env[key] = value;
+
+/**
+ * A `localStorage` for the node environment.
+ *
+ * Every preference the app stores is wrapped in a try/catch, so without this
+ * the storage tests would pass by never reaching storage at all — the catch
+ * would swallow the missing global and hand back the default. Node has a real
+ * implementation behind `--localstorage-file`, but it persists to disk between
+ * runs, which is the opposite of what a test wants.
+ */
+if (typeof globalThis.localStorage === 'undefined') {
+  const store = new Map<string, string>();
+  Object.defineProperty(globalThis, 'localStorage', {
+    configurable: true,
+    value: {
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, value: string) => void store.set(key, String(value)),
+      removeItem: (key: string) => void store.delete(key),
+      clear: () => store.clear(),
+      key: (i: number) => [...store.keys()][i] ?? null,
+      get length() { return store.size; },
+    },
+  });
+}

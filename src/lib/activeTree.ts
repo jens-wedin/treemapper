@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { readPreference, writePreference } from './storage';
 
 /**
  * Which of the family trees this browser is looking at.
@@ -24,14 +25,11 @@ export interface TreeSummary {
 }
 
 export const DEFAULT_TREE = 'default';
-const STORAGE_KEY = 'wedin-tree-trad';
+const STORAGE_KEY = 'wedin-tree-active-tree';
+const LEGACY_KEY = 'wedin-tree-trad';
 
 function read(): string {
-  try {
-    return localStorage.getItem(STORAGE_KEY) || DEFAULT_TREE;
-  } catch {
-    return DEFAULT_TREE;
-  }
+  return readPreference(STORAGE_KEY, LEGACY_KEY) || DEFAULT_TREE;
 }
 
 let current = typeof window === 'undefined' ? DEFAULT_TREE : read();
@@ -51,11 +49,7 @@ export const getTrees = () => trees;
 
 function remember(id: string) {
   current = id;
-  try {
-    localStorage.setItem(STORAGE_KEY, id);
-  } catch {
-    /* a preference is a nicety — ignore storage failures */
-  }
+  writePreference(STORAGE_KEY, id);
 }
 
 export function setActiveTree(id: string) {

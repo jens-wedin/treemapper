@@ -35,7 +35,7 @@ describe('getTree', () => {
     expect(i1.descendants.children.map(c => c.person.id)).toEqual(['I3']);
   });
 
-  it('tar med partner till personer vars ättlingar visas', () => {
+  it('includes the partners of people whose descendants are shown', () => {
     // I1 + I2 är gifta i F1 med barnet I3
     const tree = getTree(db, 'I1', 0, 2)!;
     expect(tree.descendants.spouses.map(s => s.id)).toEqual(['I2']);
@@ -44,7 +44,7 @@ describe('getTree', () => {
     expect(tree.descendants.children[0]!.spouses).toEqual([]);
   });
 
-  it('visar inte partner på den understa generationen', () => {
+  it('does not show partners on the bottom generation', () => {
     const shallow = getTree(db, 'I1', 0, 0)!;
     expect(shallow.descendants.spouses).toEqual([]);
   });
@@ -54,7 +54,7 @@ describe('getTree', () => {
     expect(tree.ancestors.parents).toEqual([]);
   });
 
-  it('säger till när ättlingarna fortsätter bortom djupgränsen', () => {
+  it('says so when the descendants continue beyond the depth limit', () => {
     // I1 har barnet I3, men vi frågar inte efter honom
     const stopped = getTree(db, 'I1', 0, 0)!;
     expect(stopped.descendants.hasMoreDescendants).toBe(true);
@@ -67,7 +67,7 @@ describe('getTree', () => {
     expect(shown.descendants.hasMoreDescendants).toBeFalsy();
   });
 
-  it('säger till när släktlinjen fortsätter bortom djupgränsen', () => {
+  it('says so when the line of descent continues beyond the depth limit', () => {
     // I3 har föräldrarna I1 och I2, men vi frågar inte efter dem
     const stopped = getTree(db, 'I3', 0, 0)!;
     expect(stopped.ancestors.hasMoreAncestors).toBe(true);
@@ -81,7 +81,7 @@ describe('getTree', () => {
     expect(shown.ancestors.parents.every(p => p.hasMoreAncestors === false)).toBe(true);
   });
 
-  it('väljer porträtt: primärt foto först, hoppar över ej nedladdade', () => {
+  it('chooses a portrait: the primary photo first, skipping any not downloaded', () => {
     const pdb = createDb(path.join(dir, 'photos.db'));
     pdb.insert(persons).values([
       { id: 'P1', givenName: 'Med', surname: 'Primärt', sex: 'M' },
@@ -105,7 +105,7 @@ describe('getTree', () => {
     expect(getTree(pdb, 'P3')!.focus.photoId).toBeNull();
   });
 
-  it('sätter land bara när födelseplatsen namnger ett', () => {
+  it('sets a country only when the birthplace names one', () => {
     const cdb = createDb(path.join(dir, 'countries.db'));
     cdb.insert(persons).values([
       { id: 'C1', givenName: 'Med', surname: 'Land', sex: 'M' },

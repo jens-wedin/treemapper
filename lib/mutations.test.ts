@@ -165,7 +165,7 @@ describe('removeChildLink', () => {
   const linksFor = (childId: string) =>
     db.select().from(familyChildren).all().filter(l => l.childId === childId);
 
-  it('tar bort barnet ur familjen men rör inte personen', () => {
+  it('removes the child from the family but leaves the person alone', () => {
     const { child, family } = setup(1);
     db.insert(events).values({ id: 9001, ownerType: 'person', ownerId: child, type: 'BIRT', dateRaw: '1800', dateYear: 1800 }).run();
 
@@ -176,13 +176,13 @@ describe('removeChildLink', () => {
     expect(db.select().from(events).all().some(e => e.id === 9001)).toBe(true);
   });
 
-  it('lossar ur en enda familj när personen är barn i flera', () => {
+  it('detaches from one family only, when the person is a child in several', () => {
     const { child, family, other } = setup(2, true);
     removeChildLink(db, family, child);
     expect(linksFor(child).map(l => l.familyId)).toEqual([other]);
   });
 
-  it('skriver borttagningen till audit_log så den går att ångra', () => {
+  it('writes the removal to audit_log so it can be undone', () => {
     const { child, family } = setup(3);
     removeChildLink(db, family, child);
     const row = db.select().from(auditLog).all().at(-1)!;
@@ -190,7 +190,7 @@ describe('removeChildLink', () => {
     expect(JSON.parse(row.before!)).toMatchObject({ familyId: family, childId: child, seq: 3 });
   });
 
-  it('säger ifrån när barnet inte finns i familjen', () => {
+  it('says so when the child is not in the family', () => {
     const { family } = setup(4);
     expect(() => removeChildLink(db, family, 'RC-saknas')).toThrow(MutationError);
   });
@@ -205,7 +205,7 @@ describe('createSource', () => {
     return `S${Math.max(0, ...ns) + 1}`;
   };
 
-  it('ger källan nästa lediga id och sparar den i ändringsloggen', () => {
+  it('gives the source the next free id and records it in the change log', () => {
     const expected = nextExpected();
     const res = createSource(db, { title: 'Notarialakt, Hinspont', transcription: 'Pardevant moy…' });
 
@@ -216,7 +216,7 @@ describe('createSource', () => {
       .some(a => a.entityType === 'source' && a.action === 'create' && a.entityId === expected)).toBe(true);
   });
 
-  it('hoppar över MyHeritage spärrposter när nästa id räknas ut', () => {
+  it('skips MyHeritage sentinel records when working out the next id', () => {
     // S88888888 "Unassociated photos" and friends must not push new ids there
     db.insert(sources).values({ id: 'S88888888', title: 'Spärrpost' }).run();
     // Read the expectation before creating: arguments evaluate left to right,
@@ -225,7 +225,7 @@ describe('createSource', () => {
     expect(createSource(db, { title: 'Ny' }).data.id).toBe(expected);
   });
 
-  it('kräver en titel — en källa utan namn går inte att hitta igen', () => {
+  it('requires a title — a source with no name cannot be found again', () => {
     expect(() => createSource(db, { title: '  ' })).toThrow();
   });
 });
@@ -241,7 +241,7 @@ describe('deleteSource', () => {
     expect(db.select().from(sources).where(eq(sources.id, id)).all()).toHaveLength(1);
   });
 
-  it('tar bort källan och dess hänvisningar när det är uttryckligen begärt', () => {
+  it('removes the source and its citations when that is explicitly asked for', () => {
     const id = createSource(db, { title: 'Citerad ändå' }).data.id;
     db.insert(citations).values({ ownerType: 'person', ownerId: 'I1', sourceId: id }).run();
 
@@ -257,7 +257,7 @@ describe('deleteSource', () => {
     expect(entry.before).toContain('"citations"');
   });
 
-  it('tar bort en ociterad källa utan krusiduller', () => {
+  it('removes an uncited source without ceremony', () => {
     const id = createSource(db, { title: 'Ensam' }).data.id;
     expect(deleteSource(db, id).data).toMatchObject({ removedCitations: 0 });
     expect(db.select().from(sources).where(eq(sources.id, id)).all()).toHaveLength(0);
@@ -269,7 +269,7 @@ describe('deleteSource', () => {
 });
 
 describe('addCitation / removeCitation', () => {
-  it('knyter en källa till en person och loggar det', () => {
+  it('ties a source to a person, and logs it', () => {
     const sourceId = createSource(db, { title: 'Notarialakt' }).data.id;
     const res = addCitation(db, {
       ownerType: 'person', ownerId: 'I1', sourceId,
@@ -288,7 +288,7 @@ describe('addCitation / removeCitation', () => {
     expect(() => addCitation(db, { ownerType: 'person', ownerId: 'I1', sourceId: 'S999999' })).toThrow(/does not exist/i);
   });
 
-  it('tas bort igen, med sin före-bild kvar i loggen', () => {
+  it('is removed again, with its before-image left in the log', () => {
     const sourceId = createSource(db, { title: 'Att lossa' }).data.id;
     const { id } = addCitation(db, { ownerType: 'person', ownerId: 'I1', sourceId, text: 'ett utdrag' }).data;
 

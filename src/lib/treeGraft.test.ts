@@ -24,32 +24,32 @@ const down = (path: number[], branch: DescendantNode): Expansion =>
   ({ direction: 'down', path, branch: { focus: branch.person, ancestors: A(branch.person.id), descendants: branch } });
 
 describe('applyExpansions', () => {
-  it('sätter in hämtade förfäder på rätt plats', () => {
+  it('inserts fetched ancestors in the right place', () => {
     const r = applyExpansions(base, [up([0], A('far', [A('farfar'), A('farmor')]))]);
     expect(r.ancestors.parents[0]!.parents.map(p => p.person.id)).toEqual(['farfar', 'farmor']);
     expect(r.ancestors.parents[1]!.parents).toEqual([]);      // modern rörs inte
   });
 
-  it('sätter in hämtade ättlingar och deras partner', () => {
+  it('inserts fetched descendants and their partners', () => {
     const r = applyExpansions(base, [down([0], D('barn1', [D('barnbarn')], [P('svärbarn')]))]);
     expect(r.descendants.children[0]!.children.map(c => c.person.id)).toEqual(['barnbarn']);
     expect(r.descendants.children[0]!.spouses.map(s => s.id)).toEqual(['svärbarn']);
     expect(r.descendants.children[1]!.children).toEqual([]);
   });
 
-  it('släcker fortsättningsflaggan där grenen nu är utritad', () => {
+  it('clears the continuation flag where the branch is now drawn', () => {
     const r = applyExpansions(base, [up([0], A('far', [A('farfar')]))]);
     expect(r.ancestors.parents[0]!.hasMoreAncestors).toBeFalsy();
     expect(r.ancestors.parents[1]!.hasMoreAncestors).toBe(true);   // orörd
   });
 
-  it('behåller de andra grenarna oförändrade, så deras kort kan glida i stället för att ritas om', () => {
+  it('leaves the other branches unchanged, so their cards can glide rather than be redrawn', () => {
     const r = applyExpansions(base, [up([0], A('far', [A('farfar')]))]);
     expect(r.ancestors.parents[1]).toBe(base.ancestors.parents[1]);
     expect(r.descendants).toBe(base.descendants);
   });
 
-  it('kan fälla ut inuti en redan utfälld gren', () => {
+  it('can expand inside a branch that is already expanded', () => {
     const r = applyExpansions(base, [
       up([0], A('far', [A('farfar', [], true)])),
       up([0, 0], A('farfar', [A('farfars far')])),
@@ -57,7 +57,7 @@ describe('applyExpansions', () => {
     expect(r.ancestors.parents[0]!.parents[0]!.parents.map(p => p.person.id)).toEqual(['farfars far']);
   });
 
-  it('struntar i en gren vars värd har fällts ihop', () => {
+  it('ignores a branch whose host has been collapsed', () => {
     // ingen utfällning av 'far' först, så vägen [0,0] finns inte
     const r = applyExpansions(base, [up([0, 0], A('farfar', [A('farfars far')]))]);
     expect(r.ancestors.parents[0]!.parents).toEqual([]);

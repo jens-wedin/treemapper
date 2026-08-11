@@ -9,7 +9,7 @@ const A = (id: string, sex: 'M' | 'F' | 'U', parents: AncestorNode[] = []): Ance
   ({ person: P(id, sex), parents });
 
 describe('generationOf', () => {
-  it('följer anfarsnumreringen', () => {
+  it('follows ahnentafel numbering', () => {
     expect(generationOf(1)).toBe(0);       // personen själv
     expect(generationOf(2)).toBe(1);       // far
     expect(generationOf(3)).toBe(1);       // mor
@@ -21,7 +21,7 @@ describe('generationOf', () => {
 });
 
 describe('branchOf', () => {
-  it('ger de fyra mor-/farföräldragrenarna', () => {
+  it('gives the four grandparent branches', () => {
     expect(branchOf(1)).toBe('focus');
     expect(branchOf(2)).toBe('ff');   // far
     expect(branchOf(3)).toBe('mm');   // mor
@@ -31,7 +31,7 @@ describe('branchOf', () => {
     expect(branchOf(7)).toBe('mm');   // mormor
   });
 
-  it('ärver grenen nedåt i djupare led', () => {
+  it('inherits the branch downward through deeper generations', () => {
     // 10 = 1010b → efter ledande 1: 010 → första två bitarna 01 = farmors gren
     expect(branchOf(10)).toBe('fm');
     expect(branchOf(11)).toBe('fm');
@@ -42,7 +42,7 @@ describe('branchOf', () => {
 });
 
 describe('flattenAncestors', () => {
-  it('numrerar far till 2n och mor till 2n+1', () => {
+  it('numbers the father 2n and the mother 2n+1', () => {
     const tree = A('barn', 'M', [
       A('far', 'M', [A('farfar', 'M'), A('farmor', 'F')]),
       A('mor', 'F', [A('morfar', 'M'), A('mormor', 'F')]),
@@ -54,13 +54,13 @@ describe('flattenAncestors', () => {
     });
   });
 
-  it('placerar en ensam mor på 2n+1, inte på faderns plats', () => {
+  it('places a lone mother at 2n+1, not in the father\'s slot', () => {
     const tree = A('barn', 'U', [A('ensam mor', 'F')]);
     const slots = flattenAncestors(tree, 2);
     expect(slots.find(s => s.person.id === 'ensam mor')!.ahnentafel).toBe(3);
   });
 
-  it('placerar en ensam far på 2n', () => {
+  it('places a lone father at 2n', () => {
     const tree = A('barn', 'U', [A('ensam far', 'M')]);
     expect(flattenAncestors(tree, 2).find(s => s.person.id === 'ensam far')!.ahnentafel).toBe(2);
   });
@@ -71,7 +71,7 @@ describe('flattenAncestors', () => {
     expect(flattenAncestors(tree, 0).map(s => s.ahnentafel)).toEqual([1]);
   });
 
-  it('klarar luckor utan att flytta syskonplatser', () => {
+  it('copes with gaps without moving sibling slots', () => {
     // ingen far alls, men mor med sina föräldrar
     const tree = A('barn', 'U', [A('mor', 'F', [A('morfar', 'M'), A('mormor', 'F')])]);
     const byNumber = Object.fromEntries(flattenAncestors(tree, 3).map(s => [s.ahnentafel, s.person.id]));
@@ -85,18 +85,18 @@ describe('graftAt', () => {
     2,
   );
 
-  it('numrerar om en hämtad gren som om den suttit där hela tiden', () => {
+  it('renumbers a fetched branch as though it had been there all along', () => {
     // grenen hängs under mormor (nr 7): hennes far blir 14, hennes farfar 28
     const grafted = Object.fromEntries(graftAt(7, sub).map(s => [s.ahnentafel, s.person.id]));
     expect(grafted).toEqual({ 7: 'rot', 14: 'far', 15: 'mor', 28: 'farfar', 29: 'farmor' });
   });
 
-  it('låter roten behålla sin plats', () => {
+  it('lets the root keep its place', () => {
     expect(graftAt(5, sub).find(s => s.person.id === 'rot')!.ahnentafel).toBe(5);
     expect(graftAt(1, sub).map(s => s.ahnentafel)).toEqual(sub.map(s => s.ahnentafel));
   });
 
-  it('behåller grenfärgen från huvudtavlan', () => {
+  it('keeps the branch colour from the main chart', () => {
     // allt som hängs under en morfar (nr 6) tillhör mf-grenen
     for (const slot of graftAt(6, sub)) expect(branchOf(slot.ahnentafel)).toBe('mf');
   });

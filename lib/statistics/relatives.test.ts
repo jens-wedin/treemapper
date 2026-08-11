@@ -29,22 +29,22 @@ function buildTree() {
 beforeEach(() => { db = createDb(':memory:'); buildTree(); });
 
 describe('relativesOf', () => {
-  it('tar med egna förfäder och egna ättlingar, men inte syskon eller utomstående', () => {
+  it('includes one\'s own ancestors and descendants, but not siblings or outsiders', () => {
     const set = relativesOf(db, 'jag')!;
     expect([...set].sort()).toEqual(['barn', 'barnbarn', 'far', 'jag', 'mor', 'mormor']);
     expect(set.has('syskon')).toBe(false);
     expect(set.has('utomstående')).toBe(false);
   });
 
-  it('ger bara personen själv när ingen släkt finns', () => {
+  it('gives only the person themselves when there is no family', () => {
     expect([...relativesOf(db, 'utomstående')!]).toEqual(['utomstående']);
   });
 
-  it('ger null för en okänd person', () => {
+  it('gives null for an unknown person', () => {
     expect(relativesOf(db, 'finns-inte')).toBeNull();
   });
 
-  it('hänger sig inte när någon är sin egen förfader', () => {
+  it('does not hang when somebody is their own ancestor', () => {
     // självförälderskap finns som konsekvenskategori i riktiga data
     db.insert(families).values({ id: 'F9', husbandId: 'barnbarn', wifeId: null }).run();
     db.insert(familyChildren).values({ familyId: 'F9', childId: 'mormor', seq: 0 }).run();

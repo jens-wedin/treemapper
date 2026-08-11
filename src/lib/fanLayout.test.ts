@@ -18,12 +18,12 @@ describe('layoutFan', () => {
   const r = layoutFan(full, 2);
   const at = (id: string) => r.slices.find(s => s.person.id === id)!;
 
-  it('lägger fokuspersonen i mitten, inte som en skiva', () => {
+  it('puts the focus person at the centre, not as a slice', () => {
     expect(r.centre.person.id).toBe('jag');
     expect(r.slices.some(s => s.person.id === 'jag')).toBe(false);
   });
 
-  it('delar solfjädern lika inom varje generation', () => {
+  it('divides the fan evenly within each generation', () => {
     const gen1 = r.slices.filter(s => s.generation === 1).sort((a, b) => a.startAngle - b.startAngle);
     expect(gen1).toHaveLength(2);
     const width = gen1[0]!.endAngle - gen1[0]!.startAngle;
@@ -34,7 +34,7 @@ describe('layoutFan', () => {
     expect(gen1[1]!.endAngle).toBeCloseTo(FAN_SPAN / 2, 6);
   });
 
-  it('sätter fadern till vänster och modern till höger', () => {
+  it('puts the father on the left and the mother on the right', () => {
     expect(at('far').startAngle).toBeLessThan(at('mor').startAngle);
     // och far-/morföräldrarna hamnar inom respektive förälders sektor
     expect(at('farfar').startAngle).toBeGreaterThanOrEqual(at('far').startAngle - 1e-9);
@@ -42,20 +42,20 @@ describe('layoutFan', () => {
     expect(at('morfar').startAngle).toBeGreaterThanOrEqual(at('mor').startAngle - 1e-9);
   });
 
-  it('lägger varje generation i en egen ring', () => {
+  it('puts each generation in its own ring', () => {
     expect(at('far').innerR).toBeLessThan(at('farfar').innerR);
     expect(at('farfar').innerR - at('far').innerR).toBeCloseTo(RING, 6);
     expect(at('far').outerR - at('far').innerR).toBeCloseTo(RING, 6);
   });
 
-  it('lämnar hål för saknade förfäder i stället för att flytta grannarna', () => {
+  it('leaves a gap for a missing ancestor rather than shifting the neighbours', () => {
     const gaps = layoutFan([slot(1, 'jag'), slot(3, 'mor'), slot(7, 'mormor')], 2);
     expect(gaps.slices.map(s => s.person.id).sort()).toEqual(['mor', 'mormor']);
     const mor = gaps.slices.find(s => s.person.id === 'mor')!;
     expect(mor.startAngle).toBeCloseTo(at('mor').startAngle, 6);   // samma plats som förut
   });
 
-  it('ger varje skiva en ritbar kil och grenfärg', () => {
+  it('gives every slice a drawable wedge and a branch colour', () => {
     for (const s of r.slices) {
       expect(s.wedgePath.startsWith('M ')).toBe(true);
       expect(s.wedgePath).toContain('A');           // bågsegment
@@ -64,7 +64,7 @@ describe('layoutFan', () => {
     expect(at('mormor').branch).toBe('mm');
   });
 
-  it('skriver aldrig text upp och ned', () => {
+  it('never writes text upside down', () => {
     const deep = layoutFan(
       Array.from({ length: 63 }, (_, i) => slot(i + 1, `p${i + 1}`)),
       5,
@@ -76,7 +76,7 @@ describe('layoutFan', () => {
     }
   });
 
-  it('vänder bågtexten på nedre halvan så den inte står upp och ned', () => {
+  it('flips the arc text on the lower half so it is not upside down', () => {
     // 3 generationer ger skivor både uppe och nere med bågtext
     const deep = layoutFan(
       Array.from({ length: 15 }, (_, i) => slot(i + 1, `p${i + 1}`)),
@@ -92,7 +92,7 @@ describe('layoutFan', () => {
     }
   });
 
-  it('anger hur många tecken som får plats i varje etikett', () => {
+  it('says how many characters fit in each label', () => {
     for (const s of r.slices) {
       expect(s.labelMaxChars).toBeGreaterThan(3);
       expect(Number.isFinite(s.labelMaxChars)).toBe(true);
@@ -103,7 +103,7 @@ describe('layoutFan', () => {
     expect(gen1.labelMaxChars).toBeGreaterThan(gen2.labelMaxChars);
   });
 
-  it('drar ned etiketterna där skivorna blir för tunna', () => {
+  it('drops the labels where the slices get too thin', () => {
     // 8 generationer: yttre ringen har 256 skivor på 270°
     const deep = layoutFan(
       Array.from({ length: 511 }, (_, i) => slot(i + 1, `p${i + 1}`)),
@@ -124,7 +124,7 @@ describe('layoutFan', () => {
     }
   });
 
-  it('sätter konsekvensmärket i skivans inre hörn, undan både namn och flagga', () => {
+  it('puts the problem mark in the slice\'s inner corner, clear of both name and flag', () => {
     for (const s of r.slices) {
       const radius = Math.hypot(s.mark.cx, s.mark.cy);
       // innanför skivan i höjdled …
@@ -136,7 +136,7 @@ describe('layoutFan', () => {
     }
   });
 
-  it('håller märket inne i sin egen skiva även när den är tunn', () => {
+  it('keeps the mark inside its own slice, even a thin one', () => {
     const deep = layoutFan(
       Array.from({ length: 511 }, (_, i) => slot(i + 1, `p${i + 1}`)),
       8,
@@ -148,7 +148,7 @@ describe('layoutFan', () => {
     }
   });
 
-  it('täcker hela solfjädern med sina gränser', () => {
+  it('covers the whole fan with its bounds', () => {
     const outer = Math.max(...r.slices.map(s => s.outerR));
     expect(r.bounds.maxX).toBeGreaterThanOrEqual(outer);
     expect(r.bounds.minY).toBeLessThanOrEqual(-outer);

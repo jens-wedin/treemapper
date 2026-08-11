@@ -63,7 +63,7 @@ describe('mapGedcom', () => {
     expect(personCit).toMatchObject({ ownerId: 'I3', sourceId: 'S1', page: 'Sida 99' });
   });
 
-  it('håller kvar texten även om en andra DATA följer utan TEXT', () => {
+  it('keeps the text even when a second DATA follows with no TEXT', () => {
     // Ett par program delar upp DATA i flera noder. Sist-vinner gjorde att den
     // tomma nollställde texten — samma fälla som vår egen export gick i.
     const [rec] = parseGedcom([

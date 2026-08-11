@@ -32,7 +32,7 @@ describe('the two ends of the morph', () => {
     }
   });
 
-  it('ends every ancestor exactly on their solfjäder slice', () => {
+  it('ends every ancestor exactly on their fan-chart slice', () => {
     const fan = layoutFan(slots, 3);
     const points = plan().points(1);
 
@@ -45,7 +45,7 @@ describe('the two ends of the morph', () => {
     }
   });
 
-  it('leaves the focus person at the centre, where the solfjäder puts them', () => {
+  it('leaves the focus person at the centre, where the fan chart puts them', () => {
     for (const t of [0, 0.5, 1]) {
       const focus = plan().points(t).find(p => p.ahnentafel === 1)!;
       near(focus.x, 0);
@@ -89,7 +89,7 @@ describe('the path between them', () => {
 });
 
 describe('what is left out', () => {
-  it('skips an ancestor the solfjäder does not draw', () => {
+  it('skips an ancestor the fan chart does not draw', () => {
     // One generation of rings: the parents get slices, the grandparents (4..7,
     // which is generation 2) have nothing to land on.
     const shallow = planMorph(layoutPedigree(slots), layoutFan(slots, 1));

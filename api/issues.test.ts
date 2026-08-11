@@ -30,7 +30,7 @@ const post = (a: Hono, url: string, body: unknown) =>
   a.request(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
 describe('GET /api/issues', () => {
-  it('returnerar problem värst först med kategorisummor', async () => {
+  it('returns problems worst first, with a count per category', async () => {
     const res = await api.request('/api/issues');
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -41,7 +41,7 @@ describe('GET /api/issues', () => {
     expect(body.dismissed).toBe(0);
   });
 
-  it('filtrerar på kategori', async () => {
+  it('filters by category', async () => {
     const res = await api.request('/api/issues?category=' + encodeURIComponent('missing-birth'));
     const body = await res.json();
     expect(body.items).toHaveLength(1);
@@ -49,8 +49,8 @@ describe('GET /api/issues', () => {
   });
 });
 
-describe('avfärdande', () => {
-  it('döljer avfärdade problem och kan återställa dem', async () => {
+describe('dismissing', () => {
+  it('hides dismissed problems and can restore them', async () => {
     const first = (await (await api.request('/api/issues')).json()).items[0];
 
     const dismiss = await post(api, '/api/issues/dismiss', { fingerprint: first.fingerprint, note: 'kollat' });
@@ -72,7 +72,7 @@ describe('avfärdande', () => {
 });
 
 describe('POST /api/merge', () => {
-  it('slår ihop två personer', async () => {
+  it('merges two people', async () => {
     const res = await post(mergeApi, '/api/merge', { survivorId: 'I1', duplicateId: 'I2' });
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -81,7 +81,7 @@ describe('POST /api/merge', () => {
     expect(db.select().from(persons).all().map(p => p.id)).toEqual(['I1']);
   });
 
-  it('accepterar tomma och partiella fältval (som gränssnittet skickar)', async () => {
+  it('accepts empty and partial field choices, as the UI sends them', async () => {
     const empty = await post(mergeApi, '/api/merge', { survivorId: 'I1', duplicateId: 'I2', fieldChoices: {} });
     expect(empty.status).toBe(200);
 
@@ -96,26 +96,26 @@ describe('POST /api/merge', () => {
     expect(db.select().from(persons).all().find(p => p.id === 'I3')!.givenName).toBe('B');
   });
 
-  it('avvisar ogiltiga fältval', async () => {
+  it('rejects invalid field choices', async () => {
     const res = await post(mergeApi, '/api/merge', {
       survivorId: 'I1', duplicateId: 'I2', fieldChoices: { givenName: 'neither' },
     });
     expect(res.status).toBe(400);
   });
 
-  it('avvisar sammanslagning med sig själv på svenska', async () => {
+  it('rejects merging a record with itself', async () => {
     const res = await post(mergeApi, '/api/merge', { survivorId: 'I1', duplicateId: 'I1' });
     expect(res.status).toBe(400);
     expect((await res.json()).error).toContain('sig själv');
   });
 
-  it('avvisar ogiltig indata', async () => {
+  it('rejects invalid input', async () => {
     expect((await post(mergeApi, '/api/merge', { survivorId: 'I1' })).status).toBe(400);
   });
 });
 
 describe('GET /api/issues/persons', () => {
-  it('ger ett register över vilka personer som har problem', async () => {
+  it('gives a register of which people have problems', async () => {
     const res = await api.request('/api/issues/persons');
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -130,7 +130,7 @@ describe('GET /api/issues/persons', () => {
     expect(body.total).toBe(2);
   });
 
-  it('räknar inte med det som avfärdats i Konsekvensbänken', async () => {
+  it('leaves out what has been dismissed in Konsekvensbänken', async () => {
     const missingBirth = (await (await api.request('/api/issues?category=' + encodeURIComponent('missing-birth'))).json()).items[0];
     await post(api, '/api/issues/dismiss', { fingerprint: missingBirth.fingerprint });
 
@@ -141,8 +141,8 @@ describe('GET /api/issues/persons', () => {
   });
 });
 
-describe('historiken i /api/issues', () => {
-  it('listar både rättat och avfärdat, senast först', async () => {
+describe('the history in /api/issues', () => {
+  it('lists both fixed and dismissed, newest first', async () => {
     updatePerson(db, 'I1', { givenName: 'Rättad' });
     const first = (await (await api.request('/api/issues')).json()).items[0];
     await post(api, '/api/issues/dismiss', { fingerprint: first.fingerprint, note: 'kollat' });
@@ -154,7 +154,7 @@ describe('historiken i /api/issues', () => {
     expect(body.log[1].changes[0].field).toBe('givenName');
   });
 
-  it('påverkas inte av filtren på kön', async () => {
+  it('is unaffected by the queue filters', async () => {
     updatePerson(db, 'I1', { givenName: 'Rättad' });
     const body = await (await api.request('/api/issues?severity=error')).json();
     expect(body.log).toHaveLength(1);

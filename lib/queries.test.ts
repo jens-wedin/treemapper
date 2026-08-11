@@ -117,7 +117,7 @@ describe('getPersonFull', () => {
 });
 
 describe('getPersonFull — dubbla familjer', () => {
-  it('räknar en förälder en gång även när barnet står i två familjer med samma mor', () => {
+  it('counts a parent once, even when the child sits in two families with the same mother', () => {
     // uppstår när en gren importerats två gånger: samma barn, två familjer,
     // samma mor i båda. Dubbla nycklar får React att tappa bort noder.
     db.insert(persons).values([

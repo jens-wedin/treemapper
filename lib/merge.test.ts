@@ -58,8 +58,8 @@ const rows = {
   audit: () => db.select().from(auditLog).all(),
 };
 
-describe('mergePersons — flytt av data', () => {
-  it('flyttar händelser, källhänvisningar och foton till den som behålls', () => {
+describe('mergePersons — moving data across', () => {
+  it('moves events, citations and photos to the record kept', () => {
     person('KEEP');
     person('DUP');
     event('KEEP', 'BIRT', 1800);
@@ -87,7 +87,7 @@ describe('mergePersons — flytt av data', () => {
    * Only an exact repeat is dropped. Two births with *different* dates are a
    * disagreement between sources, and that is the person's own to settle.
    */
-  it('tar inte med en händelse som den som behålls redan har', () => {
+  it('does not bring over an event the survivor already has', () => {
     person('KEEP');
     person('DUP');
     event('KEEP', 'BIRT', 1800);
@@ -102,7 +102,7 @@ describe('mergePersons — flytt av data', () => {
     expect(kept.filter(e => e.type === 'BIRT')).toHaveLength(1);
   });
 
-  it('behåller två födslar när källorna säger olika datum', () => {
+  it('keeps two births when the sources give different dates', () => {
     person('KEEP');
     person('DUP');
     event('KEEP', 'BIRT', 1800);
@@ -114,7 +114,7 @@ describe('mergePersons — flytt av data', () => {
     expect(rows.events().filter(e => e.ownerId === 'KEEP' && e.type === 'BIRT')).toHaveLength(2);
   });
 
-  it('länkar om make/maka-platser och barnlänkar med bevarad ordning', () => {
+  it('relinks spouse slots and child links, preserving their order', () => {
     person('KEEP', { sex: 'M' });
     person('DUP', { sex: 'M' });
     person('FRU', { sex: 'F' });
@@ -133,7 +133,7 @@ describe('mergePersons — flytt av data', () => {
       .toEqual(['BARN1', 'BARN2']);
   });
 
-  it('slår ihop dubbla barnlänkar i samma familj i stället för att skapa dubbletter', () => {
+  it('folds duplicate child links in one family together rather than creating duplicates', () => {
     person('KEEP');
     person('DUP');
     person('MOR', { sex: 'F' });
@@ -145,7 +145,7 @@ describe('mergePersons — flytt av data', () => {
     expect(rows.links().filter(l => l.familyId === 'F1').map(l => l.childId)).toEqual(['KEEP']);
   });
 
-  it('skapar aldrig ett självgifte när båda är makar i samma familj', () => {
+  it('never creates a self-marriage when both are spouses in one family', () => {
     person('KEEP', { sex: 'M' });
     person('DUP', { sex: 'F' });
     person('BARN');
@@ -160,8 +160,8 @@ describe('mergePersons — flytt av data', () => {
   });
 });
 
-describe('mergePersons — fältval', () => {
-  it('behåller överlevarens värden som standard men fyller tomma fält från dubbletten', () => {
+describe('mergePersons — choosing fields', () => {
+  it('keeps the survivor\'s values by default but fills empty fields from the duplicate', () => {
     person('KEEP', { given: 'Anders', surname: 'Johansson', note: null, marriedName: null });
     person('DUP', { given: 'Anders Olof', surname: 'Johansson', note: 'Viktig anteckning', marriedName: 'Lund' });
 
@@ -173,7 +173,7 @@ describe('mergePersons — fältval', () => {
     expect(keep.marriedName).toBe('Lund');
   });
 
-  it('tar dubblettens värde när fältvalet säger det', () => {
+  it('takes the duplicate\'s value when the field choice says so', () => {
     person('KEEP', { given: 'Anders' });
     person('DUP', { given: 'Anders Olof' });
 
@@ -183,14 +183,14 @@ describe('mergePersons — fältval', () => {
   });
 });
 
-describe('mergePersons — skydd', () => {
-  it('avvisar sammanslagning med sig själv och okända personer', () => {
+describe('mergePersons — guards', () => {
+  it('rejects merging with itself, or with people who do not exist', () => {
     person('A');
     expect(() => mergePersons(db, { survivorId: 'A', duplicateId: 'A' })).toThrowError('sig själv');
     expect(() => mergePersons(db, { survivorId: 'A', duplicateId: 'SAKNAS' })).toThrowError('does not exist');
   });
 
-  it('avvisar sammanslagning inom samma släktlinje', () => {
+  it('rejects merging within one line of descent', () => {
     person('FORFADER');
     person('BARNBARN');
     person('MELLAN');
@@ -201,8 +201,8 @@ describe('mergePersons — skydd', () => {
   });
 });
 
-describe('mergePersons — spårbarhet', () => {
-  it('skriver en merge-rad som innehåller båda personerna och alla berörda familjer', () => {
+describe('mergePersons — traceability', () => {
+  it('writes a merge row holding both people and every family touched', () => {
     person('KEEP');
     person('DUP');
     person('FRU', { sex: 'F' });
@@ -223,7 +223,7 @@ describe('mergePersons — spårbarhet', () => {
     expect(after.summary.movedEvents).toBe(1);
   });
 
-  it('rullar tillbaka allt om något går fel mitt i sammanslagningen', () => {
+  it('rolls everything back if something fails mid-merge', () => {
     person('KEEP');
     person('DUP');
     event('DUP', 'BIRT', 1800);
@@ -260,7 +260,7 @@ describe('mergePersons — spårbarhet', () => {
   });
 });
 
-describe('mergePersons — dubbla familjer för samma par', () => {
+describe('mergePersons — duplicate families for one couple', () => {
   /**
    * Det verkliga fallet i wedin.db: samma par och samma barnaskara finns
    * flera gånger. När andra maken slås ihop står paret plötsligt i två
@@ -276,7 +276,7 @@ describe('mergePersons — dubbla familjer för samma par', () => {
     family('F2', 'H', 'W2', ['C2']);
   }
 
-  it('slår ihop familjerna och samlar barnen i en', () => {
+  it('merges the families and gathers the children into one', () => {
     twinFamilies();
     const res = mergePersons(db, { survivorId: 'W1', duplicateId: 'W2' });
 
@@ -290,7 +290,7 @@ describe('mergePersons — dubbla familjer för samma par', () => {
     expect(res.data.mergedFamilies).toBe(1);
   });
 
-  it('tar med familjens egna händelser och källhänvisningar', () => {
+  it('brings the family\'s own events and citations along', () => {
     twinFamilies();
     event('F2', 'MARR', 1809, 'family');
     citation('family', 'F2');
@@ -302,7 +302,7 @@ describe('mergePersons — dubbla familjer för samma par', () => {
     expect(db.select().from(citations).all().find(c => c.ownerType === 'family')!.ownerId).toBe('F1');
   });
 
-  it('dubblerar inte ett barn som redan står i den familj som blir kvar', () => {
+  it('does not duplicate a child already in the family that remains', () => {
     person('H', { given: 'Anders' });
     person('W1', { given: 'Katarina' });
     person('W2', { given: 'Katarina' });
@@ -316,7 +316,7 @@ describe('mergePersons — dubbla familjer för samma par', () => {
     expect(links[0]).toMatchObject({ familyId: 'F1', childId: 'C' });
   });
 
-  it('rör inte två äktenskap med olika partner', () => {
+  it('leaves two marriages to different partners alone', () => {
     person('H1'); person('H2'); person('W1'); person('W2');
     family('F1', 'H1', 'W1');
     family('F2', 'H2', 'W2');
@@ -327,7 +327,7 @@ describe('mergePersons — dubbla familjer för samma par', () => {
     expect(fams.map(f => [f.husbandId, f.wifeId])).toEqual([['H1', 'W1'], ['H2', 'W1']]);
   });
 
-  it('slår inte ihop familjer där den andra partnern är okänd', () => {
+  it('does not merge families whose other partner is unknown', () => {
     // två barnaskaror med okänd far är inte självklart samma familj
     person('W1'); person('W2'); person('C1'); person('C2');
     family('F1', null, 'W1', ['C1']);
@@ -336,7 +336,7 @@ describe('mergePersons — dubbla familjer för samma par', () => {
     expect(db.select().from(families).all()).toHaveLength(2);
   });
 
-  it('skriver hela städningen till audit_log', () => {
+  it('writes the whole tidy-up to audit_log', () => {
     twinFamilies();
     mergePersons(db, { survivorId: 'W1', duplicateId: 'W2' });
     const row = db.select().from(auditLog).all().at(-1)!;

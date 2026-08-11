@@ -27,7 +27,7 @@ beforeEach(() => {
 const get = (url: string) => api.request(url);
 
 describe('GET /api/statistics', () => {
-  it('svarar med hela databasen som standard', async () => {
+  it('answers for the whole database by default', async () => {
     const res = await get('/api/statistics');
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -36,7 +36,7 @@ describe('GET /api/statistics', () => {
     expect(body.names.femaleGiven.length).toBeGreaterThan(0);
   });
 
-  it('avgränsar till en persons förfäder och ättlingar', async () => {
+  it('narrows to one person\'s ancestors and descendants', async () => {
     const body = await (await get('/api/statistics?person=jag')).json();
     expect(body.scope).toMatchObject({ kind: 'person', people: 2 });
     expect(body.scope.person).toMatchObject({ id: 'jag', givenName: 'Erik' });
@@ -49,7 +49,7 @@ describe('GET /api/statistics', () => {
     expect((await res.json()).error).toBe('That person does not exist');
   });
 
-  it('ger 400 för ett tomt person-id', async () => {
+  it('gives a 400 for an empty person id', async () => {
     expect((await get('/api/statistics?person=')).status).toBe(400);
   });
 });

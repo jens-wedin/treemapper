@@ -26,8 +26,8 @@ beforeEach(() => {
   ]).run();
 });
 
-describe('buildIssueLog — ändringar', () => {
-  it('namnger fältet och båda värdena när en person rättas', () => {
+describe('buildIssueLog — edits', () => {
+  it('names the field and both values when a person is corrected', () => {
     updatePerson(db, 'I1', { givenName: 'Jonas' });
     const [entry] = buildIssueLog(db);
     expect(entry).toMatchObject({ kind: 'changed', personId: 'I1' });
@@ -35,14 +35,14 @@ describe('buildIssueLog — ändringar', () => {
     expect(entry!.changes).toEqual([{ field: 'givenName', before: 'jonas', after: 'Jonas' }]);
   });
 
-  it('säger vilken händelse som ändrades och för vem', () => {
+  it('says which event changed, and for whom', () => {
     updateEvent(db, 1, { dateRaw: '17 mar 1942' });
     const [entry] = buildIssueLog(db);
     expect(entry).toMatchObject({ code: 'log.eventChanged', params: { event: 'DEAT', name: 'jonas Larsson' }, personId: 'I1' });
     expect(entry!.changes).toEqual([{ field: 'dateRaw', before: null, after: '17 mar 1942' }]);
   });
 
-  it('skiljer på tillagda och borttagna händelser', () => {
+  it('tells added events from removed ones', () => {
     createEvent(db, {
       ownerType: 'person', ownerId: 'I1', type: 'BIRT',
       dateRaw: '1900', place: null, description: null, age: null,
@@ -53,26 +53,26 @@ describe('buildIssueLog — ändringar', () => {
     expect(entries.some(e => e.code === 'log.eventAdded' && e.params.event === 'BIRT')).toBe(true);
   });
 
-  it('namnger båda posterna i en sammanslagning', () => {
+  it('names both records in a merge', () => {
     mergePersons(db, { survivorId: 'I2', duplicateId: 'I3' });
     const [entry] = buildIssueLog(db);
     expect(entry!.kind).toBe('changed');
     expect(entry).toMatchObject({ code: 'log.merged', params: { duplicate: 'Anna Larsson', id: 'I3' }, personId: 'I2' });
   });
 
-  it('räknar inte importen som utfört arbete', () => {
+  it('does not count the import as work done', () => {
     db.insert(persons).values({ id: 'I9', givenName: 'Ny', surname: 'Person', sex: 'U' }).run();
     expect(buildIssueLog(db)).toEqual([]);
   });
 });
 
-describe('buildIssueLog — avfärdade', () => {
+describe('buildIssueLog — dismissals', () => {
   const dismiss = (fingerprint: string, note?: string) =>
     db.insert(issueDismissals)
       .values({ fingerprint, dismissedAt: '2026-08-08T10:00:00.000Z', note: note ?? null })
       .run();
 
-  it('visar vilket problem som lades åt sidan, och anteckningen', () => {
+  it('shows which problem was set aside, and the note', () => {
     const issue = detectIssues(db).find(i => i.personIds[0] === 'I1')!;
     dismiss(issue.fingerprint, 'kollat i kyrkboken');
 
@@ -87,15 +87,15 @@ describe('buildIssueLog — avfärdade', () => {
     expect(entry!.params).toEqual({ name: 'jonas Larsson' });
   });
 
-  it('listar även det som avfärdats och sedan slutat inträffa', () => {
+  it('also lists a dismissal whose problem has stopped occurring', () => {
     dismiss('deadbeefdeadbeef');
     const [entry] = buildIssueLog(db);
     expect(entry).toMatchObject({ kind: 'dismissed', code: 'log.dismissedGone', severity: null, personId: null });
   });
 });
 
-describe('buildIssueLog — ordning', () => {
-  it('ger det senaste först och stannar vid gränsen', () => {
+describe('buildIssueLog — order', () => {
+  it('gives the newest first and stops at the limit', () => {
     updatePerson(db, 'I1', { givenName: 'Jonas' });
     updatePerson(db, 'I2', { surname: 'Larsdotter' });
     updatePerson(db, 'I1', { surname: 'Larsson Hatt' });
@@ -110,7 +110,7 @@ describe('buildIssueLog — ordning', () => {
 });
 
 describe('buildPersonLog', () => {
-  it('tar med ändringar på personen själv och på hens händelser', () => {
+  it('includes edits to the person and to their events', () => {
     updatePerson(db, 'I1', { givenName: 'Jonas' });
     updateEvent(db, 1, { dateRaw: '17 mar 1942' });   // I1:s dödsfall
     updatePerson(db, 'I2', { surname: 'Larsdotter' }); // någon annan
@@ -122,7 +122,7 @@ describe('buildPersonLog', () => {
     expect(log[1]!.changes[0]!.field).toBe('givenName');
   });
 
-  it('tar med foton som lagts till och tagits bort', () => {
+  it('includes photos added and removed', () => {
     const pixel = Buffer.from(
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
       'base64',
@@ -139,19 +139,19 @@ describe('buildPersonLog', () => {
     expect(buildPersonLog(db, 'I2')).toEqual([]);
   });
 
-  it('håller andras ändringar utanför', () => {
+  it('keeps other people\'s edits out', () => {
     updatePerson(db, 'I2', { surname: 'Larsdotter' });
     expect(buildPersonLog(db, 'I1')).toEqual([]);
   });
 
-  it('tar med en sammanslagning där personen blev kvar', () => {
+  it('includes a merge the person survived', () => {
     mergePersons(db, { survivorId: 'I2', duplicateId: 'I3' });
     const log = buildPersonLog(db, 'I2');
     expect(log).toHaveLength(1);
     expect(log[0]!.code).toBe('log.merged');
   });
 
-  it('tar med när personen lossats ur en familj', () => {
+  it('includes being detached from a family', () => {
     db.insert(families).values({ id: 'F9', husbandId: 'I2', wifeId: null }).run();
     db.insert(familyChildren).values({ familyId: 'F9', childId: 'I1', seq: 0 }).run();
     removeChildLink(db, 'F9', 'I1');
@@ -161,14 +161,14 @@ describe('buildPersonLog', () => {
     expect(log[0]!.params.entityId).toContain('F9');
   });
 
-  it('tar med en borttagen händelse, som bara finns i före-bilden', () => {
+  it('includes a deleted event, which exists only in the before-image', () => {
     deleteEvent(db, 1);
     const log = buildPersonLog(db, 'I1');
     expect(log).toHaveLength(1);
     expect(log[0]!.code).toBe('log.eventRemoved');
   });
 
-  it('räknar inte importen som en ändring och stannar vid gränsen', () => {
+  it('does not count the import as an edit, and stops at the limit', () => {
     for (const given of ['A', 'B', 'C']) updatePerson(db, 'I1', { givenName: given });
     expect(buildPersonLog(db, 'I1')).toHaveLength(3);
     expect(buildPersonLog(db, 'I1', 2)).toHaveLength(2);

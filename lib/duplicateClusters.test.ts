@@ -30,7 +30,7 @@ const all = () => branchMembers(db, ['H1']);
 const clusters = () => duplicateClusters(db, all()).map(c => c.ids);
 
 describe('branchMembers', () => {
-  it('går via både äktenskap och barn', () => {
+  it('goes by both marriage and children', () => {
     person('H1', 'Anders', 'Ek', '1784');
     person('W1', 'Karin', 'Ek', '1789');
     person('C1', 'Jonas', 'Ek', '1810');
@@ -43,7 +43,7 @@ describe('branchMembers', () => {
 });
 
 describe('duplicateClusters', () => {
-  it('samlar alla kopior av samma person, bäst underbyggd först', () => {
+  it('gathers every copy of the same person, best-evidenced first', () => {
     person('H1', 'Anders', 'Ek', '1784');
     person('W1', 'Karin', 'Ek', '1789');
     person('C1', 'Jonas', 'Ek', '11 NOV 1810');
@@ -56,7 +56,7 @@ describe('duplicateClusters', () => {
     expect(clusters()).toEqual([['C2', 'C1', 'C3']]);
   });
 
-  it('lämnar tvillingar i fred', () => {
+  it('leaves twins alone', () => {
     person('H1', 'Anders', 'Ek', '1784');
     person('W1', 'Karin', 'Ek', '1789');
     person('T1', 'Anna', 'Ek', '12 JAN 1828');
@@ -65,7 +65,7 @@ describe('duplicateClusters', () => {
     expect(clusters()).toEqual([]);
   });
 
-  it('parar ihop tvilling med tvilling när familjen finns i två kopior', () => {
+  it('pairs twin with twin when the family exists in two copies', () => {
     person('H1', 'Anders', 'Ek', '1784');
     person('W1', 'Karin', 'Ek', '1789');
     person('A1', 'Anna', 'Ek', '12 JAN 1828');
@@ -77,7 +77,7 @@ describe('duplicateClusters', () => {
     expect(clusters().map(c => [...c].sort())).toEqual([['A1', 'A2'], ['B1', 'B2']]);
   });
 
-  it('känner igen samma make trots omkastat namn', () => {
+  it('recognises the same spouse despite a swapped name order', () => {
     person('H1', 'Jonas', 'Ek', '1834');
     person('W1', 'Brita', 'Jonsdotter Forss', '6 JUN 1838');
     person('W2', 'Brita', 'Fors Jonsdotter', '6 JUN 1838');
@@ -86,7 +86,7 @@ describe('duplicateClusters', () => {
     expect(clusters().map(c => [...c].sort())).toEqual([['W1', 'W2']]);
   });
 
-  it('slår inte ihop namnar utan födelsedatum', () => {
+  it('does not merge namesakes that have no birth date', () => {
     person('H1', 'Anders', 'Ek', '1784');
     person('W1', 'Karin', 'Ek', '1789');
     person('U1', 'Okänd', 'Ek');
@@ -96,7 +96,7 @@ describe('duplicateClusters', () => {
     expect(clusters()).toEqual([]);
   });
 
-  it('lägger samman grupper som delar en person', () => {
+  it('joins groups that share a person', () => {
     // W1 matchar W2 på namn och W3 på partner — en klunga, inte två
     person('H1', 'Jonas', 'Ek', '1834');
     person('W1', 'Brita', 'Forss', '6 JUN 1838');

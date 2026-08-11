@@ -17,7 +17,7 @@ const family = (id: string, husbandId: string | null, wifeId: string | null, chi
 beforeEach(() => { db = createDb(':memory:'); });
 
 describe('getFamilies', () => {
-  it('rangordnar de största familjerna och namnger paret', () => {
+  it('ranks the largest families and names the couple', () => {
     person('far', 'M'); person('mor', 'F');
     person('a', 'U'); person('b', 'U'); person('c', 'U');
     family('F1', 'far', 'mor', ['a', 'b', 'c']);
@@ -30,7 +30,7 @@ describe('getFamilies', () => {
     expect(r.averageChildren).toBe(2);
   });
 
-  it('ger fördelningen av familjestorlekar', () => {
+  it('gives the distribution of family sizes', () => {
     person('a', 'U'); person('b', 'U');
     family('F1', 'a', null, []);
     family('F2', 'b', null, ['a']);
@@ -41,7 +41,7 @@ describe('getFamilies', () => {
     ]);
   });
 
-  it('räknar giftasålder var för sig för kvinnor och män', () => {
+  it('counts age at marriage separately for women and men', () => {
     person('man', 'M', 1800);
     person('kvinna', 'F', 1810);
     family('F1', 'man', 'kvinna', [], 1830);          // man 30, kvinna 20
@@ -53,7 +53,7 @@ describe('getFamilies', () => {
     expect(r.marriagesWithYear).toBe(1);
   });
 
-  it('ger genomsnittlig och största åldersskillnad i paret', () => {
+  it('gives the average and largest age gap within a couple', () => {
     person('m1', 'M', 1800); person('k1', 'F', 1802);   // 2 år
     person('m2', 'M', 1800); person('k2', 'F', 1820);   // 20 år
     family('F1', 'm1', 'k1', []);
@@ -63,7 +63,7 @@ describe('getFamilies', () => {
     expect(r.largestAgeGap).toMatchObject({ familyId: 'F2', gap: 20 });
   });
 
-  it('utesluter omöjliga åldersskillnader, precis som omöjliga livslängder', () => {
+  it('excludes impossible age gaps, as it does impossible lifespans', () => {
     person('m1', 'M', 1800); person('k1', 'F', 1804);     // 4 år, rimligt
     person('m2', 'M', 1700); person('k2', 'F', 1811);     // 111 år, datafel
     family('F1', 'm1', 'k1', []);
@@ -75,7 +75,7 @@ describe('getFamilies', () => {
     expect(r.couplesWithBothBirths).toBe(1);              // datafelet räknas inte
   });
 
-  it('anger underlaget för åldersskillnad skilt från antalet daterade vigslar', () => {
+  it('states the basis for the age gap separately from the number of dated marriages', () => {
     // paret har båda födelseår men ingen vigseldatering
     person('m', 'M', 1800); person('k', 'F', 1805);
     family('F1', 'm', 'k', []);
@@ -84,7 +84,7 @@ describe('getFamilies', () => {
     expect(r.marriagesWithYear).toBe(0);
   });
 
-  it('hoppar över par där ett födelseår saknas', () => {
+  it('skips couples where a birth year is missing', () => {
     person('m', 'M', 1800); person('k', 'F');
     family('F1', 'm', 'k', [], 1830);
     const r = getFamilies(db, null);
@@ -93,7 +93,7 @@ describe('getFamilies', () => {
     expect(r.largestAgeGap).toBeNull();
   });
 
-  it('tar med en familj om någon av makarna finns i avgränsningen', () => {
+  it('includes a family if either spouse is inside the scope', () => {
     person('inne', 'M'); person('ute', 'F'); person('x', 'U');
     family('F1', 'inne', 'ute', ['x']);
     family('F2', 'ute', null, ['x']);
@@ -102,7 +102,7 @@ describe('getFamilies', () => {
     expect(r.largestFamilies[0]!.familyId).toBe('F1');
   });
 
-  it('klarar en databas utan familjer utan att dela med noll', () => {
+  it('copes with a database of no families without dividing by zero', () => {
     const r = getFamilies(db, null);
     expect(r.families).toBe(0);
     expect(r.averageChildren).toBeNull();

@@ -61,7 +61,7 @@ function buildTree() {
 const roundTrip = (): MappedData => mapGedcom(parseGedcom(exportGedcom(db)));
 
 describe('exportGedcom — struktur', () => {
-  it('skriver ett giltigt GEDCOM-skelett', () => {
+  it('writes a valid GEDCOM skeleton', () => {
     buildTree();
     const text = exportGedcom(db);
     const lines = text.replace(/^﻿/, '').split('\r\n');
@@ -76,7 +76,7 @@ describe('exportGedcom — struktur', () => {
     expect(lines.at(-1)).toBe('0 TRLR');
   });
 
-  it('skriver FAMC/FAMS så att andra program ser relationerna', () => {
+  it('writes FAMC/FAMS so other programs see the relationships', () => {
     buildTree();
     const lines = exportGedcom(db).split('\r\n');
     expect(lines).toContain('1 FAMS @F1@');   // I1 är make
@@ -84,13 +84,13 @@ describe('exportGedcom — struktur', () => {
   });
 });
 
-describe('exportGedcom — rundtur genom vår egen parser', () => {
+describe('exportGedcom — round trip through our own parser', () => {
   /**
    * A transcription is the reason the field exists, and a page of secretary
    * hand is long and full of line breaks — exactly what GEDCOM's 255-byte
    * lines and CONC/CONT splitting are most likely to mangle.
    */
-  it('bär en flerradig transkription hela vägen ut och tillbaka', () => {
+  it('carries a multi-line transcription all the way out and back', () => {
     buildTree();
     const text = [
       'Pardevant moy soubsigné en présence des tesmoingz cy en bas dénommez',
@@ -108,7 +108,7 @@ describe('exportGedcom — rundtur genom vår egen parser', () => {
     expect(s1.note).toBe('Beskrivning');
   });
 
-  it('bevarar antal och nyckelvärden', () => {
+  it('preserves counts and key values', () => {
     buildTree();
     const back = roundTrip();
 
@@ -143,7 +143,7 @@ describe('exportGedcom — rundtur genom vår egen parser', () => {
     });
   });
 
-  it('bevarar raw_tags på person, händelse och media', () => {
+  it('preserves raw_tags on person, event and media', () => {
     buildTree();
     const back = roundTrip();
     expect(back.persons.find(p => p.id === 'I1')!.rawTags).toContain('_UID');
@@ -151,14 +151,14 @@ describe('exportGedcom — rundtur genom vår egen parser', () => {
     expect(back.media[0]!.rawTags).toContain('MH:P1');
   });
 
-  it('återskapar EVEN med TYPE', () => {
+  it('recreates EVEN with its TYPE', () => {
     buildTree();
     const back = roundTrip();
     const even = back.events.find(e => e.type === 'EVEN')!;
     expect(even.description).toBe('Militärtjänst: Var med i kriget');
   });
 
-  it('överlever långa värden och radbrytningar', () => {
+  it('survives long values and line breaks', () => {
     const long = 'Lorem ipsum dolor sit amet '.repeat(30).trim();   // ~800 tecken
     db.insert(persons).values({
       id: 'I1', givenName: 'Lång', surname: 'Text', sex: 'U',
@@ -168,7 +168,7 @@ describe('exportGedcom — rundtur genom vår egen parser', () => {
     expect(back.persons[0]!.note).toBe(`${long}\nandra raden`);
   });
 
-  it('överlever inbäddade CR (Windows-radbrytningar i importerad text)', () => {
+  it('survives embedded CR — Windows line breaks in imported text', () => {
     // Riktig data innehåller \r\n inuti värden — de får inte läcka ut i filen
     db.insert(sources).values({
       id: 'S1', title: 'Testkälla',
@@ -188,7 +188,7 @@ describe('exportGedcom — rundtur genom vår egen parser', () => {
    * och texten faller bort — det drabbade 3 519 källhänvisningar i det riktiga
    * trädet, alla med både text och ett DATE.
    */
-  it('tappar inte texten när DATA bär både TEXT och något mer', () => {
+  it('does not lose the text when DATA carries both TEXT and something else', () => {
     db.insert(sources).values({ id: 'S9', title: 'Källa', author: null, publication: null, note: null, rawTags: null }).run();
     db.insert(persons).values({
       id: 'I9', givenName: 'Test', surname: 'Person', marriedName: null, suffix: null, sex: 'U', note: null, rawTags: null,
@@ -212,7 +212,7 @@ describe('exportGedcom — rundtur genom vår egen parser', () => {
     expect(JSON.parse(c.rawTags!)).toEqual([{ tag: 'DATA', children: [{ tag: 'DATE', value: '26 DEC 2019' }] }]);
   });
 
-  it('klarar en tom databas', () => {
+  it('copes with an empty database', () => {
     const text = exportGedcom(db);
     expect(text).toContain('0 HEAD');
     expect(text.trimEnd().endsWith('0 TRLR')).toBe(true);

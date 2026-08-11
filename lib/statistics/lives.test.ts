@@ -14,7 +14,7 @@ function person(id: string, sex: 'F' | 'M' | 'U', birth: number | null, death: n
 beforeEach(() => { db = createDb(':memory:'); });
 
 describe('getLives', () => {
-  it('räknar personer och könsfördelning', () => {
+  it('counts people, and the split by sex', () => {
     person('a', 'F', 1800, 1880);
     person('b', 'M', 1810, 1860);
     person('c', 'U', null, null);
@@ -23,13 +23,13 @@ describe('getLives', () => {
     expect(r.bySex).toEqual({ F: 1, M: 1, U: 1 });
   });
 
-  it('anger hur många som har både födelse- och dödsår', () => {
+  it('states how many have both a birth and a death year', () => {
     person('a', 'F', 1800, 1880);
     person('b', 'M', 1810, null);
     expect(getLives(db, null).withBothYears).toBe(1);
   });
 
-  it('rangordnar de längsta liven', () => {
+  it('ranks the longest lives', () => {
     person('kort', 'M', 1800, 1830);
     person('lång', 'F', 1800, 1890);
     const r = getLives(db, null);
@@ -37,7 +37,7 @@ describe('getLives', () => {
     expect(r.longestLives[0]).toMatchObject({ age: 90, birthYear: 1800, deathYear: 1890 });
   });
 
-  it('utesluter omöjliga åldrar, de är datafel som Konsekvens flaggar', () => {
+  it('excludes impossible ages — they are data errors, which Konsekvens flags', () => {
     person('rimlig', 'F', 1800, 1890);
     person('orimlig', 'M', 1700, 1830);            // 130 år
     const r = getLives(db, null);
@@ -46,7 +46,7 @@ describe('getLives', () => {
     expect(r.withBothYears).toBe(1);               // räknas inte heller in i underlaget
   });
 
-  it('ger tidigaste och senaste födelseår', () => {
+  it('gives the earliest and latest birth year', () => {
     person('a', 'F', 1480, 1520);
     person('b', 'M', 1990, null);
     const r = getLives(db, null);
@@ -54,7 +54,7 @@ describe('getLives', () => {
     expect(r.latestBirthYear).toBe(1990);
   });
 
-  it('grupperar medellivslängd och födslar per århundrade', () => {
+  it('groups average lifespan and births by century', () => {
     person('a', 'F', 1801, 1851);                  // 1800-talet, 50 år
     person('b', 'M', 1802, 1872);                  // 1800-talet, 70 år
     person('c', 'F', 1901, 1981);                  // 1900-talet, 80 år
@@ -69,7 +69,7 @@ describe('getLives', () => {
     ]);
   });
 
-  it('räknar bara med personerna i avgränsningen', () => {
+  it('counts only the people inside the scope', () => {
     person('inne', 'F', 1800, 1880);
     person('ute', 'M', 1810, 1860);
     const r = getLives(db, new Set(['inne']));
@@ -77,7 +77,7 @@ describe('getLives', () => {
     expect(r.longestLives.map(l => l.id)).toEqual(['inne']);
   });
 
-  it('klarar en tom avgränsning utan att dela med noll', () => {
+  it('copes with an empty scope without dividing by zero', () => {
     person('a', 'F', 1800, 1880);
     const r = getLives(db, new Set<string>());
     expect(r.total).toBe(0);

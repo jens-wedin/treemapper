@@ -35,7 +35,7 @@ describe('GET /api/tree/:id', () => {
     expect((await api.request('/api/tree/I999')).status).toBe(404);
   });
 
-  it('tillåter djupa förfäder för solfjädern', async () => {
+  it('allows deep ancestors, for the fan chart', async () => {
     expect((await api.request('/api/tree/I3?up=8&down=0')).status).toBe(200);
   });
 });

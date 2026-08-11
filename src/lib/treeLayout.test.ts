@@ -66,7 +66,7 @@ describe('layoutTree', () => {
     expect(new Set(keys).size).toBe(2);
   });
 
-  it('placerar partner bredvid personen och hänger barnen mellan dem', () => {
+  it('places a partner beside the person and hangs the children between them', () => {
     const withSpouse: TreeData = {
       focus: P('F'),
       ancestors: { person: P('F'), parents: [] },
@@ -101,7 +101,7 @@ describe('layoutTree', () => {
    * another, so a rule that reads only `a` reserved the space on the wrong
    * side — and a partner card landed 121 px inside the next sibling.
    */
-  describe('kort krockar inte', () => {
+  describe('cards do not collide', () => {
     const rowOverlap = (children: DescendantNode[]) => {
       const r2 = layoutTree({
         focus: P('F'), ancestors: { person: P('F'), parents: [] }, descendants: D('F', { children }),
@@ -114,12 +114,12 @@ describe('layoutTree', () => {
       return worst;
     };
 
-    it('lämnar plats för partnern oavsett vilket syskon som har den', () => {
+    it('leaves room for the partner whichever sibling has one', () => {
       expect(rowOverlap([D('a', { spouses: [P('make') ] }), D('b')])).toBeGreaterThanOrEqual(0);
       expect(rowOverlap([D('a'), D('b', { spouses: [P('make')] })])).toBeGreaterThanOrEqual(0);
     });
 
-    it('lämnar plats även för flera partner och flera syskon', () => {
+    it('leaves room for several partners and several siblings too', () => {
       expect(rowOverlap([
         D('a', { spouses: [P('m1'), P('m2')] }),
         D('b', { spouses: [P('m3')] }),
@@ -128,7 +128,7 @@ describe('layoutTree', () => {
       ])).toBeGreaterThanOrEqual(0);
     });
 
-    it('lämnar plats för kusiner i olika familjer', () => {
+    it('leaves room for cousins in different families', () => {
       // syskonen ligger i skilda undergrenar — d3 jämför då konturer, inte syskon
       const r2 = layoutTree({
         focus: P('F'),
@@ -146,7 +146,7 @@ describe('layoutTree', () => {
     });
   });
 
-  it('hänger barn från rätt äktenskap när personen har flera partner', () => {
+  it('hangs children from the right marriage when a person has several partners', () => {
     const remarried: TreeData = {
       focus: P('F'),
       ancestors: { person: P('F'), parents: [] },
@@ -178,20 +178,20 @@ describe('layoutTree', () => {
     expect(r.bounds.minX).toBeLessThan(r.bounds.maxX);
   });
 
-  describe('grenfärger', () => {
-    it('färgar förfäderna som antavlan och solfjädern gör', () => {
+  describe('branch colours', () => {
+    it('colours the ancestors as the pedigree and fan charts do', () => {
       expect(byId('F')[0]!.branch).toBe('focus');
       expect(byId('far')[0]!.branch).toBe('ff');
       expect(byId('mor')[0]!.branch).toBe('mm');
       expect(byId('farfar')[0]!.branch).toBe('ff');
     });
 
-    it('lämnar ättlingarna ofärgade — de tillhör ingen mor-/farföräldragren', () => {
+    it('leaves the descendants uncoloured — they belong to no grandparent branch', () => {
       expect(byId('barn1')[0]!.branch).toBe('focus');
       expect(byId('barnbarn')[0]!.branch).toBe('focus');
     });
 
-    it('placerar en ensam förälder efter kön, precis som anfarsnumreringen', () => {
+    it('places a lone parent by sex, exactly as ahnentafel numbering does', () => {
       // bara modern känd: hon hör till mödernet, inte fädernet
       const motherOnly: TreeData = {
         focus: P('F'),
@@ -205,7 +205,7 @@ describe('layoutTree', () => {
       expect(m.nodes.find(n => n.person.id === 'mormor')!.branch).toBe('mm');
     });
 
-    it('ger samma gren som antavlan för samma person', () => {
+    it('gives the same branch as the pedigree chart for the same person', () => {
       // Vyerna räknar ut grenen var för sig; går de isär färgas samma
       // förfader olika beroende på vilken vy man råkar titta i.
       const mixed: TreeData = {
@@ -229,7 +229,7 @@ describe('layoutTree', () => {
       expect(fromTree.get('farmor')).toBe('fm');     // placerad efter kön, inte position
     });
 
-    it('skiljer de fyra mor-/farföräldragrenarna åt', () => {
+    it('tells the four grandparent branches apart', () => {
       const four: TreeData = {
         focus: P('F'),
         ancestors: { person: P('F'), parents: [
@@ -251,11 +251,11 @@ describe('layoutTree', () => {
     });
   });
 
-  it('ger inga knappar där ingen har flaggat att släkten fortsätter', () => {
+  it('gives no buttons where nothing has flagged that the family continues', () => {
     expect(r.handles).toEqual([]);
   });
 
-  describe('utfällningsknappar', () => {
+  describe('expand buttons', () => {
     const edges: TreeData = {
       focus: P('F'),
       ancestors: { person: P('F'), parents: [
@@ -271,25 +271,25 @@ describe('layoutTree', () => {
     const handleFor = (id: string) => e.handles.find(h => h.person.id === id);
     const nodeFor = (id: string) => e.nodes.find(n => n.person.id === id)!;
 
-    it('sätter en knapp uppåt över förfäder och nedåt under ättlingar', () => {
+    it('puts an upward button above ancestors and a downward one below descendants', () => {
       expect(handleFor('far')).toMatchObject({ direction: 'up', action: 'expand' });
       expect(handleFor('barn1')).toMatchObject({ direction: 'down', action: 'expand' });
       expect(handleFor('mor')).toBeUndefined();       // ingen flagga, ingen knapp
       expect(handleFor('barn2')).toBeUndefined();
     });
 
-    it('lägger knappen ovanför respektive nedanför sitt kort', () => {
+    it('puts the button above or below its own card', () => {
       expect(handleFor('far')!.y).toBeLessThan(nodeFor('far').y);
       expect(handleFor('far')!.x).toBe(nodeFor('far').x);
       expect(handleFor('barn1')!.y).toBeGreaterThan(nodeFor('barn1').y);
     });
 
-    it('pekar ut var i trädet en hämtad gren ska sättas in', () => {
+    it('points out where in the tree a fetched branch should be inserted', () => {
       expect(handleFor('far')!.path).toEqual([0]);        // första föräldern
       expect(handleFor('barn1')!.path).toEqual([0]);      // första barnet
     });
 
-    it('gör knappen till en anhalt på tangentbordsvägen', () => {
+    it('makes the button a stop on the keyboard path', () => {
       const far = nodeFor('far');
       const barn1 = nodeFor('barn1');
       expect(e.nav[far.key]?.up).toBe(handleFor('far')!.key);
@@ -298,7 +298,7 @@ describe('layoutTree', () => {
       expect(e.nav[handleFor('barn1')!.key]?.up).toBe(barn1.key);
     });
 
-    it('byter till hopfällning för den gren som öppnats, och släpper vidare pilen', () => {
+    it('switches to collapse for the branch that was opened, and passes the arrow on', () => {
       const opened: TreeData = {
         ...edges,
         ancestors: { person: P('F'), parents: [
@@ -317,7 +317,7 @@ describe('layoutTree', () => {
       expect(o.nav[handle.key]?.up).toBe(farfar.key);
     });
 
-    it('sätter knappen under vigselstrecket när personen har partner', () => {
+    it('puts the button below the marriage line when the person has a partner', () => {
       const couple: TreeData = {
         focus: P('F'),
         ancestors: { person: P('F'), parents: [] },
@@ -329,7 +329,7 @@ describe('layoutTree', () => {
       expect(c.handles[0]!.x).toBeCloseTo((focusNode.x + spouse.x) / 2, 5);
     });
 
-    it('täcker knapparna med sina gränser', () => {
+    it('covers the buttons with its bounds', () => {
       expect(e.bounds.minY).toBeLessThanOrEqual(Math.min(...e.handles.map(h => h.y)));
       expect(e.bounds.maxY).toBeGreaterThanOrEqual(Math.max(...e.handles.map(h => h.y)));
     });

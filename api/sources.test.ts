@@ -26,7 +26,7 @@ const patch = (url: string, body: unknown) =>
   api.request(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
 describe('GET /api/sources', () => {
-  it('listar och söker källor', async () => {
+  it('lists and searches sources', async () => {
     const res = await api.request('/api/sources');
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -39,13 +39,13 @@ describe('GET /api/sources', () => {
 });
 
 describe('GET /api/sources/:id/full', () => {
-  it('returnerar källan med hänvisningar', async () => {
+  it('returns the source with its citations', async () => {
     const body = await (await api.request('/api/sources/S1/full')).json();
     expect(body.source.title).toBe('Kyrkbok Hälsingland');
     expect(body.citations).toHaveLength(2);
   });
 
-  it('404 på svenska för okänd källa', async () => {
+  it('404 for an unknown source', async () => {
     const res = await api.request('/api/sources/S999/full');
     expect(res.status).toBe(404);
     expect((await res.json()).error).toBe('That source does not exist');
@@ -53,7 +53,7 @@ describe('GET /api/sources/:id/full', () => {
 });
 
 describe('PATCH /api/sources/:id', () => {
-  it('uppdaterar och loggar ändringen', async () => {
+  it('updates and logs the change', async () => {
     const res = await patch('/api/sources/S1', { title: 'Ny titel', author: null });
     expect(res.status).toBe(200);
     const body = await (await api.request('/api/sources/S1/full')).json();
@@ -65,7 +65,7 @@ describe('PATCH /api/sources/:id', () => {
     expect(JSON.parse(log.before!).title).toBe('Kyrkbok Hälsingland');
   });
 
-  it('404 för okänd källa och 400 för ogiltiga fält', async () => {
+  it('404 for an unknown source, 400 for invalid fields', async () => {
     expect((await patch('/api/sources/S999', { title: 'x' })).status).toBe(404);
     expect((await patch('/api/sources/S1', { title: 'x'.repeat(300) })).status).toBe(400);
   });

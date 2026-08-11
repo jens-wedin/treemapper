@@ -9,7 +9,7 @@ describe('readPreference', () => {
     expect(readPreference('wedin-tree-theme', 'wedin-tree-tema')).toBe('dark');
   });
 
-  it('adopts a value still stored under the old Swedish key', () => {
+  it('adopts a value still stored under its old name', () => {
     localStorage.setItem('wedin-tree-tema', 'dark');
     expect(readPreference('wedin-tree-theme', 'wedin-tree-tema')).toBe('dark');
   });

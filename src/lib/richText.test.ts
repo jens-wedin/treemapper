@@ -2,18 +2,18 @@ import { describe, it, expect } from 'vitest';
 import { textBlocks } from './richText';
 
 describe('textBlocks', () => {
-  it('lämnar vanlig text i fred', () => {
+  it('leaves plain text alone', () => {
     expect(textBlocks('Bonde i Vesby.')).toEqual(['Bonde i Vesby.']);
     expect(textBlocks('Rad ett\nRad två')).toEqual(['Rad ett\nRad två']);
   });
 
-  it('ger tomt för tomma anteckningar', () => {
+  it('gives nothing for an empty note', () => {
     expect(textBlocks(null)).toEqual([]);
     expect(textBlocks('')).toEqual([]);
     expect(textBlocks('   ')).toEqual([]);
   });
 
-  it('delar upp stycken och plockar bort taggarna', () => {
+  it('splits paragraphs and strips the tags', () => {
     // exakt formen som kommer ur MyHeritage-exporten
     const raw = '<p>Troligen son till den bonde som enligt skattelängden kallades Erich i Wesby</p>'
       + '<p><p></p></p><p>Nämnd som Hemmansbrukare i Vesby. Han skall ha avlidit 1557.</p>';
@@ -23,14 +23,14 @@ describe('textBlocks', () => {
     ]);
   });
 
-  it('gör radbrytning av br men håller ihop stycket', () => {
+  it('turns br into a line break but keeps the paragraph together', () => {
     expect(textBlocks('<p>Först<br>Sedan<br/>Sist</p>')).toEqual(['Först\nSedan\nSist']);
     // exporten hänger ofta med en style-attribut på sina br
     expect(textBlocks('Ett<br style="font-family: Times; font-size: small;" />Två'))
       .toEqual(['Ett\nTvå']);
   });
 
-  it('avkodar text som maskerats två gånger om', () => {
+  it('decodes text that was escaped twice over', () => {
     // stora delar av källhänvisningarna ser ut så här i exporten
     expect(textBlocks('Kön: Man&amp;lt;br&amp;gt;Födelse: 1942')).toEqual(['Kön: Man\nFödelse: 1942']);
     expect(textBlocks('Bj&amp;ouml;rn')).toEqual(['Björn']);
@@ -43,47 +43,47 @@ describe('textBlocks', () => {
     expect(textBlocks('Nilsson &amp; Son')).toEqual(['Nilsson & Son']);
   });
 
-  it('behandlar maskerad markup som markup', () => {
+  it('treats escaped markup as markup', () => {
     // exporten skriver en del av sina egna radbrytningar som &lt;br&gt;;
     // avkodade sist hade de blivit stående som text på skärmen
     expect(textBlocks('Elsa Viola&lt;br&gt;Födelse: 10 jan 1919&lt;br&gt;Bjuråker'))
       .toEqual(['Elsa Viola\nFödelse: 10 jan 1919\nBjuråker']);
   });
 
-  it('rör inte vinkelparenteser som inte är markup', () => {
+  it('leaves angle brackets that are not markup alone', () => {
     // MyHeritage döljer levande personer bakom <Privat>, ofta maskerat
     expect(textBlocks('Förälder: &lt;Privat&gt; Vedin')).toEqual(['Förälder: <Privat> Vedin']);
     expect(textBlocks('Far: <Privat> Hammarstedt')).toEqual(['Far: <Privat> Hammarstedt']);
     expect(textBlocks('Yrke: <okänt>')).toEqual(['Yrke: <okänt>']);
   });
 
-  it('behåller okända entiteter som de står', () => {
+  it('keeps unknown entities as they stand', () => {
     expect(textBlocks('100 &fnurgel; kronor')).toEqual(['100 &fnurgel; kronor']);
   });
 
-  it('tar bort inline-taggar men behåller texten', () => {
+  it('removes inline tags but keeps the text', () => {
     expect(textBlocks('<span style="color:red"><strong>Viktigt</strong> och <em>kursivt</em></span>'))
       .toEqual(['Viktigt och kursivt']);
     expect(textBlocks('<font face="Arial">Text</font>')).toEqual(['Text']);
   });
 
-  it('behåller länkars text', () => {
+  it('keeps the text of links', () => {
     expect(textBlocks('Se <a href="http://exempel.se">Riksarkivet</a> för mer'))
       .toEqual(['Se Riksarkivet för mer']);
     // MyHeritages egna pseudotaggar lämnar kvar adressen som läsbar text
     expect(textBlocks('<linkurl>http://exempel.se</linkurl>')).toEqual(['http://exempel.se']);
   });
 
-  it('ger listpunkter och tabellceller var sin rad', () => {
+  it('gives list items and table cells a line each', () => {
     expect(textBlocks('<ul><li>Ett</li><li>Två</li></ul>')).toEqual(['Ett', 'Två']);
     expect(textBlocks('<table><tr><td>A</td><td>B</td></tr></table>')).toEqual(['A', 'B']);
   });
 
-  it('rör inte ett ensamt mindre-än-tecken', () => {
+  it('leaves a lone less-than sign alone', () => {
     expect(textBlocks('Född < 1557')).toEqual(['Född < 1557']);
   });
 
-  it('klarar en tagg som aldrig stängs', () => {
+  it('copes with a tag that is never closed', () => {
     expect(textBlocks('<p>Text som saknar slut')).toEqual(['Text som saknar slut']);
   });
 

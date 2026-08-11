@@ -20,7 +20,7 @@ beforeAll(() => {
 afterAll(() => fs.rmSync(dir, { recursive: true, force: true }));
 
 describe('listSources', () => {
-  it('listar källor med antal hänvisningar', () => {
+  it('lists sources with a count of citations', () => {
     const { items, total } = listSources(db);
     expect(total).toBe(1);
     expect(items[0]).toMatchObject({
@@ -29,7 +29,7 @@ describe('listSources', () => {
     expect(items[0].citationCount).toBe(2); // en på händelse, en på person
   });
 
-  it('söker på titel och författare', () => {
+  it('searches title and author', () => {
     expect(listSources(db, { q: 'Hälsingland' }).total).toBe(1);
     expect(listSources(db, { q: 'Svenska kyrkan' }).total).toBe(1);
     expect(listSources(db, { q: 'finns inte' }).total).toBe(0);
@@ -37,11 +37,11 @@ describe('listSources', () => {
 });
 
 describe('getSourceFull', () => {
-  it('returnerar null för okänd källa', () => {
+  it('returns null for an unknown source', () => {
     expect(getSourceFull(db, 'S999')).toBeNull();
   });
 
-  it('löser upp hänvisningar till personer och händelser', () => {
+  it('resolves citations to people and events', () => {
     const full = getSourceFull(db, 'S1')!;
     expect(full.source).toMatchObject({ id: 'S1', title: 'Kyrkbok Hälsingland' });
     expect(full.citations).toHaveLength(2);

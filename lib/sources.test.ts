@@ -48,8 +48,8 @@ describe('getSourceFull', () => {
 
     const eventCitation = full.citations.find(c => c.ownerType === 'event')!;
     expect(eventCitation.personId).toBe('I1');
-    expect(eventCitation.label).toContain('Sven-Erik Wedin');
-    expect(eventCitation.label).toContain('Födelse');
+    expect(eventCitation.personName).toBe('Sven-Erik Wedin');
+    expect(eventCitation.eventType).toBe('BIRT');
     expect(eventCitation.page).toBe('Sida 12');
 
     const personCitation = full.citations.find(c => c.ownerType === 'person')!;

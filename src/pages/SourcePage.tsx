@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { SourceFull } from '../../lib/sources';
+import type { SourceCitationView, SourceFull } from '../../lib/sources';
 import { sourceUpdateSchema } from '../../lib/schemas';
-import { t } from '../lib/i18n';
+import { t, eventLabel } from '../lib/i18n';
 import { ApiError, fetchJson, mutateJson } from '../lib/api';
 import { useTreeUrl } from '../lib/treeUrl';
 import RichText from '../components/RichText';
@@ -41,7 +41,7 @@ function SourceEditForm({ source, onSaved, onCancel }: {
       note: emptyToNull(form.note),
     });
     if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? 'Ogiltiga fält');
+      setError(parsed.error.issues[0]?.message ?? t('common.error'));
       return;
     }
     setSaving(true);
@@ -60,9 +60,9 @@ function SourceEditForm({ source, onSaved, onCancel }: {
     <form onSubmit={submit} className="mt-4 rounded-lg border p-4">
       <div className="flex flex-wrap gap-3">
         {([
-          ['source-titel', t('person.name'), 'title', 'w-80'],
-          ['source-forfattare', t('sources.author'), 'author', 'w-64'],
-          ['source-utgivare', t('sources.publication'), 'publication', 'w-64'],
+          ['source-title', t('person.name'), 'title', 'w-80'],
+          ['source-author', t('sources.author'), 'author', 'w-64'],
+          ['source-publication', t('sources.publication'), 'publication', 'w-64'],
         ] as const).map(([id, label, key, width]) => (
           <div key={id}>
             <label htmlFor={id} className="block text-sm font-medium">{label}</label>
@@ -94,6 +94,18 @@ function SourceEditForm({ source, onSaved, onCancel }: {
       </div>
     </form>
   );
+}
+
+/**
+ * Who or what a citation hangs on: a person, an event of theirs, or a family.
+ * Built here rather than on the server, which has no language to build it in.
+ */
+function citationLabel(c: SourceCitationView): string {
+  const who = c.personName ?? `${t('sources.family')} ${c.ownerId}`;
+  if (c.ownerType === 'event') {
+    return c.eventType ? `${who} — ${eventLabel(c.eventType)}` : `${t('sources.event')} ${c.ownerId}`;
+  }
+  return who;
 }
 
 export default function SourcePage() {
@@ -184,8 +196,8 @@ export default function SourcePage() {
               {citations.map(c => (
                 <li key={c.id} className="border-b pb-2">
                   {c.personId
-                    ? <Link to={link(`/person/${c.personId}`)} className="text-primary underline-offset-2 hover:underline">{c.label}</Link>
-                    : <span>{c.label}</span>}
+                    ? <Link to={link(`/person/${c.personId}`)} className="text-primary underline-offset-2 hover:underline">{citationLabel(c)}</Link>
+                    : <span>{citationLabel(c)}</span>}
                   {c.page && <span className="ml-2 text-sm text-muted-foreground">{t('sources.page')}: {c.page}</span>}
                   {c.quality != null && <span className="ml-2 text-sm text-muted-foreground">{t('person.quality')} {c.quality}</span>}
                   <RichText text={c.text} className="mt-1 text-sm text-muted-foreground" />

@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
-import type { Severity } from '../../lib/issues';
+import type { IssueCode, Severity } from '../../lib/issues';
 import type { IssueLogEntry } from '../../lib/issueLog';
-import { t, getLanguage , uiLocale } from '../lib/i18n';
+import { t, uiLocale } from '../lib/i18n';
+import { issueTitle } from '../lib/issueText';
 import { fetchJson } from '../lib/api';
 import { Badge } from '@/components/ui/badge';
 import IssueCard, { type IssueListItem } from '../components/issues/IssueCard';
@@ -59,9 +60,13 @@ export default function IssuesPage() {
 
   if (state === 'error') return <p role="alert">{t('common.error')}</p>;
 
-  // Categories ordered worst-first, then by size.
+  // Categories by size, biggest first. The label is the translated title, so
+  // the dropdown reads in the reader's language while the value stays the code
+  // the API filters on — which is what keeps a shared link working.
   const ordered = data
-    ? Object.entries(data.counts).sort((a, b) => b[1] - a[1])
+    ? Object.entries(data.counts)
+      .map(([code, n]) => ({ code, n, label: issueTitle(code as IssueCode) }))
+      .sort((a, b) => b.n - a.n || a.label.localeCompare(b.label, uiLocale()))
     : [];
 
   // The queue arrives worst first; heading each run of one severity turns a
@@ -74,11 +79,6 @@ export default function IssuesPage() {
     <section>
       <h1 className="text-2xl font-bold">{t('issues.title')}</h1>
       <p className="mt-1 text-muted-foreground">{t('issues.lead')}</p>
-      {/* Category names and problem sentences are produced by the detectors in
-          Swedish; say so rather than showing a half-translated page. */}
-      {getLanguage() !== 'sv' && (
-        <p className="mt-1 text-sm text-muted-foreground">{t('issues.detailsInSwedish')}</p>
-      )}
 
       {data && (
         <p className="mt-4 rounded-lg border bg-muted/50 p-4 text-lg">
@@ -97,23 +97,23 @@ export default function IssuesPage() {
 
       <div className="mt-4 flex flex-wrap items-end gap-4">
         <div>
-          <label htmlFor="kategori" className="block text-sm font-medium">{t('issues.category')}</label>
+          <label htmlFor="issue-category" className="block text-sm font-medium">{t('issues.category')}</label>
           <select
-            id="kategori"
+            id="issue-category"
             value={category}
             onChange={e => setParam('category', e.target.value)}
             className="mt-1 max-w-md rounded-md border px-2 py-1.5"
           >
             <option value="">{t('issues.allCategories')}</option>
-            {ordered.map(([cat, n]) => (
-              <option key={cat} value={cat}>{cat} ({n})</option>
+            {ordered.map(({ code, n, label }) => (
+              <option key={code} value={code}>{label} ({n})</option>
             ))}
           </select>
         </div>
         <div>
-          <label htmlFor="grad" className="block text-sm font-medium">{t('issues.severity')}</label>
+          <label htmlFor="issue-severity" className="block text-sm font-medium">{t('issues.severity')}</label>
           <select
-            id="grad"
+            id="issue-severity"
             value={severity}
             onChange={e => setParam('severity', e.target.value)}
             className="mt-1 rounded-md border px-2 py-1.5"

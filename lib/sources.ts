@@ -2,7 +2,6 @@ import { and, eq, inArray, like, or, sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 import type { Db } from '../db/client';
 import { sources, citations, persons, events } from '../db/schema';
-import { eventLabelSv } from './eventLabels';
 
 export interface SourceListItem {
   id: string;
@@ -21,7 +20,10 @@ export interface SourceCitationView {
   text: string | null;
   /** Person to link to — resolved through the event for event-owned citations. */
   personId: string | null;
-  label: string;
+  /** Whose citation this is, when a person owns it or an event of theirs does. */
+  personName: string | null;
+  /** GEDCOM tag for an event-owned citation, translated where it is shown. */
+  eventType: string | null;
 }
 
 export interface SourceFull {
@@ -86,19 +88,24 @@ export function getSourceFull(db: Db, id: string): SourceFull | null {
     return p ? [p.givenName, p.surname].filter(s => s.trim()).join(' ') || pid : pid;
   };
 
+  // The pieces, not the sentence: "Familj F12 — Vigsel" was assembled here and
+  // stayed Swedish whatever language the page was in.
   const views: SourceCitationView[] = rows.map(c => {
     if (c.ownerType === 'person') {
-      return { ...c, ownerType: 'person', personId: c.ownerId, label: nameOf(c.ownerId) };
+      return { ...c, ownerType: 'person', personId: c.ownerId, personName: nameOf(c.ownerId), eventType: null };
     }
     if (c.ownerType === 'event') {
       const e = eventById.get(Number(c.ownerId));
       const personId = e?.ownerType === 'person' ? e.ownerId : null;
-      const label = e
-        ? `${personId ? nameOf(personId) : `Familj ${e.ownerId}`} — ${eventLabelSv(e.type)}`
-        : `Händelse ${c.ownerId}`;
-      return { ...c, ownerType: 'event', personId, label };
+      return {
+        ...c,
+        ownerType: 'event',
+        personId,
+        personName: personId ? nameOf(personId) : null,
+        eventType: e?.type ?? null,
+      };
     }
-    return { ...c, ownerType: 'family', personId: null, label: `Familj ${c.ownerId}` };
+    return { ...c, ownerType: 'family', personId: null, personName: null, eventType: null };
   });
 
   return {

@@ -1,5 +1,6 @@
 import type { IssueLogEntry } from '../../../lib/issueLog';
-import { t , uiLocale } from '../../lib/i18n';
+import { t, uiLocale } from '../../lib/i18n';
+import { logLine } from '../../lib/logText';
 
 /** Date and time, short — a log is read as "what did I do, and when". */
 const when = (iso: string) => {
@@ -16,10 +17,10 @@ export default function ChangeLog({ entries }: { entries: IssueLogEntry[] }) {
   if (!entries.length) return <p className="mt-2 text-muted-foreground">{t('issues.changeLogEmpty')}</p>;
   return (
     <ol className="mt-2 space-y-2">
-      {entries.map(entry => (
-        <li key={`${entry.at}|${entry.summary}`} className="flex flex-wrap items-baseline gap-2 text-sm">
+      {entries.map((entry, i) => (
+        <li key={`${entry.at}|${entry.code}|${i}`} className="flex flex-wrap items-baseline gap-2 text-sm">
           <time dateTime={entry.at} className="tabular-nums text-muted-foreground">{when(entry.at)}</time>
-          <span className="text-foreground">{entry.summary}</span>
+          <span className="text-foreground">{logLine(entry)}</span>
         </li>
       ))}
     </ol>

@@ -1,7 +1,8 @@
 import { Link } from 'react-router';
 import { Badge } from '@/components/ui/badge';
 import type { IssueLogEntry } from '../../../lib/issueLog';
-import { t , uiLocale } from '../../lib/i18n';
+import { t, uiLocale } from '../../lib/i18n';
+import { logLine } from '../../lib/logText';
 import { SEVERITY_STYLE } from './severityStyle';
 import { useTreeUrl } from '../../lib/treeUrl';
 
@@ -32,8 +33,8 @@ export default function IssueLog({ entries }: { entries: IssueLogEntry[] }) {
         <p className="mt-3 text-sm text-muted-foreground">{t('issues.logEmpty')}</p>
       ) : (
         <ol className="mt-3 space-y-2">
-          {entries.map(entry => (
-            <li key={`${entry.at}|${entry.kind}|${entry.summary}`} className="text-sm">
+          {entries.map((entry, i) => (
+            <li key={`${entry.at}|${entry.kind}|${i}`} className="text-sm">
               <div className="flex flex-wrap items-baseline gap-2">
                 <time dateTime={entry.at} className="tabular-nums text-muted-foreground">{when(entry.at)}</time>
                 <Badge
@@ -46,8 +47,8 @@ export default function IssueLog({ entries }: { entries: IssueLogEntry[] }) {
                 </Badge>
                 <span className="text-foreground">
                   {entry.personId
-                    ? <Link to={link(`/person/${entry.personId}`)} className="text-primary underline-offset-2 hover:underline">{entry.summary}</Link>
-                    : entry.summary}
+                    ? <Link to={link(`/person/${entry.personId}`)} className="text-primary underline-offset-2 hover:underline">{logLine(entry)}</Link>
+                    : logLine(entry)}
                 </span>
               </div>
               {entry.note && <p className="ml-1 text-muted-foreground">”{entry.note}”</p>}

@@ -35,14 +35,14 @@ describe('GET /api/issues', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.items[0].severity).toBe('error');
-    expect(body.counts['Födsel efter bortgång']).toBe(1);
-    expect(body.counts['Saknar födelse']).toBe(1);
+    expect(body.counts['death-before-birth']).toBe(1);
+    expect(body.counts['missing-birth']).toBe(1);
     expect(body.total).toBeGreaterThan(1);
     expect(body.dismissed).toBe(0);
   });
 
   it('filtrerar på kategori', async () => {
-    const res = await api.request('/api/issues?category=' + encodeURIComponent('Saknar födelse'));
+    const res = await api.request('/api/issues?category=' + encodeURIComponent('missing-birth'));
     const body = await res.json();
     expect(body.items).toHaveLength(1);
     expect(body.items[0].personIds[0]).toBe('I2');
@@ -121,9 +121,9 @@ describe('GET /api/issues/persons', () => {
     const body = await res.json();
     expect(body.persons.I1.severity).toBe('error');
     const birthAfterDeath = body.persons.I1.problems
-      .find((p: { category: string }) => p.category === 'Födsel efter bortgång');
-    // problemets egen formulering följer med, den som panelen visar
-    expect(birthAfterDeath.text).toContain('1801');
+      .find((p: { code: string }) => p.code === 'death-before-birth');
+    // the values behind the sentence come with it — the panel builds the words
+    expect(birthAfterDeath.params).toMatchObject({ birth: 1801 });
     expect(birthAfterDeath.severity).toBe('error');
     expect(body.persons.I2.problems).toHaveLength(1);
     expect(body.persons.I2.severity).toBe('warning');
@@ -131,7 +131,7 @@ describe('GET /api/issues/persons', () => {
   });
 
   it('räknar inte med det som avfärdats i Konsekvensbänken', async () => {
-    const missingBirth = (await (await api.request('/api/issues?category=' + encodeURIComponent('Saknar födelse'))).json()).items[0];
+    const missingBirth = (await (await api.request('/api/issues?category=' + encodeURIComponent('missing-birth'))).json()).items[0];
     await post(api, '/api/issues/dismiss', { fingerprint: missingBirth.fingerprint });
 
     const body = await (await api.request('/api/issues/persons')).json();
@@ -151,7 +151,7 @@ describe('historiken i /api/issues', () => {
     expect(body.log).toHaveLength(2);
     expect(body.log[0]).toMatchObject({ kind: 'dismissed', note: 'kollat' });
     expect(body.log[1]).toMatchObject({ kind: 'changed', personId: 'I1' });
-    expect(body.log[1].summary).toContain('förnamn');
+    expect(body.log[1].changes[0].field).toBe('givenName');
   });
 
   it('påverkas inte av filtren på kön', async () => {

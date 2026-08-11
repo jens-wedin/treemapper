@@ -48,23 +48,23 @@ function family(id: string, husbandId: string | null, wifeId: string | null, chi
 }
 
 const run = (referenceYear = 2026): Issue[] => detectIssues(db, { referenceYear });
-const cats = (issues: Issue[]) => issues.map(i => i.category);
-const of = (issues: Issue[], category: string) => issues.filter(i => i.category === category);
+const cats = (issues: Issue[]) => issues.map(i => i.code);
+const of = (issues: Issue[], code: string) => issues.filter(i => i.code === code);
 
 describe('detectIssues — logiska fel', () => {
-  it('Födsel efter bortgång', () => {
+  it('death-before-birth', () => {
     human('I1', 1801, 1800);
-    const hits = of(run(), 'Födsel efter bortgång');
+    const hits = of(run(), 'death-before-birth');
     expect(hits).toHaveLength(1);
     expect(hits[0]).toMatchObject({ severity: 'error', personIds: ['I1'] });
-    expect(hits[0].text).toContain('1801');
+    expect(hits[0]!.params).toMatchObject({ birth: 1801, death: 1800 });
   });
 
-  it('Barnet äldre än föräldrarna', () => {
+  it('child-older-than-parents', () => {
     human('P', 1790, null, { sex: 'M' });
     human('C', 1780, null);
     family('F1', 'P', null, ['C']);
-    const hits = of(run(), 'Barnet äldre än föräldrarna');
+    const hits = of(run(), 'child-older-than-parents');
     expect(hits).toHaveLength(1);
     expect(hits[0].personIds).toEqual(['C', 'P']);
   });
@@ -75,7 +75,7 @@ describe('detectIssues — logiska fel', () => {
     human('SENT', 1836, null);      // långt efter båda
     human('STRAX', 1801, null);     // året efter faderns död → ok för far, fel för mor
     family('F1', 'FAR', 'MOR', ['SENT', 'STRAX']);
-    const hits = of(run(), 'Barn fött efter förälders bortgång');
+    const hits = of(run(), 'child-born-after-parent-died');
     // SENT: far + mor = 2 · STRAX: bara mor = 1
     expect(hits).toHaveLength(3);
     expect(hits.filter(h => h.personIds[0] === 'STRAX')).toHaveLength(1);
@@ -86,15 +86,15 @@ describe('detectIssues — logiska fel', () => {
     human('I1', 1800, 1850);
     event('I1', 'RESI', '1860');
     event('I1', 'BURI', '1850');
-    const hits = of(run(), 'Faktum som inträffar efter döden');
+    const hits = of(run(), 'fact-after-death');
     expect(hits).toHaveLength(1);
-    expect(hits[0].text).toContain('Bosatt');
+    expect(hits[0]!.params).toMatchObject({ event: 'RESI' });
   });
 
-  it('Faktum som inträffar före födelse', () => {
+  it('fact-before-birth', () => {
     human('I1', 1900, null);
     event('I1', 'RESI', '1890');
-    expect(of(run(), 'Faktum som inträffar före födelse')).toHaveLength(1);
+    expect(of(run(), 'fact-before-birth')).toHaveLength(1);
   });
 
   it('intervalldatum som omsluter födelsen eller döden är inget fel', () => {
@@ -105,8 +105,8 @@ describe('detectIssues — logiska fel', () => {
     human('I3', 1926, null);
     event('I3', 'RESI', 'BET 1900 AND 1910');  // hela spannet före födelsen → fel
     const issues = run();
-    expect(of(issues, 'Faktum som inträffar före födelse').map(i => i.personIds[0])).toEqual(['I3']);
-    expect(of(issues, 'Faktum som inträffar efter döden')).toHaveLength(0);
+    expect(of(issues, 'fact-before-birth').map(i => i.personIds[0])).toEqual(['I3']);
+    expect(of(issues, 'fact-after-death')).toHaveLength(0);
   });
 });
 
@@ -116,20 +116,20 @@ describe('detectIssues — åldersvarningar', () => {
     person('DÖD_UTAN_DATUM');
     event('DÖD_UTAN_DATUM', 'BIRT', '1900');
     event('DÖD_UTAN_DATUM', 'DEAT', null); // markerad avliden → flaggas INTE
-    const hits = of(run(2026), 'Vid liv men för gammal');
+    const hits = of(run(2026), 'alive-too-old');
     expect(hits.map(h => h.personIds[0])).toEqual(['LEVANDE']);
-    expect(hits[0].text).toContain('126');
+    expect(hits[0]!.params).toMatchObject({ age: 126 });
   });
 
   it('Vid liv men för gammal följer referenceYear', () => {
     human('I1', 1950, null);
-    expect(of(run(2026), 'Vid liv men för gammal')).toHaveLength(0);
-    expect(of(run(2200), 'Vid liv men för gammal')).toHaveLength(1);
+    expect(of(run(2026), 'alive-too-old')).toHaveLength(0);
+    expect(of(run(2200), 'alive-too-old')).toHaveLength(1);
   });
 
-  it('Dog för gammal', () => {
+  it('died-too-old', () => {
     human('I1', 1594, 1712);
-    expect(of(run(), 'Dog för gammal')).toHaveLength(1);
+    expect(of(run(), 'died-too-old')).toHaveLength(1);
   });
 
   it('Föräldrar för unga och Förälder för gammal', () => {
@@ -138,8 +138,8 @@ describe('detectIssues — åldersvarningar', () => {
     human('BARN', 1790, null);
     family('F1', 'GAMMAL', 'UNG', ['BARN']);
     const issues = run();
-    expect(of(issues, 'Föräldrar för unga när de fick barn')).toHaveLength(1); // 10 år
-    expect(of(issues, 'Förälder för gammal när man fått barn')).toHaveLength(1); // 90 år
+    expect(of(issues, 'parents-too-young')).toHaveLength(1); // 10 år
+    expect(of(issues, 'parent-too-old')).toHaveLength(1); // 90 år
   });
 
   it('Syskon med nära ålder (kräver fulla datum, tvillingar undantagna)', () => {
@@ -151,7 +151,7 @@ describe('detectIssues — åldersvarningar', () => {
     person('T1'); event('T1', 'BIRT', '4 MAY 1900');
     person('T2'); event('T2', 'BIRT', '4 MAY 1900');
     family('F2', null, null, ['T1', 'T2']);
-    const hits = of(run(), 'Syskon med nära ålder');
+    const hits = of(run(), 'siblings-born-too-close');
     expect(hits).toHaveLength(1);
     expect(hits[0].personIds.sort()).toEqual(['A', 'B']);
   });
@@ -162,9 +162,9 @@ describe('detectIssues — åldersvarningar', () => {
     const f = family('F1', 'MAN', 'KVINNA');
     event(f, 'MARR', '1675', { ownerType: 'family' });
     const issues = run();
-    expect(of(issues, 'Stor åldersskillnad mellan makar')).toHaveLength(1); // 61 år
-    expect(of(issues, 'Gift för ung')).toHaveLength(1);                     // mannen 0 år
-    expect(of(issues, 'Dog för ung för att vara gift')).toHaveLength(1);    // dog vid 1
+    expect(of(issues, 'large-spouse-age-gap')).toHaveLength(1); // 61 år
+    expect(of(issues, 'married-too-young')).toHaveLength(1);                     // mannen 0 år
+    expect(of(issues, 'died-too-young-to-marry')).toHaveLength(1);    // dog vid 1
   });
 
   it('Fler födelsefakta och fler dödsfakta', () => {
@@ -174,8 +174,8 @@ describe('detectIssues — åldersvarningar', () => {
     event('I1', 'DEAT', '1860');
     event('I1', 'DEAT', '1861');
     const issues = run();
-    expect(of(issues, 'Fler födelsefakta för samma person')).toHaveLength(1);
-    expect(of(issues, 'Fler än ett dödsfakta för samma person')).toHaveLength(1);
+    expect(of(issues, 'multiple-births')).toHaveLength(1);
+    expect(of(issues, 'multiple-deaths')).toHaveLength(1);
   });
 });
 
@@ -185,27 +185,27 @@ describe('detectIssues — luckor', () => {
     person('UTAN_DATUM'); event('UTAN_DATUM', 'BIRT', null);
     person('DÖD'); event('DÖD', 'BIRT', '1800'); event('DÖD', 'DEAT', null);
     const issues = run();
-    expect(of(issues, 'Saknar födelse').map(i => i.personIds[0])).toEqual(['INGEN']);
-    expect(of(issues, 'Födelse utan datum').map(i => i.personIds[0])).toEqual(['UTAN_DATUM']);
-    expect(of(issues, 'Dödsfall utan datum').map(i => i.personIds[0])).toEqual(['DÖD']);
+    expect(of(issues, 'missing-birth').map(i => i.personIds[0])).toEqual(['INGEN']);
+    expect(of(issues, 'birth-without-date').map(i => i.personIds[0])).toEqual(['UTAN_DATUM']);
+    expect(of(issues, 'death-without-date').map(i => i.personIds[0])).toEqual(['DÖD']);
   });
 });
 
 describe('detectIssues — familj och namn', () => {
-  it('Flera äktenskap för samma par', () => {
+  it('duplicate-marriage', () => {
     human('M', 1800, null, { sex: 'M' });
     human('K', 1802, null, { sex: 'F' });
     const f = family('F1', 'M', 'K');
     event(f, 'MARR', '1820', { ownerType: 'family' });
     event(f, 'MARR', '1821', { ownerType: 'family' });
-    expect(of(run(), 'Flera äktenskap för samma par')).toHaveLength(1);
+    expect(of(run(), 'duplicate-marriage')).toHaveLength(1);
   });
 
-  it('Namn som gift inlagt som födelseefternamn', () => {
+  it('married-name-as-surname', () => {
     person('M', { surname: 'Le Blanc', sex: 'M' });
     person('K', { surname: 'Le Blanc', sex: 'F' });
     family('F1', 'M', 'K');
-    const hits = of(run(), 'Namn som gift inlagt som födelseefternamn');
+    const hits = of(run(), 'married-name-as-surname');
     expect(hits).toHaveLength(1);
     expect(hits[0].personIds[0]).toBe('K');
   });
@@ -215,7 +215,7 @@ describe('detectIssues — familj och namn', () => {
     human('B', 1705, null, { given: 'Margareta' });
     human('C', 1710, null, { given: 'Margareta Elisabet' }); // annat förnamn → ingen träff
     family('F1', null, null, ['A', 'B', 'C']);
-    const hits = of(run(), 'Syskon med samma förnamn');
+    const hits = of(run(), 'siblings-share-given-name');
     expect(hits).toHaveLength(2); // ett per syskon i paret A/B
     expect(hits.map(h => h.personIds[0]).sort()).toEqual(['A', 'B']);
   });
@@ -224,7 +224,7 @@ describe('detectIssues — familj och namn', () => {
     human('DÖD', 1700, 1704, { given: 'Margareta' });
     human('UPPKALLAD', 1705, null, { given: 'Margareta' }); // född efter systerns död
     family('F1', null, null, ['DÖD', 'UPPKALLAD']);
-    expect(of(run(), 'Syskon med samma förnamn')).toHaveLength(0);
+    expect(of(run(), 'siblings-share-given-name')).toHaveLength(0);
   });
 
   it('Dubbla mellanslag och versalfel', () => {
@@ -233,8 +233,8 @@ describe('detectIssues — familj och namn', () => {
     person('C', { given: 'EddieEdward' });
     person('D', { given: 'Anna', surname: 'ANDERSSON' }); // rena versaler är ok
     const issues = run();
-    expect(of(issues, 'Dubbla mellanslag i namnet').map(i => i.personIds[0])).toEqual(['A']);
-    expect(of(issues, 'Inkorrekt användande av stora/små bokstäver').map(i => i.personIds[0]).sort()).toEqual(['B', 'C']);
+    expect(of(issues, 'double-space-in-name').map(i => i.personIds[0])).toEqual(['A']);
+    expect(of(issues, 'odd-capitalisation').map(i => i.personIds[0]).sort()).toEqual(['B', 'C']);
   });
 
   it('Möjlig inkonsekvent stavning av efternamn och platsnamn', () => {
@@ -244,16 +244,16 @@ describe('detectIssues — familj och namn', () => {
     for (const id of ['E', 'F', 'G']) { person(id); event(id, 'BURI', '1900', { place: 'Bjuråkers kyrka' }); }
     person('H'); event('H', 'BURI', '1901', { place: 'Bjuråkers kyka' });
     const issues = run();
-    expect(of(issues, 'Möjlig inkonsekvent stavning av efternamn').map(i => i.personIds[0])).toEqual(['D']);
-    expect(of(issues, 'Möjlig inkonsekvent stavning av platsnamn').map(i => i.personIds[0])).toEqual(['H']);
+    expect(of(issues, 'inconsistent-surname-spelling').map(i => i.personIds[0])).toEqual(['D']);
+    expect(of(issues, 'inconsistent-place-spelling').map(i => i.personIds[0])).toEqual(['H']);
   });
 
   it('Årtal med två siffror och Platsnamn liknar datum', () => {
     person('A'); event('A', 'BIRT', '16');
     person('B'); event('B', 'MARR', '1785', { place: '18 Mar 1785' });
     const issues = run();
-    expect(of(issues, 'Årtal med två siffror')).toHaveLength(1);
-    expect(of(issues, 'Platsnamn liknar datum')).toHaveLength(1);
+    expect(of(issues, 'two-digit-year')).toHaveLength(1);
+    expect(of(issues, 'place-looks-like-date')).toHaveLength(1);
   });
 });
 
@@ -266,7 +266,7 @@ describe('detectIssues — dubbletter', () => {
     family('F1', 'P1', 'P2', ['A1', 'A2']);                             // samma föräldrar → high
     human('B1', 1800, null, { given: 'Karin', surname: 'Eriksdotter' });
     human('B2', 1800, null, { given: 'Karin', surname: 'Eriksdotter' }); // inga föräldrar → review
-    const hits = of(run(), 'Möjlig dubblett');
+    const hits = of(run(), 'possible-duplicate');
     expect(hits).toHaveLength(4); // ett per medlem
     const high = hits.filter(h => h.duplicateGroup?.confidence === 'high');
     expect(high.map(h => h.personIds[0]).sort()).toEqual(['A1', 'A2']);
@@ -278,7 +278,7 @@ describe('detectIssues — dubbletter', () => {
   it('grupperar inte personer utan födelseår', () => {
     human('X1', null, null, { given: 'Okänd', surname: 'Person' });
     human('X2', null, null, { given: 'Okänd', surname: 'Person' });
-    expect(of(run(), 'Möjlig dubblett')).toHaveLength(0);
+    expect(of(run(), 'possible-duplicate')).toHaveLength(0);
   });
 });
 
@@ -287,7 +287,7 @@ describe('detectIssues — fingeravtryck och undantag', () => {
     human('I1', 1800, 1880);
     // fyra identiska bosättningar efter dödsåret — ett problem, inte fyra
     for (let i = 0; i < 4; i++) event('I1', 'RESI', '1890');
-    const hits = of(run(), 'Faktum som inträffar efter döden');
+    const hits = of(run(), 'fact-after-death');
     expect(hits).toHaveLength(1);
   });
 
@@ -302,15 +302,15 @@ describe('detectIssues — fingeravtryck och undantag', () => {
 
   it('är stabila mellan körningar men ändras när värdena ändras', () => {
     human('I1', 1801, 1800);
-    const first = of(run(), 'Födsel efter bortgång')[0].fingerprint;
-    expect(of(run(), 'Födsel efter bortgång')[0].fingerprint).toBe(first);
+    const first = of(run(), 'death-before-birth')[0].fingerprint;
+    expect(of(run(), 'death-before-birth')[0].fingerprint).toBe(first);
 
     // samma person och kategori, andra årtal → nytt fingeravtryck (problemet
     // återuppstår med rätta även om det tidigare avfärdats)
     db = createDb(':memory:');
     eventId = 0;
     human('I1', 1805, 1802);
-    expect(of(run(), 'Födsel efter bortgång')[0].fingerprint).not.toBe(first);
+    expect(of(run(), 'death-before-birth')[0].fingerprint).not.toBe(first);
   });
 
   it('hoppar över MyHeritage-platshållaren I88888888', () => {
@@ -327,38 +327,38 @@ describe('detectIssues — fingeravtryck och undantag', () => {
 describe('summarizeByPerson', () => {
   it('samlar varje persons problem, värst först', () => {
     const issues: Issue[] = [
-      { fingerprint: 'a', category: 'Saknar födelse', severity: 'warning', text: 'Ingen födelse alls.', personIds: ['I1'] },
-      { fingerprint: 'b', category: 'Födsel efter bortgång', severity: 'error', text: 'Född 1801, död 1800.', personIds: ['I1'] },
-      { fingerprint: 'c', category: 'Syskon med samma förnamn', severity: 'info', text: 'Två Anders.', personIds: ['I2'] },
+      { fingerprint: 'a', code: 'missing-birth', severity: 'warning', params: { name: 'Anna' }, personIds: ['I1'] },
+      { fingerprint: 'b', code: 'death-before-birth', severity: 'error', params: { name: 'Anna', birth: 1801, death: 1800 }, personIds: ['I1'] },
+      { fingerprint: 'c', code: 'siblings-share-given-name', severity: 'info', params: { name: 'Anders', sibling: 'Anders' }, personIds: ['I2'] },
     ];
     expect(summarizeByPerson(issues)).toEqual({
       I1: {
         severity: 'error',
         problems: [
-          { severity: 'error', category: 'Födsel efter bortgång', text: 'Född 1801, död 1800.' },
-          { severity: 'warning', category: 'Saknar födelse', text: 'Ingen födelse alls.' },
+          { severity: 'error', code: 'death-before-birth', params: { name: 'Anna', birth: 1801, death: 1800 } },
+          { severity: 'warning', code: 'missing-birth', params: { name: 'Anna' } },
         ],
       },
       I2: {
         severity: 'info',
-        problems: [{ severity: 'info', category: 'Syskon med samma förnamn', text: 'Två Anders.' }],
+        problems: [{ severity: 'info', code: 'siblings-share-given-name', params: { name: 'Anders', sibling: 'Anders' } }],
       },
     });
   });
 
   it('märker alla inblandade, inte bara den som äger köposten', () => {
     const issues: Issue[] = [
-      { fingerprint: 'a', category: 'Barnet äldre än föräldrarna', severity: 'error', text: 'Barnet är äldst.', personIds: ['C', 'P'] },
+      { fingerprint: 'a', code: 'child-older-than-parents', severity: 'error', params: { child: 'Brita', parent: 'Per' }, personIds: ['C', 'P'] },
     ];
     const marks = summarizeByPerson(issues);
     expect(Object.keys(marks).sort()).toEqual(['C', 'P']);
-    expect(marks.P!.problems).toEqual([{ severity: 'error', category: 'Barnet äldre än föräldrarna', text: 'Barnet är äldst.' }]);
+    expect(marks.P!.problems).toEqual([{ severity: 'error', code: 'child-older-than-parents', params: { child: 'Brita', parent: 'Per' } }]);
   });
 
   it('behåller båda problemen när kategorin är densamma', () => {
     const issues: Issue[] = [
-      { fingerprint: 'a', category: 'Dödsfall utan datum', severity: 'warning', text: 'Första.', personIds: ['I1'] },
-      { fingerprint: 'b', category: 'Dödsfall utan datum', severity: 'warning', text: 'Andra.', personIds: ['I1'] },
+      { fingerprint: 'a', code: 'death-without-date', severity: 'warning', params: { name: 'Anna' }, personIds: ['I1'] },
+      { fingerprint: 'b', code: 'death-without-date', severity: 'warning', params: { name: 'Brita' }, personIds: ['I1'] },
     ];
     expect(summarizeByPerson(issues).I1!.problems).toHaveLength(2);
   });

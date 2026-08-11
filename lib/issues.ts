@@ -2,7 +2,6 @@ import { createHash } from 'node:crypto';
 import type { Db } from '../db/client';
 import { persons, families, familyChildren, events } from '../db/schema';
 import { parseFullDate, daysBetween, yearRange, type FullDate } from './dates';
-import { eventLabelSv } from './eventLabels';
 
 export type Severity = 'error' | 'dup' | 'warning' | 'info' | 'minor';
 export const SEVERITY_ORDER: Severity[] = ['error', 'dup', 'warning', 'info', 'minor'];
@@ -14,11 +13,71 @@ export interface DuplicateGroup {
   ids: string[];
 }
 
+/**
+ * What kind of problem this is.
+ *
+ * A stable identifier rather than a sentence. The detector used to emit the
+ * Swedish wording itself, which made the queue Swedish however the app was
+ * set — and made the dismissal fingerprint depend on the phrasing, so
+ * rewording a message would have quietly un-dismissed everything it named.
+ */
+export type IssueCode =
+  | 'death-before-birth'
+  | 'fact-after-death'
+  | 'fact-before-birth'
+  | 'died-too-old'
+  | 'alive-too-old'
+  | 'multiple-births'
+  | 'multiple-deaths'
+  | 'missing-birth'
+  | 'birth-without-date'
+  | 'death-without-date'
+  | 'double-space-in-name'
+  | 'odd-capitalisation'
+  | 'two-digit-year'
+  | 'place-looks-like-date'
+  | 'child-older-than-parents'
+  | 'child-born-after-parent-died'
+  | 'parents-too-young'
+  | 'parent-too-old'
+  | 'siblings-born-too-close'
+  | 'siblings-share-given-name'
+  | 'duplicate-marriage'
+  | 'large-spouse-age-gap'
+  | 'married-name-as-surname'
+  | 'married-too-young'
+  | 'died-too-young-to-marry'
+  | 'inconsistent-surname-spelling'
+  | 'inconsistent-place-spelling'
+  | 'possible-duplicate';
+
+/** Every code, for the queue's filter and for a test that keeps it honest. */
+export const ISSUE_CODES: IssueCode[] = [
+  'death-before-birth', 'fact-after-death', 'fact-before-birth', 'died-too-old',
+  'alive-too-old', 'multiple-births', 'multiple-deaths', 'missing-birth',
+  'birth-without-date', 'death-without-date', 'double-space-in-name', 'odd-capitalisation',
+  'two-digit-year', 'place-looks-like-date', 'child-older-than-parents',
+  'child-born-after-parent-died', 'parents-too-young', 'parent-too-old',
+  'siblings-born-too-close', 'siblings-share-given-name', 'duplicate-marriage',
+  'large-spouse-age-gap', 'married-name-as-surname', 'married-too-young',
+  'died-too-young-to-marry', 'inconsistent-surname-spelling', 'inconsistent-place-spelling',
+  'possible-duplicate',
+];
+
+/**
+ * The values the sentence is built from.
+ *
+ * Two of these keys are themselves translated rather than printed: `event` is
+ * a GEDCOM tag (`BIRT`), and `role` is `father` or `mother`. The server has no
+ * business knowing what those are called in the reader's language.
+ */
+export type IssueParams = Record<string, string | number>;
+
 export interface Issue {
   fingerprint: string;
-  category: string;
+  code: IssueCode;
   severity: Severity;
-  text: string;
+  params: IssueParams;
   /** Everyone involved; [0] owns the queue entry. */
   personIds: string[];
   duplicateGroup?: DuplicateGroup;
@@ -29,8 +88,8 @@ export interface DetectOptions { referenceYear?: number }
 /** One problem as the tree shows it — the queue's own wording, per person. */
 export interface PersonProblem {
   severity: Severity;
-  category: string;
-  text: string;
+  code: IssueCode;
+  params: IssueParams;
 }
 
 /** What the tree charts draw on a card to say "look here". */
@@ -50,10 +109,10 @@ export function summarizeByPerson(issues: Issue[]): Record<string, PersonIssueMa
   const worstFirst = [...issues].sort((a, b) =>
     SEVERITY_ORDER.indexOf(a.severity) - SEVERITY_ORDER.indexOf(b.severity));
   const marks: Record<string, PersonIssueMark> = {};
-  for (const { severity, category, text, personIds } of worstFirst) {
+  for (const { severity, code, params, personIds } of worstFirst) {
     for (const id of personIds) {
       const mark = marks[id] ?? (marks[id] = { severity, problems: [] });
-      mark.problems.push({ severity, category, text });
+      mark.problems.push({ severity, code, params });
     }
   }
   return marks;
@@ -77,9 +136,15 @@ const SENTINEL_ID = 'I88888888';
 // Events that legitimately happen after death.
 const POST_MORTEM_OK = new Set(['DEAT', 'BURI', 'CREM', 'PROB', 'WILL']);
 
-const fingerprint = (category: string, ids: string[], ...values: (string | number | null)[]) =>
+/**
+ * What makes two reports of a problem the same problem, across runs.
+ *
+ * Built from the code rather than the wording, so a message can be rephrased —
+ * or translated — without losing the dismissals that named it.
+ */
+const fingerprint = (code: string, ids: string[], ...values: (string | number | null)[]) =>
   createHash('sha1')
-    .update([category, [...ids].sort().join(','), values.map(v => v ?? '').join('|')].join('§'))
+    .update([code, [...ids].sort().join(','), values.map(v => v ?? '').join('|')].join('§'))
     .digest('hex')
     .slice(0, 16);
 
@@ -112,10 +177,10 @@ export function detectIssues(db: Db, opts: DetectOptions = {}): Issue[] {
   const referenceYear = opts.referenceYear ?? new Date().getFullYear();
   const issues: Issue[] = [];
   const add = (
-    category: string, severity: Severity, text: string, personIds: string[],
+    code: IssueCode, severity: Severity, params: IssueParams, personIds: string[],
     values: (string | number | null)[], duplicateGroup?: DuplicateGroup,
   ) => {
-    issues.push({ fingerprint: fingerprint(category, personIds, ...values), category, severity, text, personIds, ...(duplicateGroup ? { duplicateGroup } : {}) });
+    issues.push({ fingerprint: fingerprint(code, personIds, ...values), code, severity, params, personIds, ...(duplicateGroup ? { duplicateGroup } : {}) });
   };
 
   const people = db.select({ id: persons.id, givenName: persons.givenName, surname: persons.surname, sex: persons.sex })
@@ -156,81 +221,81 @@ export function detectIssues(db: Db, opts: DetectOptions = {}): Issue[] {
     const dy = deathYear(p.id);
     const evts = personEvents.get(p.id) ?? [];
 
-    // 1. Födsel efter bortgång
+    // 1. Death before birth
     if (by != null && dy != null && dy < by) {
-      add('Födsel efter bortgång', 'error',
-        `${name(p.id)} har ett dödsår (${dy}) som ligger före födelseåret (${by}).`, [p.id], [by, dy]);
+      add('death-before-birth', 'error',
+        { name: name(p.id), death: dy, birth: by }, [p.id], [by, dy]);
     }
 
-    // 4/5. Faktum efter döden / före födelsen.
-    // Intervalldatum ("BET 1916 AND 1928") krockar bara när HELA spannet
-    // ligger på fel sida — annars omsluter perioden födelsen/döden.
+    // 4/5. A fact after death / before birth.
+    // A range ("BET 1916 AND 1928") only clashes when the WHOLE span falls on
+    // the wrong side — otherwise the period encloses the birth or the death.
     for (const e of evts) {
       const span = yearRange(e.dateRaw);
       if (dy != null && span.start != null && span.start > dy && !POST_MORTEM_OK.has(e.type)) {
-        add('Faktum som inträffar efter döden', 'error',
-          `${eventLabelSv(e.type)} för ${name(p.id)} (${e.dateRaw}) inträffade efter dödsåret ${dy}.`, [p.id], [e.type, span.start, dy]);
+        add('fact-after-death', 'error',
+          { event: e.type, name: name(p.id), date: e.dateRaw ?? '', year: dy },
+          [p.id], [e.type, span.start, dy]);
       }
       if (by != null && span.end != null && span.end < by && e.type !== 'BIRT') {
-        add('Faktum som inträffar före födelse', 'error',
-          `${eventLabelSv(e.type)} för ${name(p.id)} (${e.dateRaw}) inträffade före födelseåret ${by}.`, [p.id], [e.type, span.end, by]);
+        add('fact-before-birth', 'error',
+          { event: e.type, name: name(p.id), date: e.dateRaw ?? '', year: by },
+          [p.id], [e.type, span.end, by]);
       }
     }
 
-    // 7/8. Dog för gammal / Vid liv men för gammal
+    // 7/8. Died too old / alive but too old
     if (by != null && dy != null && dy - by > MAX_AGE) {
-      add('Dog för gammal', 'warning',
-        `${name(p.id)} (född ${by}, dog ${dy}) var ${dy - by} år vid sin död.`, [p.id], [by, dy]);
+      add('died-too-old', 'warning',
+        { name: name(p.id), birth: by, death: dy, age: dy - by }, [p.id], [by, dy]);
     }
     if (by != null && !firstOf(p.id, 'DEAT') && referenceYear - by > MAX_AGE) {
-      add('Vid liv men för gammal', 'warning',
-        `${name(p.id)} (född ${by}) är inte markerad som avliden och skulle vara ${referenceYear - by} år gammal.`,
-        [p.id], [by]);
+      add('alive-too-old', 'warning',
+        { name: name(p.id), birth: by, age: referenceYear - by }, [p.id], [by]);
     }
 
-    // 15/16. Flera födelse-/dödsfakta
+    // 15/16. More than one birth or death fact
     const births = allOf(p.id, 'BIRT');
     if (births.length > 1) {
-      add('Fler födelsefakta för samma person', 'warning',
-        `${name(p.id)} har ${births.length} födelsefakta.`, [p.id], [births.length]);
+      add('multiple-births', 'warning',
+        { name: name(p.id), count: births.length }, [p.id], [births.length]);
     }
     const deaths = allOf(p.id, 'DEAT');
     if (deaths.length > 1) {
-      add('Fler än ett dödsfakta för samma person', 'warning',
-        `${name(p.id)} har ${deaths.length} dödsfakta.`, [p.id], [deaths.length]);
+      add('multiple-deaths', 'warning',
+        { name: name(p.id), count: deaths.length }, [p.id], [deaths.length]);
     }
 
-    // 17/18/19. Luckor
+    // 17/18/19. Gaps
     if (births.length === 0) {
-      add('Saknar födelse', 'warning', `Ingen födelsehändelse registrerad för ${name(p.id)}.`, [p.id], []);
+      add('missing-birth', 'warning', { name: name(p.id) }, [p.id], []);
     } else if (!births[0]!.dateRaw) {
-      add('Födelse utan datum', 'warning', `Födelsehändelse utan datum för ${name(p.id)}.`, [p.id], []);
+      add('birth-without-date', 'warning', { name: name(p.id) }, [p.id], []);
     }
     if (deaths.length > 0 && !deaths[0]!.dateRaw) {
-      add('Dödsfall utan datum', 'warning', `Dödshändelse utan datum för ${name(p.id)}.`, [p.id], []);
+      add('death-without-date', 'warning', { name: name(p.id) }, [p.id], []);
     }
 
-    // 25/26. Namnformat
+    // 25/26. Name formatting
     const rawName = `${p.givenName} ${p.surname}`;
     if (/\s{2,}/.test(p.givenName) || /\s{2,}/.test(p.surname)) {
-      add('Dubbla mellanslag i namnet', 'minor', `Namnet på ${name(p.id)} har dubbla mellanslag.`, [p.id], [rawName]);
+      add('double-space-in-name', 'minor', { name: name(p.id) }, [p.id], [rawName]);
     }
     const badCase = rawName.split(/\s+/).some(tok =>
       /[a-zåäöé][A-ZÅÄÖ]/.test(tok) || /^[A-ZÅÄÖ]{2,}[a-zåäöé]/.test(tok));
     if (badCase) {
-      add('Inkorrekt användande av stora/små bokstäver', 'minor',
-        `Namnet för ${name(p.id)} kan ha felaktigt bruk av stora och små bokstäver.`, [p.id], [rawName]);
+      add('odd-capitalisation', 'minor', { name: name(p.id) }, [p.id], [rawName]);
     }
 
-    // 27/28. Datum- och platsformat
+    // 27/28. Date and place formatting
     for (const e of evts) {
       if (e.dateRaw && /^\s*\d{1,2}\s*$/.test(e.dateRaw)) {
-        add('Årtal med två siffror', 'minor',
-          `${eventLabelSv(e.type)} för ${name(p.id)} har bara ${e.dateRaw.trim()} som årtal.`, [p.id], [e.type, e.dateRaw]);
+        add('two-digit-year', 'minor',
+          { event: e.type, name: name(p.id), year: e.dateRaw.trim() }, [p.id], [e.type, e.dateRaw]);
       }
       if (e.place && /^\s*\d{1,2}[ .-][A-Za-zÅÄÖåäö]{3,}[ .-]\d{3,4}\s*$/.test(e.place)) {
-        add('Platsnamn liknar datum', 'minor',
-          `Platsen för ${eventLabelSv(e.type)} ('${e.place}') för ${name(p.id)} liknar ett datum.`, [p.id], [e.type, e.place]);
+        add('place-looks-like-date', 'minor',
+          { event: e.type, place: e.place, name: name(p.id) }, [p.id], [e.type, e.place]);
       }
     }
   }
@@ -248,35 +313,41 @@ export function detectIssues(db: Db, opts: DetectOptions = {}): Issue[] {
         const cby = birthYear(childId);
         if (cby == null) continue;
 
-        // 2. Barnet äldre än föräldrarna
+        // 2. Child older than its parents
         if (pby != null && cby <= pby) {
-          add('Barnet äldre än föräldrarna', 'error',
-            `${name(childId)} (född ${cby}) är äldre än eller lika gammal som sin ${isFather ? 'far' : 'mor'} ${name(parentId)} (född ${pby}).`,
+          add('child-older-than-parents', 'error',
+            {
+              child: name(childId), childBirth: cby, role: isFather ? 'father' : 'mother',
+              parent: name(parentId), parentBirth: pby,
+            },
             [childId, parentId], [cby, pby]);
         }
-        // 3. Barn fött efter förälders bortgång (fadern får ett års nåd)
+        // 3. Child born after a parent died (the father gets a year's grace)
         if (pdy != null && cby > pdy + (isFather ? 1 : 0)) {
-          add('Barn fött efter förälders bortgång', 'error',
-            `${name(childId)} föddes ${cby}, efter ${isFather ? 'faderns' : 'moderns'} ${name(parentId)} död ${pdy}.`,
+          add('child-born-after-parent-died', 'error',
+            {
+              child: name(childId), childBirth: cby, role: isFather ? 'father' : 'mother',
+              parent: name(parentId), parentDeath: pdy,
+            },
             [childId, parentId], [cby, pdy]);
         }
-        // 9/10. Föräldraålder
+        // 9/10. Parent age
         if (pby != null) {
           const gap = cby - pby;
           if (gap > 0 && gap <= PARENT_MIN_GAP) {
-            add('Föräldrar för unga när de fick barn', 'warning',
-              `${name(parentId)} var bara ${gap} år när ${name(childId)} föddes (${cby}).`,
+            add('parents-too-young', 'warning',
+              { parent: name(parentId), age: gap, child: name(childId), childBirth: cby },
               [parentId, childId], [gap, cby]);
           } else if (gap >= PARENT_MAX_GAP) {
-            add('Förälder för gammal när man fått barn', 'warning',
-              `${name(parentId)} var ${gap} år när ${name(childId)} föddes (${cby}).`,
+            add('parent-too-old', 'warning',
+              { parent: name(parentId), age: gap, child: name(childId), childBirth: cby },
               [parentId, childId], [gap, cby]);
           }
         }
       }
     }
 
-    // 11. Syskon med nära ålder (tvillingar undantagna)
+    // 11. Siblings born too close together (twins excepted)
     for (let i = 0; i < kids.length; i++) {
       for (let j = i + 1; j < kids.length; j++) {
         const a = birthDate(kids[i]!);
@@ -284,15 +355,15 @@ export function detectIssues(db: Db, opts: DetectOptions = {}): Issue[] {
         if (!a || !b) continue;
         const days = daysBetween(a, b);
         if (days > 0 && days < SIBLING_MIN_DAYS) {
-          add('Syskon med nära ålder', 'warning',
-            `${name(kids[i]!)} och ${name(kids[j]!)} är födda bara ${days} dagar isär.`,
+          add('siblings-born-too-close', 'warning',
+            { a: name(kids[i]!), b: name(kids[j]!), days },
             [kids[i]!, kids[j]!], [days]);
         }
       }
     }
 
-    // 22. Syskon med samma förnamn. Att återanvända ett avlidet syskons namn
-    // var vanligt historiskt — flagga bara när båda levde samtidigt.
+    // 22. Siblings sharing a given name. Reusing a dead sibling's name was
+    // common historically — only flag it when both were alive at once.
     for (let i = 0; i < kids.length; i++) {
       for (let j = i + 1; j < kids.length; j++) {
         const a = byId.get(kids[i]!)!;
@@ -306,32 +377,35 @@ export function detectIssues(db: Db, opts: DetectOptions = {}): Issue[] {
           (bDeath != null && aBirth != null && bDeath <= aBirth);
         if (nameReuse) continue;
         for (const [self, other] of [[a.id, b.id], [b.id, a.id]] as const) {
-          add('Syskon med samma förnamn', 'info',
-            `${name(self)} delar förnamn med sitt syskon ${name(other)}.`, [self, other], [given]);
+          add('siblings-share-given-name', 'info',
+            { name: name(self), sibling: name(other) }, [self, other], [given]);
         }
       }
     }
 
-    // 12/13/14/20/21. Par- och äktenskapsregler
+    // 12/13/14/20/21. Couple and marriage rules
     const marriages = (familyEvents.get(f.id) ?? []).filter(e => e.type === 'MARR');
     if (marriages.length > 1) {
-      add('Flera äktenskap för samma par', 'info',
-        `${parents.map(name).join(' och ')} har ${marriages.length} äktenskapsfakta.`,
+      add('duplicate-marriage', 'info',
+        { couple: parents.map(name).join(' & '), count: marriages.length },
         parents.length ? parents : [f.id], [marriages.length]);
     }
     if (f.husbandId && f.wifeId && byId.has(f.husbandId) && byId.has(f.wifeId)) {
       const hby = birthYear(f.husbandId);
       const wby = birthYear(f.wifeId);
       if (hby != null && wby != null && Math.abs(hby - wby) >= SPOUSE_MAX_GAP) {
-        add('Stor åldersskillnad mellan makar', 'warning',
-          `${name(f.husbandId)} (född ${hby}) och ${name(f.wifeId)} (född ${wby}) har ${Math.abs(hby - wby)} år emellan sig.`,
+        add('large-spouse-age-gap', 'warning',
+          {
+            husband: name(f.husbandId), husbandBirth: hby,
+            wife: name(f.wifeId), wifeBirth: wby, gap: Math.abs(hby - wby),
+          },
           [f.husbandId, f.wifeId], [Math.abs(hby - wby)]);
       }
       const husband = byId.get(f.husbandId)!;
       const wife = byId.get(f.wifeId)!;
       if (husband.surname.trim() && normalizeName(husband.surname) === normalizeName(wife.surname)) {
-        add('Namn som gift inlagt som födelseefternamn', 'info',
-          `Födelseefternamnet '${wife.surname}' för ${name(f.wifeId)} är samma som makens ${name(f.husbandId)}.`,
+        add('married-name-as-surname', 'info',
+          { surname: wife.surname, wife: name(f.wifeId), husband: name(f.husbandId) },
           [f.wifeId, f.husbandId], [wife.surname]);
       }
     }
@@ -340,23 +414,22 @@ export function detectIssues(db: Db, opts: DetectOptions = {}): Issue[] {
       const sby = birthYear(spouseId);
       const sdy = deathYear(spouseId);
       if (marrYear != null && sby != null && marrYear - sby < MARRY_MIN_AGE && marrYear >= sby) {
-        add('Gift för ung', 'warning',
-          `${name(spouseId)} var bara ${marrYear - sby} år vid giftermålet ${marrYear}.`,
+        add('married-too-young', 'warning',
+          { name: name(spouseId), age: marrYear - sby, year: marrYear },
           [spouseId], [marrYear, sby]);
       }
       if (marriages.length > 0 && sby != null && sdy != null && sdy - sby < MARRIED_MIN_DEATH_AGE) {
-        add('Dog för ung för att vara gift', 'warning',
-          `${name(spouseId)} (född ${sby}, dog ${sdy}) var bara ${sdy - sby} år vid sin död men är registrerad som gift.`,
+        add('died-too-young-to-marry', 'warning',
+          { name: name(spouseId), birth: sby, death: sdy, age: sdy - sby },
           [spouseId], [sby, sdy]);
       }
     }
   }
 
-  // ---- 23/24. Stavningsvarianter ----
+  // ---- 23/24. Spelling variants ----
   const spellingIssues = (
-    values: { id: string; value: string; label: string }[],
-    category: string,
-    describe: (owner: string, rare: string, common: string, n: number) => string,
+    values: { id: string; value: string }[],
+    code: IssueCode,
   ) => {
     const counts = new Map<string, number>();
     for (const v of values) counts.set(v.value, (counts.get(v.value) ?? 0) + 1);
@@ -369,20 +442,20 @@ export function detectIssues(db: Db, opts: DetectOptions = {}): Issue[] {
       const match = common.find(([c]) => c !== v.value && editDistance(c.toLowerCase(), v.value.toLowerCase(), 1) <= 1);
       if (!match) continue;
       seen.add(key);
-      add(category, 'info', describe(name(v.id), v.value, match[0], match[1]), [v.id], [v.value, match[0]]);
+      add(code, 'info',
+        { name: name(v.id), rare: v.value, common: match[0], count: match[1] },
+        [v.id], [v.value, match[0]]);
     }
   };
 
   spellingIssues(
-    people.filter(p => p.surname.trim()).map(p => ({ id: p.id, value: p.surname.trim(), label: 'efternamn' })),
-    'Möjlig inkonsekvent stavning av efternamn',
-    (owner, rare, common, n) => `${owner} har efternamnet '${rare}' som förekommer en gång, medan '${common}' förekommer ${n} gånger.`,
+    people.filter(p => p.surname.trim()).map(p => ({ id: p.id, value: p.surname.trim() })),
+    'inconsistent-surname-spelling',
   );
   spellingIssues(
     allEvents.filter(e => e.ownerType === 'person' && e.place?.trim() && byId.has(e.ownerId))
-      .map(e => ({ id: e.ownerId, value: e.place!.trim(), label: 'plats' })),
-    'Möjlig inkonsekvent stavning av platsnamn',
-    (owner, rare, common, n) => `${owner} har platsen '${rare}' som förekommer en gång, medan '${common}' förekommer ${n} gånger.`,
+      .map(e => ({ id: e.ownerId, value: e.place!.trim() })),
+    'inconsistent-place-spelling',
   );
 
   // ---- 6. Möjliga dubbletter ----
@@ -410,8 +483,8 @@ export function detectIssues(db: Db, opts: DetectOptions = {}): Issue[] {
       parentSets[0] !== '' && parentSets.every(s => s === parentSets[0]) ? 'high' : 'review';
     const group: DuplicateGroup = { name: byId.get(ids[0]!)! && fullName(byId.get(ids[0]!)!), year: Number(yearKey), confidence, ids: [...ids].sort() };
     for (const id of ids) {
-      add('Möjlig dubblett', 'dup',
-        `Samma namn och födelseår (${yearKey}) som ${ids.length - 1} annan post. Säkerhet: ${confidence === 'high' ? 'hög (samma föräldrar)' : 'kräver bedömning'}.`,
+      add('possible-duplicate', 'dup',
+        { year: yearKey!, others: ids.length - 1, confidence },
         [id, ...ids.filter(o => o !== id)], [nameKey!, yearKey!, confidence], group);
     }
   }
@@ -428,8 +501,11 @@ export function detectIssues(db: Db, opts: DetectOptions = {}): Issue[] {
     return !seen.has(key) && (seen.add(key), true);
   });
 
+  // Sorted by code, not by the wording: the server has no language to sort in.
+  // The queue groups by severity and orders those groups by the translated
+  // title, which is the order that means something on screen.
   return distinct.sort((a, b) =>
     SEVERITY_ORDER.indexOf(a.severity) - SEVERITY_ORDER.indexOf(b.severity)
-    || a.category.localeCompare(b.category, 'sv')
+    || a.code.localeCompare(b.code)
     || a.personIds[0]!.localeCompare(b.personIds[0]!));
 }

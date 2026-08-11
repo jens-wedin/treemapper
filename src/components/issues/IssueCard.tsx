@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Issue } from '../../../lib/issues';
 import { t } from '../../lib/i18n';
+import { issueText, issueTitle } from '../../lib/issueText';
 import { mutateJson } from '../../lib/api';
 import { clearIssueMarks } from '../../lib/issueMarks';
 import { useTreeUrl } from '../../lib/treeUrl';
@@ -28,11 +29,11 @@ export default function IssueCard({ issue, onChanged }: { issue: IssueListItem; 
     <li className={`rounded-lg border p-4 ${issue.dismissed ? 'opacity-60' : ''}`}>
       {/* the severity heads the group this card sits in, so it is not repeated here */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="font-medium">{issue.category}</span>
+        <span className="font-medium">{issueTitle(issue.code)}</span>
         {issue.dismissed && <Badge variant="outline">{t('issues.dismissedBadge')}</Badge>}
       </div>
 
-      <p className="mt-2 text-foreground">{issue.text}</p>
+      <p className="mt-2 text-foreground">{issueText(issue.code, issue.params)}</p>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <Button asChild variant="outline" size="sm">

@@ -10,6 +10,9 @@ const MAX_ITEMS = 500;
 const MAX_LOG = 50;
 
 const querySchema = z.object({
+  // An issue code, e.g. `child-older-than-parents`. Kept as a plain string
+  // rather than an enum of ISSUE_CODES: an unknown code should return nothing,
+  // not a 400, so a stale bookmark shows an empty queue instead of an error.
   category: z.string().trim().max(80).optional(),
   severity: z.enum(['error', 'dup', 'warning', 'info', 'minor']).optional(),
   includeDismissed: z.string().optional(),
@@ -39,7 +42,7 @@ export function createIssuesApi(tree: TreeResolver) {
     let outstanding = 0;
     for (const i of all) {
       if (dismissed.has(i.fingerprint)) continue;
-      counts[i.category] = (counts[i.category] ?? 0) + 1;
+      counts[i.code] = (counts[i.code] ?? 0) + 1;
       severityCounts[i.severity] = (severityCounts[i.severity] ?? 0) + 1;
       outstanding++;
     }
@@ -47,7 +50,7 @@ export function createIssuesApi(tree: TreeResolver) {
     const showDismissed = includeDismissed === '1' || includeDismissed === 'true';
     const filtered = all.filter(i =>
       (showDismissed || !dismissed.has(i.fingerprint))
-      && (!category || i.category === category)
+      && (!category || i.code === category)
       && (!severity || i.severity === severity));
 
     const items = filtered.slice(0, limit).map(i => ({ ...i, dismissed: dismissed.has(i.fingerprint) }));

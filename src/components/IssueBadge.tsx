@@ -1,4 +1,5 @@
 import type { PersonIssueMark, Severity } from '../../lib/issues';
+import { issueTitle } from '../lib/issueText';
 
 /** Same hues as the severity badges in Konsekvensbänken, swapped by theme. */
 const FILL: Record<Severity, string> = {
@@ -17,7 +18,7 @@ const shortCount = (count: number) => (count > 9 ? '9+' : String(count));
 
 /** The tooltip names each kind once, however many of that kind there are. */
 export const issueCategories = (mark: PersonIssueMark): string[] =>
-  [...new Set(mark.problems.map(p => p.category))];
+  [...new Set(mark.problems.map(p => issueTitle(p.code)))];
 
 /**
  * The mark a chart card wears when someone has outstanding inconsistencies:

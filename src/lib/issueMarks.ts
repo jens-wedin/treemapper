@@ -1,8 +1,18 @@
 import { useEffect, useState } from 'react';
-import type { PersonIssueMark, Severity } from '../../lib/issues';
+import type { IssueCode, PersonIssueMark, Severity } from '../../lib/issues';
 import { fetchJson } from './api';
+import { issueText, issueTitle } from './issueText';
 
 export type IssueMarks = Record<string, PersonIssueMark>;
+
+/** One kind of problem a person has, with every wording of it under one heading. */
+export interface ProblemGroup {
+  severity: Severity;
+  code: IssueCode;
+  /** Already translated — the caller is rendering, not deciding. */
+  title: string;
+  texts: string[];
+}
 
 const NONE: IssueMarks = Object.freeze({});
 
@@ -30,12 +40,12 @@ function load(): Promise<IssueMarks> {
  * Client-side on purpose — `lib/issues.ts` reaches for node:crypto and the
  * database schema, and importing a value from it drags both into the bundle.
  */
-export function groupProblems(mark: PersonIssueMark): { severity: Severity; category: string; texts: string[] }[] {
-  const groups: { severity: Severity; category: string; texts: string[] }[] = [];
+export function groupProblems(mark: PersonIssueMark): ProblemGroup[] {
+  const groups: ProblemGroup[] = [];
   for (const problem of mark.problems) {
-    const group = groups.find(g => g.category === problem.category)
-      ?? (groups.push({ severity: problem.severity, category: problem.category, texts: [] }), groups[groups.length - 1]!);
-    if (problem.text) group.texts.push(problem.text);
+    const group = groups.find(g => g.code === problem.code)
+      ?? (groups.push({ severity: problem.severity, code: problem.code, title: issueTitle(problem.code), texts: [] }), groups[groups.length - 1]!);
+    group.texts.push(issueText(problem.code, problem.params));
   }
   return groups;
 }

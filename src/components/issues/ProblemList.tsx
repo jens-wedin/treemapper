@@ -16,12 +16,12 @@ export default function ProblemList({ mark }: { mark: PersonIssueMark }) {
   return (
     <ul className="mt-2 space-y-2">
       {groupProblems(mark).map(group => (
-        <li key={group.category} className="rounded-md border p-2 text-sm">
+        <li key={group.code} className="rounded-md border p-2 text-sm">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="outline" className={SEVERITY_STYLE[group.severity]}>
               {t(`issues.sev.${group.severity}`)}
             </Badge>
-            <span className="font-medium">{group.category}</span>
+            <span className="font-medium">{group.title}</span>
             {group.texts.length > 1 && (
               <span className="text-muted-foreground">({group.texts.length})</span>
             )}

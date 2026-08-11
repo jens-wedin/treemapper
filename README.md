@@ -117,6 +117,24 @@ MyHeritage's links are **signed and expire**. If the download reports HTTP 403,
 take a fresh GEDCOM export and run `npm run refresh-media -- data/<export>.ged`
 before trying again. The report lands in `data/media-report-<tree>.md`.
 
+### Källans egna ord
+
+A source has a **Transkription** — the document written out — separate from
+**Anteckning**, which is what *you* say about it. Line breaks are kept: in a
+transcription they are where the lines break on the page.
+
+It maps to GEDCOM's `SOUR.TEXT`, so a transcription survives an export and comes
+back on re-import. The importer used to fall `TEXT` back into `note` when a
+source had no `NOTE`, which filled 478 of 520 sources with MyHeritage's own
+blurbs and left nowhere to write a remark of your own.
+`npx tsx scripts/split-source-text.ts <tree> --apply` separates an old database,
+moving only rows whose note provably came from a `TEXT` node — checked against
+the raw tags kept at import, not guessed from the words.
+
+For a document naming several people, transcribe it **once on the source** and
+add a citation from it to each person: the text lives in one place, and each
+person's page shows the source and the line naming them.
+
 ## Språk / Language
 
 The interface is available in **Swedish, English, German and Spanish**, picked

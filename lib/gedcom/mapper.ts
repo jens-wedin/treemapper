@@ -205,14 +205,18 @@ export function mapGedcom(records: GedcomNode[]): MappedData {
         rawTags: serializeRaw([...raw, ...leftoverSours]),
       });
     } else if (rec.tag === 'SOUR') {
-      const consumed = new Set(['TITL', 'AUTH', 'PUBL', 'NOTE']);
+      const consumed = new Set(['TITL', 'AUTH', 'PUBL', 'NOTE', 'TEXT']);
       out.sources.push({
         id,
         title: childValue(rec, 'TITL') ?? null,
         author: childValue(rec, 'AUTH') ?? null,
         publication: childValue(rec, 'PUBL') ?? null,
-        // TEXT doubles as the source description; it also stays in raw_tags for lossless export
-        note: childValue(rec, 'NOTE') ?? childValue(rec, 'TEXT') ?? null,
+        // NOTE is what the researcher says about the source; TEXT is what the
+        // source itself says — a transcription, or an archive's description of
+        // its collection. TEXT used to fall back into `note`, which put 478
+        // MyHeritage blurbs where a person's own remarks belong.
+        note: childValue(rec, 'NOTE') ?? null,
+        transcription: childValue(rec, 'TEXT') ?? null,
         rawTags: serializeRaw(rec.children.filter(c => !consumed.has(c.tag))),
       });
     } else {

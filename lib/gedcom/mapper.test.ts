@@ -37,11 +37,20 @@ describe('mapGedcom', () => {
     expect(mapped.familyChildren[0]).toMatchObject({ familyId: 'F1', childId: 'I3', seq: 0 });
   });
 
-  it('maps sources with TEXT as note (kept lossless in raw_tags)', () => {
+  /**
+   * NOTE and TEXT say different things: NOTE is the researcher's remark about
+   * the source, TEXT is what the source itself says. TEXT used to fall back
+   * into `note`, which filled 478 sources with MyHeritage's own blurbs and left
+   * nowhere to write a remark of your own.
+   */
+  it('keeps the source\'s own text apart from a note about it', () => {
     expect(mapped.sources[0]).toMatchObject({
-      id: 'S1', title: 'Kyrkbok Hälsingland', author: 'Svenska kyrkan', note: 'Beskrivning av källan',
+      id: 'S1', title: 'Kyrkbok Hälsingland', author: 'Svenska kyrkan',
+      transcription: 'Beskrivning av källan',
+      note: null,
     });
-    expect(mapped.sources[0].rawTags).toContain('Beskrivning');
+    // consumed into its column, so the export writes one TEXT and not two
+    expect(mapped.sources[0].rawTags ?? '').not.toContain('Beskrivning');
   });
 
   it('maps citations on events and persons, preserving DATA>DATE in raw_tags', () => {

@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import { eq } from 'drizzle-orm';
 import { createDb, type Db } from '../db/client';
 import { persons, families, familyChildren, events, sources, citations, media } from '../db/schema';
 import { exportGedcom } from './gedcomExport';
@@ -84,6 +85,29 @@ describe('exportGedcom — struktur', () => {
 });
 
 describe('exportGedcom — rundtur genom vår egen parser', () => {
+  /**
+   * A transcription is the reason the field exists, and a page of secretary
+   * hand is long and full of line breaks — exactly what GEDCOM's 255-byte
+   * lines and CONC/CONT splitting are most likely to mangle.
+   */
+  it('bär en flerradig transkription hela vägen ut och tillbaka', () => {
+    buildTree();
+    const text = [
+      'Pardevant moy soubsigné en présence des tesmoingz cy en bas dénommez',
+      'sont comparuz en propres personnes Erik Nilsson maistre marteleur',
+      '',
+      'demeurant présentement à Hinspont, Andry Falla et Jacques Falla frères',
+    ].join('\n');
+    db.update(sources).set({ transcription: text }).where(eq(sources.id, 'S1')).run();
+
+    const back = roundTrip();
+    const s1 = back.sources.find(s => s.id === 'S1')!;
+    expect(s1.transcription).toBe(text);
+    // The fixture also carries a note, so this is the case that matters: both
+    // present, neither bleeding into the other on the way out or back.
+    expect(s1.note).toBe('Beskrivning');
+  });
+
   it('bevarar antal och nyckelvärden', () => {
     buildTree();
     const back = roundTrip();

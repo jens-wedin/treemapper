@@ -66,6 +66,10 @@ export const sources = sqliteTable('sources', {
   author: text('author'),
   publication: text('publication'),
   note: text('note'),
+  // The source's own words: a transcription of the document, or the text an
+  // archive supplies about its collection. GEDCOM calls this SOUR.TEXT; `note`
+  // is what *you* say about the source, this is what the source says.
+  transcription: text('transcription'),
   rawTags: text('raw_tags'),
 });
 

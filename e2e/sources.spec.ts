@@ -63,3 +63,34 @@ test('inställningar erbjuder gedcom-nedladdning', async ({ page }) => {
   expect(body).toContain('2 VERS 5.5.1');
   expect(body.trimEnd().endsWith('0 TRLR')).toBe(true);
 });
+
+/**
+ * A source's own words and a remark about it are different things: the
+ * transcription is what the document says, the note is what you say about it.
+ */
+test('en källa kan skrivas av, med anteckningen som eget fält', async ({ page }) => {
+  await page.goto('/wedin/kallor');
+  await page.locator('tbody tr').first().getByRole('link').click();
+  await expect(page).toHaveURL(/\/kalla\/S\d+/);
+
+  await page.getByRole('button', { name: 'Redigera' }).click();
+  const doc = 'Pardevant moy soubsigné\n\nErik Nilsson maistre marteleur';
+  await page.getByLabel('Transkription').fill(doc);
+  await page.getByLabel('Anteckning').fill('Jämför med originalet i RA.');
+  await page.getByRole('button', { name: 'Spara' }).click();
+
+  // Shown as two separate sections, and the blank line is still a blank line.
+  const shown = page.getByRole('heading', { name: 'Transkription' })
+    .locator('xpath=following-sibling::*[1]');
+  await expect(shown).toContainText('Pardevant moy');
+  await expect(shown).toContainText('Erik Nilsson');
+  // Line breaks are where the lines break on the page, so the block keeps its
+  // own shape instead of reflowing as prose.
+  await expect(shown).toHaveCSS('white-space', 'pre-wrap');
+  await expect(page.getByRole('heading', { name: 'Anteckning' })).toBeVisible();
+
+  // survives a reload — it is in the database, not in the form
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Transkription' })).toBeVisible();
+  await expect(page.getByText('Erik Nilsson')).toBeVisible();
+});

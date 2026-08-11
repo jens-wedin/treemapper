@@ -41,6 +41,8 @@ export const sourceUpdateSchema = z.object({
   title: z.string().trim().max(200).nullable(),
   author: z.string().trim().max(200).nullable(),
   publication: z.string().trim().max(200).nullable(),
+  // A whole document, not a line: room for a page of close handwriting.
+  transcription: z.string().max(20_000).nullable(),
   note: z.string().trim().max(10_000).nullable(),
 }).partial();
 export type SourceUpdate = z.infer<typeof sourceUpdateSchema>;

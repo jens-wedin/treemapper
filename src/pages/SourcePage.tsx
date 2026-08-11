@@ -22,6 +22,7 @@ function SourceEditForm({ source, onSaved, onCancel }: {
     title: source.title ?? '',
     author: source.author ?? '',
     publication: source.publication ?? '',
+    transcription: source.transcription ?? '',
     note: source.note ?? '',
   });
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +34,7 @@ function SourceEditForm({ source, onSaved, onCancel }: {
       title: emptyToNull(form.title),
       author: emptyToNull(form.author),
       publication: emptyToNull(form.publication),
+      transcription: emptyToNull(form.transcription),
       note: emptyToNull(form.note),
     });
     if (!parsed.success) {
@@ -66,8 +68,21 @@ function SourceEditForm({ source, onSaved, onCancel }: {
         ))}
       </div>
       <div className="mt-3">
+        {/* Tall by default: this is where a whole document goes, and a box that
+            shows four lines of forty invites you to stop after four. */}
+        <label htmlFor="kalla-transkription" className="block text-sm font-medium">{t('sources.transcription')}</label>
+        <Textarea
+          id="kalla-transkription"
+          value={form.transcription}
+          onChange={e => setForm({ ...form, transcription: e.target.value })}
+          className="mt-1 font-mono text-sm"
+          rows={18}
+        />
+        <p className="mt-1 text-sm text-muted-foreground">{t('sources.transcriptionHint')}</p>
+      </div>
+      <div className="mt-3">
         <label htmlFor="kalla-anteckning" className="block text-sm font-medium">{t('edit.note')}</label>
-        <Textarea id="kalla-anteckning" value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} className="mt-1" rows={5} />
+        <Textarea id="kalla-anteckning" value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} className="mt-1" rows={4} />
       </div>
       {error && <p role="alert" className="mt-3 text-destructive">{error}</p>}
       <div className="mt-4 flex gap-2">
@@ -130,6 +145,19 @@ export default function SourcePage() {
           />
         )}
       </header>
+
+      {source.transcription && !editing && (
+        <section className="mt-6">
+          <h2 className="text-lg font-semibold">{t('sources.transcription')}</h2>
+          {/* Line breaks are meaningful in a transcription — they are where the
+              lines break on the page — so it keeps its own shape rather than
+              reflowing as prose. */}
+          <RichText
+            text={source.transcription}
+            className="mt-2 whitespace-pre-wrap rounded-lg border bg-muted/40 p-4 font-mono text-sm text-foreground"
+          />
+        </section>
+      )}
 
       {source.note && !editing && (
         <section className="mt-6">

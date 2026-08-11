@@ -244,6 +244,7 @@ export function exportGedcom(db: Db, opts: ExportOptions = {}): string {
     if (s.author) w.line(1, 'AUTH', s.author);
     if (s.publication) w.line(1, 'PUBL', s.publication);
     if (s.note) w.line(1, 'NOTE', s.note);
+    if (s.transcription) w.line(1, 'TEXT', s.transcription);
     writeRawTags(w, 1, s.rawTags);
   }
 

@@ -43,6 +43,11 @@
 
 ### Added
 
+**Källor kan skrivas av**
+- Ett nytt fält **Transkription** rymmer dokumentet avskrivet, skilt från **Anteckning** som är vad *du* säger om källan. Radbrytningar behålls — i en avskrift är de var raderna bryts på sidan.
+- Motsvarar GEDCOM:s `SOUR.TEXT`, så en avskrift överlever export och kommer tillbaka vid återimport. Ett rundturstest skickar en flerradig text hela vägen ut och in igen.
+- **Rättat: källans egna ord låg i anteckningsfältet.** Importen lät `TEXT` falla tillbaka på `note` när källan saknade `NOTE`. Det fyllde 478 av 520 källor med MyHeritages egna texter och lämnade ingen plats för en egen anteckning. 478 flyttade i wedin.db, 30 i Andersson — bara rader vars anteckning bevisligen kom från en TEXT-nod, kontrollerat mot råtaggarna och inte gissat ur texten.
+
 **Ut- och invandring listas per person, inte per flytt**
 - Anna Jonsdotter flyttade fyra gånger på fyra år och fyllde fyra rader som bara skilde sig i den lilla grå texten på slutet. Listan såg ut att vara full av dubbletter fast den beskrev ett liv i flyttlass. Namnet sägs en gång nu, med flyttarna under.
 - Den som flyttat en gång står kvar på en rad. Ordningen är densamma: personerna kommer i tur efter sin senaste flytt.

@@ -15,6 +15,8 @@ const sv = {
   },
   sources: {
     title: 'Källor', search: 'Sök källa', author: 'Författare', publication: 'Utgivare',
+    transcription: 'Transkription',
+    transcriptionHint: 'Källans egna ord — dokumentet avskrivet. Radbrytningar behålls.',
     citations: 'Källhänvisningar', usedBy: 'Används av', count: 'Antal hänvisningar',
     none: 'Inga källhänvisningar.', truncated: 'Visar de första {n} hänvisningarna.',
     backToSources: 'Till källistan', notFound: 'Källan finns inte.', page: 'Sida',
@@ -203,6 +205,8 @@ const en: DeepPartial<Dict> = {
   },
   sources: {
     title: 'Sources', search: 'Search sources', author: 'Author', publication: 'Publisher',
+    transcription: 'Transcription',
+    transcriptionHint: "The source's own words — the document written out. Line breaks are kept.",
     citations: 'Citations', usedBy: 'Used by', count: 'Citations',
     none: 'No citations.', truncated: 'Showing the first {n} citations.',
     backToSources: 'Back to sources', notFound: 'That source does not exist.', page: 'Page',
@@ -388,6 +392,8 @@ const de: DeepPartial<Dict> = {
   },
   sources: {
     title: 'Quellen', search: 'Quelle suchen', author: 'Autor', publication: 'Herausgeber',
+    transcription: 'Transkription',
+    transcriptionHint: 'Die eigenen Worte der Quelle — das abgeschriebene Dokument. Zeilenumbrüche bleiben erhalten.',
     citations: 'Quellenangaben', usedBy: 'Verwendet von', count: 'Anzahl Angaben',
     none: 'Keine Quellenangaben.', truncated: 'Zeigt die ersten {n} Angaben.',
     backToSources: 'Zurück zur Quellenliste', notFound: 'Diese Quelle gibt es nicht.', page: 'Seite',
@@ -573,6 +579,8 @@ const es: DeepPartial<Dict> = {
   },
   sources: {
     title: 'Fuentes', search: 'Buscar fuente', author: 'Autor', publication: 'Editorial',
+    transcription: 'Transcripción',
+    transcriptionHint: 'Las palabras de la propia fuente — el documento transcrito. Se conservan los saltos de línea.',
     citations: 'Citas', usedBy: 'Usada por', count: 'Nº de citas',
     none: 'Sin citas.', truncated: 'Mostrando las primeras {n} citas.',
     backToSources: 'Volver a las fuentes', notFound: 'Esa fuente no existe.', page: 'Página',

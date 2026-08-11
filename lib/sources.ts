@@ -25,7 +25,7 @@ export interface SourceCitationView {
 }
 
 export interface SourceFull {
-  source: { id: string; title: string | null; author: string | null; publication: string | null; note: string | null };
+  source: { id: string; title: string | null; author: string | null; publication: string | null; note: string | null; transcription: string | null };
   citations: SourceCitationView[];
   citationTotal: number;
 }
@@ -104,7 +104,7 @@ export function getSourceFull(db: Db, id: string): SourceFull | null {
   return {
     source: {
       id: source.id, title: source.title, author: source.author,
-      publication: source.publication, note: source.note,
+      publication: source.publication, note: source.note, transcription: source.transcription,
     },
     citations: views,
     citationTotal: all.length,

@@ -4,6 +4,7 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createTreesApi, treeResolver } from './trees';
 import { createPersonsApi } from './persons';
+import { createDb } from '../db/client';
 import { closeTrees, listTrees, openTree } from '../lib/trees';
 import { SAFE_ENV } from '../vitest.setup';
 
@@ -25,6 +26,10 @@ beforeEach(() => {
   process.env.WEDIN_TREES_DIR = path.join(workDir, 'trees');
   process.env.WEDIN_MEDIA_DIR = path.join(workDir, 'media');
   closeTrees();
+  // The state an existing installation is in: wedin.db is on disk because an
+  // import once made it. A clone of the repository has no such file — see the
+  // "a fresh clone" block below.
+  createDb(process.env.WEDIN_DB!).$client.close();
   api = createTreesApi();
 });
 
@@ -34,6 +39,33 @@ afterEach(() => {
   // Restored, not deleted: unsetting them would let lib/trees.ts fall back
   // to the real wedin.db for any test file sharing this worker.
   Object.assign(process.env, SAFE_ENV);
+});
+
+describe('a fresh clone', () => {
+  beforeEach(() => {
+    closeTrees();
+    for (const suffix of ['', '-wal', '-shm']) {
+      fs.rmSync(`${process.env.WEDIN_DB}${suffix}`, { force: true });
+    }
+  });
+
+  it('reports no family trees rather than inventing one', async () => {
+    const res = await api.request('/api/trees');
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ trees: [] });
+    expect(fs.existsSync(process.env.WEDIN_DB!)).toBe(false);
+  });
+
+  it('names the first tree the caller asks for', async () => {
+    const res = await api.request('/api/trees', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Mormors släkt' }),
+    });
+    expect(res.status).toBe(200);
+    expect((await res.json()).tree).toMatchObject({ id: 'mormors-slakt', name: 'Mormors släkt' });
+    expect(fs.existsSync(process.env.WEDIN_DB!)).toBe(false);
+  });
 });
 
 describe('GET /api/trees', () => {

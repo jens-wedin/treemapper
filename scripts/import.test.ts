@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { runImport } from './import';
+import { runImport, readArgs } from './import';
 import { createDb } from '../db/client';
 import { persons, media } from '../db/schema';
 
@@ -11,6 +11,27 @@ const fixture = fileURLToPath(new URL('../lib/gedcom/fixtures/mini.ged', import.
 let tmpDb: string;
 
 afterEach(() => { if (tmpDb && fs.existsSync(tmpDb)) fs.rmSync(tmpDb); });
+
+describe('what the command line asks for', () => {
+  it('takes a file and a name for the tree', () => {
+    expect(readArgs(['family.ged', 'Mormors släkt']))
+      .toEqual({ gedPath: 'family.ged', name: 'Mormors släkt' });
+  });
+
+  it('will not guess the name, because the name decides the filename', () => {
+    expect(readArgs(['family.ged'])).toMatchObject({ error: expect.stringContaining('name') });
+  });
+
+  it('will not guess the file either', () => {
+    // It used to default to `data/Wedin_Family_Tree_CLEANED.ged`, so running
+    // the command with no arguments tried to import somebody else's family.
+    expect(readArgs([])).toMatchObject({ error: expect.stringContaining('GEDCOM') });
+  });
+
+  it('refuses a name that is only whitespace', () => {
+    expect(readArgs(['family.ged', '   '])).toMatchObject({ error: expect.stringContaining('name') });
+  });
+});
 
 describe('runImport', () => {
   it('imports the fixture and verifies counts', () => {

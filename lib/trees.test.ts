@@ -3,7 +3,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { persons } from '../db/schema';
-import { TreeNotFound, closeTrees, createEmptyTree, createTree, deleteTree, listTrees, openTree, renameTree } from './trees';
+import { createDb } from '../db/client';
+import { TreeNotFound, closeTrees, createEmptyTree, createTree, defaultTreeId, deleteTree, listTrees, openTree, renameTree } from './trees';
 import { SAFE_ENV } from '../vitest.setup';
 
 const MINI = path.resolve('lib/gedcom/fixtures/mini.ged');
@@ -16,7 +17,17 @@ beforeEach(() => {
   process.env.WEDIN_TREES_DIR = path.join(workDir, 'trees');
   process.env.WEDIN_MEDIA_DIR = path.join(workDir, 'media');
   closeTrees();
+  giveThemADefaultTree();
 });
+
+/**
+ * The state Jens's own machine is in: `wedin.db` exists, because an import once
+ * made it. Most of this file is about that installation. A fresh clone has no
+ * such file, and gets its own describe block below.
+ */
+function giveThemADefaultTree() {
+  createDb(process.env.WEDIN_DB!).$client.close();
+}
 
 afterEach(() => {
   closeTrees();
@@ -26,8 +37,50 @@ afterEach(() => {
   Object.assign(process.env, SAFE_ENV);
 });
 
+describe('a fresh clone, with no family tree at all', () => {
+  beforeEach(() => {
+    closeTrees();
+    for (const suffix of ['', '-wal', '-shm']) {
+      fs.rmSync(`${process.env.WEDIN_DB}${suffix}`, { force: true });
+    }
+  });
+
+  it('has no family trees', () => {
+    expect(listTrees()).toEqual([]);
+  });
+
+  it('writes no database merely because something asked whether one exists', () => {
+    // The bug this replaces: `wedin.db` appeared as a side effect of listing,
+    // so a stranger who cloned the repo was handed an empty tree named after
+    // somebody else's family. Asserted on the file, because the damage was
+    // never visible in the return value.
+    listTrees();
+    defaultTreeId();
+    expect(fs.existsSync(process.env.WEDIN_DB!)).toBe(false);
+  });
+
+  it('refuses to open a tree that is not there, default or not', () => {
+    expect(() => openTree('default')).toThrow(TreeNotFound);
+    expect(fs.existsSync(process.env.WEDIN_DB!)).toBe(false);
+  });
+
+  it('names the first tree after itself', () => {
+    const tree = createEmptyTree('Mormors släkt');
+    expect(tree).toMatchObject({ id: 'mormors-slakt', name: 'Mormors släkt', isDefault: false });
+    expect(fs.existsSync(path.join(process.env.WEDIN_TREES_DIR!, 'mormors-slakt.db'))).toBe(true);
+    expect(fs.existsSync(process.env.WEDIN_DB!)).toBe(false);
+    expect(listTrees().map(t => t.id)).toEqual(['mormors-slakt']);
+  });
+
+  it('lets the first tree be deleted again, having nothing to protect', () => {
+    const tree = createEmptyTree('Mormors släkt');
+    expect(() => deleteTree(tree.id)).not.toThrow();
+    expect(listTrees()).toEqual([]);
+  });
+});
+
 describe('the default tree', () => {
-  it('is always present and named after its file', () => {
+  it('is listed once its file exists, named after that file', () => {
     const trees = listTrees();
     expect(trees).toHaveLength(1);
     expect(trees[0]).toMatchObject({ id: 'wedin', name: 'wedin', isDefault: true, persons: 0 });

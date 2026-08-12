@@ -18,13 +18,28 @@ Working in this repo: `CLAUDE.md` for conventions, `MEMORY.md` for current state
 
 ```bash
 npm install
-npm run import   # one-time: data/Wedin_Family_Tree_CLEANED.ged → wedin.db
-                 # (further trees are imported in the app, see Multiple family trees)
-npm run media    # download photos from MyHeritage CDN → media/<tree>/
-npm run dev      # http://localhost:5173 (API on :3001)
-npm test         # vitest unit tests
-npm run test:e2e # Playwright browse flow (needs wedin.db)
+npm run dev            # app on :5173, API on :3001
 ```
+
+The first run has **no family tree**. The app offers two ways to make one, and
+does nothing until you pick: import a GEDCOM export from Ancestry, MyHeritage,
+Geni or another program, or start an empty tree and add people by hand.
+
+**The name you give decides the filename.** `Mormors släkt` becomes
+`trees/mormors-slakt.db`, and `/mormors-slakt` is its address in every link.
+Swedish letters are folded, so an id is safe in a path and on any filesystem.
+The same is true from the terminal:
+
+```bash
+npm run import -- family.ged "Mormors släkt"     # → trees/mormors-slakt.db
+```
+
+Both arguments are required. Nothing is uploaded anywhere; every database is a
+file on your own machine, under `trees/`.
+
+`wedin.db` at the repository root is the author's own tree, made before trees
+were named this way. If the file is not there — and in a fresh clone it is not —
+nothing creates it.
 
 ## Transitions between the tree views
 
@@ -715,7 +730,7 @@ hand. Specs live in `docs/superpowers/specs/` and plans in
 `MEMORY.md` in the repo root is the working handoff — decisions worth not
 re-litigating, gotchas that cost real time, and the open threads.
 
-**685 unit tests and 95 end-to-end tests**, `tsc -b` and `npm run build` clean.
+**715 unit tests and 101 end-to-end tests**, `tsc -b` and `npm run build` clean.
 The e2e suite runs single-worker against a copy of the database (`.e2e/wedin.db`), so
 it never touches the real one.
 

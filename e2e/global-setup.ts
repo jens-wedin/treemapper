@@ -11,6 +11,12 @@ import path from 'node:path';
  * gigabyte.
  */
 export default function globalSetup() {
+  // The first-run project needs an empty directory and gets a new one every
+  // time: it asserts what a clone of this repository looks like, and the tree
+  // the previous run created would make it look like something else.
+  fs.rmSync('.first-run', { recursive: true, force: true });
+  fs.mkdirSync('.first-run', { recursive: true });
+
   fs.rmSync('.e2e', { recursive: true, force: true });
   fs.mkdirSync('.e2e', { recursive: true });
 

@@ -86,6 +86,7 @@ const isDefaultId = (id: string) => id === DEFAULT_TREE || id === defaultTreeId(
 
 /** The default tree's public id, e.g. `wedin` for `wedin.db`. */
 export function defaultTreeId(): string {
+  if (!fs.existsSync(defaultDbPath())) return DEFAULT_TREE;
   return openAt(defaultDbPath()).select().from(treeMeta).all()[0]?.slug || DEFAULT_TREE;
 }
 
@@ -157,8 +158,10 @@ export function openTree(id: string): Db {
   const file = fileFor(id);
 
   // createDb migrates, and migrating creates the file. Without this check a
-  // typo'd id would silently produce an empty tree instead of an error.
-  if (!isDefaultId(id) && !open.has(file) && !fs.existsSync(file)) throw new TreeNotFound(id);
+  // typo'd id would silently produce an empty tree instead of an error — and
+  // the default tree used to be exempt, which is how a fresh clone ended up
+  // holding an empty tree named after somebody else's family.
+  if (!open.has(file) && !fs.existsSync(file)) throw new TreeNotFound(id);
 
   return openAt(file);
 }
@@ -193,7 +196,10 @@ export function listTrees(): TreeInfo[] {
       .filter(name => SAFE_ID.test(name))
     : [];
   const rest = imported.map(infoFor).sort((a, b) => a.name.localeCompare(b.name, 'sv'));
-  return [infoFor(DEFAULT_TREE), ...rest];
+  // Only when the file is on disk. A clone of this repository has no default
+  // tree and should be told so, not handed one.
+  const first = fs.existsSync(defaultDbPath()) ? [infoFor(DEFAULT_TREE)] : [];
+  return [...first, ...rest];
 }
 
 /**
@@ -307,7 +313,7 @@ export function deleteTree(id: string) {
   // the target is the same mistake that once let `..%2Fwedin` delete the
   // family database.
   const file = fileFor(id);
-  if (path.resolve(file) === path.resolve(defaultDbPath())) {
+  if (fs.existsSync(defaultDbPath()) && path.resolve(file) === path.resolve(defaultDbPath())) {
     throw new Error('The original family tree cannot be removed');
   }
   if (!fs.existsSync(file)) throw new TreeNotFound(id);

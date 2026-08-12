@@ -2,10 +2,11 @@ import { useEffect } from 'react';
 import { Navigate, NavLink, Route, Routes, useLocation, useParams } from 'react-router';
 import { t, useLanguage, setLanguage, LANGUAGES, type Lang } from './lib/i18n';
 import {
-  adoptTree, fallbackTree, isKnownTree, notifyTreeChanged, refreshTrees, useActiveTree, useTrees,
+  adoptTree, fallbackTree, isKnownTree, notifyTreeChanged, refreshTrees, useActiveTree, useTrees, useTreesLoaded,
 } from './lib/activeTree';
 import { rescueUrl, treeUrl } from './lib/treeUrl';
 import ThemePicker from './components/ThemePicker';
+import FirstTree from './components/settings/FirstTree';
 import TreePicker from './components/TreePicker';
 import Home from './pages/Home';
 import PersonList from './pages/PersonList';
@@ -94,7 +95,12 @@ export default function App() {
   // Subscribing here re-renders the whole app when the language changes.
   const lang = useLanguage();
   const activeTree = useActiveTree();
-  const treesLoaded = useTrees().length > 0;
+  const trees = useTrees();
+  const treesLoaded = useTreesLoaded();
+  // Told apart on purpose: a list that has not arrived yet is a blank moment,
+  // a list that arrived empty is a clone of this repository with no family
+  // tree in it. The nav would only offer addresses that cannot resolve.
+  const noTrees = treesLoaded && trees.length === 0;
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -117,7 +123,7 @@ export default function App() {
       <header className="border-b">
         <nav aria-label={t('appTitle')} className={`${HEADER_WIDTH} flex items-center gap-6 py-3`}>
           <span className="shrink-0 whitespace-nowrap font-semibold">{t('appTitle')}</span>
-          {(
+          {!noTrees && (
             [
               ['/', t('nav.home')],
               ['/people', t('nav.persons')],
@@ -140,7 +146,7 @@ export default function App() {
             </NavLink>
           ))}
           <div className="ml-auto">
-            <TreePicker />
+            {!noTrees && <TreePicker />}
           </div>
           <ThemePicker />
           <label className="flex items-center gap-2 text-sm">
@@ -164,7 +170,8 @@ export default function App() {
       >
         {/* Which tree an address names can only be answered against the list of
             trees, so nothing routes until it has arrived. */}
-        {treesLoaded && (
+        {noTrees && <FirstTree />}
+        {treesLoaded && !noTrees && (
           <Routes>
             <Route path=":tree/*" element={<TreeScope />} />
             <Route path="*" element={<TreeScope />} />

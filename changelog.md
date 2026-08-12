@@ -4,6 +4,13 @@
 
 ### Changed
 
+**Anyone can clone this and start their own family tree**
+- The first run has no family tree at all, and says so. Previously `wedin.db` was written to disk as a side effect of asking whether it existed, so a stranger who cloned the repository was handed an empty tree named after somebody else's family, in a URL that said `wedin`.
+- **The name decides the filename.** `Mormors släkt` becomes `trees/mormors-slakt.db` and is addressed at `/mormors-slakt`. That was already true of every tree except the first one; now it is true of all of them.
+- `npm run import` takes the file and the tree's name, both required, and writes `trees/<name>.db` through the same path the browser uses. It used to default to one particular family's GEDCOM and one particular database. Its report is in English rather than Swedish, like everything else the terminal prints.
+- `wedin.db` at the repository root still works, still has the id `wedin`, and every link to it is unchanged. It is simply no longer conjured into being.
+- The navigation and the tree picker are hidden while there is no tree, since every address they could offer names one that does not exist.
+
 **The project is written in English**
 - Code, comments, tests, routes, query parameters, stored preference keys, element ids and terminal output. So that it can go on GitHub and be read by someone who does not speak Swedish. The family data is Swedish and stays Swedish: names, places, notes, GEDCOM bodies, and the Swedish translation of the interface.
 - **English is now the source language.** `en` is the authored dictionary and the fallback; `sv` joins `de` and `es` as a translation. A browser with no stored preference opens in English. Every stored preference key was renamed, and each reads its old Swedish name once so the theme, the language and the tree you had open survive the change.

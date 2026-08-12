@@ -15,7 +15,8 @@
     "refresh-media": "tsx scripts/refresh-media-urls.ts",
     "export": "tsx scripts/export.ts",
     "repair-conc": "tsx scripts/repair-conc.ts",
-    "merge-duplicates": "tsx scripts/merge-duplicates.ts"
+    "merge-duplicates": "tsx scripts/merge-duplicates.ts",
+    "dev:first-run": "WEDIN_E2E=1 WEDIN_DB=.first-run/family.db WEDIN_TREES_DIR=.first-run/trees WEDIN_MEDIA_DIR=.first-run/media API_PORT=3198 concurrently -k \"tsx api/server.ts\" \"vite --port 5198\""
   },
   "dependencies": {
     "@fontsource-variable/public-sans": "^5.3.0",

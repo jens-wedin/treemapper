@@ -34,6 +34,15 @@ function read(): string {
 
 let current = typeof window === 'undefined' ? DEFAULT_TREE : read();
 let trees: TreeSummary[] = [];
+/**
+ * Whether the list has come back yet.
+ *
+ * Separate from `trees.length`, which used to stand in for it — and could not
+ * tell "still asking" from "there are none". A clone of this repository has no
+ * family tree at all until somebody makes one, and the two states look nothing
+ * alike to a reader: one is a blank moment, the other is the whole app.
+ */
+let loaded = false;
 
 const listeners = new Set<() => void>();
 const notify = () => listeners.forEach(l => l());
@@ -46,6 +55,7 @@ function subscribe(onChange: () => void): () => void {
 
 export const getActiveTree = () => current;
 export const getTrees = () => trees;
+export const getTreesLoaded = () => loaded;
 
 function remember(id: string) {
   current = id;
@@ -103,6 +113,7 @@ export async function refreshTrees(): Promise<TreeSummary[]> {
   if (!res.ok) return trees;
   const body = (await res.json()) as { trees: TreeSummary[] };
   trees = body.trees;
+  loaded = true;
   // `default` is the legacy alias, so a browser that stored it before trees
   // had ids is pointing at a real tree — just not by the name it now has.
   if (current === DEFAULT_TREE) remember(defaultTreeId());
@@ -123,3 +134,4 @@ export const fallbackTree = () => (isKnownTree(current) ? current : defaultTreeI
 
 export const useActiveTree = () => useSyncExternalStore(subscribe, getActiveTree, getActiveTree);
 export const useTrees = () => useSyncExternalStore(subscribe, getTrees, getTrees);
+export const useTreesLoaded = () => useSyncExternalStore(subscribe, getTreesLoaded, getTreesLoaded);

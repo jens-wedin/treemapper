@@ -249,6 +249,13 @@ const en = {
     family: 'Family', marriedName: 'Married name', suffix: 'Suffix', note: 'Note',
     saved: 'Saved', noHits: 'No matches', searchFirst: 'Search and pick a person',
   },
+  firstTree: {
+    title: 'No family tree yet',
+    lead: 'Bring in a GEDCOM file, or start an empty tree and add people by hand.',
+    local: 'Everything stays on this computer. Nothing is uploaded anywhere.',
+    importLead: 'An export from Ancestry, MyHeritage, Geni or another program.',
+    createLead: 'The name you give it becomes its filename.',
+  },
   countries: {
     title: 'Countries',
     lead: 'Places that name no country, and what this tree says they are. Nothing is written until you approve it.',
@@ -600,6 +607,13 @@ const sv: DeepPartial<Dict> = {
     family: 'Familj', marriedName: 'Giftasnamn', suffix: 'Suffix', note: 'Anteckning',
     saved: 'Sparat', noHits: 'Inga träffar', searchFirst: 'Sök och välj en person',
   },
+  firstTree: {
+    title: 'Inget släktträd ännu',
+    lead: 'Läs in en GEDCOM-fil, eller börja med ett tomt träd och lägg till personer för hand.',
+    local: 'Allt stannar på den här datorn. Ingenting laddas upp någonstans.',
+    importLead: 'En export från Ancestry, MyHeritage, Geni eller ett annat program.',
+    createLead: 'Namnet du ger det blir dess filnamn.',
+  },
   countries: {
     title: 'Länder',
     lead: 'Platser utan land, och vad det här trädet säger att de är. Inget skrivs förrän du godkänner det.',
@@ -948,6 +962,13 @@ const de: DeepPartial<Dict> = {
     family: 'Familie', marriedName: 'Ehename', suffix: 'Namenszusatz', note: 'Notiz',
     saved: 'Gespeichert', noHits: 'Keine Treffer', searchFirst: 'Person suchen und wählen',
   },
+  firstTree: {
+    title: 'Noch kein Stammbaum',
+    lead: 'Lesen Sie eine GEDCOM-Datei ein, oder beginnen Sie mit einem leeren Baum und tragen Sie Personen von Hand ein.',
+    local: 'Alles bleibt auf diesem Rechner. Es wird nichts hochgeladen.',
+    importLead: 'Ein Export aus Ancestry, MyHeritage, Geni oder einem anderen Programm.',
+    createLead: 'Der Name, den Sie vergeben, wird zum Dateinamen.',
+  },
   countries: {
     title: 'Länder',
     lead: 'Orte ohne Land, und was dieser Stammbaum dazu sagt. Nichts wird geschrieben, bevor Sie zustimmen.',
@@ -1295,6 +1316,13 @@ const es: DeepPartial<Dict> = {
     sexM: 'Hombre', sexF: 'Mujer', sexU: 'Desconocido',
     family: 'Familia', marriedName: 'Apellido de casada', suffix: 'Sufijo', note: 'Nota',
     saved: 'Guardado', noHits: 'Sin resultados', searchFirst: 'Busca y elige una persona',
+  },
+  firstTree: {
+    title: 'Aún no hay árbol genealógico',
+    lead: 'Importa un archivo GEDCOM, o empieza con un árbol vacío y añade personas a mano.',
+    local: 'Todo permanece en este ordenador. No se sube nada a ninguna parte.',
+    importLead: 'Una exportación de Ancestry, MyHeritage, Geni u otro programa.',
+    createLead: 'El nombre que le des será su nombre de archivo.',
   },
   countries: {
     title: 'Países',

@@ -103,7 +103,8 @@ test('a marriage is added to the family, not to the person', async ({ page }) =>
 
   // … but is edited in the family box, and saved on the family
   const family = page.locator('section', { has: page.getByRole('heading', { name: 'Family' }) });
-  await family.getByRole('button', { name: /Add marriage|Edit/ }).first().click();
+  // Anchored, so that renaming the control is noticed rather than shrugged at.
+  await family.getByRole('button', { name: /^(Add marriage|Edit Marriage)/ }).first().click();
   await page.getByLabel(/Date/).fill('14 JUN 1969');
   await page.getByRole('button', { name: 'Save' }).click();
 
@@ -113,6 +114,23 @@ test('a marriage is added to the family, not to the person', async ({ page }) =>
   // holds no marriage
   const timeline = page.locator('section', { has: page.getByRole('heading', { name: 'Events' }) });
   await expect(timeline.getByText('Marriage')).toHaveCount(0);
+});
+
+test('a marriage can be removed again, through the icon on its row', async ({ page }) => {
+  await page.goto('/wedin/person/I500001');
+  const family = page.locator('section', { has: page.getByRole('heading', { name: 'Family', exact: true }) });
+
+  // the previous test left this one on the first family
+  await expect(family.getByText('14 Jun 1969')).toBeVisible();
+
+  // The icon has to say which marriage it is about — there are two families here.
+  await family.getByRole('button', { name: 'Remove Marriage 14 Jun 1969' }).click();
+  const confirm = page.getByRole('alertdialog');
+  await expect(confirm).toContainText('Remove the marriage?');
+  await confirm.getByRole('button', { name: 'Remove' }).click();
+
+  await expect(family.getByText('14 Jun 1969')).toHaveCount(0);
+  await expect(family.getByRole('button', { name: 'Add marriage' }).first()).toBeVisible();
 });
 
 test('a photo can be added and removed again', async ({ page }) => {

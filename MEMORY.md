@@ -21,7 +21,7 @@ What is left is 137 places, 211 rows, and none of it is inferable:
 - ~31 are records the export joined (`Hemsö, Västernorrland, Sweden, Hemsö,
   Västernorrland, Sverige`, and one spanning Wyoming and Minnesota). They need
   **splitting**, which is a different job.
-- The rest have no evidence at all: `Th.`, `Bjr.`, `Lax.`, `Email`, `Unknown`,
+- The rest have no evidence at all: `Bjr.`, `Lax.`, `Email`, `Unknown`,
   `Same Place`, `Loppi`, `Lahti`, `Kiruna`.
 
 `Census` is gone — 28 residence events deleted 2026-08-12 by
@@ -30,6 +30,13 @@ writes the *source* into the place column, so it was never a place. The script
 matches the whole place and never a substring.
 
 `npx tsx scripts/country-report.ts wedin` lists every one with a person link.
+
+**Check what an abbreviation is before deleting it.** Asked to remove the 11
+`Th.` records the same way as `Census`, they turned out to be *birth* events
+with exact dates, and `Th.` was Thorsö — the parish all 11 siblings lived in.
+`scripts/expand-place.ts <tree> <short> <full>` takes both halves as arguments
+and asserts nothing; `Bjr.`, `Lax.`, `Ha.`, `Trå.` and `Svall.` are still to do
+and Jens has to say what each one means.
 
 Note the audit_log clock runs behind the shell's — filter generously when
 checking whether a write landed, or it looks like nothing happened. `npx tsx scripts/country-report.ts wedin` prints all

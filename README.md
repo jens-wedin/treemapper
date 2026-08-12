@@ -651,6 +651,20 @@ npx tsx scripts/drop-census-events.ts wedin --apply
 It matches the whole place, never a substring — a real place could contain the
 word, and a substring rule would take it with no way to notice.
 
+Abbreviations are a different matter. `Th.`, `Bjr.`, `Ha.`, `Lax.`, `Trå.` and
+`Svall.` are real places written short, and what they stand for lives in the
+head of whoever kept the book — no rule can expand one safely. So you supply
+both halves:
+
+```bash
+npx tsx scripts/expand-place.ts wedin "Th." "Torsö, Skaraborgs, Västergötland, Sverige" --apply
+```
+
+`Th.` has been done: eleven **birth** records, one per sibling, all of whom also
+lived at Bromö on Torsö. Expanded to the parish and not to the farm, because
+`Th.` names the parish and naming the farm would assert something the record
+does not.
+
 Two country names exist and they disagree on purpose. What gets **written into**
 a place is always Swedish — `Sverige` — because a place name is data. What is
 **shown on screen** follows your language, so an English reader approves

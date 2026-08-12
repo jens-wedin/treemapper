@@ -67,6 +67,9 @@ describe('i18n', () => {
 
   it('hands back text that is not a date at all, so nothing disappears', () => {
     expect(formatGedcomDate('okänt')).toBe('okänt');
+    // GEDCOM cannot say "31 July, year unknown", so the text stays — but it
+    // should still read as a date rather than as a Swedish fragment.
+    expect(formatGedcomDate('6 aug.')).toBe('6 Aug');
     expect(formatGedcomDate('17xx')).toBe('17xx');
   });
 

@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { DICTIONARIES, FALLBACK, EVENT_LABELS, MONTHS, QUALIFIERS, type Lang } from './dictionaries';
 import { readPreference, writePreference } from '../storage';
-import { parseGedcomDate, type DateParts } from '../../../lib/gedcomDate';
+import { monthNumber, parseGedcomDate, type DateParts } from '../../../lib/gedcomDate';
 
 export type { Lang };
 export const LANGUAGES: { code: Lang; label: string }[] = [
@@ -135,8 +135,6 @@ export function displayName(p: { givenName?: string | null; surname?: string | n
 export const eventDescription = (description: string | null | undefined): string | null =>
   !description || description.trim() === 'Y' ? null : description;
 
-const MONTH_TAGS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-
 /** "15 Apr 1942" · "Apr 1942" · "1942" · "" — in the current language. */
 function displayParts({ day, month, year }: DateParts): string {
   if (year === null) return '';
@@ -156,8 +154,9 @@ function translateTokens(raw: string): string {
   const q = QUALIFIERS[current];
   return raw.trim().split(/\s+/).map(token => {
     const upper = token.toUpperCase();
-    const monthIndex = MONTH_TAGS.indexOf(upper);
-    if (monthIndex >= 0) return months[monthIndex]!;
+    // Any language's month name, so "6 aug." reads as a date and not as debris.
+    const month = monthNumber(token);
+    if (month !== null) return months[month - 1]!;
     if (upper === 'ABT' || upper === 'EST' || upper === 'CAL') return q.about;
     if (upper === 'BEF') return q.before;
     if (upper === 'AFT') return q.after;

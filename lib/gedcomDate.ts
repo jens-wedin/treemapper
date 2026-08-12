@@ -54,7 +54,7 @@ const MONTH_BY_WORD = new Map<string, number>(
 );
 
 /** 1–12, or null when the token is not a month in any language the app speaks. */
-function monthNumber(token: string): number | null {
+export function monthNumber(token: string): number | null {
   return MONTH_BY_WORD.get(token.toUpperCase().replace(/\.$/, '')) ?? null;
 }
 
@@ -104,6 +104,20 @@ function parseParts(text: string): DateParts | null {
 }
 
 const EMPTY: DateParts = { day: null, month: null, year: null };
+
+const KEYWORDS = new Set(['ABT', 'EST', 'CAL', 'BEF', 'AFT', 'BET', 'AND', 'FROM', 'TO', 'INT']);
+
+/**
+ * True for a string built only of GEDCOM date words and numbers, whether or not
+ * this module can model it. `BET AFT 31 JAN 1762 AND BEF 31 DEC 1762` is real
+ * GEDCOM with a qualifier nested in a range; `arbrå` is a parish in the wrong
+ * column. Both fail to parse, and only one of them is a defect.
+ */
+export function looksLikeGedcom(raw: string | null | undefined): boolean {
+  if (!raw?.trim()) return false;
+  return raw.trim().toUpperCase().split(/\s+/).every(token =>
+    KEYWORDS.has(token) || monthNumber(token) !== null || /^\d{1,4}$/.test(token));
+}
 
 const TAG: Record<Qualifier, string> = {
   exact: '', about: 'ABT', estimated: 'EST', calculated: 'CAL',

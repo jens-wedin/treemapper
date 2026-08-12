@@ -1,4 +1,11 @@
-# MEMORY — where the project stands
+# Treemapper — working notes
+
+**Renamed 2026-08-12.** The app is *Treemapper*; the repository and the folder are
+`treemapper`. The family tree inside it is still `wedin` — `wedin.db`, the id
+`wedin`, every `/wedin/...` address — because a tree is named after whoever is
+in it. Environment variables are `TREEMAPPER_DB`, `TREEMAPPER_TREES_DIR`,
+`TREEMAPPER_MEDIA_DIR`, `TREEMAPPER_E2E`; browser preferences are
+`treemapper-*`, with the two older names still read once and migrated.
 
 _Last updated: 2026-08-11. All six spec phases are built, plus tree UX work, a
 shadcn theme, Statistics, multiple family trees, the tree in every URL, sources

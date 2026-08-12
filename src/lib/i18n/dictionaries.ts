@@ -219,6 +219,9 @@ const en = {
   },
   edit: {
     edit: 'Edit', save: 'Save', cancel: 'Cancel', remove: 'Remove',
+    // For icon-only controls, which have to say what they act on: a screen
+    // reader listing ten buttons all called "Edit" tells you nothing.
+    editNamed: 'Edit {name}', removeNamed: 'Remove {name}',
     confirmRemoveTitle: 'Remove this event?',
     confirmRemove: 'The event disappears from the person. The removal is written to the change log and can be read in the consistency bench.',
     newPerson: 'New person',
@@ -515,6 +518,7 @@ const sv: DeepPartial<Dict> = {
   },
   edit: {
     edit: 'Redigera', save: 'Spara', cancel: 'Avbryt', remove: 'Ta bort',
+    editNamed: 'Redigera {name}', removeNamed: 'Ta bort {name}',
     confirmRemoveTitle: 'Ta bort händelsen?',
     confirmRemove: 'Händelsen försvinner från personen. Borttagningen loggas i ändringshistoriken och går att läsa i Konsekvensbänken.',
     newPerson: 'Ny person',
@@ -808,6 +812,7 @@ const de: DeepPartial<Dict> = {
   },
   edit: {
     edit: 'Bearbeiten', save: 'Speichern', cancel: 'Abbrechen', remove: 'Entfernen',
+    editNamed: '{name} bearbeiten', removeNamed: '{name} entfernen',
     confirmRemoveTitle: 'Ereignis entfernen?',
     confirmRemove: 'Das Ereignis verschwindet von der Person. Die Entfernung wird protokolliert und ist in der Konsistenzprüfung nachzulesen.',
     newPerson: 'Neue Person',
@@ -1101,6 +1106,7 @@ const es: DeepPartial<Dict> = {
   },
   edit: {
     edit: 'Editar', save: 'Guardar', cancel: 'Cancelar', remove: 'Eliminar',
+    editNamed: 'Editar {name}', removeNamed: 'Eliminar {name}',
     confirmRemoveTitle: '¿Eliminar el evento?',
     confirmRemove: 'El evento desaparece de la persona. La eliminación queda registrada en el historial y puede leerse en el banco de consistencia.',
     newPerson: 'Nueva persona',

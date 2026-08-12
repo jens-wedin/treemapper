@@ -44,8 +44,11 @@ test('removing asks in the app\'s own dialog, and can be backed out of', async (
   const row = page.locator('li').filter({ hasText: 'Ska tas bort' });
   await expect(row).toBeVisible();
 
+  // The row's controls are icons, so each one has to say which event it acts on
+  await expect(row.getByRole('button', { name: 'Edit Occupation' })).toBeVisible();
+
   // Cancel leaves the event alone
-  await row.getByRole('button', { name: 'Remove' }).click();
+  await row.getByRole('button', { name: 'Remove Occupation' }).click();
   const confirm = page.getByRole('alertdialog');
   await expect(confirm).toContainText('Remove this event?');
   await expect(confirm).toContainText('Occupation');            // which event it concerns
@@ -53,9 +56,25 @@ test('removing asks in the app\'s own dialog, and can be backed out of', async (
   await expect(confirm).toBeHidden();
   await expect(row).toBeVisible();
 
-  await row.getByRole('button', { name: 'Remove' }).click();
+  await row.getByRole('button', { name: 'Remove Occupation' }).click();
   await page.getByRole('alertdialog').getByRole('button', { name: 'Remove' }).click();
   await expect(row).toHaveCount(0);
+});
+
+test('every section offers its add button on the heading line', async ({ page }) => {
+  await page.goto('/wedin/person/I500001');
+
+  for (const [heading, button] of [
+    ['Events', 'Add event'],
+    ['Family', 'Add child'],
+    ['Citations', 'Add citation'],
+  ]) {
+    const section = page.locator('section', { has: page.getByRole('heading', { name: heading, exact: true }) });
+    const title = await section.getByRole('heading', { name: heading, exact: true }).boundingBox();
+    const add = await section.getByRole('button', { name: button }).boundingBox();
+    // Same line as the heading, not further down the section.
+    expect(Math.abs(add!.y - title!.y), `${button} beside ${heading}`).toBeLessThan(24);
+  }
 });
 
 test('the person page ends with its change history', async ({ page }) => {

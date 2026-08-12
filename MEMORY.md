@@ -32,6 +32,30 @@ git log --all --diff-filter=A --name-only -- '*.db*' 'backups/*'
 — by now far more than statistics — still unmerged. Check `git branch` before
 assuming you are somewhere sensible.
 
+## The person page's editing pattern (2026-08-12)
+
+One pattern now, everywhere on the page: **the section's adding action sits on
+the heading line, and the per-row controls are icons at the end of the row.**
+*Add citation* already worked that way; *Add event* and *Add child / partner /
+parent* were moved up to match, and the per-event *Edit*/*Remove* pair became a
+pencil and a bin.
+
+The part worth not undoing: an icon has no accessible name, so
+`EventActions` names each button after what it acts on — `Remove Birth 15 Apr
+1942`, via `edit.editNamed` / `edit.removeNamed` and `tf()`. A page with a
+dozen events would otherwise hand a screen reader a dozen buttons called
+*Edit*. The same string goes on `title` for a mouse. `EventActions` is shared
+by `EventEditor` and `MarriageEditor`, so the wedding — which lives on the
+family, not the person — behaves identically.
+
+`EventEditor` renders its own `<h2>`, taking `title` as a prop, because the add
+button and the `adding` state belong together and lifting that state into
+`PersonPage` would have bought nothing.
+
+The e2e check for this is geometric — the add button's `y` within 24px of its
+heading's `y`, for all three sections — since "moved to the heading" is a fact
+about layout that no text assertion would catch.
+
 ## The project is written in English (2026-08-11)
 
 Jens asked for this so the repo can go on GitHub and be read by people who do
@@ -246,7 +270,7 @@ rather than trusting the tests:
 - **Data** (`wedin.db`): 4 511 people, 979 families, 14 357 events, 5 805
   citations, 521 sources, 978 photos. Two further trees: Andersson
   (486 people) and Test (3).
-- **Tests**: 466 vitest + 80 Playwright e2e, all green. The e2e suite runs with
+- **Tests**: 466 vitest + 81 Playwright e2e, all green. The e2e suite runs with
   one worker — the specs share `.e2e.db` and would race. `tsc -b` clean.
 - **Consistency**: 2 714 problems in `wedin.db`, 288 in Andersson, 2 in
   Test. Zero dismissals anywhere.
@@ -340,7 +364,12 @@ panel on click.
   for now; widening it is a small migration when he wants it.
 - **Backups in `backups/`** from this week's repairs — safe to delete once the
   data is trusted. Also the older `wedin.db.before-*` files in the repo root.
-- **Jens has more UX/UI feedback coming** — that is the natural next work.
+- **Jens has more UX/UI feedback coming** — that is the natural next work. The
+  first round (2026-08-12) was the person page's editing controls. Two places
+  still use the old shape and are the obvious next candidates if he wants the
+  pattern carried further: the citation lines, whose *Remove citation* is a
+  word inside a sentence, and `AddRelativeDialog` in the tree chart, whose
+  relation buttons have no icons.
 - **Commit messages are English from 2026-08-11 onward.** Earlier history is
   Swedish and is not being rewritten.
 - **API error messages are English strings, not translated.** They reach the

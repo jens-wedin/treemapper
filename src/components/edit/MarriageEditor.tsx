@@ -1,14 +1,10 @@
 import { useState } from 'react';
+import { HeartPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { buttonVariants } from '@/components/ui/button';
 import type { MarriageView } from '../../../lib/queries';
 import { formatGedcomDate, t } from '../../lib/i18n';
 import { mutateJson } from '../../lib/api';
+import EventActions from './EventActions';
 import EventForm from './EventForm';
 
 /**
@@ -50,35 +46,30 @@ export default function MarriageEditor({ familyId, marriage, onChanged }: {
     );
   }
 
+  const date = marriage ? formatGedcomDate(marriage.dateRaw) || marriage.dateYear || '' : '';
+  const name = [t('person.marriage'), date].filter(Boolean).join(' ');
+
   return (
     <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
       {marriage ? (
         <>
           <span className="text-muted-foreground">
-            {t('person.marriage')}: {formatGedcomDate(marriage.dateRaw) || marriage.dateYear || '—'}
+            {t('person.marriage')}: {date || '—'}
             {marriage.place && `, ${marriage.place}`}
           </span>
-          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>{t('edit.edit')}</Button>
-          <AlertDialog>
-            <AlertDialogTrigger className={buttonVariants({ variant: 'outline', size: 'sm' })}>
-              {t('edit.remove')}
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>{t('edit.confirmRemoveMarriageTitle')}</AlertDialogTitle>
-                <AlertDialogDescription>{t('edit.confirmRemove')}</AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>{t('edit.cancel')}</AlertDialogCancel>
-                <AlertDialogAction className={buttonVariants({ variant: 'destructive' })} onClick={remove}>
-                  {t('edit.remove')}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <EventActions
+            name={name}
+            detail={marriage.place ? `${name}, ${marriage.place}` : name}
+            confirmTitle={t('edit.confirmRemoveMarriageTitle')}
+            onEdit={() => setEditing(true)}
+            onRemove={remove}
+          />
         </>
       ) : (
-        <Button variant="outline" size="sm" onClick={() => setEditing(true)}>{t('edit.addMarriage')}</Button>
+        <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+          <HeartPlus aria-hidden className="mr-2 h-4 w-4" />
+          {t('edit.addMarriage')}
+        </Button>
       )}
       {error && <span role="alert" className="text-destructive">{error}</span>}
     </div>

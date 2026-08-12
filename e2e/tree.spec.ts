@@ -385,7 +385,7 @@ test.describe('the person panel slides in', () => {
     return page.getByRole('complementary', { name: 'Person details' });
   };
 
-  test('panelen animeras in och ligger kvar medan den glider ut', async ({ page }) => {
+  test('the panel animates in, and stays put while it slides back out', async ({ page }) => {
     const panel = await openPanel(page);
     // the class stays as long as the panel is open — nothing time-dependent
     await expect(panel).toHaveClass(/panel-entering/);

@@ -515,15 +515,20 @@ a log earns its keep.
 Removing something asks first, in the app's own dialog rather than the
 browser's: it names the event in question, says the removal goes to the change
 log, and follows the theme and the chosen language. All editing lives on the
-Person page: **Edit** for names, sex and note;
-per-event **Edit**/**Remove** plus **Add event**; and guided
-dialogs for **Add child / partner / parent** (pick an existing person or
-create a new one; family records are created and linked correctly).
+Person page, and every section offers its adding action on the heading line —
+**Add event**, **Add child / partner / parent**, **Add citation**, **Add
+photo**. The relation buttons open guided dialogs: pick an existing person or
+create a new one, and the family records are created and linked correctly.
+
+Within a section, the per-row controls are icons at the end of the line, so a
+timeline reads as events rather than as buttons. An icon has no accessible name
+of its own, so each is named after what it acts on — *Remove Birth 15 Apr
+1942*, not a twelfth button called *Remove*.
 
 Every mutation is validated with the shared zod schemas in `lib/schemas.ts` and
 written to `audit_log` with full before/after JSON snapshots, so any change can
 be traced and manually reversed. Impossible states (self-relations, ancestry
-cycles, a third parent, duplicate children) are rejected with Swedish messages.
+cycles, a third parent, duplicate children) are rejected with a stated reason.
 Fuzzy dates are always accepted — `ABT 1715`, `17xx`, free text — and only the
 sortable year is left blank when it can't be parsed.
 
@@ -536,7 +541,8 @@ API: `GET /api/stats` · `GET /api/persons` · `GET /api/persons/:id/full` ·
 `POST /api/relations` · `GET /api/media/:id` · `GET /api/tree/:id?up=&down=` ·
 `GET /api/issues` + dismissals · `POST /api/merge` · `GET /api/sources`,
 `GET /api/sources/:id/full`, `PATCH /api/sources/:id` ·
-`GET /api/export/gedcom`. All UI copy lives in `src/lib/i18n.ts` (Swedish).
+`GET /api/export/gedcom`. All UI copy lives in `src/lib/i18n/dictionaries.ts`,
+with English as the source language.
 
 ## Photos
 

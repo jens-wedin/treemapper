@@ -21,6 +21,10 @@
 **The document says which language it is in**
 - `startLanguage()` sets `<html lang>` before the first paint. `index.html` can only name one language and it names English, so a reader who had chosen Swedish was getting Swedish prose inside `<html lang="en">` — which is what sends a screen reader off in an English voice.
 
+**A person's events read as events, not as buttons**
+- Each row's *Edit* and *Remove* are icons at the end of the line. They are named after the event they act on — *Remove Birth 15 Apr 1942* — because a screen reader offered a dozen buttons all called *Edit* learns nothing from them, and a mouse gets the same wording as a tooltip. The removal still goes through the app's own confirmation, which still spells out what disappears, place included.
+- Every section on the person page now offers its adding action on the heading line, the way **Add citation** already did: **Add event** beside *Events*, and **Add child / partner / parent** beside *Family*. The wedding, which is edited on the family rather than the person, took the same pair of icons.
+
 ### Security
 
 **Backup copies of the family database are no longer tracked**

@@ -190,11 +190,13 @@ export default function PersonPage() {
       </section>
 
       <section className="mt-8">
-        <h2 className="text-xl font-semibold">{t('person.family')}</h2>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {(['child', 'spouse', 'parent'] as const).map(type => (
-            <RelationDialog key={type} type={type} person={person} families={data.families} onSaved={reload} />
-          ))}
+        <div className="flex flex-wrap items-center gap-3">
+          <h2 className="text-xl font-semibold">{t('person.family')}</h2>
+          <div className="flex flex-wrap gap-2">
+            {(['child', 'spouse', 'parent'] as const).map(type => (
+              <RelationDialog key={type} type={type} person={person} families={data.families} onSaved={reload} />
+            ))}
+          </div>
         </div>
         <dl className="mt-3 space-y-2">
           <div><dt className="inline font-medium">{t('person.parents')}: </dt><dd className="inline"><MemberLinks people={data.parents} /></dd></div>
@@ -217,10 +219,12 @@ export default function PersonPage() {
       </section>
 
       <section className="mt-8">
-        <h2 className="text-xl font-semibold">{t('person.timeline')}</h2>
+        {/* The heading is EventEditor's, so "Add event" can share its line
+            without the adding state having to live up here. */}
         <EventEditor
           events={data.events}
           ownerId={person.id}
+          title={t('person.timeline')}
           citations={Citations}
           onChanged={reload}
         />
@@ -252,7 +256,7 @@ export default function PersonPage() {
         </section>
       )}
 
-      {/* sist: vad som gjorts med posten, inte vad posten säger */}
+      {/* Last: what has been done to the record, not what the record says. */}
       <section className="mt-8">
         <h2 className="text-xl font-semibold">{t('issues.changeLog')}</h2>
         <ChangeLog entries={data.log} />

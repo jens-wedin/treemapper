@@ -72,22 +72,85 @@ npx tsx scripts/dedupe-events.ts <tree> [--apply]
 
 ## Testing
 
+### Write the test first
+
+Default to TDD for anything with a definable answer — a parser, a layout, a
+query, a detector, an endpoint. The loop, one behaviour at a time:
+
+```bash
+npx vitest run lib/dates.test.ts        # one file, not the suite
+npx vitest lib/dates.test.ts            # or watch it
+```
+
+1. Write one failing test that names the behaviour, not the implementation.
+2. **Run it and read the failure.** It must fail for the reason you intended.
+3. Write the smallest code that passes it.
+4. Run it again, then the whole file.
+5. Commit.
+
+**Step 2 is the one that earns its keep, and the one worth being strict about.**
+A test that passes the first time is a finding: either the behaviour already
+existed, or the test is not reaching the code. Six storage tests in this repo
+passed immediately because the node environment has no `localStorage` and a
+defensive `try/catch` handed back the default — green, and testing nothing. If
+you did not watch it go red, you do not know what it covers.
+
+Two habits that keep tests honest here:
+
+- **Assert on structure, not on wording.** `expect(issue.code).toBe(
+  'death-before-birth')` survives a rewording; `toContain('Barnet är äldst')`
+  does not, and three tests had to be rewritten when the detector stopped
+  emitting sentences. Where a test does check user-visible text, take the
+  expected string from the dictionary rather than retyping it.
+- **Name the test as the behaviour**, in English: `it('counts a parent once,
+  even when the child sits in two families with the same mother')`. The name is
+  the specification; if it only says `it('works')` the test cannot tell you what
+  broke.
+
+### Where TDD fits, and where something else does
+
+| Layer | How to drive it |
+|---|---|
+| `src/lib/*` — layout, ahnentafel, dates, i18n, richText | Pure functions, no I/O. Strict TDD; these are the easiest and highest-value tests in the repo. |
+| `lib/*` — queries, detectors, mutations, merge | TDD against `createDb(':memory:')` in `beforeEach`, with small `person()`/`event()`/`family()` helpers. See `lib/issues.test.ts`. |
+| `api/*` | TDD through `api.request('/api/…')` on a temp-directory database; see `api/sources.test.ts`. Assert status *and* body. |
+| React components | No unit tests here by choice. Cover the behaviour in e2e and keep the logic in `src/lib/` where it can be tested directly. |
+| Data-repair scripts | The dry run **is** the test: print what would change, read it, then `--apply`. Add a unit test for any pure helper inside. |
+| Anything visual | A screenshot you actually look at. A passing assertion says the element exists, not that it is readable. |
+
+Do not write a test whose only job is to restate the implementation, and do not
+retro-fit tests to code you just wrote by copying its output into an assertion —
+that locks in whatever it does, including the bugs.
+
+### Then leave the fixtures behind
+
 Fixture tests are necessary and have not been sufficient. **Every genuine bug in
 this project was found by running against the real database or by looking at the
-running app** — not by a failing test. After the tests pass, run the thing over
-`wedin.db` and sanity-check the extremes, then take a browser screenshot and
-actually read it.
+running app** — not by a failing test. TDD gets the logic right; it does not
+tell you the answer is implausible. So once the suite is green:
 
-- The e2e suite mutates data, so it runs against `.e2e/` (copied by
+- Run the code over `wedin.db` and sanity-check the extremes — the largest, the
+  oldest, the counts. Ask "is this figure *possible*?", not "does it match the
+  fixture?"
+- For anything visual, drive the running app with Playwright, screenshot it, and
+  read it. That is what caught a Swedish sentence 546 passing tests were happy
+  with.
+- For data changes, compare row counts before and after and spot-check the rows
+  that moved.
+
+### e2e specifics
+
+- The suite mutates data, so it runs against `.e2e/` (copied by
   `e2e/global-setup.ts`) on ports 5199/3199, `workers: 1` because the specs
   share one SQLite file. `/api/health` reports which database is being served
   and a test asserts it is the copy.
+- It takes ~2 minutes, so it is a verification step rather than a TDD loop. Run
+  one spec while iterating: `npx playwright test e2e/sources.spec.ts`.
 - Playwright `.check()`/`.uncheck()` fight React checkboxes driven by URL state.
   Use `.click()` then `toBeChecked()`.
 - A stray `*.spec.ts` anywhere in the repo gets picked up by vitest.
 - The node test environment has **no `localStorage`**; `vitest.setup.ts`
-  installs a stub. Without it, every preference path passed by never running —
-  see below.
+  installs a stub.
 
 ## Traps this codebase has already sprung
 

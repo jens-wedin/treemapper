@@ -17,9 +17,50 @@ test('add an event', async ({ page }) => {
   await page.getByRole('button', { name: 'Add event' }).click();
   await page.getByLabel('Type').selectOption('OCCU');
   await page.getByLabel('Description').fill('Testyrke');
-  await page.getByLabel(/^Date/).fill('ABT 1970');
+  await page.getByLabel('Kind of date').selectOption('about');
+  await page.getByLabel('Year', { exact: true }).fill('1970');
   await page.getByRole('button', { name: 'Save' }).click();
   await expect(page.getByText('Testyrke')).toBeVisible();
+});
+
+test('a date is entered as its parts, and shows what it will become', async ({ page }) => {
+  await page.goto('/wedin/person/I500001');
+  await page.getByRole('button', { name: 'Add event' }).click();
+  await page.getByLabel('Type').selectOption('OCCU');
+  await page.getByLabel('Description').fill('Datumtest');
+
+  // A year on its own is a real genealogical date, so day and month stay empty.
+  await page.getByLabel('Year', { exact: true }).fill('1902');
+  await expect(page.getByText('Stored as: 1902')).toBeVisible();
+
+  await page.getByLabel('Month', { exact: true }).selectOption('3');
+  await expect(page.getByText('Stored as: MAR 1902')).toBeVisible();
+
+  // Between reveals the second half and reads out in words.
+  await page.getByLabel('Kind of date').selectOption('between');
+  await page.getByLabel('End year').fill('1910');
+  await expect(page.getByText('Stored as: BET MAR 1902 AND 1910')).toBeVisible();
+  await expect(page.getByText('Reads as: between Mar 1902 and 1910')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Save' }).click();
+  const row = page.locator('li').filter({ hasText: 'Datumtest' });
+  await expect(row).toContainText('between Mar 1902 and 1910');
+});
+
+test('a date the form cannot hold is kept exactly as written', async ({ page }) => {
+  await page.goto('/wedin/person/I500001');
+  await page.getByRole('button', { name: 'Add event' }).click();
+  await page.getByLabel('Type').selectOption('DEAT');
+  await page.getByLabel('Description').fill('Fritextdatum');
+
+  await page.getByRole('button', { name: 'Type it myself' }).click();
+  await page.getByLabel('Date', { exact: true }).fill('INFANT');
+  await expect(page.getByText('Kept exactly as written', { exact: false })).toBeVisible();
+  // The boxes must not pretend they can hold it.
+  await expect(page.getByLabel('Kind of date')).toBeDisabled();
+
+  await page.getByRole('button', { name: 'Save' }).click();
+  await expect(page.locator('li').filter({ hasText: 'Fritextdatum' })).toContainText('INFANT');
 });
 
 test('add a child through the dialog', async ({ page }) => {
@@ -105,7 +146,9 @@ test('a marriage is added to the family, not to the person', async ({ page }) =>
   const family = page.locator('section', { has: page.getByRole('heading', { name: 'Family' }) });
   // Anchored, so that renaming the control is noticed rather than shrugged at.
   await family.getByRole('button', { name: /^(Add marriage|Edit Marriage)/ }).first().click();
-  await page.getByLabel(/Date/).fill('14 JUN 1969');
+  await page.getByLabel('Day', { exact: true }).fill('14');
+  await page.getByLabel('Month', { exact: true }).selectOption('6');
+  await page.getByLabel('Year', { exact: true }).fill('1969');
   await page.getByRole('button', { name: 'Save' }).click();
 
   await expect(family.getByText('14 Jun 1969')).toBeVisible();

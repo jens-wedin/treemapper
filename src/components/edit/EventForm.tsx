@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import DateInput from './DateInput';
 import type { EventView } from '../../../lib/queries';
 import { eventCreateSchema, eventUpdateSchema } from '../../../lib/schemas';
 import { t, eventLabel } from '../../lib/i18n';
@@ -66,15 +67,15 @@ export default function EventForm({ event, ownerId, ownerType = 'person', fixedT
     }
   }
 
-  const idp = event ? `h${event.id}` : 'ny';
+  const idp = event ? `e${event.id}` : 'new';
 
   return (
     <form onSubmit={submit} className="mt-2 rounded-lg border p-4">
       <div className="flex flex-wrap gap-3">
         <div>
-          <label htmlFor={`${idp}-typ`} className="block text-sm font-medium">{t('edit.eventType')}</label>
+          <label htmlFor={`${idp}-type`} className="block text-sm font-medium">{t('edit.eventType')}</label>
           <select
-            id={`${idp}-typ`}
+            id={`${idp}-type`}
             value={form.type}
             disabled={!!event || !!fixedType}
             onChange={e => setForm({ ...form, type: e.target.value })}
@@ -86,25 +87,22 @@ export default function EventForm({ event, ownerId, ownerType = 'person', fixedT
           </select>
         </div>
         <div>
-          <label htmlFor={`${idp}-datum`} className="block text-sm font-medium">{t('edit.date')}</label>
-          <Input id={`${idp}-datum`} value={form.dateRaw} onChange={e => setForm({ ...form, dateRaw: e.target.value })} className="mt-1 w-56" />
+          <label htmlFor={`${idp}-place`} className="block text-sm font-medium">{t('edit.place')}</label>
+          <Input id={`${idp}-place`} value={form.place} onChange={e => setForm({ ...form, place: e.target.value })} className="mt-1 w-64" />
         </div>
         <div>
-          <label htmlFor={`${idp}-plats`} className="block text-sm font-medium">{t('edit.place')}</label>
-          <Input id={`${idp}-plats`} value={form.place} onChange={e => setForm({ ...form, place: e.target.value })} className="mt-1 w-64" />
-        </div>
-        <div>
-          <label htmlFor={`${idp}-beskrivning`} className="block text-sm font-medium">{t('edit.description')}</label>
-          <Input id={`${idp}-beskrivning`} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="mt-1 w-64" />
+          <label htmlFor={`${idp}-description`} className="block text-sm font-medium">{t('edit.description')}</label>
+          <Input id={`${idp}-description`} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="mt-1 w-64" />
         </div>
         {/* Age is the person's age at their own event; a couple has two. */}
         {ownerType === 'person' && (
           <div>
-            <label htmlFor={`${idp}-alder`} className="block text-sm font-medium">{t('edit.age')}</label>
-            <Input id={`${idp}-alder`} value={form.age} onChange={e => setForm({ ...form, age: e.target.value })} className="mt-1 w-24" />
+            <label htmlFor={`${idp}-age`} className="block text-sm font-medium">{t('edit.age')}</label>
+            <Input id={`${idp}-age`} value={form.age} onChange={e => setForm({ ...form, age: e.target.value })} className="mt-1 w-24" />
           </div>
         )}
       </div>
+      <DateInput id={`${idp}-date`} value={form.dateRaw} onChange={dateRaw => setForm({ ...form, dateRaw })} />
       {error && <p role="alert" className="mt-3 text-destructive">{error}</p>}
       <div className="mt-4 flex gap-2">
         <Button type="submit" disabled={saving}>{t('edit.save')}</Button>

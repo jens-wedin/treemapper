@@ -21,8 +21,13 @@ What is left is 137 places, 211 rows, and none of it is inferable:
 - ~31 are records the export joined (`Hemsö, Västernorrland, Sweden, Hemsö,
   Västernorrland, Sverige`, and one spanning Wyoming and Minnesota). They need
   **splitting**, which is a different job.
-- The rest have no evidence at all: `Census`, `Th.`, `Bjr.`, `Email`,
-  `Unknown`, `Same Place`, `Loppi`, `Lahti`, `Kiruna`.
+- The rest have no evidence at all: `Th.`, `Bjr.`, `Lax.`, `Email`, `Unknown`,
+  `Same Place`, `Loppi`, `Lahti`, `Kiruna`.
+
+`Census` is gone — 28 residence events deleted 2026-08-12 by
+`scripts/drop-census-events.ts`, all recoverable from `audit_log`. MyHeritage
+writes the *source* into the place column, so it was never a place. The script
+matches the whole place and never a substring.
 
 `npx tsx scripts/country-report.ts wedin` lists every one with a person link.
 

@@ -638,6 +638,19 @@ ever added or removed. To see what would be proposed without opening the app:
 npx tsx scripts/country-report.ts wedin
 ```
 
+`Census` was in the place column 28 times, because MyHeritage puts the *source*
+there when a fact comes from an enumeration. Those events carried a date span
+and nothing else and have been deleted, each with its full before-image in
+`audit_log`:
+
+```bash
+npx tsx scripts/drop-census-events.ts wedin          # dry run
+npx tsx scripts/drop-census-events.ts wedin --apply
+```
+
+It matches the whole place, never a substring — a real place could contain the
+word, and a substring rule would take it with no way to notice.
+
 Two country names exist and they disagree on purpose. What gets **written into**
 a place is always Swedish — `Sverige` — because a place name is data. What is
 **shown on screen** follows your language, so an English reader approves

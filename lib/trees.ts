@@ -47,9 +47,9 @@ export const DEFAULT_TREE = 'default';
 
 // Read at call time, not at import time: the tests and `npm run dev:e2e` point
 // these elsewhere, and a module-level constant would capture the wrong value.
-const defaultDbPath = () => process.env.WEDIN_DB ?? 'wedin.db';
-const treesDir = () => process.env.WEDIN_TREES_DIR ?? 'trees';
-const mediaRoot = () => process.env.WEDIN_MEDIA_DIR ?? 'media';
+const defaultDbPath = () => process.env.TREEMAPPER_DB ?? 'wedin.db';
+const treesDir = () => process.env.TREEMAPPER_TREES_DIR ?? 'trees';
+const mediaRoot = () => process.env.TREEMAPPER_MEDIA_DIR ?? 'media';
 
 /**
  * Ids are slugs by construction — `allocateId` can only ever produce these.
@@ -111,7 +111,7 @@ export const mediaDirFor = (id: string) => {
   return path.join(mediaRoot(), id);
 };
 
-// Keyed by resolved path rather than id, so a test that repoints WEDIN_DB
+// Keyed by resolved path rather than id, so a test that repoints TREEMAPPER_DB
 // cannot be handed the previous test's database.
 const open = new Map<string, Db>();
 

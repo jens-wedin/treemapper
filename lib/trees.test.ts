@@ -13,9 +13,9 @@ let workDir: string;
 
 beforeEach(() => {
   workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'wedin-trees-'));
-  process.env.WEDIN_DB = path.join(workDir, 'wedin.db');
-  process.env.WEDIN_TREES_DIR = path.join(workDir, 'trees');
-  process.env.WEDIN_MEDIA_DIR = path.join(workDir, 'media');
+  process.env.TREEMAPPER_DB = path.join(workDir, 'wedin.db');
+  process.env.TREEMAPPER_TREES_DIR = path.join(workDir, 'trees');
+  process.env.TREEMAPPER_MEDIA_DIR = path.join(workDir, 'media');
   closeTrees();
   giveThemADefaultTree();
 });
@@ -26,7 +26,7 @@ beforeEach(() => {
  * such file, and gets its own describe block below.
  */
 function giveThemADefaultTree() {
-  createDb(process.env.WEDIN_DB!).$client.close();
+  createDb(process.env.TREEMAPPER_DB!).$client.close();
 }
 
 afterEach(() => {
@@ -41,7 +41,7 @@ describe('a fresh clone, with no family tree at all', () => {
   beforeEach(() => {
     closeTrees();
     for (const suffix of ['', '-wal', '-shm']) {
-      fs.rmSync(`${process.env.WEDIN_DB}${suffix}`, { force: true });
+      fs.rmSync(`${process.env.TREEMAPPER_DB}${suffix}`, { force: true });
     }
   });
 
@@ -56,19 +56,19 @@ describe('a fresh clone, with no family tree at all', () => {
     // never visible in the return value.
     listTrees();
     defaultTreeId();
-    expect(fs.existsSync(process.env.WEDIN_DB!)).toBe(false);
+    expect(fs.existsSync(process.env.TREEMAPPER_DB!)).toBe(false);
   });
 
   it('refuses to open a tree that is not there, default or not', () => {
     expect(() => openTree('default')).toThrow(TreeNotFound);
-    expect(fs.existsSync(process.env.WEDIN_DB!)).toBe(false);
+    expect(fs.existsSync(process.env.TREEMAPPER_DB!)).toBe(false);
   });
 
   it('names the first tree after itself', () => {
     const tree = createEmptyTree('Mormors släkt');
     expect(tree).toMatchObject({ id: 'mormors-slakt', name: 'Mormors släkt', isDefault: false });
-    expect(fs.existsSync(path.join(process.env.WEDIN_TREES_DIR!, 'mormors-slakt.db'))).toBe(true);
-    expect(fs.existsSync(process.env.WEDIN_DB!)).toBe(false);
+    expect(fs.existsSync(path.join(process.env.TREEMAPPER_TREES_DIR!, 'mormors-slakt.db'))).toBe(true);
+    expect(fs.existsSync(process.env.TREEMAPPER_DB!)).toBe(false);
     expect(listTrees().map(t => t.id)).toEqual(['mormors-slakt']);
   });
 
@@ -89,7 +89,7 @@ describe('the default tree', () => {
   it('cannot be deleted — the CLI scripts own that file', () => {
     openTree('default');
     expect(() => deleteTree('default')).toThrow();
-    expect(fs.existsSync(process.env.WEDIN_DB!)).toBe(true);
+    expect(fs.existsSync(process.env.TREEMAPPER_DB!)).toBe(true);
   });
 
   it('can be renamed, and the name survives a reopen', () => {
@@ -126,7 +126,7 @@ describe('a tree is addressed by a stable slug', () => {
    */
   it('will not let either name delete the family database', () => {
     openTree('wedin');
-    const file = process.env.WEDIN_DB!;
+    const file = process.env.TREEMAPPER_DB!;
 
     expect(() => deleteTree('wedin')).toThrow();
     expect(() => deleteTree('default')).toThrow();
@@ -224,7 +224,7 @@ describe('a tree id is not a path', () => {
 
   it('leaves the family database alone when asked to delete ../wedin', () => {
     openTree('default');
-    const wedin = process.env.WEDIN_DB!;
+    const wedin = process.env.TREEMAPPER_DB!;
     expect(fs.existsSync(wedin)).toBe(true);
 
     expect(() => deleteTree('../wedin')).toThrow(TreeNotFound);

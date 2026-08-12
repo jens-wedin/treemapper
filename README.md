@@ -1,4 +1,4 @@
-# Wedin Family Tree
+# Treemapper
 
 Web app that replaces MyHeritage for the Wedin family tree: browse, edit,
 fix consistency problems, and manage sources. Local-first (SQLite); designed
@@ -78,8 +78,8 @@ a tree to deleting a file.
 
 | Where | What |
 |---|---|
-| `wedin.db` (`WEDIN_DB`) | The tree that was here first, id `wedin`. Owned by the CLI scripts, and not deletable from the UI. |
-| `trees/<id>.db` (`WEDIN_TREES_DIR`) | One file per imported tree. |
+| `wedin.db` (`TREEMAPPER_DB`) | The tree that was here first, id `wedin`. Owned by the CLI scripts, and not deletable from the UI. |
+| `trees/<id>.db` (`TREEMAPPER_TREES_DIR`) | One file per imported tree. |
 | `media/<id>/` | Photos, one folder per tree. |
 
 A tree's name lives in a `tree_meta` row **inside** the tree, so there is no

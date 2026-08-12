@@ -1,11 +1,11 @@
 {
-  "name": "wedin-tree",
+  "name": "treemapper",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "concurrently -k \"tsx watch api/server.ts\" \"vite\"",
-    "dev:e2e": "WEDIN_E2E=1 WEDIN_DB=.e2e/wedin.db WEDIN_TREES_DIR=.e2e/trees WEDIN_MEDIA_DIR=.e2e/media API_PORT=3199 concurrently -k \"tsx api/server.ts\" \"vite --port 5199\"",
+    "dev:e2e": "TREEMAPPER_E2E=1 TREEMAPPER_DB=.e2e/wedin.db TREEMAPPER_TREES_DIR=.e2e/trees TREEMAPPER_MEDIA_DIR=.e2e/media API_PORT=3199 concurrently -k \"tsx api/server.ts\" \"vite --port 5199\"",
     "build": "tsc -b && vite build",
     "test": "vitest run",
     "test:e2e": "playwright test",
@@ -16,7 +16,7 @@
     "export": "tsx scripts/export.ts",
     "repair-conc": "tsx scripts/repair-conc.ts",
     "merge-duplicates": "tsx scripts/merge-duplicates.ts",
-    "dev:first-run": "WEDIN_E2E=1 WEDIN_DB=.first-run/family.db WEDIN_TREES_DIR=.first-run/trees WEDIN_MEDIA_DIR=.first-run/media API_PORT=3198 concurrently -k \"tsx api/server.ts\" \"vite --port 5198\""
+    "dev:first-run": "TREEMAPPER_E2E=1 TREEMAPPER_DB=.first-run/family.db TREEMAPPER_TREES_DIR=.first-run/trees TREEMAPPER_MEDIA_DIR=.first-run/media API_PORT=3198 concurrently -k \"tsx api/server.ts\" \"vite --port 5198\""
   },
   "dependencies": {
     "@fontsource-variable/public-sans": "^5.3.0",

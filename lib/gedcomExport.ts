@@ -189,7 +189,7 @@ export function exportGedcom(db: Db, opts: ExportOptions = {}): string {
 
   // ---- HEAD ----
   w.line(0, 'HEAD');
-  w.line(1, 'SOUR', 'WEDIN_TREE');
+  w.line(1, 'SOUR', 'TREEMAPPER');
   w.line(2, 'NAME', 'Wedin släktträd');
   w.line(2, 'VERS', '0.1.0');
   w.line(1, 'DATE', headerDate(now));

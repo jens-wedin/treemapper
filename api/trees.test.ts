@@ -22,14 +22,14 @@ const upload = (contents: string, filename = 'mini.ged', name?: string) => {
 
 beforeEach(() => {
   workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'wedin-api-trees-'));
-  process.env.WEDIN_DB = path.join(workDir, 'wedin.db');
-  process.env.WEDIN_TREES_DIR = path.join(workDir, 'trees');
-  process.env.WEDIN_MEDIA_DIR = path.join(workDir, 'media');
+  process.env.TREEMAPPER_DB = path.join(workDir, 'wedin.db');
+  process.env.TREEMAPPER_TREES_DIR = path.join(workDir, 'trees');
+  process.env.TREEMAPPER_MEDIA_DIR = path.join(workDir, 'media');
   closeTrees();
   // The state an existing installation is in: wedin.db is on disk because an
   // import once made it. A clone of the repository has no such file — see the
   // "a fresh clone" block below.
-  createDb(process.env.WEDIN_DB!).$client.close();
+  createDb(process.env.TREEMAPPER_DB!).$client.close();
   api = createTreesApi();
 });
 
@@ -45,7 +45,7 @@ describe('a fresh clone', () => {
   beforeEach(() => {
     closeTrees();
     for (const suffix of ['', '-wal', '-shm']) {
-      fs.rmSync(`${process.env.WEDIN_DB}${suffix}`, { force: true });
+      fs.rmSync(`${process.env.TREEMAPPER_DB}${suffix}`, { force: true });
     }
   });
 
@@ -53,7 +53,7 @@ describe('a fresh clone', () => {
     const res = await api.request('/api/trees');
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ trees: [] });
-    expect(fs.existsSync(process.env.WEDIN_DB!)).toBe(false);
+    expect(fs.existsSync(process.env.TREEMAPPER_DB!)).toBe(false);
   });
 
   it('names the first tree the caller asks for', async () => {
@@ -64,7 +64,7 @@ describe('a fresh clone', () => {
     });
     expect(res.status).toBe(200);
     expect((await res.json()).tree).toMatchObject({ id: 'mormors-slakt', name: 'Mormors släkt' });
-    expect(fs.existsSync(process.env.WEDIN_DB!)).toBe(false);
+    expect(fs.existsSync(process.env.TREEMAPPER_DB!)).toBe(false);
   });
 });
 

@@ -15,11 +15,11 @@ beforeEach(() => {
 });
 
 describe('GET /api/export/gedcom', () => {
-  it('levererar en nedladdningsbar GEDCOM-fil', async () => {
+  it('serves a GEDCOM file the browser will download', async () => {
     const res = await api.request('/api/export/gedcom');
     expect(res.status).toBe(200);
     expect(res.headers.get('content-type')).toContain('utf-8');
-    expect(res.headers.get('content-disposition')).toMatch(/attachment; filename="wedin-tree-\d{4}-\d{2}-\d{2}\.ged"/);
+    expect(res.headers.get('content-disposition')).toMatch(/attachment; filename="treemapper-\d{4}-\d{2}-\d{2}\.ged"/);
     const text = await res.text();
     expect(text.replace(/^﻿/, '').startsWith('0 HEAD')).toBe(true);
     expect(text.trimEnd().endsWith('0 TRLR')).toBe(true);

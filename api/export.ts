@@ -10,7 +10,7 @@ export function createExportApi(tree: TreeResolver) {
     const stamp = new Date().toISOString().slice(0, 10);
     return c.body(exportGedcom(db), 200, {
       'Content-Type': 'text/plain; charset=utf-8',
-      'Content-Disposition': `attachment; filename="wedin-tree-${stamp}.ged"`,
+      'Content-Disposition': `attachment; filename="treemapper-${stamp}.ged"`,
     });
   });
 

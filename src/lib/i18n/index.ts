@@ -14,12 +14,12 @@ export const LANGUAGES: { code: Lang; label: string }[] = [
 /** For Intl. The app's own language codes are deliberately shorter than these. */
 const LOCALES: Record<Lang, string> = { en: 'en-GB', sv: 'sv-SE', de: 'de-DE', es: 'es-ES' };
 
-const STORAGE_KEY = 'wedin-tree-language';
-const LEGACY_KEY = 'wedin-tree-sprak';
+const STORAGE_KEY = 'treemapper-language';
+const LEGACY_KEYS = ['wedin-tree-language', 'wedin-tree-sprak'];
 const listeners = new Set<() => void>();
 
 function readStored(): Lang {
-  const stored = readPreference(STORAGE_KEY, LEGACY_KEY) as Lang | null;
+  const stored = readPreference(STORAGE_KEY, ...LEGACY_KEYS) as Lang | null;
   if (stored && stored in DICTIONARIES) return stored;
   return 'en';
 }

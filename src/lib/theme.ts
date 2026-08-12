@@ -5,8 +5,8 @@ export type Theme = 'light' | 'dark' | 'system';
 export type Resolved = 'light' | 'dark';
 
 export const THEMES: Theme[] = ['system', 'light', 'dark'];
-const STORAGE_KEY = 'wedin-tree-theme';
-const LEGACY_KEY = 'wedin-tree-tema';
+const STORAGE_KEY = 'treemapper-theme';
+const LEGACY_KEYS = ['wedin-tree-theme', 'wedin-tree-tema'];
 const DARK_QUERY = '(prefers-color-scheme: dark)';
 
 /** Anything unrecognised — including nothing stored — means "follow the OS". */
@@ -24,7 +24,7 @@ function systemPrefersDark(): boolean {
 }
 
 function read(): Theme {
-  return parseTheme(readPreference(STORAGE_KEY, LEGACY_KEY));
+  return parseTheme(readPreference(STORAGE_KEY, ...LEGACY_KEYS));
 }
 
 let current: Theme = typeof window === 'undefined' ? 'system' : read();

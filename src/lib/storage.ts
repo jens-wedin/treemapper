@@ -12,20 +12,28 @@
  */
 
 /**
- * The stored value for `key`, adopting `legacyKey`'s value if that is where it
- * still lives. Returns null when neither is set.
+ * The stored value for `key`, adopting the value of an older name if that is
+ * where it still lives. Returns null when none of them is set.
+ *
+ * Variadic because the names have now been renamed twice — `wedin-tree-tema`
+ * became `wedin-tree-theme` when the project moved to English, and that became
+ * `treemapper-theme` when it was named. A single legacy argument would have
+ * quietly dropped the oldest link in the chain.
  */
-export function readPreference(key: string, legacyKey: string): string | null {
+export function readPreference(key: string, ...legacyKeys: string[]): string | null {
   try {
     const current = localStorage.getItem(key);
     if (current != null) return current;
 
-    const legacy = localStorage.getItem(legacyKey);
-    if (legacy == null) return null;
-
-    localStorage.setItem(key, legacy);
-    localStorage.removeItem(legacyKey);
-    return legacy;
+    // Newest first, so a browser holding two old names adopts the later one.
+    for (const legacyKey of legacyKeys) {
+      const legacy = localStorage.getItem(legacyKey);
+      if (legacy == null) continue;
+      localStorage.setItem(key, legacy);
+      localStorage.removeItem(legacyKey);
+      return legacy;
+    }
+    return null;
   } catch {
     return null;   // storage unavailable — every caller has a default
   }

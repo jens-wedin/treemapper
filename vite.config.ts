@@ -7,8 +7,8 @@ import tailwindcss from '@tailwindcss/vite';
 
 function apiPort(): string {
   const port = process.env.API_PORT;
-  if (process.env.WEDIN_E2E && (!port || port === '3001')) {
-    throw new Error('WEDIN_E2E är satt men API_PORT pekar på utvecklingsservern — e2e skulle skriva i wedin.db');
+  if (process.env.TREEMAPPER_E2E && (!port || port === '3001')) {
+    throw new Error('TREEMAPPER_E2E är satt men API_PORT pekar på utvecklingsservern — e2e skulle skriva i wedin.db');
   }
   return port ?? '3001';
 }

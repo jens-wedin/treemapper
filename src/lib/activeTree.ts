@@ -25,11 +25,11 @@ export interface TreeSummary {
 }
 
 export const DEFAULT_TREE = 'default';
-const STORAGE_KEY = 'wedin-tree-active-tree';
-const LEGACY_KEY = 'wedin-tree-trad';
+const STORAGE_KEY = 'treemapper-active-tree';
+const LEGACY_KEYS = ['wedin-tree-active-tree', 'wedin-tree-trad'];
 
 function read(): string {
-  return readPreference(STORAGE_KEY, LEGACY_KEY) || DEFAULT_TREE;
+  return readPreference(STORAGE_KEY, ...LEGACY_KEYS) || DEFAULT_TREE;
 }
 
 let current = typeof window === 'undefined' ? DEFAULT_TREE : read();

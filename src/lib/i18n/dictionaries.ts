@@ -9,7 +9,7 @@ export type Lang = 'sv' | 'en' | 'de' | 'es';
  * says about it, which is a different thing.
  */
 const en = {
-  appTitle: 'Wedin Family Tree',
+  appTitle: 'Treemapper',
   language: 'Language',
   theme: { label: 'Appearance', system: 'Follow system', light: 'Light', dark: 'Dark' },
   nav: {
@@ -369,7 +369,7 @@ export type Dict = typeof en;
 type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K] };
 
 const sv: DeepPartial<Dict> = {
-  appTitle: 'Wedin släktträd',
+  appTitle: 'Treemapper',
   language: 'Språk',
   theme: { label: 'Utseende', system: 'Följ systemet', light: 'Ljust', dark: 'Mörkt' },
   nav: {
@@ -724,7 +724,7 @@ const sv: DeepPartial<Dict> = {
 };
 
 const de: DeepPartial<Dict> = {
-  appTitle: 'Wedin Stammbaum',
+  appTitle: 'Treemapper',
   language: 'Sprache',
   theme: { label: 'Darstellung', system: 'System folgen', light: 'Hell', dark: 'Dunkel' },
   nav: {
@@ -1079,7 +1079,7 @@ const de: DeepPartial<Dict> = {
 };
 
 const es: DeepPartial<Dict> = {
-  appTitle: 'Árbol genealógico Wedin',
+  appTitle: 'Treemapper',
   language: 'Idioma',
   theme: { label: 'Apariencia', system: 'Seguir el sistema', light: 'Claro', dark: 'Oscuro' },
   nav: {

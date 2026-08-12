@@ -525,6 +525,22 @@ timeline reads as events rather than as buttons. An icon has no accessible name
 of its own, so each is named after what it acts on — *Remove Birth 15 Apr
 1942*, not a twelfth button called *Remove*.
 
+A date is entered as its parts — the kind of date (exact, about, before, after,
+between, period), then day, month and year, each of which may be left blank
+because *March 1902* and *1821* are real genealogical dates. A preview shows
+both what will be stored (`BET MAR 1902 AND 1910`) and how it will read
+(*between March 1902 and 1910*). **Type it myself** keeps a free-text box for
+the shapes the form cannot express; what is typed there is parsed when the box
+closes, and kept verbatim when it is not a date.
+
+`lib/gedcomDate.ts` is the only module that reads or writes a GEDCOM date. It
+accepts more than it emits — month names in all four languages, ISO, qualifiers,
+ranges, periods — and writes exactly one canonical shape. `events.date_raw` is
+the source of truth and nothing structured is stored beside it, because two
+representations of one date can disagree and the text is what has to survive an
+export round-trip. `npx tsx scripts/normalise-dates.ts <tree> [--apply]` brings
+existing rows to that shape, dry run by default.
+
 Every mutation is validated with the shared zod schemas in `lib/schemas.ts` and
 written to `audit_log` with full before/after JSON snapshots, so any change can
 be traced and manually reversed. Impossible states (self-relations, ancestry

@@ -32,6 +32,55 @@ git log --all --diff-filter=A --name-only -- '*.db*' 'backups/*'
 — by now far more than statistics — still unmerged. Check `git branch` before
 assuming you are somewhere sensible.
 
+## Dates have one shape (2026-08-12)
+
+`lib/gedcomDate.ts` is now the only module that reads or writes a GEDCOM date,
+and `events.date_raw` stays the single source of truth — canonical GEDCOM, with
+`date_year` derived. **Nothing structured is stored beside it on purpose**: two
+representations of one date can disagree, and the text is what has to survive an
+export round trip.
+
+The measurement that shaped the work: of 12 025 dated events, 2 387 were
+*displaying* raw GEDCOM keywords because `QUALIFIERS` had no `between`, `from`
+or `to` — a bigger problem by volume than the 49 rows that were genuinely
+malformed. **The biggest date problem was a display bug, not a data one.** A
+unit test had `expect(formatGedcomDate('BET 1916 AND 1928')).toBe('BET 1916 and
+1928')` written into it as the expectation, which is how it survived; that is
+the retro-fitted-test failure mode CLAUDE.md warns about, caught in the wild.
+
+Three decisions worth not re-litigating:
+
+- **A bare `TO 1965` is parsed as a period with an open start, never as
+  "before".** Ten rows had it and they split evenly: five `DEAT TO 1803` mean
+  *died by then*, five `OCCU/RESI/EDUC TO 1965` mean *until then*. The parser
+  records what is written; `lib/dateCleanup.ts` makes the type-aware call.
+- **Seven rows carry a qualifier nested inside a range** (`BET AFT 31 JAN 1762
+  AND BEF 31 DEC 1762`). Valid GEDCOM that one `qualifier` field cannot hold. A
+  per-part flag for seven rows would leak through the writer, the formatter and
+  the input alike, so they fail to parse and are left completely alone —
+  `looksLikeGedcom()` is what tells them apart from `arbrå`.
+- **`INFANT` and `arbrå` are the same shape.** One is an age at death, one is a
+  parish in the date column. Any rule that sorted one into the place column
+  would be guessing at the other, so both went to the description and the dry
+  run listed them for a human.
+
+`scripts/date-report.ts` is read-only and worth re-running after any change to
+the parser: it round-trips every date in every tree and reports what would be
+rewritten. It is what proved the parser before anything was built on it.
+
+**Applied 2026-08-12** to all three trees — 2 370 / 136 / 1 rows, event counts
+identical, `backups/wedin.db.before-dates` (+ `-wal`, `-shm`). Nine dates remain
+unreadable in `wedin.db`: the seven nested qualifiers, plus `31 juli` and
+`6 aug.` — day and month with no year, which GEDCOM cannot express either.
+
+Three rows lost a year from the sortable column because their text was
+ambiguous: `30 jan. 2009 kl 17.06`, `25 ... 1738`, `30 ... 1738`. The text is in
+each event's description and they are quick to re-enter by hand now that the
+control exists.
+
+**Not done:** the `unparseable-date` detector the spec calls for. Nothing yet
+surfaces a bad date typed through the escape hatch.
+
 ## The person page's editing pattern (2026-08-12)
 
 One pattern now, everywhere on the page: **the section's adding action sits on
@@ -268,9 +317,9 @@ rather than trusting the tests:
 ## Current state
 
 - **Data** (`wedin.db`): 4 511 people, 979 families, 14 357 events, 5 805
-  citations, 521 sources, 978 photos. Two further trees: Andersson
+  citations, 521 sources, 977 photos. Two further trees: Andersson
   (486 people) and Test (3).
-- **Tests**: 466 vitest + 81 Playwright e2e, all green. The e2e suite runs with
+- **Tests**: 568 vitest + 84 Playwright e2e, all green. The e2e suite runs with
   one worker — the specs share `.e2e.db` and would race. `tsc -b` clean.
 - **Consistency**: 2 714 problems in `wedin.db`, 288 in Andersson, 2 in
   Test. Zero dismissals anywhere.

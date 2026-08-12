@@ -45,6 +45,12 @@ test('a date is entered as its parts, and shows what it will become', async ({ p
   await page.getByRole('button', { name: 'Save' }).click();
   const row = page.locator('li').filter({ hasText: 'Datumtest' });
   await expect(row).toContainText('between Mar 1902 and 1910');
+
+  // Tidy up: an occupation in 1902 for a man born in 1942 is a genuine
+  // inconsistency, and later specs rely on this person having none.
+  await row.getByRole('button', { name: /^Remove/ }).click();
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Remove' }).click();
+  await expect(row).toHaveCount(0);
 });
 
 test('a date the form cannot hold is kept exactly as written', async ({ page }) => {
@@ -60,7 +66,14 @@ test('a date the form cannot hold is kept exactly as written', async ({ page }) 
   await expect(page.getByLabel('Kind of date')).toBeDisabled();
 
   await page.getByRole('button', { name: 'Save' }).click();
-  await expect(page.locator('li').filter({ hasText: 'Fritextdatum' })).toContainText('INFANT');
+  const row = page.locator('li').filter({ hasText: 'Fritextdatum' });
+  await expect(row).toContainText('INFANT');
+
+  // Tidy up: a second death is a problem in its own right, and later specs
+  // rely on this person having none.
+  await row.getByRole('button', { name: /^Remove/ }).click();
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Remove' }).click();
+  await expect(row).toHaveCount(0);
 });
 
 test('add a child through the dialog', async ({ page }) => {

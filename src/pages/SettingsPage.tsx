@@ -1,11 +1,15 @@
 import { useEffect } from 'react';
+import { Link } from 'react-router';
 import { t } from '../lib/i18n';
 import { apiUrl } from '../lib/api';
+import { useTreeId, treeUrl } from '../lib/treeUrl';
 import ImportForm from '../components/settings/ImportForm';
 import NewTreeForm from '../components/settings/NewTreeForm';
 import TreeList from '../components/settings/TreeList';
 
 export default function SettingsPage() {
+  const tree = useTreeId();
+
   useEffect(() => {
     document.title = `${t('export.title')} – ${t('appTitle')}`;
   }, []);
@@ -13,6 +17,19 @@ export default function SettingsPage() {
   return (
     <section>
       <h1 className="text-2xl font-bold">{t('export.title')}</h1>
+
+      {/* A maintenance tool rather than a fifth thing in the nav: it empties
+          out as the work is done, and fills again only on the next import. */}
+      <section className="mt-6 rounded-lg border p-4">
+        <h2 className="text-lg font-semibold">{t('countries.title')}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{t('countries.lead')}</p>
+        <Link
+          to={treeUrl(tree, '/countries')}
+          className="mt-3 inline-block text-sm font-medium underline underline-offset-4"
+        >
+          {t('countries.title')}
+        </Link>
+      </section>
 
       <section id="import" className="mt-6 rounded-lg border p-4">
         <h2 className="text-lg font-semibold">{t('trees.import')}</h2>

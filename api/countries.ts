@@ -41,7 +41,10 @@ export function createCountriesApi(tree: TreeResolver) {
 
     let changed = 0;
     for (const place of places) changed += applyCountry(db, place, code);
-    return c.json({ changed });
+    // The `{ ok, warnings, data }` envelope every mutation here uses, because
+    // `mutateJson` casts the body to that shape rather than wrapping it — a
+    // bare `{ changed }` reads back as `undefined` in the browser.
+    return c.json({ ok: true, warnings: [], data: { changed } });
   });
 
   api.post('/api/countries/reject', async c => {
@@ -50,7 +53,7 @@ export function createCountriesApi(tree: TreeResolver) {
     if (!parsed.success) return c.json({ error: 'Invalid request' }, 400);
 
     rejectCountry(db, parsed.data.places, parsed.data.code);
-    return c.json({ rejected: parsed.data.places.length });
+    return c.json({ ok: true, warnings: [], data: { rejected: parsed.data.places.length } });
   });
 
   return api;

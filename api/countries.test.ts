@@ -81,7 +81,7 @@ describe('POST /api/countries/apply', () => {
 
     const res = await post('/api/countries/apply', { places: ['Bjuråker'], code: 'SE' });
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ changed: 3 });
+    expect(await res.json()).toEqual({ ok: true, warnings: [], data: { changed: 3 } });
     expect(placesNow().filter(p => p === 'Bjuråker, Sverige')).toHaveLength(4);
   });
 
@@ -93,7 +93,7 @@ describe('POST /api/countries/apply', () => {
     const res = await post('/api/countries/apply', {
       places: ['Bjuråker', 'Bjuråker Strömbacka'], code: 'SE',
     });
-    expect((await res.json()).changed).toBe(2);
+    expect((await res.json()).data.changed).toBe(2);
     expect(placesNow()).toContain('Bjuråker Strömbacka, Sverige');
   });
 
@@ -103,7 +103,7 @@ describe('POST /api/countries/apply', () => {
 
     await post('/api/countries/apply', { places: ['Bjuråker'], code: 'SE' });
     const again = await post('/api/countries/apply', { places: ['Bjuråker'], code: 'SE' });
-    expect(await again.json()).toEqual({ changed: 0 });
+    expect(await again.json()).toEqual({ ok: true, warnings: [], data: { changed: 0 } });
   });
 
   it('refuses a country code it does not know', async () => {

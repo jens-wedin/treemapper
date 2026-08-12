@@ -590,6 +590,52 @@ export. If links ever need refreshing again:
 3. `npm run media` — downloads with the fresh links; safe to re-run, it only
    retries what isn't done.
 
+## Countries
+
+GEDCOM's `PLAC` is free text. Its only rule is position — smallest jurisdiction
+first, largest last — and there is no controlled vocabulary and no country list
+anywhere in the standard. So 3 444 events carry a place that names no country:
+`Bjuråker`, `Alnö (Y)`, `Bjuråker Strömbacka`.
+
+**Settings → Countries** offers a country for each of them, and writes nothing
+until you approve it.
+
+The proposals come from the tree itself. 7 871 places already pair a parish with
+a country — `Bjuråker, Sverige` appears 173 times — so a bare `Bjuråker` is a
+lookup in what the family recorded, not a guess. Nothing here reaches the
+network.
+
+Three sections, in the order they should be read:
+
+1. **Already recorded.** The country is in the text, somewhere nothing could
+   read it: `Sweden.` with a full stop, `Sweden (Sverige)`, or stranded
+   mid-string by the export. Approving rewrites the text, so these come first
+   and there are only 88 of them.
+2. **Learned from this tree.** Grouped by the evidence, which turns 1 253 places
+   into 402 decisions — *Bjuråker → Sweden · Places 77 · Events 294 · taught
+   ×487*. Open the disclosure to see every place a group covers. Approve writes
+   `, Sverige` into all of them; Reject is remembered and the group does not come
+   back.
+3. **Needs a closer look.** Matched only by near-spelling. Reading all of these
+   against the real database found seven wrong countries — `Belgien (BEL)` put in
+   Norway, a South African place in Sweden — so each is decided on its own, the
+   match is shown (`Bjertrå ≈ bjärtrå`), and **there is no approve-all button**.
+
+132 places have no evidence at all — `Bjr.`, `Ha.`, `Fattigstugan`. They are
+counted at the foot of the page and left alone.
+
+Every approval writes a before/after snapshot to `audit_log`, and no event is
+ever added or removed. To see what would be proposed without opening the app:
+
+```bash
+npx tsx scripts/country-report.ts wedin
+```
+
+Two country names exist and they disagree on purpose. What gets **written into**
+a place is always Swedish — `Sverige` — because a place name is data. What is
+**shown on screen** follows your language, so an English reader approves
+"Sweden" and `Sverige` is what lands in the record.
+
 ## Data and backups
 
 `data/` (gitignored) holds the MyHeritage GEDCOM exports and reports
@@ -619,7 +665,7 @@ hand. Specs live in `docs/superpowers/specs/` and plans in
 `MEMORY.md` in the repo root is the working handoff — decisions worth not
 re-litigating, gotchas that cost real time, and the open threads.
 
-**313 unit tests and 37 end-to-end tests**, `tsc -b` and `npm run build` clean.
+**679 unit tests and 93 end-to-end tests**, `tsc -b` and `npm run build` clean.
 The e2e suite runs single-worker against a copy of the database (`.e2e/wedin.db`), so
 it never touches the real one.
 

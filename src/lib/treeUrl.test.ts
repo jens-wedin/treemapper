@@ -72,7 +72,8 @@ describe('rescueUrl', () => {
 describe('PAGE_SEGMENTS', () => {
   it('names every first segment a tree may not be confused with', () => {
     expect([...PAGE_SEGMENTS].sort()).toEqual(
-      ['issues', 'people', 'person', 'settings', 'source', 'sources', 'statistics', 'tree'],
+      ['countries', 'issues', 'people', 'person', 'settings', 'source', 'sources',
+        'statistics', 'tree'],
     );
   });
 });

@@ -66,6 +66,16 @@ const MIN_FUZZY_LENGTH = 6;
 const MAX_EDITS = 2;
 
 /**
+ * A one-letter name is a county code, not a place.
+ *
+ * `Umeå lfs, AC` and `Alnö (Y)` put the code where a name goes, and the tree
+ * duly learned `x` as a Swedish name taught 410 times — which would answer any
+ * place containing a stray letter. Two, not three: `Ås` is a real parish.
+ * County codes are read properly by `impliedCountry` against a closed set.
+ */
+const MIN_NAME_LENGTH = 2;
+
+/**
  * How much more evidence the winner needs than the runner-up.
  *
  * Two, measured: it resolves all six names in `wedin.db` that taught more than
@@ -93,7 +103,7 @@ export function learn(places: (string | null | undefined)[]): LearnedIndex {
     }
 
     for (const name of taught) {
-      if (!name || NOISE.has(name)) continue;
+      if (name.length < MIN_NAME_LENGTH || NOISE.has(name)) continue;
       if (!names.has(name)) names.set(name, new Map());
       const counts = names.get(name)!;
       counts.set(code, (counts.get(code) ?? 0) + 1);
@@ -111,14 +121,16 @@ function tally(names: string[], index: LearnedIndex) {
   const votes = new Map<string, { weight: number; by: string; best: number }>();
 
   for (const name of names) {
-    const counts = index.names.get(norm(name));
+    const key = norm(name);
+    if (key.length < MIN_NAME_LENGTH) continue;
+    const counts = index.names.get(key);
     if (!counts) continue;
     for (const [code, weight] of counts) {
       const current = votes.get(code);
-      if (!current) { votes.set(code, { weight, by: norm(name), best: weight }); continue; }
+      if (!current) { votes.set(code, { weight, by: key, best: weight }); continue; }
       current.weight += weight;
       // Report the strongest single name, which is what a reviewer is shown.
-      if (weight > current.best) { current.best = weight; current.by = norm(name); }
+      if (weight > current.best) { current.best = weight; current.by = key; }
     }
   }
 

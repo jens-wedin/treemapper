@@ -12,6 +12,7 @@ import PersonList from './pages/PersonList';
 import PersonPage from './pages/PersonPage';
 import TreePage from './pages/TreePage';
 import StatisticsPage from './pages/StatisticsPage';
+import CountriesPage from './pages/CountriesPage';
 import IssuesPage from './pages/IssuesPage';
 import SourcesPage from './pages/SourcesPage';
 import SourcePage from './pages/SourcePage';
@@ -71,6 +72,7 @@ function TreeScope() {
       <Route path="tree" element={<TreePage />} />
       <Route path="tree/:id" element={<TreePage />} />
       <Route path="statistics" element={<StatisticsPage />} />
+      <Route path="countries" element={<CountriesPage />} />
       <Route path="issues" element={<IssuesPage />} />
       <Route path="sources" element={<SourcesPage />} />
       <Route path="source/:id" element={<SourcePage />} />

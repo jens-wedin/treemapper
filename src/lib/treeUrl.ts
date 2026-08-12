@@ -22,6 +22,7 @@ import { getActiveTree } from './activeTree';
  */
 export const PAGE_SEGMENTS = [
   'people', 'person', 'tree', 'statistics', 'issues', 'sources', 'source', 'settings',
+  'countries',
 ] as const;
 
 /** `/wedin` + `/people` → `/wedin/people`. */

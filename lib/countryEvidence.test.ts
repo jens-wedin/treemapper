@@ -51,6 +51,20 @@ describe('inferCountry, token tier', () => {
     expect(inferCountry('Från till och socken', index)).toBeNull();
   });
 
+  it('does not learn a single letter as the name of a place', () => {
+    // County codes stand as their own segment — `Umeå lfs, AC` — and in
+    // brackets, `Alnö (Y)`. A lone letter is a code, not a name, and matching
+    // it as a word answers any place that happens to contain a stray letter.
+    // `lib/places.ts` already reads county codes against a closed set.
+    const index = learn(['Umeå lfs, X, Sverige']);
+    expect(inferCountry('Grand Rapids X', index)).toBeNull();
+  });
+
+  it('still learns a two-letter parish, because Ås is a real one', () => {
+    const index = learn(['Ås, Sverige']);
+    expect(inferCountry('Ås', index)).toMatchObject({ code: 'SE' });
+  });
+
   it('keeps a parish whose name looks like a register word', () => {
     // `Holm` is a real parish taught 119 times in this data. Dropping it as
     // noise would lose every place that names it.

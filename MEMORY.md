@@ -5,6 +5,37 @@ shadcn theme, Statistics, multiple family trees, the tree in every URL, sources
 you can write out and cite by hand, several rounds of data repair — and the
 whole project moved to English._
 
+## Countries on places (2026-08-12)
+
+`Settings → Countries` fills in the country of a place that names none, one
+approval at a time. **The tree teaches itself**: 7 871 places pair a parish with
+a country, so `Bjuråker` is a lookup, not a guess. Nothing reaches the network.
+
+Numbers for `wedin.db`: 88 stated, 1 253 learned across **402 groups**, 97
+quarantined, 132 left alone. `npx tsx scripts/country-report.ts wedin` prints all
+of it without opening the app.
+
+Things worth not rediscovering:
+
+- **Edit distance is the untrustworthy tier and stays quarantined.** Reading all
+  125 of its matches found seven wrong countries — `Belgien (BEL)` → Norway, a
+  South African place → Sweden, and Halden/Larvik/Namsos (all Norwegian) →
+  Sweden. Do not add an approve-all to that section; an e2e test asserts there
+  isn't one.
+- **Two country names, and they must not be swapped.** `countryName()` → Swedish,
+  written into the data. `countryLabel()` → the reader's language, shown on
+  screen. Both appear on this page at once.
+- **`mutateJson` casts, it does not wrap.** It reads the body as
+  `{ ok, warnings, data }`, so an endpoint returning a bare `{ changed: 3 }`
+  gives `undefined` in the browser and the caller's destructure throws into its
+  own catch — which looks exactly like a network failure. Every mutation
+  endpoint must return the envelope. Unit and API tests both passed while this
+  was broken; only e2e caught it.
+- Only **rejections** persist (`place_country_rejections`, keyed by the place
+  text, no fingerprint to orphan). Proposals are recomputed each request.
+- The real database was **not** touched by any of this work: counts verified
+  before and after, `place_country_rejections` still 0.
+
 ## Before publishing this repo — unresolved
 
 Jens wants this on GitHub. **Four backup copies of the family database are in

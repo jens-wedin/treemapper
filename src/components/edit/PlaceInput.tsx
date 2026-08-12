@@ -1,6 +1,6 @@
 import { Input } from '@/components/ui/input';
-import { COUNTRY_NAMES, countryName } from '../../../lib/places';
-import { t, getLanguage } from '../../lib/i18n';
+import { COUNTRY_NAMES } from '../../../lib/places';
+import { t, countryLabel, getLanguage } from '../../lib/i18n';
 import { countryOf, withCountry, OTHER } from '../../lib/placeField';
 
 /**
@@ -16,9 +16,14 @@ import { countryOf, withCountry, OTHER } from '../../lib/placeField';
  * Preussen, no Österrike-Ungern and no pre-1917 Ryssland, and this tree reaches
  * into the 1600s. A place ending in something unrecognised shows *somewhere
  * else* and is left alone.
+ *
+ * The options are named in the reader's language while the place text keeps the
+ * Swedish name — an English reader picks "Sweden" and the box reads "Sverige".
+ * That is the project's rule showing through rather than a bug: the interface
+ * is translated, and what was written in the register is not.
  */
 const CODES = [...new Set(Object.values(COUNTRY_NAMES))].sort((a, b) =>
-  (countryName(a) ?? a).localeCompare(countryName(b) ?? b, getLanguage()));
+  countryLabel(a).localeCompare(countryLabel(b), getLanguage()));
 
 export default function PlaceInput({ id, value, onChange }: {
   id: string;
@@ -43,7 +48,7 @@ export default function PlaceInput({ id, value, onChange }: {
           className="mt-1 h-9 w-44 rounded-md border bg-background px-2 text-sm disabled:bg-muted disabled:opacity-50"
         >
           <option value="">— {t('edit.countryNone')}</option>
-          {CODES.map(code => <option key={code} value={code}>{countryName(code)}</option>)}
+          {CODES.map(code => <option key={code} value={code}>{countryLabel(code)}</option>)}
           {/* Only offered when it is already the case; picking it is meaningless. */}
           {selected === OTHER && <option value={OTHER}>{t('edit.countryOther')}</option>}
         </select>

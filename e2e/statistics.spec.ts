@@ -55,7 +55,7 @@ test('narrowing to one person lands in the URL and survives a reload', async ({ 
  * Every list on this page answers a question that provokes the next one — who
  * *was* the person who lived to 104? The name has to be the way there.
  */
-test('namnen i statistiken leder till personsidan', async ({ page }) => {
+test('a name in the statistics leads to that person\'s page', async ({ page }) => {
   await page.goto('/wedin/statistics');
 
   const longest = page.locator('h3', { hasText: /Longest lives/ })
@@ -104,4 +104,24 @@ test('emigration and immigration can be filtered one direction at a time', async
   expect(immi + emig).toBe(all);
   expect(immi).toBeGreaterThan(0);
   expect(emig).toBeGreaterThan(0);
+});
+
+test('countries are named, not left as two-letter codes', async ({ page }) => {
+  // The heading is translated too, so the list has to be found again after a
+  // language change rather than held from before it.
+  const topCountry = (heading: string) => page.locator('div')
+    .filter({ has: page.getByRole('heading', { name: heading, exact: true }) })
+    .last()
+    .getByRole('listitem')
+    .first();
+
+  await page.goto('/wedin/statistics');
+  await expect(topCountry('Countries')).toContainText('Sweden');
+  await expect(topCountry('Countries')).not.toContainText('SE');
+
+  // and the name follows the reader, because it comes from Intl rather than
+  // from the place text, which stays Swedish
+  await page.getByRole('combobox', { name: /Language|Språk|Sprache|Idioma/ }).selectOption('de');
+  await expect(page.getByRole('heading', { name: 'Länder', exact: true })).toBeVisible();
+  await expect(topCountry('Länder')).toContainText('Schweden');
 });

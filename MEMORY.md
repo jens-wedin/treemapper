@@ -56,6 +56,15 @@ Two traps, both found by measuring rather than by reasoning:
   away the more precise thing the record said. `isSubdivisionName()` protects
   them, and the same applies to `Holland`.
 
+**Two country names, and they must not be confused.** `countryName()` in
+`lib/places.ts` gives the Swedish name and is what gets **written into a place
+string** — the register's language. `countryLabel()` in `src/lib/i18n` goes
+through `Intl.DisplayNames` and is what is **shown** — the reader's language.
+So the statistics say "Sweden" in English and "Schweden" in German while the
+place text says `Sverige` throughout, and the country select's options are
+translated while the box beside it is not. That is the project's rule showing
+through, not a bug.
+
 Still true, and still deliberate: **a parish name is not evidence of a country.**
 Only an explicit county code counts. 3 444 places still name no country.
 

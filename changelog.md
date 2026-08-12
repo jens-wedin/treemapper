@@ -26,6 +26,7 @@
 - The canonical form is the **Swedish** name — `Sverige`, `Norge`, `Tyskland` — because a place name is data and stays as it was written in the register. What you see stays language-independent: the flags and the statistics go through the ISO code rather than the text.
 - **A country is now known for 7 871 of 11 315 places, up from 6 265.** 2 435 spellings were renamed, and 1 589 places that carry a Swedish county code without naming the country — `Alnö (Y)`, `Umeå lfs, AC` — had it appended.
 - **A parish is still not evidence.** `Bjuråker` is in Gävleborg and every reader knows it, but the record does not say so and nothing guesses on its behalf. Only an explicit county code counts.
+- **The statistics name their countries.** The Countries list showed `SE`, `NO`, `US`; it now reads Sweden, Norway, United States — and Schweden, Norwegen, Vereinigte Staaten to a German reader, because the names come from `Intl.DisplayNames` rather than from a table that would need a fifth language adding by hand.
 - The place field gained a **country select** beside it that reads and rewrites the last segment. The place itself stays a text box — the hierarchy here runs from one level to five — and a place ending in something the list has never heard of, like `Preussen`, shows *somewhere else* and is left alone.
 
 **Dates have one shape now**

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { PlacesStats } from '../../../lib/statistics';
-import { t, eventLabel , uiLocale } from '../../lib/i18n';
+import { t, eventLabel, uiLocale, countryLabel } from '../../lib/i18n';
 import PersonLink from './PersonLink';
 import CountryFlag from '../CountryFlag';
 import RankedList from './RankedList';
@@ -41,8 +41,9 @@ export default function PlacesSection({ stats }: { stats: PlacesStats }) {
         <RankedList
           title={t('statistics.countries')}
           rows={asRows(stats.countries)}
-          // Countries come back as ISO codes, so they get the same flags the
-          // tree cards use rather than a second set of translated names.
+          // Countries come back as ISO codes; Intl names them in the reader's
+          // language, and the flag is the same one the tree cards draw.
+          label={countryLabel}
           icon={code => (
             <svg viewBox="-9 -9 18 18" className="inline-block h-4 w-4 align-[-2px]" aria-hidden>
               <CountryFlag code={code} cx={0} cy={0} r={8} />

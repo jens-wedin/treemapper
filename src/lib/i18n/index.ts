@@ -102,6 +102,33 @@ export const tf = (path: string, params: Record<string, string | number> = {}): 
  */
 export const uiLocale = (): string => LOCALES[current];
 
+/**
+ * A country's name in the reader's language: 'SE' → Sweden, Sverige, Schweden,
+ * Suecia. `Intl` already knows all of these, so there is no table to keep in
+ * step with the flags — and no fifth language to translate by hand later.
+ *
+ * This is display only. What is *stored* in a place string is the Swedish name,
+ * because a place name is data; `countryName()` in lib/places.ts writes that.
+ * The two must not be confused: one follows the reader, the other follows the
+ * register.
+ */
+const displayNames = new Map<string, Intl.DisplayNames>();
+
+export function countryLabel(code: string): string {
+  if (!code) return '';
+  const locale = uiLocale();
+  if (!displayNames.has(locale)) {
+    displayNames.set(locale, new Intl.DisplayNames([locale], { type: 'region' }));
+  }
+  // Intl throws on a malformed code and returns the code itself for an unknown
+  // one; either way a code on screen beats an empty cell.
+  try {
+    return displayNames.get(locale)!.of(code) ?? code;
+  } catch {
+    return code;
+  }
+}
+
 /** The common case: a count, grouped the way the reader expects. */
 export const formatNumber = (n: number): string => n.toLocaleString(uiLocale());
 

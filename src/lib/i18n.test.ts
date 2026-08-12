@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import {
   t, tf, format, formatNumber, eventLabel, eventDescription, lifespan, displayName,
-  formatGedcomDate, setLanguage, getLanguage, LANGUAGES,
+  formatGedcomDate, countryLabel, setLanguage, getLanguage, LANGUAGES,
 } from './i18n';
 import { DICTIONARIES } from './i18n/dictionaries';
 
@@ -91,6 +91,31 @@ describe('format', () => {
 
   it('fills a translated template through tf()', () => {
     expect(tf('issues.remaining', { n: 1, total: 2 })).toBe('1 left of 2 flagged');
+  });
+});
+
+describe('country names', () => {
+  it('names a country in the reader\'s language', () => {
+    expect(countryLabel('SE')).toBe('Sweden');
+    setLanguage('sv');
+    expect(countryLabel('SE')).toBe('Sverige');
+    setLanguage('de');
+    expect(countryLabel('SE')).toBe('Schweden');
+    setLanguage('es');
+    expect(countryLabel('SE')).toBe('Suecia');
+  });
+
+  it('handles the codes this tree actually contains', () => {
+    expect(countryLabel('NO')).toBe('Norway');
+    expect(countryLabel('GB')).toBe('United Kingdom');
+    expect(countryLabel('US')).toBe('United States');
+  });
+
+  // Better a code on screen than an empty cell where a country should be.
+  // (Not 'ZZ' — that is CLDR's own code for an unknown region and has a name.)
+  it('falls back to the code itself when it is not a country', () => {
+    expect(countryLabel('QQ')).toBe('QQ');
+    expect(countryLabel('')).toBe('');
   });
 });
 

@@ -106,6 +106,9 @@ test('a country is picked from a list rather than spelled a tenth way', async ({
   // A place with no country: the select says so, and adds one on the end.
   await page.getByLabel('Place').fill('Bjuråker');
   await expect(page.getByLabel('Country')).toHaveValue('');
+  // The option reads in the interface's language; the place keeps the Swedish
+  // name, because the interface is translated and the register is not.
+  await expect(page.getByLabel('Country').locator('option[value="SE"]')).toHaveText('Sweden');
   await page.getByLabel('Country').selectOption('SE');
   await expect(page.getByLabel('Place')).toHaveValue('Bjuråker, Sverige');
 

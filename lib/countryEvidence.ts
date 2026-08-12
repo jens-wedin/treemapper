@@ -13,6 +13,7 @@
  * another's inferences, the same reason GEDCOM xrefs are per-file.
  */
 import { countryFromPlace } from './places';
+import { lookupCountry } from './countryVocabulary';
 
 export type Tier = 'segment' | 'token' | 'fuzzy';
 
@@ -179,6 +180,9 @@ export function inferCountry(place: string | null | undefined, index: LearnedInd
   const near = new Map<string, string>();     // learned name -> the word that reached it
   for (const word of words) {
     if (word.length < MIN_FUZZY_LENGTH) continue;
+    // A word that already names a country is never guessed at. `Finland
+    // MIchäkkä län?????` was matched to `island` and answered United States.
+    if (lookupCountry(word)) continue;
     const candidate = norm(word);
     for (const learned of index.fuzzyPool) {
       if (levenshtein(candidate, learned) <= MAX_EDITS) { near.set(learned, word); break; }

@@ -100,6 +100,13 @@ describe('inferCountry, fuzzy tier', () => {
     expect(inferCountry('Malm', index)).toBeNull();
   });
 
+  it('never matches a word that already names a country', () => {
+    // Real: `Finland MIchäkkä län?????` was matched to `island` and answered
+    // United States. A country name is the one word never worth guessing at.
+    const index = learn(['Island, Sverige']);
+    expect(inferCountry('Finland MIchäkkä län?????', index)).toBeNull();
+  });
+
   it('is never reached when an exact word already answered', () => {
     const index = learn(['Bjuråker, Sverige', 'Härnösand, Sverige']);
     expect(inferCountry('Bjuråker Härnösands', index)!.tier).toBe('token');

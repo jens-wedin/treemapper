@@ -23,7 +23,10 @@ const ALL_CODES = Array.from({ length: 26 * 26 }, (_, i) =>
  * Only what has actually been seen in the data — `Swed.` appears 16 times.
  * Guessing at further abbreviations would be inventing evidence.
  */
-const REGISTER_FORMS: Record<string, string> = { swed: 'SE' };
+const REGISTER_FORMS: Record<string, string> = {
+  swed: 'SE',
+  'amerikas förenta stater': 'US',
+};
 
 let vocabulary: Map<string, string> | null = null;
 
@@ -129,7 +132,14 @@ export function statedCountries(place: string | null | undefined): StatedCountry
   return found;
 }
 
-function readCountry(text: string | undefined): string | null {
+/**
+ * The country a single piece of a place names, or null.
+ *
+ * Unlike `lookupCountry` this refuses England, Scotland, Wales and Holland:
+ * they carry a country code for the flag, but they are what the record said and
+ * a rewrite must not swallow them.
+ */
+export function readCountry(text: string | undefined | null): string | null {
   if (!text) return null;
   const k = normalise(text);
   if (NOT_A_SPELLING.has(k)) return null;

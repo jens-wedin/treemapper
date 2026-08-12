@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, primaryKey } from 'drizzle-orm/sqlite-core';
 
 /**
  * What this database calls itself. One row, id 1.
@@ -103,6 +103,25 @@ export const issueDismissals = sqliteTable('issue_dismissals', {
   dismissedAt: text('dismissed_at').notNull(),
   note: text('note'),
 });
+
+/**
+ * Country inferences that were looked at and turned down.
+ *
+ * Only rejections are stored. A proposal is recomputed from the events on every
+ * request — the cascade is deterministic and cheap, and a stored one goes stale
+ * the moment a place is edited — while an approval is applied at once and its
+ * before/after lands in `audit_log`, which is already the record of what
+ * happened.
+ *
+ * Keyed by the place text itself rather than by a hash. `issue_dismissals` is
+ * keyed by a fingerprint, and changing how one is built orphans every row;
+ * there is no fingerprint here to break.
+ */
+export const placeCountryRejections = sqliteTable('place_country_rejections', {
+  place: text('place').notNull(),
+  code: text('code').notNull(),
+  rejectedAt: text('rejected_at').notNull(),
+}, table => [primaryKey({ columns: [table.place, table.code] })]);
 
 export const auditLog = sqliteTable('audit_log', {
   id: integer('id').primaryKey(),

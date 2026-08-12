@@ -4,5 +4,5 @@ export default defineConfig({
   dialect: 'sqlite',
   schema: './db/schema.ts',
   out: './db/migrations',
-  dbCredentials: { url: 'wedin.db' },
+  dbCredentials: { url: 'trees/wedin.db' },
 });

@@ -4,11 +4,16 @@
 
 ### Changed
 
+**Every family database lives in one folder**
+- The default tree moved from `wedin.db` at the repository root to `trees/wedin.db`, in the same folder as every imported tree — the root no longer carries a database. Its id, its `wedin` slug and every link to it are unchanged, and `TREEMAPPER_DB` still overrides the location for the tests and the e2e copy.
+- Because the default now sits inside the scanned directory, the tree list skips its own file so it appears once, as the default, and not a second time as a tree found sitting alongside the others.
+- Loose `wedin.db.before-*` backup snapshots that had gathered at the repository root now live in `backups/` with the dated ones.
+
 **Anyone can clone this and start their own family tree**
 - The first run has no family tree at all, and says so. Previously `wedin.db` was written to disk as a side effect of asking whether it existed, so a stranger who cloned the repository was handed an empty tree named after somebody else's family, in a URL that said `wedin`.
 - **The name decides the filename.** `Mormors släkt` becomes `trees/mormors-slakt.db` and is addressed at `/mormors-slakt`. That was already true of every tree except the first one; now it is true of all of them.
 - `npm run import` takes the file and the tree's name, both required, and writes `trees/<name>.db` through the same path the browser uses. It used to default to one particular family's GEDCOM and one particular database. Its report is in English rather than Swedish, like everything else the terminal prints.
-- `wedin.db` at the repository root still works, still has the id `wedin`, and every link to it is unchanged. It is simply no longer conjured into being.
+- `trees/wedin.db` still works, still has the id `wedin`, and every link to it is unchanged. It is simply no longer conjured into being.
 - The navigation and the tree picker are hidden while there is no tree, since every address they could offer names one that does not exist.
 
 **The project is written in English**

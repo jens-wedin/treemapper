@@ -139,6 +139,32 @@ describe('a tree is addressed by a stable slug', () => {
   });
 });
 
+describe('the default database living inside the trees directory', () => {
+  // Every family database now lives in one folder: the default at
+  // trees/wedin.db, alongside the imported ones. The listing must show it once
+  // — as the default — and not a second time as a tree the scan happened to
+  // find sitting in that same directory.
+  beforeEach(() => {
+    closeTrees();
+    for (const suffix of ['', '-wal', '-shm']) {
+      fs.rmSync(`${path.join(workDir, 'wedin.db')}${suffix}`, { force: true });
+    }
+    process.env.TREEMAPPER_DB = path.join(workDir, 'trees', 'wedin.db');
+    fs.mkdirSync(path.join(workDir, 'trees'), { recursive: true });
+    createDb(process.env.TREEMAPPER_DB!).$client.close();
+  });
+
+  it('lists the default tree once, not again as an imported tree', () => {
+    expect(listTrees().map(t => t.id)).toEqual(['wedin']);
+    expect(listTrees()[0]).toMatchObject({ id: 'wedin', isDefault: true });
+  });
+
+  it('keeps the default first, the imported ones after, with no duplicate', () => {
+    createTree('Larsson', MINI, 'x.ged');
+    expect(listTrees().map(t => t.id)).toEqual(['wedin', 'larsson']);
+  });
+});
+
 describe('importing a tree', () => {
   it('creates a separate database and leaves the default tree alone', () => {
     const { tree, summary } = createTree('Släkten Larsson', MINI, 'larsson.ged');

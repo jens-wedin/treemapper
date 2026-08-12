@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { test, expect } from '@playwright/test';
 
 // Runs against the real imported database; skip when it's absent.
-test.skip(!fs.existsSync('wedin.db'), 'wedin.db is missing — run npm run import first');
+test.skip(!fs.existsSync('trees/wedin.db'), 'trees/wedin.db is missing — run npm run import first');
 
 test('search from Home → people list → person page', async ({ page }) => {
   await page.goto('/wedin');

@@ -220,7 +220,7 @@ export function mergeDuplicates(dbPath: string, seed: string[], apply: boolean) 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   const apply = process.argv.includes('--apply');
   const seed = process.argv.slice(2).filter(a => !a.startsWith('--'));
-  const dbPath = process.env.TREEMAPPER_DB ?? 'wedin.db';
+  const dbPath = process.env.TREEMAPPER_DB ?? 'trees/wedin.db';
   if (!seed.length) {
     console.error('Name at least one person to start from: npm run merge-duplicates -- I500101 I500102');
     process.exit(1);

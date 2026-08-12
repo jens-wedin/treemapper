@@ -169,6 +169,6 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   const args = process.argv.slice(2).filter(a => a !== '--apply');
   const apply = process.argv.includes('--apply');
   const ged = args[0] ?? 'data/Wedin_Family_Tree_CLEANED.ged';
-  const db = args[1] ?? process.env.TREEMAPPER_DB ?? 'wedin.db';
+  const db = args[1] ?? process.env.TREEMAPPER_DB ?? 'trees/wedin.db';
   repairConc(ged, db, apply);
 }

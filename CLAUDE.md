@@ -50,7 +50,7 @@ Data tools, all **dry-run by default** — they print what they would do and nee
 `--apply` to write:
 
 ```bash
-npm run import                 # GEDCOM → wedin.db
+npm run import                 # GEDCOM → trees/<id>.db
 npm run media -- <tree>        # download that tree's photos
 npm run export -- [path]       # GEDCOM 5.5.1 out
 npx tsx scripts/dedupe-events.ts <tree> [--apply]
@@ -179,9 +179,12 @@ tell you the answer is implausible. So once the suite is green:
 
 ## Architecture worth knowing before you change it
 
-- **One SQLite file per tree.** GEDCOM xrefs are only unique within a file, so
-  this tree's `I500097` and a cousin's are different people. `wedin.db` at the
-  repo root, `trees/<id>.db` for the rest, `media/<id>/` per tree.
+- **One SQLite file per tree, all in `trees/`.** GEDCOM xrefs are only unique
+  within a file, so this tree's `I500097` and a cousin's are different people.
+  `trees/wedin.db` is the default tree, `trees/<id>.db` the rest, `media/<id>/`
+  per tree. `TREEMAPPER_DB` overrides the default's path. Because the default
+  now sits inside the scanned directory, `listTrees` skips its file so it is
+  listed once — as the default — not again as an imported tree.
 - **A tree's id comes from its filename, never its display name**, so renaming
   cannot break a saved link. `default` remains an alias.
 - **The tree is in every URL** (`/wedin/people`), read during render rather than

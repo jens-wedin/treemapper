@@ -37,7 +37,7 @@ app.route('/', createCountriesApi(tree));
  * development API edits the real family data, and the only sign is a row you
  * did not put there.
  */
-app.get('/api/health', c => c.json({ db: path.resolve(process.env.TREEMAPPER_DB ?? 'wedin.db') }));
+app.get('/api/health', c => c.json({ db: path.resolve(process.env.TREEMAPPER_DB ?? 'trees/wedin.db') }));
 
 const port = Number(process.env.API_PORT ?? 3001);
 serve({ fetch: app.fetch, port });

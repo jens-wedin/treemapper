@@ -6,7 +6,7 @@ if (!gedPath || !fs.existsSync(gedPath)) {
   console.error('Usage: npm run refresh-media -- data/<fresh-export>.ged [db-path]');
   process.exit(2);
 }
-const dbPath = process.argv[3] ?? 'wedin.db';
+const dbPath = process.argv[3] ?? 'trees/wedin.db';
 
 const result = refreshMediaUrls(gedPath, dbPath);
 console.log(`Refreshed URLs for ${result.matched} of ${result.total} photos — run npm run media to download them.`);

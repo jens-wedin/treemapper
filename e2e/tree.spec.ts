@@ -9,7 +9,7 @@ const openSettings = async (page: import('@playwright/test').Page) => {
   await panel.waitFor();
 };
 
-test.skip(!fs.existsSync('wedin.db'), 'wedin.db is missing — run npm run import first');
+test.skip(!fs.existsSync('trees/wedin.db'), 'trees/wedin.db is missing — run npm run import first');
 
 test('the tree renders, and arrow keys move the focus', async ({ page }) => {
   await page.goto('/wedin/tree/I500001');

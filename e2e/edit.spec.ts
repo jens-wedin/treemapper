@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { test, expect } from '@playwright/test';
 
 // Mutating tests — these run against the .e2e.db copy (see e2e/global-setup.ts).
-test.skip(!fs.existsSync('wedin.db'), 'wedin.db is missing — run npm run import first');
+test.skip(!fs.existsSync('trees/wedin.db'), 'trees/wedin.db is missing — run npm run import first');
 
 test('edit a person\'s fields', async ({ page }) => {
   await page.goto('/wedin/person/I500001');

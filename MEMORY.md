@@ -1,8 +1,8 @@
 # Treemapper — working notes
 
 **Renamed 2026-08-12.** The app is *Treemapper*; the repository and the folder are
-`treemapper`. The family tree inside it is still `wedin` — `wedin.db`, the id
-`wedin`, every `/wedin/...` address — because a tree is named after whoever is
+`treemapper`. The family tree inside it is still `wedin` — `trees/wedin.db`, the
+id `wedin`, every `/wedin/...` address — because a tree is named after whoever is
 in it. Environment variables are `TREEMAPPER_DB`, `TREEMAPPER_TREES_DIR`,
 `TREEMAPPER_MEDIA_DIR`, `TREEMAPPER_E2E`; browser preferences are
 `treemapper-*`, with the two older names still read once and migrated.
@@ -11,6 +11,24 @@ _Last updated: 2026-08-11. All six spec phases are built, plus tree UX work, a
 shadcn theme, Statistics, multiple family trees, the tree in every URL, sources
 you can write out and cite by hand, several rounds of data repair — and the
 whole project moved to English._
+
+## Every database lives in `trees/` (2026-08-12)
+
+The default tree moved from `wedin.db` at the repository root to
+`trees/wedin.db`, so all family databases sit in one folder. `TREEMAPPER_DB`
+still overrides it (the tests and `dev:e2e` point it at a copy). `defaultDbPath()`
+falls back to `trees/wedin.db`; the same literal is the default in `db/client.ts`,
+the `/api/health` endpoint, `drizzle.config.ts` and the data scripts.
+
+Because the default now sits inside the scanned directory, `listTrees` skips the
+file equal to `defaultDbPath()` so it is listed once, as the default — covered by
+a test in `lib/trees.test.ts` ("the default database living inside the trees
+directory"). e2e mirrors the layout: `global-setup` copies `trees/wedin.db` into
+`.e2e/trees/`, and `dev:e2e` serves `.e2e/trees/wedin.db`.
+
+Loose `wedin.db.before-*` snapshots were moved from the root into `backups/`. The
+moved file is byte-identical (sha256 verified, 4 511 persons); 719 unit tests and
+the `trees` e2e spec green after the move.
 
 ## Countries on places (2026-08-12)
 

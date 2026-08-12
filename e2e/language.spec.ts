@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import { test, expect } from '@playwright/test';
 
-test.skip(!fs.existsSync('wedin.db'), 'wedin.db is missing — run npm run import first');
+test.skip(!fs.existsSync('trees/wedin.db'), 'trees/wedin.db is missing — run npm run import first');
 
 /**
  * English is the source language now, so the interesting direction is the other

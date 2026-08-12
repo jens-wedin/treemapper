@@ -5,8 +5,8 @@
  *
  * The tree's name decides the filename, through the same `allocateId` the
  * import form in the browser uses — so the two agree, and neither writes to a
- * database named after whoever wrote this. `wedin.db` at the repository root
- * predates that and is left where it is.
+ * database named after whoever wrote this. The default tree lives at
+ * `trees/wedin.db`, in the same folder as every other family database.
  */
 import fs from 'node:fs';
 import path from 'node:path';

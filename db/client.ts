@@ -7,7 +7,7 @@ import * as schema from './schema';
 
 const migrationsFolder = path.join(path.dirname(fileURLToPath(import.meta.url)), 'migrations');
 
-export function createDb(dbPath = process.env.TREEMAPPER_DB ?? 'wedin.db') {
+export function createDb(dbPath = process.env.TREEMAPPER_DB ?? 'trees/wedin.db') {
   const sqlite = new Database(dbPath);
   sqlite.pragma('journal_mode = WAL');
   sqlite.pragma('foreign_keys = ON');

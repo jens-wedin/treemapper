@@ -18,17 +18,21 @@ export default function globalSetup() {
   fs.mkdirSync('.first-run', { recursive: true });
 
   fs.rmSync('.e2e', { recursive: true, force: true });
-  fs.mkdirSync('.e2e', { recursive: true });
+  fs.mkdirSync('.e2e/trees', { recursive: true });
 
-  // Named wedin.db, in a directory of its own: a tree's id comes from its
-  // filename, so this is what makes the suite walk the same `/wedin/...`
-  // addresses the app really uses.
+  // Copied into a trees/ of its own, keeping the name wedin.db: a tree's id
+  // comes from its filename, so this is what makes the suite walk the same
+  // `/wedin/...` addresses the app really uses. It also mirrors the real
+  // layout, where every family database — the default included — lives in
+  // trees/, so the suite exercises the same paths the app resolves against.
   //
   // The -wal has to come too. In WAL mode the newest writes live there and not
   // in the .db, so copying the one file alone hands the suite a stale database
   // — recent edits simply missing, for no visible reason.
   for (const suffix of ['', '-wal', '-shm']) {
-    if (fs.existsSync(`wedin.db${suffix}`)) fs.copyFileSync(`wedin.db${suffix}`, `.e2e/wedin.db${suffix}`);
+    if (fs.existsSync(`trees/wedin.db${suffix}`)) {
+      fs.copyFileSync(`trees/wedin.db${suffix}`, `.e2e/trees/wedin.db${suffix}`);
+    }
   }
 
   // Mirrors the real layout, one folder per tree, because that is what the app

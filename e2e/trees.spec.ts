@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { test, expect } from '@playwright/test';
 
-test.skip(!fs.existsSync('wedin.db'), 'wedin.db is missing — run npm run import first');
+test.skip(!fs.existsSync('trees/wedin.db'), 'trees/wedin.db is missing — run npm run import first');
 
 const MINI = path.resolve('lib/gedcom/fixtures/mini.ged');
 

@@ -47,8 +47,11 @@ export const DEFAULT_TREE = 'default';
 
 // Read at call time, not at import time: the tests and `npm run dev:e2e` point
 // these elsewhere, and a module-level constant would capture the wrong value.
-const defaultDbPath = () => process.env.TREEMAPPER_DB ?? 'wedin.db';
 const treesDir = () => process.env.TREEMAPPER_TREES_DIR ?? 'trees';
+// The default tree lives in the trees directory alongside every other family
+// database — one folder for all of them. `TREEMAPPER_DB` still overrides it,
+// which is how the tests and `npm run dev:e2e` point it at a throwaway copy.
+const defaultDbPath = () => process.env.TREEMAPPER_DB ?? path.join(treesDir(), 'wedin.db');
 const mediaRoot = () => process.env.TREEMAPPER_MEDIA_DIR ?? 'media';
 
 /**
@@ -188,9 +191,13 @@ function infoFor(id: string): TreeInfo {
 /** The default tree first, then the imported ones by name. */
 export function listTrees(): TreeInfo[] {
   const dir = treesDir();
+  // The default tree sits in this directory too, so the scan finds its file —
+  // but it is listed once, as the default below, not a second time here.
+  const defaultFile = path.resolve(defaultDbPath());
   const imported = fs.existsSync(dir)
     ? fs.readdirSync(dir)
       .filter(f => f.endsWith('.db'))
+      .filter(f => path.resolve(path.join(dir, f)) !== defaultFile)
       .map(f => path.basename(f, '.db'))
       // Anything not shaped like one of our own ids is not ours to open.
       .filter(name => SAFE_ID.test(name))

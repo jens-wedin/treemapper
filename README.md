@@ -37,9 +37,9 @@ npm run import -- family.ged "Mormors släkt"     # → trees/mormors-slakt.db
 Both arguments are required. Nothing is uploaded anywhere; every database is a
 file on your own machine, under `trees/`.
 
-`wedin.db` at the repository root is the author's own tree, made before trees
-were named this way. If the file is not there — and in a fresh clone it is not —
-nothing creates it.
+`trees/wedin.db` is the author's own tree, made before trees were named this
+way, and it lives in `trees/` alongside every other one. If the file is not
+there — and in a fresh clone it is not — nothing creates it.
 
 ## Transitions between the tree views
 
@@ -78,8 +78,8 @@ a tree to deleting a file.
 
 | Where | What |
 |---|---|
-| `wedin.db` (`TREEMAPPER_DB`) | The tree that was here first, id `wedin`. Owned by the CLI scripts, and not deletable from the UI. |
-| `trees/<id>.db` (`TREEMAPPER_TREES_DIR`) | One file per imported tree. |
+| `trees/wedin.db` (`TREEMAPPER_DB`) | The tree that was here first, id `wedin`. Owned by the CLI scripts, and not deletable from the UI. |
+| `trees/<id>.db` (`TREEMAPPER_TREES_DIR`) | One file per imported tree — the default lives here too. |
 | `media/<id>/` | Photos, one folder per tree. |
 
 A tree's name lives in a `tree_meta` row **inside** the tree, so there is no
@@ -578,8 +578,8 @@ Fuzzy dates are always accepted — `ABT 1715`, `17xx`, free text — and only t
 sortable year is left blank when it can't be parsed.
 
 Note: `npm run test:e2e` mutates data, so it runs against a **copy**
-(`.e2e/wedin.db`, recreated from `wedin.db` at the start of each run) on ports
-5199/3199 — the real database is never touched by tests.
+(`.e2e/trees/wedin.db`, recreated from `trees/wedin.db` at the start of each
+run) on ports 5199/3199 — the real database is never touched by tests.
 
 API: `GET /api/stats` · `GET /api/persons` · `GET /api/persons/:id/full` ·
 `PATCH /api/persons/:id` · `POST|PATCH|DELETE /api/events[/:id]` ·
@@ -705,16 +705,16 @@ a place is always Swedish — `Sverige` — because a place name is data. What i
 
 `data/` (gitignored) holds the MyHeritage GEDCOM exports and reports
 (`import-report.md`, `media-report.md` are written here).
-`wedin.db` and `media/` (both gitignored) are the live database and photos.
+`trees/` and `media/` (both gitignored) hold the live databases and photos.
 
 **The repo holds code, never family data.** A complete backup is:
 
 1. `npm run export` — the whole tree as GEDCOM 5.5.1, and
 2. a copy of the `media/` folder (photos are not inside the GEDCOM).
 
-Copying `wedin.db` itself also works and additionally preserves the audit log
-and dismissed consistency problems, which the GEDCOM does not carry. **Copy the
-`-wal` and `-shm` files with it** — in WAL mode the newest writes live there,
+Copying `trees/wedin.db` itself also works and additionally preserves the audit
+log and dismissed consistency problems, which the GEDCOM does not carry. **Copy
+the `-wal` and `-shm` files with it** — in WAL mode the newest writes live there,
 and copying the `.db` alone hands you a stale database with recent edits simply
 missing. `backups/` holds dated copies taken before each repair run.
 
@@ -730,8 +730,8 @@ hand. Specs live in `docs/superpowers/specs/` and plans in
 `MEMORY.md` in the repo root is the working handoff — decisions worth not
 re-litigating, gotchas that cost real time, and the open threads.
 
-**715 unit tests and 101 end-to-end tests**, `tsc -b` and `npm run build` clean.
-The e2e suite runs single-worker against a copy of the database (`.e2e/wedin.db`), so
+**719 unit tests and 101 end-to-end tests**, `tsc -b` and `npm run build` clean.
+The e2e suite runs single-worker against a copy of the database (`.e2e/trees/wedin.db`), so
 it never touches the real one.
 
 Note that `main` is stale — it points at an early Phase 1 commit. The work lives

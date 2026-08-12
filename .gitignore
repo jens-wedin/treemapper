@@ -9,6 +9,11 @@ trees/
 # cannot be committed by accident
 .e2e-trees/
 .e2e-media/
+# `*.db` alone does not match `wedin.db.before-merge` — a glob needs the name to
+# end in .db — so four backup copies of the family database were tracked for
+# months. These databases hold living people; nothing shaped like one goes in.
+*.db.*
+backups/
 *.db-journal
 *.db-wal
 *.db-shm

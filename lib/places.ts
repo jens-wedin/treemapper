@@ -70,7 +70,7 @@ export function countryName(code: string | null | undefined): string | null {
  * genealogist gave on purpose. Renaming them to "Storbritannien" would throw
  * away the more precise thing the record said.
  */
-const NOT_A_SPELLING = new Set(['england', 'scotland', 'skottland', 'wales', 'holland']);
+export const NOT_A_SPELLING = new Set(['england', 'scotland', 'skottland', 'wales', 'holland']);
 
 /** True when rewriting this place's country to the canonical name would lose something. */
 export function isSubdivisionName(place: string | null | undefined): boolean {

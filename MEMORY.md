@@ -32,6 +32,40 @@ git log --all --diff-filter=A --name-only -- '*.db*' 'backups/*'
 — by now far more than statistics — still unmerged. Check `git branch` before
 assuming you are somewhere sensible.
 
+## Countries in places (2026-08-12)
+
+`PLAC` is free text in GEDCOM with **no controlled vocabulary** — the standard
+gives a position (last segment, largest jurisdiction) and nothing else — so
+canonicalising is entirely our decision. Sweden was written nine ways; it is now
+`Sverige` and nothing else, 7 454 places.
+
+**Canonical is the Swedish name.** `Sverige`, `Norge`, `Tyskland`. A place name
+is data and stays as written; display stays language-independent because the
+flags and statistics go through the ISO code, not the text.
+
+Two traps, both found by measuring rather than by reasoning:
+
+- **US state codes sit in the same position as Swedish county codes.** `WI`,
+  `MN`, `AZ`, `TX`, `IL`, `CA`, `VA`, `IN`, `NV` all appear as a last segment.
+  A rule reading "one or two letters at the end means a county code" would have
+  moved Wisconsin to Sweden. `impliedCountry()` checks the **closed set** of 21
+  county codes exactly; none of them collides with a US state code, and that is
+  the only reason the rule is safe. Never match a shape here.
+- **England and Scotland map to `GB` for the flag but are not spellings of
+  Storbritannien.** The first dry run would have renamed six rows and thrown
+  away the more precise thing the record said. `isSubdivisionName()` protects
+  them, and the same applies to `Holland`.
+
+Still true, and still deliberate: **a parish name is not evidence of a country.**
+Only an explicit county code counts. 3 444 places still name no country.
+
+Applied 2026-08-12 to all trees — 4 024 rows in wedin, 280 in Andersson och
+Anders — event counts identical, `backups/wedin.db.before-places`.
+
+Not touched, and a real inconsistency if you want it next: the province and
+parish spellings themselves (`Gävleborg` vs `Gävleborgs län`, `Alnö` vs
+`Alnön`). Much larger job.
+
 ## Dates have one shape (2026-08-12)
 
 `lib/gedcomDate.ts` is now the only module that reads or writes a GEDCOM date,
@@ -319,7 +353,7 @@ rather than trusting the tests:
 - **Data** (`wedin.db`): 4 511 people, 979 families, 14 357 events, 5 805
   citations, 521 sources, 977 photos. Two further trees: Andersson
   (486 people) and Test (3).
-- **Tests**: 568 vitest + 84 Playwright e2e, all green. The e2e suite runs with
+- **Tests**: 604 vitest + 87 Playwright e2e, all green. The e2e suite runs with
   one worker — the specs share `.e2e.db` and would race. `tsc -b` clean.
 - **Consistency**: 2 714 problems in `wedin.db`, 288 in Andersson, 2 in
   Test. Zero dismissals anywhere.

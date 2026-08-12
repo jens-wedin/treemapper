@@ -21,6 +21,13 @@
 **The document says which language it is in**
 - `startLanguage()` sets `<html lang>` before the first paint. `index.html` can only name one language and it names English, so a reader who had chosen Swedish was getting Swedish prose inside `<html lang="en">` — which is what sends a screen reader off in an English voice.
 
+**Countries are spelled one way**
+- GEDCOM's `PLAC` is free text whose only rule is position — smallest jurisdiction first, largest last — with no controlled vocabulary and no country list anywhere in the standard. So Sweden was written nine ways: `Sverige` 3 667, `Sweden` 2 232, `SWEDEN` 12, `SE` 11, `Swe` 5, `sverige`, `SVerige`, `Suecia`, `sweden`. It is now `Sverige` 7 454, and nothing else.
+- The canonical form is the **Swedish** name — `Sverige`, `Norge`, `Tyskland` — because a place name is data and stays as it was written in the register. What you see stays language-independent: the flags and the statistics go through the ISO code rather than the text.
+- **A country is now known for 7 871 of 11 315 places, up from 6 265.** 2 435 spellings were renamed, and 1 589 places that carry a Swedish county code without naming the country — `Alnö (Y)`, `Umeå lfs, AC` — had it appended.
+- **A parish is still not evidence.** `Bjuråker` is in Gävleborg and every reader knows it, but the record does not say so and nothing guesses on its behalf. Only an explicit county code counts.
+- The place field gained a **country select** beside it that reads and rewrites the last segment. The place itself stays a text box — the hierarchy here runs from one level to five — and a place ending in something the list has never heard of, like `Preussen`, shows *somewhere else* and is left alone.
+
 **Dates have one shape now**
 - The date field was one text box labelled *"Date (free text, e.g. ABT 1715)"*, which is how `arbrå`, `17xx`, `INFANT` and `4 juli 1814 el 1812` came to be stored as dates. It now asks for the kind of date — exact, about, before, after, between, period — and then day, month and year, any of which may be left blank, because a genealogical date is very often *March 1902* or just *1821*. A live preview says what will be stored and how it will read.
 - **Ranges and periods are read out.** `QUALIFIERS` knew *about*, *before*, *after* and *and*, and nothing else, so 2 328 residences displayed as *"BET 1916 and 1928"* and 39 as *"FROM 1932 TO 1938"* — in English, Swedish, German and Spanish alike. A unit test had the wrong output written into it as its expectation, which is how it survived this long.

@@ -96,6 +96,36 @@ test('a date the form cannot hold is kept exactly as written', async ({ page }) 
   await expect(row).toHaveCount(0);
 });
 
+test('a country is picked from a list rather than spelled a tenth way', async ({ page }) => {
+  await page.goto('/wedin/person/I500001');
+  await page.getByRole('button', { name: 'Add event' }).click();
+  await page.getByLabel('Type').selectOption('RESI');
+  await page.getByLabel('Description').fill('Landtest');
+  await page.getByLabel('Year', { exact: true }).fill('1950');
+
+  // A place with no country: the select says so, and adds one on the end.
+  await page.getByLabel('Place').fill('Bjuråker');
+  await expect(page.getByLabel('Country')).toHaveValue('');
+  await page.getByLabel('Country').selectOption('SE');
+  await expect(page.getByLabel('Place')).toHaveValue('Bjuråker, Sverige');
+
+  // Choosing another replaces it rather than appending a second one.
+  await page.getByLabel('Country').selectOption('NO');
+  await expect(page.getByLabel('Place')).toHaveValue('Bjuråker, Norge');
+
+  // Typing the country by hand moves the select, because there is one value.
+  await page.getByLabel('Place').fill('Alnön, Västernorrlands län, Sverige');
+  await expect(page.getByLabel('Country')).toHaveValue('SE');
+
+  await page.getByRole('button', { name: 'Save' }).click();
+  const row = page.locator('li').filter({ hasText: 'Landtest' });
+  await expect(row).toContainText('Alnön, Västernorrlands län, Sverige');
+
+  await row.getByRole('button', { name: /^Remove/ }).click();
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Remove' }).click();
+  await expect(row).toHaveCount(0);
+});
+
 test('add a child through the dialog', async ({ page }) => {
   await page.goto('/wedin/person/I500001');
   await page.getByRole('button', { name: 'Add child' }).click();

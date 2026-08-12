@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import DateInput from './DateInput';
+import PlaceInput from './PlaceInput';
 import type { EventView } from '../../../lib/queries';
 import { eventCreateSchema, eventUpdateSchema } from '../../../lib/schemas';
 import { t, eventLabel } from '../../lib/i18n';
@@ -88,10 +89,7 @@ export default function EventForm({ event, ownerId, ownerType = 'person', fixedT
             ))}
           </select>
         </div>
-        <div>
-          <label htmlFor={`${idp}-place`} className="block text-sm font-medium">{t('edit.place')}</label>
-          <Input id={`${idp}-place`} value={form.place} onChange={e => setForm({ ...form, place: e.target.value })} className="mt-1 w-64" />
-        </div>
+        <PlaceInput id={`${idp}-place`} value={form.place} onChange={place => setForm({ ...form, place })} />
         <div>
           <label htmlFor={`${idp}-description`} className="block text-sm font-medium">{t('edit.description')}</label>
           <Input id={`${idp}-description`} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="mt-1 w-64" />

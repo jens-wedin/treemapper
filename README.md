@@ -533,6 +533,20 @@ both what will be stored (`BET MAR 1902 AND 1910`) and how it will read
 the shapes the form cannot express; what is typed there is parsed when the box
 closes, and kept verbatim when it is not a date.
 
+A place is one text box with a **country select** beside it. GEDCOM's `PLAC` is
+free text whose only rule is position — smallest jurisdiction first, largest
+last — so the country is simply the last segment, and that is all the select
+reads and rewrites. The hierarchy in this data runs from one level (`Voxna`) to
+five, which is why the rest stays text. A place ending in something the list has
+never heard of — `Preussen`, `Österrike-Ungern` — shows *somewhere else* and is
+left alone.
+
+Countries are stored under their **Swedish** names, because a place name is data
+and stays as it was written; `lib/places.ts` maps every spelling to an ISO
+3166-1 code, so the flags and statistics follow the reader's language rather than
+the stored text. `npx tsx scripts/normalise-places.ts <tree> [--apply]` brings
+existing rows to one spelling, dry run by default.
+
 `lib/gedcomDate.ts` is the only module that reads or writes a GEDCOM date. It
 accepts more than it emits — month names in all four languages, ISO, qualifiers,
 ranges, periods — and writes exactly one canonical shape. `events.date_raw` is

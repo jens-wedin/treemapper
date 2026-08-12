@@ -21,6 +21,12 @@
 **The document says which language it is in**
 - `startLanguage()` sets `<html lang>` before the first paint. `index.html` can only name one language and it names English, so a reader who had chosen Swedish was getting Swedish prose inside `<html lang="en">` — which is what sends a screen reader off in an English voice.
 
+### Security
+
+**Backup copies of the family database are no longer tracked**
+- Four of them, ~27 MB, committed since `ccc1f22`: `wedin.db.before-merge`, `.before-repair-conc`, `.before-repair-conc.2`, `.before-restore`. Each holds 4 561 people, 987 with no recorded death — living relatives, with names, birth dates and places. `.gitignore` had `*.db`, which does not match `wedin.db.before-merge`, because a glob needs the filename to end in the pattern. `backups/` was unignored for the same reason.
+- `*.db.*` and `backups/` are ignored now and the files are untracked, staying on disk. **This does not remove them from history** — that still has to happen before the repo is published anywhere.
+
 ### Fixed
 
 **Storage, tested for the first time**

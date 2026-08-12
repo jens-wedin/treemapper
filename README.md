@@ -8,6 +8,11 @@ The project is written in English — code, comments, tests, routes and terminal
 output. The family data it holds is Swedish and stays Swedish.
 
 Design spec: `docs/superpowers/specs/2026-08-05-wedin-tree-design.md`.
+Working in this repo: `CLAUDE.md` for conventions, `MEMORY.md` for current state.
+
+> **This repository is not ready to be published.** Backup copies of the family
+> database — real data about living people — are in git history. See the top of
+> `MEMORY.md` before pushing anywhere public.
 
 ## Setup
 

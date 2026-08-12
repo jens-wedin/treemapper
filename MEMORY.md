@@ -5,6 +5,26 @@ shadcn theme, Statistics, multiple family trees, the tree in every URL, sources
 you can write out and cite by hand, several rounds of data repair — and the
 whole project moved to English._
 
+## Before publishing this repo — unresolved
+
+Jens wants this on GitHub. **Four backup copies of the family database are in
+git history**: `wedin.db.before-merge`, `.before-repair-conc`,
+`.before-repair-conc.2` and `.before-restore`, ~27 MB, added in `ccc1f22`. Each
+holds 4 561 people, 987 with no recorded death — living relatives, names, birth
+dates, places. `.gitignore` had `*.db`, which does not match
+`wedin.db.before-merge`: a glob needs the filename to *end* in `.db`.
+
+`2e8e738` adds `*.db.*` and `backups/` to `.gitignore` and untracks the four
+files (they remain on disk). **That does not touch history.** Anyone cloning the
+published repo would still get every byte.
+
+Deciding between a `git filter-repo` purge plus force-push, and publishing a
+fresh repository with no ancestry, is Jens's call. Check before pushing:
+
+```bash
+git log --all --diff-filter=A --name-only -- '*.db*' 'backups/*'
+```
+
 ## Where the work lives — read this first
 
 `main` is **stale**: it points at an early Phase 1 commit. All real work is on
@@ -293,6 +313,12 @@ panel on click.
   template uses actually gets filled.
 - **Scratch `.spec.ts` files anywhere in the repo get picked up by vitest.**
   A screenshot spec parked in `.baseline/` failed the unit run.
+- **A glob needs the filename to *end* in the pattern.** `*.db` does not match
+  `wedin.db.before-merge`. Check ignore rules by listing what is **tracked**
+  (`git ls-files | grep …`), never by reading the patterns and assuming.
+- **A passing test on code you expected to fail is a finding, not a relief.**
+  Six storage tests passed because the environment had no `localStorage` and the
+  defensive catch handed back the default.
 
 ## Open threads
 

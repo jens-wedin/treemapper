@@ -23,3 +23,6 @@ backups/
 .DS_Store
 test-results/
 playwright-report/
+
+# Internal planning docs (brief, plans, specs) — kept local, not published.
+docs/superpowers/

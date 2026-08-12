@@ -21,6 +21,26 @@ describe('parsing a plain date', () => {
     });
   });
 
+  it('refuses a day that month does not have', () => {
+    expect(parseGedcomDate('31 FEB 1902')).toBeNull();
+    expect(parseGedcomDate('31 APR 1902')).toBeNull();
+    expect(parseGedcomDate('30 FEB 1902')).toBeNull();
+    expect(parseGedcomDate('45 MAR 1902')).toBeNull();
+    expect(parseGedcomDate('0 MAR 1902')).toBeNull();
+  });
+
+  it('knows which Februaries have 29 days', () => {
+    expect(parseGedcomDate('29 FEB 1904')).not.toBeNull();   // leap
+    expect(parseGedcomDate('29 FEB 1900')).toBeNull();       // century, not leap
+    expect(parseGedcomDate('29 FEB 2000')).not.toBeNull();   // divisible by 400
+    expect(parseGedcomDate('29 FEB 1903')).toBeNull();
+  });
+
+  it('refuses a year outside anything a parish register could hold', () => {
+    expect(parseGedcomDate('17 MAR 3')).toBeNull();
+    expect(parseGedcomDate('MAR 12')).toBeNull();
+  });
+
   it('refuses text that holds no date', () => {
     expect(parseGedcomDate('okänt')).toBeNull();
     expect(parseGedcomDate('-')).toBeNull();

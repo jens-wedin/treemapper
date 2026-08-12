@@ -37,6 +37,8 @@ export default function EventForm({ event, ownerId, ownerType = 'person', fixedT
   });
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  /** An impossible date blocks saving, rather than being stored as nothing. */
+  const [dateError, setDateError] = useState<string | null>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -102,10 +104,15 @@ export default function EventForm({ event, ownerId, ownerType = 'person', fixedT
           </div>
         )}
       </div>
-      <DateInput id={`${idp}-date`} value={form.dateRaw} onChange={dateRaw => setForm({ ...form, dateRaw })} />
+      <DateInput
+        id={`${idp}-date`}
+        value={form.dateRaw}
+        onChange={dateRaw => setForm({ ...form, dateRaw })}
+        onError={setDateError}
+      />
       {error && <p role="alert" className="mt-3 text-destructive">{error}</p>}
       <div className="mt-4 flex gap-2">
-        <Button type="submit" disabled={saving}>{t('edit.save')}</Button>
+        <Button type="submit" disabled={saving || !!dateError}>{t('edit.save')}</Button>
         <Button type="button" variant="outline" onClick={onCancel}>{t('edit.cancel')}</Button>
       </div>
     </form>

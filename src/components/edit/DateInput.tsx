@@ -5,7 +5,7 @@ import type { Qualifier } from '../../../lib/gedcomDate';
 import { parseGedcomDate } from '../../../lib/gedcomDate';
 import { MONTHS } from '../../lib/i18n/dictionaries';
 import { t, getLanguage, formatGedcomDate } from '../../lib/i18n';
-import { fromRaw, toRaw, RANGE_QUALIFIERS, type DateFieldState } from '../../lib/dateField';
+import { dateFieldError, fromRaw, toRaw, RANGE_QUALIFIERS, type DateFieldState } from '../../lib/dateField';
 
 /**
  * A date, entered as the parts it is actually made of.
@@ -26,10 +26,12 @@ const QUALIFIER_LABEL: Record<Qualifier, string> = {
 };
 const QUALIFIER_ORDER = Object.keys(QUALIFIER_LABEL) as Qualifier[];
 
-export default function DateInput({ id, value, onChange }: {
+export default function DateInput({ id, value, onChange, onError }: {
   id: string;
   value: string;
   onChange: (raw: string) => void;
+  /** Lets the form refuse to save rather than quietly storing no date. */
+  onError?: (message: string | null) => void;
 }) {
   const [state, setState] = useState<DateFieldState>(() => fromRaw(value));
   const [typing, setTyping] = useState(() => Boolean(fromRaw(value).text));
@@ -38,10 +40,12 @@ export default function DateInput({ id, value, onChange }: {
   function put(next: DateFieldState) {
     setState(next);
     onChange(toRaw(next));
+    onError?.(dateFieldError(next));
   }
 
   const months = MONTHS[getLanguage()];
   const stored = toRaw(state);
+  const error = dateFieldError(state);
   const unreadable = Boolean(state.text.trim()) && !parseGedcomDate(state.text);
   const isRange = RANGE_QUALIFIERS.includes(state.qualifier);
 
@@ -113,7 +117,8 @@ export default function DateInput({ id, value, onChange }: {
       {/* Announced, because the whole point is that you can see what a choice
           of "Between" plus two years is about to become. */}
       <p aria-live="polite" className="mt-2 min-h-5 text-sm text-muted-foreground">
-        {stored && (
+        {error && <span role="alert" className="text-destructive">{t(error)}</span>}
+        {!error && stored && (
           <>
             {t('edit.dateStored')}: <code className="font-mono">{stored}</code>
             {' · '}

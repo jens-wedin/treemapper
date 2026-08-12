@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { blankDateField, fromRaw, toRaw } from './dateField';
+import { blankDateField, dateFieldError, fromRaw, toRaw } from './dateField';
 
 describe('filling the form from what is stored', () => {
   it('spreads a full date across the parts', () => {
@@ -72,5 +72,46 @@ describe('the round trip through the form', () => {
     'BET 1916 AND 1928', 'FROM 1932 TO 1938', 'FROM 1938', 'TO 1965', 'okänt', '',
   ])('opening %s in the form and saving it again changes nothing', raw => {
     expect(toRaw(fromRaw(raw))).toBe(raw);
+  });
+});
+
+describe('refusing a date that is not one', () => {
+  const field = (over: Partial<typeof blankDateField>) => ({ ...blankDateField, ...over });
+
+  it('is happy with nothing typed yet', () => {
+    expect(dateFieldError(blankDateField)).toBeNull();
+    expect(dateFieldError(field({ fromYear: '1902' }))).toBeNull();
+    expect(dateFieldError(field({ fromDay: '17', fromMonth: '3', fromYear: '1942' }))).toBeNull();
+  });
+
+  it('names a day the month does not have', () => {
+    expect(dateFieldError(field({ fromDay: '31', fromMonth: '2', fromYear: '1902' })))
+      .toBe('edit.dateNoSuchDay');
+    expect(dateFieldError(field({ fromDay: '45', fromMonth: '3', fromYear: '1902' })))
+      .toBe('edit.dateNoSuchDay');
+  });
+
+  it('asks for a month when a day has been given without one', () => {
+    expect(dateFieldError(field({ fromDay: '17', fromYear: '1942' }))).toBe('edit.dateNeedsMonth');
+  });
+
+  it('asks for a year, which is the one part a date cannot do without', () => {
+    expect(dateFieldError(field({ fromMonth: '3' }))).toBe('edit.dateNeedsYear');
+    expect(dateFieldError(field({ fromDay: '17', fromMonth: '3' }))).toBe('edit.dateNeedsYear');
+  });
+
+  it('checks the far end of a range too', () => {
+    expect(dateFieldError(field({
+      qualifier: 'between', fromYear: '1902', toDay: '31', toMonth: '2', toYear: '1910',
+    }))).toBe('edit.dateNoSuchDay');
+  });
+
+  it('says nothing about free text, which is kept as written by design', () => {
+    expect(dateFieldError(field({ text: 'INFANT' }))).toBeNull();
+  });
+
+  it('stores nothing at all while the date is impossible', () => {
+    expect(toRaw(field({ fromDay: '31', fromMonth: '2', fromYear: '1902' }))).toBe('');
+    expect(toRaw(field({ fromDay: '45', fromMonth: '3', fromYear: '1902' }))).toBe('');
   });
 });

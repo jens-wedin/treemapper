@@ -53,6 +53,26 @@ test('a date is entered as its parts, and shows what it will become', async ({ p
   await expect(row).toHaveCount(0);
 });
 
+test('an impossible date is refused rather than stored', async ({ page }) => {
+  await page.goto('/wedin/person/I500001');
+  await page.getByRole('button', { name: 'Add event' }).click();
+  await page.getByLabel('Type').selectOption('OCCU');
+
+  await page.getByLabel('Day', { exact: true }).fill('31');
+  await page.getByLabel('Month', { exact: true }).selectOption('2');
+  await page.getByLabel('Year', { exact: true }).fill('1902');
+
+  await expect(page.getByRole('alert')).toContainText('does not have that many days');
+  await expect(page.getByRole('button', { name: 'Save' })).toBeDisabled();
+
+  // and a real day in that month clears it again
+  await page.getByLabel('Day', { exact: true }).fill('28');
+  await expect(page.getByText('Stored as: 28 FEB 1902')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Save' })).toBeEnabled();
+
+  await page.getByRole('button', { name: 'Cancel' }).click();
+});
+
 test('a date the form cannot hold is kept exactly as written', async ({ page }) => {
   await page.goto('/wedin/person/I500001');
   await page.getByRole('button', { name: 'Add event' }).click();

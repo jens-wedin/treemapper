@@ -58,6 +58,21 @@ export function monthNumber(token: string): number | null {
   return MONTH_BY_WORD.get(token.toUpperCase().replace(/\.$/, '')) ?? null;
 }
 
+/** Days each month actually has; February needs the year to answer. */
+const DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+const isLeapYear = (year: number): boolean =>
+  (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+
+/**
+ * A day the month can hold. `31 FEB 1902` parses as three plausible numbers and
+ * is still not a date — the structured input could otherwise store it.
+ */
+function isRealDay(day: number, month: number, year: number): boolean {
+  const max = month === 2 && isLeapYear(year) ? 29 : DAYS_IN_MONTH[month - 1]!;
+  return day >= 1 && day <= max;
+}
+
 /** Day/month/year in any order the tokens allow. Null when a token is not a date part. */
 function parseParts(text: string): DateParts | null {
   // ISO, because people paste it out of a spreadsheet or a birth register.
@@ -65,8 +80,10 @@ function parseParts(text: string): DateParts | null {
   if (iso) {
     const month = Number(iso[2]);
     const day = iso[3] === undefined ? null : Number(iso[3]);
-    if (month < 1 || month > 12 || (day !== null && (day < 1 || day > 31))) return null;
-    return { day, month, year: Number(iso[1]) };
+    const year = Number(iso[1]);
+    if (month < 1 || month > 12) return null;
+    if (day !== null && !isRealDay(day, month, year)) return null;
+    return { day, month, year };
   }
 
   const tokens = text.trim().split(/\s+/).filter(Boolean);
@@ -100,6 +117,7 @@ function parseParts(text: string): DateParts | null {
 
   // A day with no month is not a date anyone can place; a year is the minimum.
   if (year === null || (day !== null && month === null)) return null;
+  if (day !== null && month !== null && !isRealDay(day, month, year)) return null;
   return { day, month, year };
 }
 

@@ -1,5 +1,6 @@
 import {
-  parseGedcomDate, toGedcom, type DateParts, type GedcomDate, type Qualifier,
+  MONTH_TAGS, parseGedcomDate, toGedcom,
+  type DateParts, type GedcomDate, type Qualifier,
 } from '../../lib/gedcomDate';
 
 /**
@@ -38,6 +39,33 @@ const num = (s: string): number | null => {
 const partsOf = (day: string, month: string, year: string): DateParts =>
   ({ day: num(day), month: num(month), year: num(year) });
 
+/**
+ * Why the boxes do not yet make a date, as a dictionary key — or null.
+ *
+ * The whole point of the structured control is that a malformed date cannot be
+ * entered, and without this it could: nothing stopped `45 MAR 1902`, `0 MAR
+ * 1902` or `31 FEB 1902` being written straight into `date_raw`.
+ */
+export function dateFieldError(state: DateFieldState): string | null {
+  if (state.text.trim()) return null;   // kept as written, on purpose
+
+  for (const [day, month, year] of [
+    [state.fromDay, state.fromMonth, state.fromYear],
+    [state.toDay, state.toMonth, state.toYear],
+  ] as const) {
+    const d = num(day);
+    const m = num(month);
+    const y = num(year);
+    if (d === null && m === null && y === null) continue;
+    if (y === null) return 'edit.dateNeedsYear';
+    if (d !== null && m === null) return 'edit.dateNeedsMonth';
+    if (d !== null && m !== null && !parseGedcomDate(`${d} ${MONTH_TAGS[m - 1]} ${y}`)) {
+      return 'edit.dateNoSuchDay';
+    }
+  }
+  return null;
+}
+
 /** What is stored → what the boxes should show. Unmodellable text goes to the text box. */
 export function fromRaw(raw: string | null | undefined): DateFieldState {
   if (!raw?.trim()) return { ...blankDateField };
@@ -54,6 +82,9 @@ export function fromRaw(raw: string | null | undefined): DateFieldState {
 /** What the boxes hold → what to store. Empty when there is no date to write. */
 export function toRaw(state: DateFieldState): string {
   if (state.text.trim()) return state.text;
+  // An impossible date stores nothing rather than something broken; the form
+  // says why and refuses to save, so nothing is lost silently.
+  if (dateFieldError(state)) return '';
 
   const from = partsOf(state.fromDay, state.fromMonth, state.fromYear);
   const to = partsOf(state.toDay, state.toMonth, state.toYear);

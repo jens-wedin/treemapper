@@ -29,7 +29,15 @@ What is left is 137 places, 211 rows, and none of it is inferable:
 writes the *source* into the place column, so it was never a place. The script
 matches the whole place and never a substring.
 
-`npx tsx scripts/country-report.ts wedin` lists every one with a person link.
+The **Left for you** section on the page shows exactly what
+`scripts/country-report.ts` prints — 112 places, 148 rows — with person links.
+The two are kept in step deliberately; if they disagree, one of them is wrong.
+
+**`lib/countryProposals.ts` keys sets with `\0`, not a space** (so does
+`lib/merge.ts`). A scripted edit that retypes the key with a space compiles,
+passes typecheck, and silently stops every rejection matching. It cost half an
+hour: `grep` was also swallowing output, which made the file look empty of the
+word `rejected` when it was not.
 
 **Check what an abbreviation is before deleting it.** Asked to remove the 11
 `Th.` records the same way as `Census`, they turned out to be *birth* events

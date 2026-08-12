@@ -50,7 +50,8 @@ describe('GET /api/countries', () => {
     expect(body.learned).toHaveLength(1);
     expect(body.learned[0]).toMatchObject({ code: 'SE', by: 'bjuråker', places: 1, rows: 1 });
     expect(body.quarantined).toEqual([]);
-    expect(body.unanswered).toBe(1);
+    expect(body.unanswered).toHaveLength(1);
+    expect(body.unanswered[0]).toMatchObject({ place: 'Ouagadougou', reason: 'no-evidence' });
   });
 
   it('sends a code and its numbers, never a finished sentence', async () => {

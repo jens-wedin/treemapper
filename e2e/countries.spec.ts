@@ -21,6 +21,11 @@ let PARISH = '';
 let KNOWN = '';
 let BARE = '';
 let NEAR = '';
+/**
+ * A place nothing in the tree can answer for. It shares no word with the
+ * parish, or the token tier would answer it from that.
+ */
+let UNKNOWN = '';
 
 let personId: string;
 const eventIds: number[] = [];
@@ -41,6 +46,7 @@ test.beforeEach(async ({ request }) => {
   KNOWN = `${PARISH}, Sverige`;
   BARE = `${PARISH} Nedre`;
   NEAR = `${PARISH}s kyrkogård`;
+  UNKNOWN = `Ödemarksbyn${'ABCDEFGHIJ'[run - 1]}`;
 
   const person = await request.post('/api/persons', {
     data: { givenName: 'Country', surname: 'Fixture', sex: 'U' },
@@ -53,6 +59,7 @@ test.beforeEach(async ({ request }) => {
   await addEvent(request, KNOWN);
   await addEvent(request, BARE);
   await addEvent(request, NEAR);
+  await addEvent(request, UNKNOWN);
 });
 
 test.afterEach(async ({ request }) => {
@@ -153,6 +160,33 @@ test.describe('Countries', () => {
     await group.locator('details li').filter({ hasText: BARE })
       .getByRole('link', { name: 'Country Fixture' }).click();
     await expect(page).toHaveURL(new RegExp(`/wedin/person/${personId}$`));
+  });
+
+  test('lists what it could not answer, with a way into each record', async ({ page }) => {
+    // The list only a person can clear. It replaces reading
+    // scripts/country-report.ts in a terminal, so it has to be complete.
+    await page.goto('/wedin/countries');
+
+    const left = page.locator('#countries-left').locator('..');
+    await expect(left.getByRole('heading', { name: 'Left for you' })).toBeVisible();
+
+    const row = left.getByRole('listitem').filter({ hasText: UNKNOWN }).first();
+    await expect(row).toContainText('no evidence in this tree');
+    await row.getByRole('link', { name: 'Country Fixture' }).click();
+    await expect(page).toHaveURL(new RegExp(`/wedin/person/${personId}$`));
+  });
+
+  test('keeps a rejected place on the list, since rejecting gives it no country', async ({ page }) => {
+    await page.goto('/wedin/countries');
+
+    const row = quarantineSection(page).getByRole('listitem').filter({ hasText: NEAR }).first();
+    await row.getByRole('button', { name: /^Reject Sweden for/ }).click();
+    await expect(page.getByText(/left as they were/)).toBeVisible();
+    await page.reload();
+
+    const left = page.locator('#countries-left').locator('..');
+    await expect(left.getByRole('listitem').filter({ hasText: NEAR }))
+      .toContainText('you turned this inference down');
   });
 
   test('is reachable from settings', async ({ page }) => {

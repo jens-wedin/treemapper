@@ -628,8 +628,13 @@ how you get to the record and correct it by hand. Three names are shown and the
 rest are counted; a marriage has no page of its own, so a family event is listed
 against its husband or wife.
 
-132 places have no evidence at all — `Bjr.`, `Ha.`, `Fattigstugan`. They are
-counted at the foot of the page and left alone.
+4. **Left for you.** Everything still without a country, listed rather than
+   counted — the same rows `scripts/country-report.ts` prints, with the people
+   linked so you can go straight to the record. Each says why it is there: *no
+   evidence in this tree*, *you turned this inference down*, *the country is in
+   a bracket*, or *looks like two records joined*. No buttons, because there is
+   no country to approve and inventing one is what this whole feature refuses
+   to do.
 
 Every approval writes a before/after snapshot to `audit_log`, and no event is
 ever added or removed. To see what would be proposed without opening the app:

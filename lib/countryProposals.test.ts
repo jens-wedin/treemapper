@@ -365,6 +365,71 @@ describe('countryProposals leaves the rest alone', () => {
     expect([...learned, ...quarantined, ...stated]).toHaveLength(0);
   });
 
+  it('lists what it left alone, so it can be worked through by hand', () => {
+    place('Bjuråker, Sverige');
+    place('Ouagadougou', 3);
+
+    const { unanswered } = countryProposals(db);
+    expect(unanswered).toHaveLength(1);
+    expect(unanswered[0]).toMatchObject({
+      place: 'Ouagadougou', rows: 3, reason: 'no-evidence',
+      owners: [{ id: 'I1', name: 'Test Person' }],
+    });
+  });
+
+  it('says which ones are two records joined, because those need splitting', () => {
+    // Two countries named, and it trails off into New York rather than ending
+    // in one. This shape is real: the export ran a Swedish record and an
+    // American one together.
+    place('Sundsvall, Sweden, Brooklyn, USA, Kings, New York');
+    place('Ouagadougou');
+
+    const { unanswered } = countryProposals(db);
+    expect(unanswered.find(u => u.place.startsWith('Sundsvall'))!.reason).toBe('joined');
+    expect(unanswered.find(u => u.place === 'Ouagadougou')!.reason).toBe('no-evidence');
+  });
+
+  it('leaves out a place that reads its country perfectly well', () => {
+    // `Åland` here is a farm in Säbrå, not the islands, and the place ends in
+    // Sverige. It was being listed as "two records joined" and needs nothing.
+    place('Åland, Säbrå, Västernorrlands, Ångermanland, Sverige');
+    expect(countryProposals(db).unanswered).toHaveLength(0);
+  });
+
+  it('lists only what the report lists: places with no readable country', () => {
+    // A joined record that still names its country is a job for another day.
+    // This page is about countries, and that one has its answer.
+    place('Hemsö, Västernorrland, Sweden, Hemsö, Västernorrland, Sverige');
+    expect(countryProposals(db).unanswered).toHaveLength(0);
+  });
+
+  it('still lists a place whose inference was rejected, since it needs a person', () => {
+    // Rejecting stops the offer. It does not give the place a country, so it
+    // stays on the list — otherwise turning one down makes it disappear.
+    place('Bjuråker, Sverige');
+    place('Bjuråker');
+    rejectCountry(db, ['Bjuråker'], 'SE');
+
+    const { learned, unanswered } = countryProposals(db);
+    expect(learned).toHaveLength(0);
+    expect(unanswered).toMatchObject([{ place: 'Bjuråker', reason: 'rejected' }]);
+  });
+
+  it('lists a place whose country is only in a bracket', () => {
+    // Readable to a person, not to `countryFromPlace`, and its text is left
+    // alone on purpose — so it needs a person to decide.
+    place('Strömbacka (Bjuråker, Sverige)');
+    expect(countryProposals(db).unanswered)
+      .toMatchObject([{ place: 'Strömbacka (Bjuråker, Sverige)', reason: 'bracketed' }]);
+  });
+
+  it('puts the ones on most events first', () => {
+    place('Ouagadougou');
+    place('Timbuktu', 5);
+
+    expect(countryProposals(db).unanswered.map(u => u.place)).toEqual(['Timbuktu', 'Ouagadougou']);
+  });
+
   it('ignores an event with no place at all', () => {
     db.insert(events).values({
       id: ++nextEventId, ownerType: 'person', ownerId: 'I1', type: 'BIRT', place: null,

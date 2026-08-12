@@ -3,6 +3,7 @@ import { t, tf } from '../lib/i18n';
 import { fetchJson, mutateJson } from '../lib/api';
 import EvidenceGroup from '../components/countries/EvidenceGroup';
 import PlaceRow, { nearMissDetail } from '../components/countries/PlaceRow';
+import LeftForYou from '../components/countries/LeftForYou';
 import type { CountryProposals } from '../../lib/countryProposals';
 
 /**
@@ -53,7 +54,7 @@ export default function CountriesPage() {
   if (state === 'error' || !data) return <p className="p-6 text-destructive">{t('countries.failed')}</p>;
 
   const { stated, learned, quarantined, unanswered } = data;
-  const nothingLeft = !stated.length && !learned.length && !quarantined.length;
+  const nothingLeft = !stated.length && !learned.length && !quarantined.length && !unanswered.length;
 
   return (
     <div className="mx-auto max-w-4xl p-6">
@@ -130,11 +131,7 @@ export default function CountriesPage() {
         </section>
       )}
 
-      {unanswered > 0 && (
-        <p className="mt-8 text-sm text-muted-foreground">
-          {tf('countries.unanswered', { n: unanswered })}
-        </p>
-      )}
+      <LeftForYou places={unanswered} />
     </div>
   );
 }

@@ -32,13 +32,81 @@ export const COUNTRY_NAMES: Record<string, string> = {
   österrike: 'AT', austria: 'AT',
 };
 
-/** ISO 3166-1 alpha-2 code when the place explicitly names a country, else null. */
+/** Every ISO 3166-1 alpha-2 code, including the ones no country uses. */
+const ALL_CODES = Array.from({ length: 26 * 26 }, (_, i) =>
+  String.fromCharCode(65 + Math.floor(i / 26)) + String.fromCharCode(65 + (i % 26)));
+
+/**
+ * Forms this register uses that no standard list contains. Only what has been
+ * seen in the data — `Swed.` appears 16 times. Guessing at further
+ * abbreviations would be inventing evidence.
+ */
+const REGISTER_FORMS: Record<string, string> = {
+  swed: 'SE',
+  'amerikas förenta stater': 'US',
+};
+
+let vocabulary: Map<string, string> | null = null;
+
+/**
+ * Every country name this app can recognise: the 697 `Intl.DisplayNames` knows
+ * across the four languages it speaks, with `COUNTRY_NAMES` laid over the top.
+ *
+ * The hand-written table wins, because it carries what a Swedish register
+ * actually writes — `Suecia`, `Swe`, `Förenta staterna` — and because
+ * `england` must keep mapping to GB for the flag.
+ */
+function vocab(): Map<string, string> {
+  if (vocabulary) return vocabulary;
+  const map = new Map<string, string>();
+
+  for (const locale of ['sv', 'en', 'de', 'es']) {
+    const names = new Intl.DisplayNames([locale], { type: 'region', fallback: 'none' });
+    for (const code of ALL_CODES) {
+      let name: string | undefined;
+      try { name = names.of(code); } catch { continue; }
+      if (!name || name === code) continue;
+      const key = normaliseName(name);
+      if (key && !map.has(key)) map.set(key, code);
+    }
+  }
+  for (const [name, code] of Object.entries(COUNTRY_NAMES)) map.set(normaliseName(name), code);
+  for (const [name, code] of Object.entries(REGISTER_FORMS)) map.set(normaliseName(name), code);
+
+  vocabulary = map;
+  return map;
+}
+
+/** Lowercased and stripped of the punctuation a parish register leaves behind. */
+function normaliseName(text: string): string {
+  return text.toLowerCase()
+    .replace(/[.,;:\s]+$/, '').replace(/^[.,;:\s]+/, '')
+    .replace(/\s+/g, ' ').trim();
+}
+
+/** The ISO code a name stands for, or null. */
+export function lookupCountry(name: string | null | undefined): string | null {
+  if (!name) return null;
+  return vocab().get(normaliseName(name)) ?? null;
+}
+
+/**
+ * ISO 3166-1 alpha-2 code when the place explicitly names a country, else null.
+ *
+ * Only the last segment is trusted, which is where GEDCOM puts a country. A
+ * country stranded mid-string is evidence for a proposal on the Countries page,
+ * never a fact — the survey found one place naming `Sweden` that turned out to
+ * be a township in the United States.
+ *
+ * The vocabulary is the wide one. It used to be the hand-written 21, which
+ * meant `Sydafrika`, `Chile`, `Brazil` and `Tjeckien` were all in this tree and
+ * none of them counted as naming a country at all.
+ */
 export function countryFromPlace(place: string | null | undefined): string | null {
   if (!place) return null;
-  const segments = place.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  const segments = place.split(',').map(s => s.trim()).filter(Boolean);
   if (!segments.length) return null;
-  // The country belongs last in a GEDCOM place; only trust that position.
-  return COUNTRY_NAMES[segments[segments.length - 1]!] ?? null;
+  return lookupCountry(segments[segments.length - 1]);
 }
 
 /**
@@ -59,8 +127,32 @@ const CANONICAL: Record<string, string> = {
   CH: 'Schweiz', AT: 'Österrike',
 };
 
+/**
+ * Swedish region names for everywhere `CANONICAL` does not reach.
+ *
+ * The hand-written table covers what a Swedish family tree mostly contains, and
+ * it stays first because it carries forms this register uses — `USA` rather
+ * than `Förenta staterna`, `Kanada` rather than `Canada`. But it is only 21
+ * countries, and this tree also holds South Africa, Brazil, Chile and Czechia.
+ * Those were recognised and then silently dropped: `countryName` returned null,
+ * so `withCountryLast` returned null, so no proposal was ever offered.
+ */
+let swedishNames: Intl.DisplayNames | null = null;
+
 export function countryName(code: string | null | undefined): string | null {
-  return code ? CANONICAL[code.toUpperCase()] ?? null : null;
+  if (!code) return null;
+  const upper = code.toUpperCase();
+  const canonical = CANONICAL[upper];
+  if (canonical) return canonical;
+
+  swedishNames ??= new Intl.DisplayNames(['sv'], { type: 'region', fallback: 'none' });
+  try {
+    // `fallback: 'none'` returns undefined rather than handing back the code,
+    // which is what keeps a made-up code answering null.
+    return swedishNames.of(upper) ?? null;
+  } catch {
+    return null;
+  }
 }
 
 /**

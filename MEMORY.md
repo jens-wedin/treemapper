@@ -11,8 +11,10 @@ whole project moved to English._
 approval at a time. **The tree teaches itself**: 7 871 places pair a parish with
 a country, so `Bjuråker` is a lookup, not a guess. Nothing reaches the network.
 
-Numbers for `wedin.db`: 88 stated, 1 253 learned across **402 groups**, 97
-quarantined, 132 left alone. `npx tsx scripts/country-report.ts wedin` prints all
+Jens went through the whole queue on 2026-08-12. Places naming a country went
+from 7 871 to 11 098 of 11 309 — **98%**. 22 inferences were rejected. What is
+left: 59 stated (mostly MyHeritage double-place artefacts) and 106 with no
+evidence. `npx tsx scripts/country-report.ts wedin` prints all
 of it without opening the app.
 
 Things worth not rediscovering:
@@ -34,6 +36,15 @@ Things worth not rediscovering:
 - Every place links to whoever carries it, because **rejecting fixes nothing** —
   it only stops the offer. The link is the route to the record. Family events
   resolve to husband ?? wife; a marriage has no page.
+- **A queue's e2e tests must build their own data.** The first version asserted
+  on `Bjertrå` and `Vattingen`; four tests broke the moment the queue was
+  cleared, because the feature had removed exactly what they were watching. They
+  now create a person and three places per test — and a *different* parish per
+  test, since a rejection is remembered by place text and hid the place from the
+  test that ran next.
+- `countryFromPlace` now reads all 697 ISO names, not the hand-written 21.
+  `Sydafrika`, `Chile`, `Brazil` and `Tjeckien` were all in this tree and none
+  counted as naming a country. It still trusts only the **last segment**.
 - Only **rejections** persist (`place_country_rejections`, keyed by the place
   text, no fingerprint to orphan). Proposals are recomputed each request.
 - The real database was **not** touched by any of this work: counts verified

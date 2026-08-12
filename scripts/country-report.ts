@@ -10,7 +10,7 @@
 import { events } from '../db/schema';
 import { DEFAULT_TREE, openTree } from '../lib/trees';
 import { countryFromPlace } from '../lib/places';
-import { countryProposals } from '../lib/countryProposals';
+import { countryProposals, placeOwners } from '../lib/countryProposals';
 
 const treeId = process.argv[2] ?? DEFAULT_TREE;
 const db = openTree(treeId);
@@ -20,6 +20,7 @@ const withPlace = all.filter(e => e.place?.trim());
 const named = withPlace.filter(e => countryFromPlace(e.place));
 
 const { stated, learned, quarantined, unanswered } = countryProposals(db);
+const owners = placeOwners(db);
 
 const sum = (rows: number[]) => rows.reduce((a, b) => a + b, 0);
 const statedRows = sum(stated.map(s => s.rows));
@@ -59,6 +60,21 @@ console.log(`\n--- quarantined: every edit-distance match, with what it matched 
 for (const q of quarantined) {
   console.log(`  ${String(q.rows).padStart(3)}x  ${q.place}`);
   console.log(`        -> ${q.code}   [${q.matched} ~ ${q.by}, taught ${q.weight}]`);
+}
+
+// What is left once the queue is empty: places nothing could answer, and the
+// ones that were looked at and turned down. Both need a person, so both are
+// listed with somebody to go and ask.
+const silent = withPlace.filter(e => !countryFromPlace(e.place));
+if (silent.length) {
+  const counts = new Map<string, number>();
+  for (const e of silent) counts.set(e.place!.trim(), (counts.get(e.place!.trim()) ?? 0) + 1);
+  console.log(`\n--- still without a country (${counts.size} places, ${silent.length} rows) ---`);
+  for (const [place, n] of [...counts].sort((a, b) => b[1] - a[1])) {
+    const who = owners.get(place)?.slice(0, 3).map(o => `${o.name} /person/${o.id}`).join('; ') ?? '';
+    console.log(`  ${String(n).padStart(3)}x  ${place}`);
+    if (who) console.log(`        ${who}`);
+  }
 }
 
 console.log(`\nNothing was written. Approve on the review page: /${treeId}/countries`);

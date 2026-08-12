@@ -201,9 +201,31 @@ describe('countryProposals, what the record already says', () => {
     expect(countryProposals(db).stated).toHaveLength(0);
   });
 
-  it('proposes nothing when the country is already last and readable', () => {
+  it('proposes nothing when the country is already last and spelled right', () => {
     place('Bjuråker, Gävleborg, Sverige');
     expect(countryProposals(db).stated).toHaveLength(0);
+  });
+
+  it('never appends a country to a place that says it inside a bracket', () => {
+    // This one got through and reached the real database: `Strömbacka
+    // (Bjuråker, Sverige)` was answered by the learned tier and became
+    // `Strömbacka (Bjuråker, Sverige), Sverige`. A bracketed country is still
+    // the record naming its country.
+    place('Bjuråker, Sverige', 3);
+    place('Strömbacka (Bjuråker, Sverige)');
+
+    const { stated, learned, quarantined } = countryProposals(db);
+    expect([...stated, ...learned, ...quarantined]).toHaveLength(0);
+  });
+
+  it('never appends a country to a place that already says England', () => {
+    // `Manchester, England` reads as GB for the flag but must not be rewritten
+    // to Storbritannien, and must not have a country inferred on top of it.
+    place('Manchester, Sverige');            // gives the tree something to learn
+    place('Manchester, England');
+
+    const { stated, learned, quarantined } = countryProposals(db);
+    expect([...stated, ...learned, ...quarantined]).toHaveLength(0);
   });
 });
 

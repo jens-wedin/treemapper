@@ -11,58 +11,9 @@
  * `countryLabel()` uses for the statistics: 697 names across the four languages
  * the app speaks, with nothing to keep in step by hand.
  */
-import { COUNTRY_NAMES, NOT_A_SPELLING } from './places';
+import { NOT_A_SPELLING, lookupCountry } from './places';
 
-/** Every ISO 3166-1 alpha-2 code, including the ones no country uses. */
-const ALL_CODES = Array.from({ length: 26 * 26 }, (_, i) =>
-  String.fromCharCode(65 + Math.floor(i / 26)) + String.fromCharCode(65 + (i % 26)));
-
-/**
- * Forms this register uses that no standard list contains.
- *
- * Only what has actually been seen in the data — `Swed.` appears 16 times.
- * Guessing at further abbreviations would be inventing evidence.
- */
-const REGISTER_FORMS: Record<string, string> = {
-  swed: 'SE',
-  'amerikas förenta stater': 'US',
-};
-
-let vocabulary: Map<string, string> | null = null;
-
-function vocab(): Map<string, string> {
-  if (vocabulary) return vocabulary;
-  const map = new Map<string, string>();
-
-  for (const locale of ['sv', 'en', 'de', 'es']) {
-    const names = new Intl.DisplayNames([locale], { type: 'region', fallback: 'none' });
-    for (const code of ALL_CODES) {
-      let name: string | undefined;
-      try { name = names.of(code); } catch { continue; }
-      if (!name || name === code) continue;
-      const k = normalise(name);
-      if (k && !map.has(k)) map.set(k, code);
-    }
-  }
-  // The hand-written list wins: it carries `Suecia`, `Swe` and `Förenta
-  // staterna`, and it is what the rest of the app already agrees with.
-  for (const [name, code] of Object.entries(COUNTRY_NAMES)) map.set(normalise(name), code);
-  for (const [name, code] of Object.entries(REGISTER_FORMS)) map.set(normalise(name), code);
-
-  vocabulary = map;
-  return map;
-}
-
-/** Lowercased, trimmed, and stripped of the punctuation a register leaves behind. */
-function normalise(text: string): string {
-  return text.toLowerCase().replace(/[.,;:\s]+$/, '').replace(/^[.,;:\s]+/, '').replace(/\s+/g, ' ').trim();
-}
-
-/** The ISO code a name stands for, or null. */
-export function lookupCountry(name: string | null | undefined): string | null {
-  if (!name) return null;
-  return vocab().get(normalise(name)) ?? null;
-}
+export { lookupCountry };
 
 export interface StatedCountry {
   code: string;
@@ -141,7 +92,6 @@ export function statedCountries(place: string | null | undefined): StatedCountry
  */
 export function readCountry(text: string | undefined | null): string | null {
   if (!text) return null;
-  const k = normalise(text);
-  if (NOT_A_SPELLING.has(k)) return null;
-  return vocab().get(k) ?? null;
+  if (NOT_A_SPELLING.has(text.toLowerCase().replace(/[.,;:\s]+$/, '').trim())) return null;
+  return lookupCountry(text);
 }

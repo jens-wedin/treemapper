@@ -30,6 +30,31 @@ describe('countryFromPlace', () => {
   });
 });
 
+describe('countryFromPlace, beyond the hand-written twenty-one', () => {
+  it('reads a country the hand-written list never had', () => {
+    expect(countryFromPlace('Port Natal, Durban, Sydafrika')).toBe('ZA');
+    expect(countryFromPlace('Böhmen, Tjeckien')).toBe('CZ');
+    expect(countryFromPlace('Rio De Janeiro, Brazil')).toBe('BR');
+    expect(countryFromPlace('Chile')).toBe('CL');
+  });
+
+  it('still gives England the Union flag rather than nothing', () => {
+    // NOT_A_SPELLING stops England being *rewritten* to Storbritannien. It must
+    // not stop it being *read*, or those places lose their flag.
+    expect(countryFromPlace('Manchester, England')).toBe('GB');
+  });
+
+  it('still trusts only the last segment', () => {
+    // A country stranded mid-string is evidence for a proposal, never a fact.
+    expect(countryFromPlace('Frisbo 17, Bjuråker, Sweden, Gävleborgs, Hälsingland')).toBeNull();
+  });
+
+  it('does not mistake a parish for a country', () => {
+    expect(countryFromPlace('Bjuråker')).toBeNull();
+    expect(countryFromPlace('Strömbacka, Bjuråker')).toBeNull();
+  });
+});
+
 describe('countryName', () => {
   it('gives the canonical Swedish name for a code', () => {
     expect(countryName('SE')).toBe('Sverige');
@@ -38,8 +63,19 @@ describe('countryName', () => {
     expect(countryName('US')).toBe('USA');
   });
 
-  it('gives null for a code it does not know', () => {
-    expect(countryName('ZZ')).toBeNull();
+  it('names a country the hand-written list never had, still in Swedish', () => {
+    // `Sydafrika`, `Brazil`, `Chile` and `Tjeckien` are all in this tree, and
+    // all four were recognised but could not be written: countryName returned
+    // null, withCountryLast returned null, and the proposal was dropped without
+    // a word. Seven places went unoffered that way.
+    expect(countryName('ZA')).toBe('Sydafrika');
+    expect(countryName('BR')).toBe('Brasilien');
+    expect(countryName('CL')).toBe('Chile');
+    expect(countryName('CZ')).toBe('Tjeckien');
+  });
+
+  it('gives null for a code no country uses', () => {
+    expect(countryName('QQ')).toBeNull();
   });
 
   // Every alias must lead back to a name, or normalising would blank a country.

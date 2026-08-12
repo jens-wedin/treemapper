@@ -12,6 +12,7 @@ import { createMergeApi } from './merge';
 import { createSourcesApi } from './sources';
 import { createExportApi } from './export';
 import { createStatisticsApi } from './statistics';
+import { createCountriesApi } from './countries';
 
 // Every request names the tree it is about (`?tree=`); the resolver opens that
 // database and caches the handle. Nothing here holds "the current tree".
@@ -28,6 +29,7 @@ app.route('/', createMergeApi(tree));
 app.route('/', createSourcesApi(tree));
 app.route('/', createExportApi(tree));
 app.route('/', createStatisticsApi(tree));
+app.route('/', createCountriesApi(tree));
 
 /**
  * Which database this server is actually serving. Exists so the e2e suite can

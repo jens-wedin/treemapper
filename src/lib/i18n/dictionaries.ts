@@ -1240,9 +1240,20 @@ export const MONTHS: Record<Lang, string[]> = {
 };
 
 /** GEDCOM date qualifiers: ABT/EST/CAL, BEF, AFT and the BET…AND joiner. */
-export const QUALIFIERS: Record<Lang, { about: string; before: string; after: string; and: string }> = {
-  sv: { about: 'ca', before: 'före', after: 'efter', and: 'och' },
-  en: { about: 'about', before: 'before', after: 'after', and: 'and' },
-  de: { about: 'um', before: 'vor', after: 'nach', and: 'und' },
-  es: { about: 'hacia', before: 'antes de', after: 'después de', and: 'y' },
+/**
+ * The words a date is built from. `between`/`from`/`to` were missing, which is
+ * why 2 387 events read "BET 1916 and 1928" in every language.
+ *
+ * Composition is positional — qualifier, date, joining word, date — and that
+ * happens to be the order all four of these languages want. A language that
+ * wants another would need a template here instead.
+ */
+export const QUALIFIERS: Record<Lang, {
+  about: string; before: string; after: string; and: string;
+  between: string; from: string; to: string;
+}> = {
+  sv: { about: 'ca', before: 'före', after: 'efter', and: 'och', between: 'mellan', from: 'från', to: 'till' },
+  en: { about: 'about', before: 'before', after: 'after', and: 'and', between: 'between', from: 'from', to: 'to' },
+  de: { about: 'um', before: 'vor', after: 'nach', and: 'und', between: 'zwischen', from: 'von', to: 'bis' },
+  es: { about: 'hacia', before: 'antes de', after: 'después de', and: 'y', between: 'entre', from: 'de', to: 'a' },
 };

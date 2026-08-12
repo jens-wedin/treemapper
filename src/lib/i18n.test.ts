@@ -48,9 +48,26 @@ describe('i18n', () => {
     expect(formatGedcomDate('2 DEC 2014')).toBe('2 Dec 2014');
     expect(formatGedcomDate('ABT 1715')).toBe('about 1715');
     expect(formatGedcomDate('BEF 17 JUL 1719')).toBe('before 17 Jul 1719');
-    expect(formatGedcomDate('BET 1916 AND 1928')).toBe('BET 1916 and 1928');
     expect(formatGedcomDate('1834')).toBe('1834');
     expect(formatGedcomDate(null)).toBe('');
+  });
+
+  it('reads out ranges and periods instead of showing the GEDCOM keyword', () => {
+    expect(formatGedcomDate('BET 1916 AND 1928')).toBe('between 1916 and 1928');
+    expect(formatGedcomDate('FROM 1932 TO 1938')).toBe('from 1932 to 1938');
+    expect(formatGedcomDate('FROM 1938')).toBe('from 1938');
+    expect(formatGedcomDate('TO 1965')).toBe('to 1965');
+  });
+
+  it('translates a date it cannot model, word by word, rather than showing tags', () => {
+    expect(formatGedcomDate('BET AFT 31 JAN 1762 AND BEF 31 DEC 1762'))
+      .toBe('between after 31 Jan 1762 and before 31 Dec 1762');
+    expect(formatGedcomDate('FROM ABT 1904')).toBe('from about 1904');
+  });
+
+  it('hands back text that is not a date at all, so nothing disappears', () => {
+    expect(formatGedcomDate('okänt')).toBe('okänt');
+    expect(formatGedcomDate('17xx')).toBe('17xx');
   });
 
   it('formats display names with id fallback', () => {
@@ -94,6 +111,8 @@ describe('changing language', () => {
     expect(eventLabel('BIRT')).toBe('Födelse');
     expect(formatGedcomDate('15 APR 1942')).toBe('15 apr 1942');
     expect(formatGedcomDate('ABT 1715')).toBe('ca 1715');
+    expect(formatGedcomDate('BET 1916 AND 1928')).toBe('mellan 1916 och 1928');
+    expect(formatGedcomDate('FROM 1932 TO 1938')).toBe('från 1932 till 1938');
     expect(lifespan(1942, null)).toBe('f. 1942');
 
     setLanguage('de');

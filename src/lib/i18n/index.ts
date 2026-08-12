@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { DICTIONARIES, FALLBACK, EVENT_LABELS, MONTHS, QUALIFIERS, type Lang } from './dictionaries';
 import { readPreference, writePreference } from '../storage';
+import { parseGedcomDate, type DateParts } from '../../../lib/gedcomDate';
 
 export type { Lang };
 export const LANGUAGES: { code: Lang; label: string }[] = [
@@ -136,23 +137,56 @@ export const eventDescription = (description: string | null | undefined): string
 
 const MONTH_TAGS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 
+/** "15 Apr 1942" · "Apr 1942" · "1942" · "" — in the current language. */
+function displayParts({ day, month, year }: DateParts): string {
+  if (year === null) return '';
+  if (month === null) return String(year);
+  const name = MONTHS[current][month - 1]!;
+  return day === null ? `${name} ${year}` : `${day} ${name} ${year}`;
+}
+
+/**
+ * Word by word, for a date the model cannot hold — the seven rows with a
+ * qualifier nested inside a range — and for text that is not a date at all.
+ * Anything unrecognised comes through untouched, so nothing disappears from
+ * the page just because the app does not understand it.
+ */
+function translateTokens(raw: string): string {
+  const months = MONTHS[current];
+  const q = QUALIFIERS[current];
+  return raw.trim().split(/\s+/).map(token => {
+    const upper = token.toUpperCase();
+    const monthIndex = MONTH_TAGS.indexOf(upper);
+    if (monthIndex >= 0) return months[monthIndex]!;
+    if (upper === 'ABT' || upper === 'EST' || upper === 'CAL') return q.about;
+    if (upper === 'BEF') return q.before;
+    if (upper === 'AFT') return q.after;
+    if (upper === 'AND') return q.and;
+    if (upper === 'BET') return q.between;
+    if (upper === 'FROM') return q.from;
+    if (upper === 'TO') return q.to;
+    return token;
+  }).join(' ');
+}
+
 /** GEDCOM date → readable in the current language, e.g. "15 APR 1942". */
 export function formatGedcomDate(raw: string | null | undefined): string {
   if (!raw) return '';
-  const months = MONTHS[current];
-  const qualifiers = QUALIFIERS[current];
-  return raw
-    .trim()
-    .split(/\s+/)
-    .map(token => {
-      const upper = token.toUpperCase();
-      const monthIndex = MONTH_TAGS.indexOf(upper);
-      if (monthIndex >= 0) return months[monthIndex]!;
-      if (upper === 'ABT' || upper === 'EST' || upper === 'CAL') return qualifiers.about;
-      if (upper === 'BEF') return qualifiers.before;
-      if (upper === 'AFT') return qualifiers.after;
-      if (upper === 'AND') return qualifiers.and;
-      return token;
-    })
-    .join(' ');
+  const date = parseGedcomDate(raw);
+  if (!date) return translateTokens(raw);
+
+  const q = QUALIFIERS[current];
+  const from = displayParts(date.from);
+  const to = date.to ? displayParts(date.to) : '';
+
+  switch (date.qualifier) {
+    case 'exact': return from;
+    case 'about': case 'estimated': case 'calculated': return `${q.about} ${from}`;
+    case 'before': return `${q.before} ${from}`;
+    case 'after': return `${q.after} ${from}`;
+    case 'between': return `${q.between} ${from} ${q.and} ${to}`;
+    case 'period':
+      if (from && to) return `${q.from} ${from} ${q.to} ${to}`;
+      return from ? `${q.from} ${from}` : `${q.to} ${to}`;
+  }
 }

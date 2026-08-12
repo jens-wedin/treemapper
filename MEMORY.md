@@ -11,10 +11,23 @@ whole project moved to English._
 approval at a time. **The tree teaches itself**: 7 871 places pair a parish with
 a country, so `Bjuråker` is a lookup, not a guess. Nothing reaches the network.
 
-Jens went through the whole queue on 2026-08-12. Places naming a country went
-from 7 871 to 11 098 of 11 309 — **98%**. 22 inferences were rejected. What is
-left: 59 stated (mostly MyHeritage double-place artefacts) and 106 with no
-evidence. `npx tsx scripts/country-report.ts wedin` prints all
+**Finished 2026-08-12. The queue is empty — 0 stated, 0 learned, 0
+quarantined.** Places naming a country went from 7 871 to 11 098 of 11 309 —
+**98.1%**, up from 70%. 3 241 events updated across two passes, every one
+audit-logged; 22 inferences rejected.
+
+What is left is 137 places, 211 rows, and none of it is inferable:
+
+- ~31 are records the export joined (`Hemsö, Västernorrland, Sweden, Hemsö,
+  Västernorrland, Sverige`, and one spanning Wyoming and Minnesota). They need
+  **splitting**, which is a different job.
+- The rest have no evidence at all: `Census`, `Th.`, `Bjr.`, `Email`,
+  `Unknown`, `Same Place`, `Loppi`, `Lahti`, `Kiruna`.
+
+`npx tsx scripts/country-report.ts wedin` lists every one with a person link.
+
+Note the audit_log clock runs behind the shell's — filter generously when
+checking whether a write landed, or it looks like nothing happened. `npx tsx scripts/country-report.ts wedin` prints all
 of it without opening the app.
 
 Things worth not rediscovering:

@@ -126,15 +126,19 @@ npm run test:e2e       # Playwright, against a copy under .e2e/ — never live d
 npm run build          # tsc -b && vite build
 ```
 
-Data tools are **dry-run by default** and need `--apply` to write; each backs
-the database up first:
+Data tools:
 
 ```bash
-npm run import                    # GEDCOM → trees/<id>.db
-npm run media -- <tree>           # download a tree's photos
-npm run export -- [path]          # GEDCOM 5.5.1 out
-npm run merge-duplicates -- <person-id> ...
+npm run import -- <file.ged> "<name>"        # create a new tree from a GEDCOM
+npm run media -- <tree>                      # download a tree's photos
+npm run export -- [path]                     # write the tree out as GEDCOM 5.5.1
+npm run merge-duplicates -- <person-id> ...  # fold up a re-imported branch
 ```
+
+`import`, `media` and `export` act immediately. The repair and normalisation
+scripts under `scripts/` are **dry-run by default** — they print what they would
+change and write only when passed `--apply`; the ones that mutate a tree in
+place (`merge-duplicates`, `repair-conc`) back the database up first.
 
 ## Project layout
 

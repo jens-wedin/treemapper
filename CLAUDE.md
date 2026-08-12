@@ -46,13 +46,19 @@ npm run test:e2e   # Playwright, against .e2e/ — never the real database
 npm run build      # tsc -b && vite build
 ```
 
-Data tools, all **dry-run by default** — they print what they would do and need
-`--apply` to write:
+Data tools. `import`, `media` and `export` **act immediately**:
 
 ```bash
-npm run import                 # GEDCOM → trees/<id>.db
-npm run media -- <tree>        # download that tree's photos
-npm run export -- [path]       # GEDCOM 5.5.1 out
+npm run import -- <file.ged> "<name>"   # create a new tree from a GEDCOM
+npm run media -- <tree>                 # download that tree's photos
+npm run export -- [path]                # GEDCOM 5.5.1 out
+```
+
+The repair/normalisation scripts under `scripts/` are **dry-run by default** —
+they print what they would change and write only with `--apply` (and
+`merge-duplicates` / `repair-conc` back up the database first):
+
+```bash
 npx tsx scripts/dedupe-events.ts <tree> [--apply]
 ```
 

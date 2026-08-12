@@ -68,9 +68,9 @@
 
 ### Security
 
-**Backup copies of the family database are no longer tracked**
-- Four of them, ~27 MB, committed since `ccc1f22`: `wedin.db.before-merge`, `.before-repair-conc`, `.before-repair-conc.2`, `.before-restore`. Each holds 4 561 people, 987 with no recorded death — living relatives, with names, birth dates and places. `.gitignore` had `*.db`, which does not match `wedin.db.before-merge`, because a glob needs the filename to end in the pattern. `backups/` was unignored for the same reason.
-- `*.db.*` and `backups/` are ignored now and the files are untracked, staying on disk. **This does not remove them from history** — that still has to happen before the repo is published anywhere.
+**Backup copies of the family database are gone from history**
+- Four of them, ~27 MB, had been committed since `ccc1f22`: `wedin.db.before-merge`, `.before-repair-conc`, `.before-repair-conc.2`, `.before-restore`. Each held 4 561 people, 987 with no recorded death — living relatives, with names, birth dates and places. `.gitignore` had `*.db`, which does not match `wedin.db.before-merge`, because a glob needs the filename to end in the pattern. `backups/` was unignored for the same reason.
+- `*.db.*` and `backups/` are ignored, the files were untracked, and git history was rewritten with `git filter-repo` to purge every backup blob before the repo went public. Real family names in the tracked docs were replaced with synthetic placeholders for the same reason — the published repo holds code, not a family.
 
 ### Fixed
 

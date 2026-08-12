@@ -42,24 +42,24 @@ describe('searchPersons', () => {
    * Searching the two names somebody goes by has to find them even when the
    * record carries middle names between those two words.
    *
-   * `%jens wedin%` against "Karl Johan Fredrik Lindqvist" matches nothing — the
+   * `%karl lindqvist%` against "Karl Johan Fredrik Lindqvist" matches nothing — the
    * middle names sit in the gap. Most of this database has middle names, so a
    * plain substring search silently hides the person you are looking for, and
    * answers 0 as confidently as it answers 5.
    */
   it('matches each word separately, so middle names cannot hide a person', () => {
     db.insert(persons).values({
-      id: 'IX1', givenName: 'Karl Johan Fredrik', surname: 'Wedin', sex: 'M',
+      id: 'IX1', givenName: 'Karl Johan Fredrik', surname: 'Lindqvist', sex: 'M',
     }).run();
 
     try {
-      expect(searchPersons(db, { q: 'jens wedin' }).items.map(i => i.id)).toEqual(['IX1']);
-      expect(searchPersons(db, { q: 'Wedin Jens' }).items.map(i => i.id)).toEqual(['IX1']);
-      expect(searchPersons(db, { q: '  jens   wedin  ' }).items.map(i => i.id)).toEqual(['IX1']);
-      expect(searchPersons(db, { q: 'manfred' }).items.map(i => i.id)).toEqual(['IX1']);
+      expect(searchPersons(db, { q: 'karl lindqvist' }).items.map(i => i.id)).toEqual(['IX1']);
+      expect(searchPersons(db, { q: 'Lindqvist Karl' }).items.map(i => i.id)).toEqual(['IX1']);
+      expect(searchPersons(db, { q: '  karl   lindqvist  ' }).items.map(i => i.id)).toEqual(['IX1']);
+      expect(searchPersons(db, { q: 'fredrik' }).items.map(i => i.id)).toEqual(['IX1']);
 
       // Every word still has to match something — this is a filter, not a guess.
-      expect(searchPersons(db, { q: 'jens larsson' }).total).toBe(0);
+      expect(searchPersons(db, { q: 'karl larsson' }).total).toBe(0);
     } finally {
       // In a finally: a failing assertion above would otherwise leave this row
       // behind and fail the next test instead, pointing at the wrong thing.

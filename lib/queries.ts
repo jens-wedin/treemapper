@@ -48,7 +48,7 @@ export function searchPersons(db: Db, p: SearchParams): { items: PersonListItem[
   const offset = p.offset ?? 0;
   const conds: (SQL | undefined)[] = [];
   if (p.q) {
-    // Word by word, not as one string: "jens wedin" has to find "Erik Anders
+    // Word by word, not as one string: "karl lindqvist" has to find "Karl Johan
     // Fredrik Lindqvist", and matching the query whole never could — the middle
     // names sit in the gap between the two words typed. Most people here carry
     // middle names, so the whole-string search quietly hid them and reported 0

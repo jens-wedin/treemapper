@@ -125,32 +125,32 @@ Things worth not rediscovering:
 - The real database was **not** touched by any of this work: counts verified
   before and after, `place_country_rejections` still 0.
 
-## Before publishing this repo — unresolved
+## Published to GitHub (2026-08-13)
 
-Jens wants this on GitHub. **Four backup copies of the family database are in
-git history**: `wedin.db.before-merge`, `.before-repair-conc`,
-`.before-repair-conc.2` and `.before-restore`, ~27 MB, added in `ccc1f22`. Each
-holds 4 561 people, 987 with no recorded death — living relatives, names, birth
-dates, places. `.gitignore` had `*.db`, which does not match
-`wedin.db.before-merge`: a glob needs the filename to *end* in `.db`.
+Public at `github.com/jens-wedin/treemapper` under the MIT license. Git history
+was rewritten with `git filter-repo` before the push:
 
-`2e8e738` adds `*.db.*` and `backups/` to `.gitignore` and untracks the four
-files (they remain on disk). **That does not touch history.** Anyone cloning the
-published repo would still get every byte.
+- **The four `wedin.db.before-*` backup blobs are purged from every commit.**
+  They held living relatives and had sat in history since `ccc1f22`. `*.db`,
+  `*.db.*` and `backups/` are gitignored, so nothing shaped like a database can
+  come back.
+- **Real family names were scrubbed from the tracked docs and their history**
+  and replaced with synthetic placeholders — the example tree is `Andersson`,
+  example people are names like `Karl Johan Fredrik Lindqvist`. The real
+  databases stay local and gitignored: the public repo holds code, not a family.
 
-Deciding between a `git filter-repo` purge plus force-push, and publishing a
-fresh repository with no ancestry, is Jens's call. Check before pushing:
+Check history stays clean before any future force-push:
 
 ```bash
 git log --all --diff-filter=A --name-only -- '*.db*' 'backups/*'
 ```
 
-## Where the work lives — read this first
+## Where the work lives
 
-`main` is **stale**: it points at an early Phase 1 commit. All real work is on
-**`feat/phase1-scaffold-import`**. Everything since then sits on **`statistik`**
-— by now far more than statistics — still unmerged. Check `git branch` before
-assuming you are somewhere sensible.
+`main` carries the whole history: it was fast-forwarded up to the `statistik`
+work at publication, so the two point at the same commit and GitHub serves
+`main`. The old `feat/phase1-scaffold-import` branch is an ancestor with nothing
+unique left on it.
 
 ## Countries in places (2026-08-12)
 
@@ -188,8 +188,7 @@ through, not a bug.
 Still true, and still deliberate: **a parish name is not evidence of a country.**
 Only an explicit county code counts. 3 444 places still name no country.
 
-Applied 2026-08-12 to all trees — 4 024 rows in wedin, 280 in Andersson och
-Anders — event counts identical, `backups/wedin.db.before-places`.
+Applied 2026-08-12 to all trees — 4 024 rows in wedin, 280 in Andersson — event counts identical, `backups/wedin.db.before-places`.
 
 Not touched, and a real inconsistency if you want it next: the province and
 parish spellings themselves (`Gävleborg` vs `Gävleborgs län`, `Alnö` vs

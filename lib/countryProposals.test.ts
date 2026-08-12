@@ -182,17 +182,54 @@ describe('countryProposals, what the record already says', () => {
       .toBe('Opstead, Mille Lacs, Minnesota, (Bonde), USA');
   });
 
+  it('keeps the county code when the country beside it goes', () => {
+    // `Hassela (X) Sweden` — the (X) says which Hassela, and there are several.
+    // Rebuilding the segment from its unbracketed text dropped it silently.
+    place('Hassela (X) Sweden, Sverige');
+    expect(countryProposals(db).stated[0]!.after).toBe('Hassela (X), Sverige');
+  });
+
+  it('keeps a county code that stands between words', () => {
+    place('Södra Röjdåsen Östmark (S) SE, Sverige');
+    expect(countryProposals(db).stated[0]!.after)
+      .toBe('Södra Röjdåsen Östmark (S), Sverige');
+  });
+
+  it('proposes nothing when only the spacing would change', () => {
+    // A double space is not a country problem, and every proposal costs a
+    // decision. This queue is about countries.
+    place('Berge, Hassela  (X), Sverige');
+    expect(countryProposals(db).stated).toHaveLength(0);
+  });
+
   it('moves a country that was written first instead of last', () => {
     place('Sverige, Ånimskog');
     expect(countryProposals(db).stated[0]!.after).toBe('Ånimskog, Sverige');
   });
 
-  it('collapses a country repeated in two segments into one', () => {
-    // Real, and it does not end in the country, which is why nothing could
-    // read it: the export wrote Sverige twice and a province last.
+  it('refuses a place whose country is repeated across two segments', () => {
+    // Real. `Halvarsnäs, Glava Glasbruk, Värmland, Sverige, Glava, Sverige,
+    // Värmland` is Glava written twice with a province left dangling. An
+    // earlier version tidied it to one country; that made a joined record look
+    // whole, which is worse than leaving it visibly broken.
     place('Halvarsnäs, Glava Glasbruk, Värmland, Sverige, Glava, Sverige, Värmland');
-    expect(countryProposals(db).stated[0]!.after)
-      .toBe('Halvarsnäs, Glava Glasbruk, Värmland, Glava, Värmland, Sverige');
+    expect(countryProposals(db).stated).toHaveLength(0);
+  });
+
+  it('refuses a place that names one country twice as its own segment', () => {
+    // `Hemsö, Västernorrland, Sweden, Hemsö, Västernorrland, Sverige` is two
+    // records the export joined. Taking out the first country leaves the place
+    // still doubled — tidier, and no more correct. It needs splitting by a
+    // person, and a tidy version of a broken record is harder to spot.
+    place('Hemsö, Västernorrland, Sweden, Hemsö, Västernorrland, Sverige');
+    expect(countryProposals(db).stated).toHaveLength(0);
+  });
+
+  it('still offers a country that merely sits inside another segment', () => {
+    // `Hassela (X) Sweden` is one place, not two: the country is a word in the
+    // segment rather than a segment of its own.
+    place('Hassela (X) Sweden, Sverige');
+    expect(countryProposals(db).stated).toHaveLength(1);
   });
 
   it('refuses a place that names two different countries', () => {

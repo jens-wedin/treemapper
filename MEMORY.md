@@ -36,6 +36,17 @@ Things worth not rediscovering:
 - Every place links to whoever carries it, because **rejecting fixes nothing** —
   it only stops the offer. The link is the route to the record. Family events
   resolve to husband ?? wife; a marriage has no page.
+- **A tidy version of a broken record is worse than a visibly broken one.** A
+  country named as its own segment more than once is the export having joined
+  two records — `Hemsö, Västernorrland, Sweden, Hemsö, Västernorrland, Sverige`.
+  Removing one country leaves the place still doubled. Refused, not tidied, the
+  same as when the two halves name different countries.
+- The queue proposes only when the **country** changes. It used to offer
+  whitespace fixes too, because `withCountryLast` collapses spacing on the way
+  through — 12 of 59 proposals were double spaces.
+- **A county code is data.** `Hassela (X)` says which Hassela; rebuilding a
+  segment from its unbracketed text dropped it. Nine proposals would have
+  deleted one.
 - **A queue's e2e tests must build their own data.** The first version asserted
   on `Bjertrå` and `Vattingen`; four tests broke the moment the queue was
   cleared, because the feature had removed exactly what they were watching. They

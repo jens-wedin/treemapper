@@ -35,8 +35,14 @@ matches the whole place and never a substring.
 `Th.` records the same way as `Census`, they turned out to be *birth* events
 with exact dates, and `Th.` was Thorsö — the parish all 11 siblings lived in.
 `scripts/expand-place.ts <tree> <short> <full>` takes both halves as arguments
-and asserts nothing; `Bjr.`, `Lax.`, `Ha.`, `Trå.` and `Svall.` are still to do
-and Jens has to say what each one means.
+and asserts nothing. All six are done — Th.→Torsö, Ha.→Hassela, Bjr.→Bjuråker,
+Lax.→Laxarby, Trå.→Timrå, Svall.→Sundsvall, 40 records and every one a **birth**.
+Each took the form that parish already carries most often in the tree, rather
+than a form I chose.
+
+`Ha.` had already become `Ha., Sverige` in the country pass, so the match had to
+be against that. An abbreviation that has been through one repair is no longer
+the string you remember.
 
 Note the audit_log clock runs behind the shell's — filter generously when
 checking whether a write landed, or it looks like nothing happened. `npx tsx scripts/country-report.ts wedin` prints all

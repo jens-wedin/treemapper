@@ -660,10 +660,21 @@ both halves:
 npx tsx scripts/expand-place.ts wedin "Th." "Torsö, Skaraborgs, Västergötland, Sverige" --apply
 ```
 
-`Th.` has been done: eleven **birth** records, one per sibling, all of whom also
-lived at Bromö on Torsö. Expanded to the parish and not to the farm, because
-`Th.` names the parish and naming the farm would assert something the record
-does not.
+Six have been done, 40 records and **every one a birth**:
+
+| | | expanded to |
+|---|---:|---|
+| `Th.` | 11 | `Torsö, Skaraborgs, Västergötland, Sverige` |
+| `Ha.` | 11 | `Hassela, Sverige` |
+| `Bjr.` | 9 | `Bjuråker, Sverige` |
+| `Lax.` | 4 | `Laxarby, Älvsborgs län, Sverige` |
+| `Trå.` | 3 | `Timrå, Sverige` |
+| `Svall.` | 2 | `Sundsvall, Västernorrland, Sverige` |
+
+Each was expanded to **the form that parish already carries most often in this
+tree**, so the spelling stays internally consistent and no jurisdiction level is
+added that the register never wrote. `Th.` went to the parish and not to Bromö,
+the farm those eleven siblings lived on, for the same reason.
 
 Two country names exist and they disagree on purpose. What gets **written into**
 a place is always Swedish — `Sverige` — because a place name is data. What is

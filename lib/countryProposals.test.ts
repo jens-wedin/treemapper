@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { createDb, type Db } from '../db/client';
-import { auditLog, events, persons, placeCountryRejections } from '../db/schema';
+import { auditLog, events, families, persons, placeCountryRejections } from '../db/schema';
 import { countryProposals, applyCountry, rejectCountry } from './countryProposals';
 
 let db: Db;
@@ -21,7 +21,71 @@ function place(text: string, times = 1) {
   }
 }
 
+function event(ownerId: string, text: string) {
+  db.insert(events).values({
+    id: ++nextEventId, ownerType: 'person', ownerId, type: 'RESI', place: text,
+  }).run();
+}
+
 const placesNow = () => db.select().from(events).all().map(e => e.place);
+
+describe('countryProposals, who to go and ask', () => {
+  it('names the person whose event carries the place', () => {
+    place('Bjuråker, Sverige');
+    place('Bjuråker');
+
+    const { learned } = countryProposals(db);
+    expect(learned[0]!.items[0]!.owners).toEqual([{ id: 'I1', name: 'Test Person' }]);
+  });
+
+  it('names every person a place turns up on, without repeating one', () => {
+    db.insert(persons).values({ id: 'I2', givenName: 'Anna', surname: 'Ek' }).run();
+    place('Bjuråker, Sverige');
+    place('Bjuråker', 2);                       // twice on I1
+    event('I2', 'Bjuråker');
+
+    const owners = countryProposals(db).learned[0]!.items[0]!.owners;
+    expect(owners.map(o => o.id).sort()).toEqual(['I1', 'I2']);
+  });
+
+  it('reaches a person through a family event, since a marriage has no page', () => {
+    db.insert(persons).values({ id: 'H1', givenName: 'Erik', surname: 'Ek' }).run();
+    db.insert(families).values({ id: 'F1', husbandId: 'H1', wifeId: null }).run();
+    place('Bjuråker, Sverige');
+    db.insert(events).values({
+      id: ++nextEventId, ownerType: 'family', ownerId: 'F1', type: 'MARR', place: 'Bjuråker',
+    }).run();
+
+    const owners = countryProposals(db).learned[0]!.items[0]!.owners;
+    expect(owners).toEqual([{ id: 'H1', name: 'Erik Ek' }]);
+  });
+
+  it('lists a few and counts the rest, rather than a wall of names', () => {
+    place('Bjuråker, Sverige');
+    for (let i = 2; i <= 8; i++) {
+      db.insert(persons).values({ id: `I${i}`, givenName: `P${i}`, surname: 'Test' }).run();
+      event(`I${i}`, 'Bjuråker');
+    }
+
+    const item = countryProposals(db).learned[0]!.items[0]!;
+    expect(item.owners).toHaveLength(3);
+    expect(item.moreOwners).toBe(4);
+  });
+
+  it('names the person on a quarantined place too', () => {
+    place('Härnösand, Sverige');
+    place('Härnösands nya kyrkogård');
+
+    expect(countryProposals(db).quarantined[0]!.owners)
+      .toEqual([{ id: 'I1', name: 'Test Person' }]);
+  });
+
+  it('names the person on a place that already stated its country', () => {
+    place('Tobyn, Manskog, Varmland, Sweden.');
+    expect(countryProposals(db).stated[0]!.owners)
+      .toEqual([{ id: 'I1', name: 'Test Person' }]);
+  });
+});
 
 describe('countryProposals, the learned groups', () => {
   it('groups the places that share one piece of evidence', () => {

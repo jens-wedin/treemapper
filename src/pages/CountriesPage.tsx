@@ -59,6 +59,7 @@ export default function CountriesPage() {
     <div className="mx-auto max-w-4xl p-6">
       <h1 className="text-2xl font-semibold">{t('countries.title')}</h1>
       <p className="mt-1 text-muted-foreground">{t('countries.lead')}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{t('countries.fixByHand')}</p>
 
       {/* Announced, because approving a group of 79 changes something the
           reader cannot see from where the button was. */}
@@ -77,6 +78,8 @@ export default function CountriesPage() {
                 place={s.place}
                 code={s.code}
                 after={s.after}
+                owners={s.owners}
+                moreOwners={s.moreOwners}
                 busy={busy}
                 onApprove={() => decide('apply', [s.place], s.code)}
                 onReject={() => decide('reject', [s.place], s.code)}
@@ -96,8 +99,8 @@ export default function CountriesPage() {
                 key={`${group.by}-${group.code}`}
                 group={group}
                 busy={busy}
-                onApprove={() => decide('apply', group.members, group.code)}
-                onReject={() => decide('reject', group.members, group.code)}
+                onApprove={() => decide('apply', group.items.map(i => i.place), group.code)}
+                onReject={() => decide('reject', group.items.map(i => i.place), group.code)}
               />
             ))}
           </ul>
@@ -116,6 +119,8 @@ export default function CountriesPage() {
                 place={q.place}
                 code={q.code}
                 detail={nearMissDetail(q.matched, q.by, q.weight)}
+                owners={q.owners}
+                moreOwners={q.moreOwners}
                 busy={busy}
                 onApprove={() => decide('apply', [q.place], q.code)}
                 onReject={() => decide('reject', [q.place], q.code)}

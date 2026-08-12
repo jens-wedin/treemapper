@@ -31,6 +31,9 @@ Things worth not rediscovering:
   own catch — which looks exactly like a network failure. Every mutation
   endpoint must return the envelope. Unit and API tests both passed while this
   was broken; only e2e caught it.
+- Every place links to whoever carries it, because **rejecting fixes nothing** —
+  it only stops the offer. The link is the route to the record. Family events
+  resolve to husband ?? wife; a marriage has no page.
 - Only **rejections** persist (`place_country_rejections`, keyed by the place
   text, no fingerprint to orphan). Proposals are recomputed each request.
 - The real database was **not** touched by any of this work: counts verified

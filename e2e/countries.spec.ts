@@ -81,6 +81,36 @@ test.describe('Countries', () => {
     ).toHaveCount(0);
   });
 
+  test('links a near-spelling match to the record where it is fixed by hand', async ({ page }) => {
+    await page.goto('/wedin/countries');
+
+    const row = page.locator('#countries-quarantine').locator('..')
+      .getByRole('listitem').filter({ hasText: 'Haffsta Själervad' }).first();
+    await expect(row).toBeVisible();
+
+    // Rejecting only stops the offer; the place stays as wrong as it was. The
+    // link is the way to actually correct it.
+    const person = row.getByRole('link').first();
+    const name = (await person.textContent())!.trim();
+    await person.click();
+
+    await expect(page).toHaveURL(/\/wedin\/person\/I\d+/);
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(name.split(' ')[0]!);
+  });
+
+  test('links each place inside a group to whoever carries it', async ({ page }) => {
+    await page.goto('/wedin/countries');
+
+    const group = page.locator('#countries-learned').locator('..')
+      .getByRole('listitem').filter({ hasText: 'Bjuråker → Sweden' }).first();
+    await group.locator('summary').click();
+
+    const firstPlace = group.locator('details li').first();
+    await expect(firstPlace.getByRole('link').first()).toBeVisible();
+    await firstPlace.getByRole('link').first().click();
+    await expect(page).toHaveURL(/\/wedin\/person\/I\d+/);
+  });
+
   test('is reachable from settings', async ({ page }) => {
     await page.goto('/wedin/settings');
     await page.getByRole('link', { name: 'Countries' }).click();

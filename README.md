@@ -621,6 +621,13 @@ Three sections, in the order they should be read:
    Norway, a South African place in Sweden — so each is decided on its own, the
    match is shown (`Bjertrå ≈ bjärtrå`), and **there is no approve-all button**.
 
+Every place, everywhere on the page, names the people whose records carry it and
+links to them. **Rejecting an inference only stops it being offered again — it
+leaves the place as wrong as it was**, so when the answer is wrong the link is
+how you get to the record and correct it by hand. Three names are shown and the
+rest are counted; a marriage has no page of its own, so a family event is listed
+against its husband or wife.
+
 132 places have no evidence at all — `Bjr.`, `Ha.`, `Fattigstugan`. They are
 counted at the foot of the page and left alone.
 
@@ -665,7 +672,7 @@ hand. Specs live in `docs/superpowers/specs/` and plans in
 `MEMORY.md` in the repo root is the working handoff — decisions worth not
 re-litigating, gotchas that cost real time, and the open threads.
 
-**679 unit tests and 93 end-to-end tests**, `tsc -b` and `npm run build` clean.
+**685 unit tests and 95 end-to-end tests**, `tsc -b` and `npm run build` clean.
 The e2e suite runs single-worker against a copy of the database (`.e2e/wedin.db`), so
 it never touches the real one.
 

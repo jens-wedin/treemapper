@@ -49,7 +49,10 @@ for (const g of learned) {
     `  ${String(g.rows).padStart(4)} rows / ${String(g.places).padStart(3)} places  ` +
     `"${g.by}" -> ${g.code}  (${g.tier}, taught ${g.weight}${rival})`,
   );
-  for (const example of g.examples) console.log(`        ${example}`);
+  for (const item of g.items.slice(0, 3)) {
+    const who = item.owners.map(o => o.name).join(', ');
+    console.log(`        ${item.place}${who ? `   — ${who}` : ''}`);
+  }
 }
 
 console.log(`\n--- quarantined: every edit-distance match, with what it matched (${quarantined.length}) ---`);

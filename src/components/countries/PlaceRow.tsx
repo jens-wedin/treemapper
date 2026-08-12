@@ -2,6 +2,8 @@ import { Button } from '@/components/ui/button';
 import CountryFlag from '../CountryFlag';
 import { t, tf, countryLabel } from '../../lib/i18n';
 import { nearMiss, strength } from '../../lib/countryText';
+import PlaceOwners from './PlaceOwners';
+import type { PlaceOwner } from '../../../lib/countryProposals';
 
 /**
  * A single place, decided on its own.
@@ -10,9 +12,11 @@ import { nearMiss, strength } from '../../lib/countryText';
  * contains — in each case the text is the evidence, so it is shown in full and
  * there is no approve-all to sweep it past the reader.
  */
-export default function PlaceRow({ place, code, after, detail, busy, onApprove, onReject }: {
+export default function PlaceRow({ place, code, after, detail, owners, moreOwners, busy, onApprove, onReject }: {
   place: string;
   code: string;
+  owners: PlaceOwner[];
+  moreOwners: number;
   /** What the text would become, when approving rewrites rather than appends. */
   after?: string;
   /** The near-miss, or how strongly the tree taught it. */
@@ -40,6 +44,7 @@ export default function PlaceRow({ place, code, after, detail, busy, onApprove, 
             </p>
           )}
           {detail && <p className="mt-1 text-sm text-muted-foreground">{detail}</p>}
+          <PlaceOwners owners={owners} more={moreOwners} />
         </div>
 
         <div className="flex shrink-0 gap-2">

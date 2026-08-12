@@ -60,7 +60,7 @@ describe('GET /api/countries', () => {
     const body = await (await api.request('/api/countries')).json();
     const group = body.learned[0];
     expect(Object.keys(group).sort()).toEqual(
-      ['by', 'code', 'examples', 'members', 'places', 'rows', 'tier', 'weight'],
+      ['by', 'code', 'items', 'places', 'rows', 'tier', 'weight'],
     );
   });
 

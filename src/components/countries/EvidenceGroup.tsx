@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import CountryFlag from '../CountryFlag';
 import { t, tf, countryLabel } from '../../lib/i18n';
 import { coverage, evidenceLine, strength, tierLabel } from '../../lib/countryText';
+import PlaceOwners from './PlaceOwners';
 import type { LearnedGroup } from '../../../lib/countryProposals';
 
 /**
@@ -57,10 +58,11 @@ export default function EvidenceGroup({ group, busy, onApprove, onReject }: {
         <summary className="cursor-pointer text-sm text-muted-foreground">
           {tf('countries.showPlaces', { n: group.places })}
         </summary>
-        <ul className="mt-2 space-y-1 text-sm">
-          {group.members.map(place => (
-            <li key={place} className="text-muted-foreground">
-              <span className="text-foreground">{place}</span>
+        <ul className="mt-2 space-y-2 text-sm">
+          {group.items.map(item => (
+            <li key={item.place} className="border-l-2 pl-3">
+              <p className="break-words font-mono">{item.place}</p>
+              <PlaceOwners owners={item.owners} more={item.moreOwners} />
             </li>
           ))}
         </ul>

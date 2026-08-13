@@ -25,4 +25,10 @@ describe('GET /api/export/gedcom', () => {
     expect(text.trimEnd().endsWith('0 TRLR')).toBe(true);
     expect(text).toContain('0 @I1@ INDI');
   });
+
+  it('exports 7.0 by default and honours an explicit ?format', async () => {
+    expect(await (await api.request('/api/export/gedcom')).text()).toContain('2 VERS 7.0');            // default
+    expect(await (await api.request('/api/export/gedcom?format=7.0')).text()).toContain('2 VERS 7.0'); // explicit
+    expect(await (await api.request('/api/export/gedcom?format=5.5.1')).text()).toContain('2 VERS 5.5.1'); // override
+  });
 });

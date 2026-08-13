@@ -117,6 +117,21 @@ export`) plus a copy of `media/` — photos are links in a GEDCOM, not files.
 Copying a `.db` directly also preserves the audit log and dismissals; copy its
 `-wal` and `-shm` alongside it, or you get a stale snapshot.
 
+## Validating GEDCOM 7.0 output
+
+Our round-trip tests only prove that our own parser can read back what our own
+writer produced — a self-check, not an interop check. The honest test is the
+official [gedcom.io validator](https://gedcom.io/tools/#validation): export a
+tree as 7.0 and run the file through it.
+
+```bash
+npm run export -- out.ged --format=7.0
+```
+
+**Never upload a real family database's export to a third-party service** — it
+contains living people. Validate a synthetic or fixture export, or use offline
+conformance tooling, when checking 7.0 output externally.
+
 ## Commands
 
 ```bash

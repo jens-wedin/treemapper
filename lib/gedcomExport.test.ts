@@ -264,6 +264,18 @@ describe('exportGedcom — version-aware media FORM', () => {
   });
 });
 
+describe('exportGedcom — 7.0 validity', () => {
+  it('7.0 output obeys the 7.0 invariants', () => {
+    buildTree();
+    const lines = exportGedcom(db, { version: '7.0' }).replace(/^﻿/, '').split('\r\n');
+    expect(lines.some(l => / CONC /.test(l))).toBe(false);       // no CONC anywhere
+    expect(lines).not.toContain('1 CHAR UTF-8');
+    const declared = new Set(lines.filter(l => l.startsWith('2 TAG ')).map(l => l.split(' ')[2]));
+    const emitted = new Set(lines.flatMap(l => l.split(' ')).filter(t => /^_[A-Z0-9_]+$/.test(t)));
+    for (const tag of emitted) expect(declared.has(tag)).toBe(true); // every extension is SCHMA-declared
+  });
+});
+
 describe('Writer — version-aware continuation', () => {
   it('7.0 uses CONT for newlines and never CONC', () => {
     const w = new Writer('7.0');

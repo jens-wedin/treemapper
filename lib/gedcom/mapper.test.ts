@@ -102,4 +102,17 @@ describe('mapGedcom', () => {
     const { media } = mapGedcom(tree);
     expect(media[0]!.form).toBe('jpg');
   });
+
+  it('reads 7.0 multimedia: a pointer + a top-level OBJE record → a media row', () => {
+    const tree = parseGedcom([
+      '0 HEAD',
+      '0 @I1@ INDI', '1 NAME Test /Person/', '1 OBJE @M5@',
+      '0 @M5@ OBJE', '1 FILE https://x/y.jpg', '2 FORM image/jpeg', '1 TITL Ett foto', '1 _FILESIZE 4242',
+      '0 TRLR',
+    ].join('\n'));
+    const { media, warnings } = mapGedcom(tree);
+    expect(media).toHaveLength(1);
+    expect(media[0]).toMatchObject({ ownerId: 'I1', originalUrl: 'https://x/y.jpg', form: 'jpg', title: 'Ett foto', filesize: 4242 });
+    expect(warnings.some(w => /Skipped unknown level-0 record OBJE/.test(w))).toBe(false);
+  });
 });

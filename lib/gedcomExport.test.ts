@@ -274,6 +274,33 @@ describe('exportGedcom — 7.0 validity', () => {
     const emitted = new Set(lines.flatMap(l => l.split(' ')).filter(t => /^_[A-Z0-9_]+$/.test(t)));
     for (const tag of emitted) expect(declared.has(tag)).toBe(true); // every extension is SCHMA-declared
   });
+
+  it('7.0 output obeys the media invariants: pointers under INDI, records at level 0', () => {
+    buildTree();
+    const lines = exportGedcom(db, { version: '7.0' }).replace(/^﻿/, '').split('\r\n');
+    expect(lines.filter(l => /^1 OBJE/.test(l)).every(l => /^1 OBJE @/.test(l))).toBe(true);  // links are pointers
+    expect(lines.some(l => /^0 @M\d+@ OBJE$/.test(l))).toBe(true);                             // a record exists
+    expect(lines.some(l => /^2 FILE /.test(l))).toBe(false);                                   // FILE only under a record
+  });
+});
+
+describe('exportGedcom — 7.0 multimedia records', () => {
+  it('7.0 writes media as a record + pointer (5.5.1 keeps the embedded form)', () => {
+    buildTree(); // one media on I1, form 'jpg'
+    const v7 = exportGedcom(db, { version: '7.0' }).replace(/^﻿/, '').split('\r\n');
+    expect(v7).toContain('1 OBJE @M1@');           // person references a record by pointer
+    expect(v7).toContain('0 @M1@ OBJE');           // the record exists at level 0
+    expect(v7).toContain('1 FILE https://cdn.example.com/a/b/foto.jpg');
+    expect(v7).toContain('2 FORM image/jpeg');     // FORM nested under FILE (level 2)
+    expect(v7.some(l => /^1 OBJE$/.test(l))).toBe(false);  // no embedded OBJE block
+    expect(v7.some(l => /^2 FILE /.test(l))).toBe(false);  // FILE never at level 2 in 7.0
+
+    const v55 = exportGedcom(db).replace(/^﻿/, '').split('\r\n');
+    expect(v55).toContain('1 OBJE');               // 5.5.1 embedded unchanged
+    expect(v55).toContain('2 FILE https://cdn.example.com/a/b/foto.jpg');
+    expect(v55).toContain('2 FORM jpg');
+    expect(v55.some(l => /^0 @M1@ OBJE$/.test(l))).toBe(false); // no records in 5.5.1
+  });
 });
 
 describe('Writer — version-aware continuation', () => {

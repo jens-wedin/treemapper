@@ -118,9 +118,16 @@ export function mapGedcom(records: GedcomNode[]): MappedData {
   const isEventNode = (c: GedcomNode) =>
     EVENT_TAGS.has(c.tag) || (!!c.children.length && (!!child(c, 'DATE') || !!child(c, 'PLAC')));
 
+  // 7.0 multimedia records live at level 0 and are referenced by a pointer
+  // (`1 OBJE @M@`) rather than embedded — build a lookup before the main
+  // pass so the INDI branch below can resolve one when it meets a pointer.
+  const objeRecords = new Map<string, GedcomNode>();
+  for (const rec of records) if (rec.tag === 'OBJE') objeRecords.set(stripAt(rec.xref), rec);
+
   for (const rec of records) {
     if (rec.tag === 'HEAD' || rec.tag === 'TRLR') continue;
     if (rec.tag === 'ALBUM') { out.albums++; continue; }
+    if (rec.tag === 'OBJE') continue;   // consumed via pointers, not a record of its own
     const id = stripAt(rec.xref);
 
     if (rec.tag === 'INDI') {
@@ -150,7 +157,28 @@ export function mapGedcom(records: GedcomNode[]): MappedData {
         } else if (c.tag === 'NOTE') {
           if (c.value) notes.push(c.value);
         } else if (c.tag === 'OBJE') {
-          const url = childValue(c, 'FILE');
+          if (c.value?.startsWith('@')) {                       // 7.0 multimedia link (pointer)
+            const objeRec = objeRecords.get(stripAt(c.value));
+            const fileNode = objeRec && child(objeRec, 'FILE');
+            const url = fileNode?.value;
+            if (objeRec && url?.startsWith('http')) {
+              const consumed = new Set(['FILE', 'TITL', '_FILESIZE']);  // FORM lives under FILE, consumed with it
+              out.media.push({
+                id: ++mediaId, ownerType: 'person', ownerId: id,
+                title: childValue(objeRec, 'TITL') ?? null,
+                originalUrl: url,
+                form: canonicalForm(childValue(fileNode!, 'FORM') ?? null),
+                filesize: childValue(objeRec, '_FILESIZE') != null ? Number(childValue(objeRec, '_FILESIZE')) : null,
+                downloadStatus: 'pending',
+                rawTags: serializeRaw(objeRec.children.filter(x => !consumed.has(x.tag))),
+              });
+            } else {
+              out.warnings.push(`OBJE pointer ${c.value} unresolved on ${id} kept in raw_tags`);
+              raw.push(c);
+            }
+            continue;
+          }
+          const url = childValue(c, 'FILE');                    // 5.5.1 embedded (existing logic, unchanged)
           if (!url?.startsWith('http')) {
             out.warnings.push(`OBJE without http FILE on ${id} kept in raw_tags`);
             raw.push(c);

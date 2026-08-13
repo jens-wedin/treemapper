@@ -245,12 +245,16 @@ export function exportGedcom(db: Db, opts: ExportOptions = {}): string {
     writeEvents(w, eventsByOwner.get(`person:${p.id}`) ?? [], citationsByEvent);
     writeCitations(w, 1, citationsByOwner.get(`person:${p.id}`) ?? []);
     for (const m of mediaByPerson.get(p.id) ?? []) {
-      w.line(1, 'OBJE');
-      if (m.form) w.line(2, 'FORM', version === '7.0' ? mediaType(m.form) : m.form);
-      if (m.originalUrl) w.line(2, 'FILE', m.originalUrl);
-      if (m.title) w.line(2, 'TITL', m.title);
-      if (m.filesize != null) w.line(2, '_FILESIZE', String(m.filesize));
-      writeRawTags(w, 2, m.rawTags);
+      if (version === '7.0') {
+        w.line(1, 'OBJE', `@M${m.id}@`);            // 7.0: pointer to the record
+      } else {
+        w.line(1, 'OBJE');                          // 5.5.1: embedded (unchanged)
+        if (m.form) w.line(2, 'FORM', m.form);
+        if (m.originalUrl) w.line(2, 'FILE', m.originalUrl);
+        if (m.title) w.line(2, 'TITL', m.title);
+        if (m.filesize != null) w.line(2, '_FILESIZE', String(m.filesize));
+        writeRawTags(w, 2, m.rawTags);
+      }
     }
     if (p.note) w.line(1, 'NOTE', p.note);
     writeRawTags(w, 1, p.rawTags);
@@ -280,6 +284,19 @@ export function exportGedcom(db: Db, opts: ExportOptions = {}): string {
     if (s.note) w.line(1, 'NOTE', s.note);
     if (s.transcription) w.line(1, 'TEXT', s.transcription);
     writeRawTags(w, 1, s.rawTags);
+  }
+
+  // ---- OBJE (7.0 multimedia records; 5.5.1 embeds media inline above) ----
+  if (version === '7.0') {
+    for (const m of allMedia) {
+      if (m.ownerType !== 'person') continue;     // only the referenced ones
+      w.line(0, 'OBJE', null, `@M${m.id}@`);
+      w.line(1, 'FILE', m.originalUrl);
+      w.line(2, 'FORM', mediaType(m.form) ?? 'application/octet-stream');  // FORM required under FILE in 7.0
+      if (m.title) w.line(1, 'TITL', m.title);
+      if (m.filesize != null) w.line(1, '_FILESIZE', String(m.filesize));
+      writeRawTags(w, 1, m.rawTags);
+    }
   }
 
   const body = w.toString();

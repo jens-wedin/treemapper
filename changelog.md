@@ -8,6 +8,18 @@ Releases are automated from [Conventional Commits](https://www.conventionalcommi
 with [release-please](https://github.com/googleapis/release-please); see
 [`RELEASING.md`](RELEASING.md).
 
+## [1.2.0](https://github.com/jens-wedin/treemapper/compare/v1.1.0...v1.2.0) (2026-08-13)
+
+
+### Added
+
+* **statistics:** link birth places and countries to a People search ([540e374](https://github.com/jens-wedin/treemapper/commit/540e374ac63d0a31fdae4cc5a16e68257196dbc0))
+
+
+### Fixed
+
+* **statistics:** lay the family-sizes chart and table out in two columns ([0a1e055](https://github.com/jens-wedin/treemapper/commit/0a1e05556a4eda7f2a057ecdd8cd32213a4e25e4))
+
 ## [1.1.0](https://github.com/jens-wedin/treemapper/compare/v1.0.0...v1.1.0) (2026-08-13)
 
 

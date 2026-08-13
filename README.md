@@ -153,6 +153,14 @@ place (`merge-duplicates`, `repair-conc`) back the database up first.
 `CLAUDE.md` holds the conventions and traps; `MEMORY.md` holds current state and
 open threads.
 
+## Releasing
+
+Versions follow [SemVer](https://semver.org), the changelog is [Keep a
+Changelog](https://keepachangelog.com), and releases are automated from
+[Conventional Commits](https://www.conventionalcommits.org) with
+[release-please](https://github.com/googleapis/release-please). See
+[RELEASING.md](RELEASING.md).
+
 ## License
 
 MIT — see [LICENSE](LICENSE).

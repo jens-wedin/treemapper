@@ -1,0 +1,21 @@
+name: release-please
+
+on:
+  push:
+    branches:
+      - main
+
+# release-please opens a release PR and, when it is merged, tags the release
+# and publishes the GitHub Release — both need write access to the repo.
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json

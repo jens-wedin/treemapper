@@ -1,6 +1,14 @@
 # Changelog
 
-## [Unreleased]
+All notable changes to this project are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Releases are automated from [Conventional Commits](https://www.conventionalcommits.org)
+with [release-please](https://github.com/googleapis/release-please); see
+[`RELEASING.md`](RELEASING.md).
+
+## [1.0.0] - 2026-08-13
 
 ### Changed
 
@@ -369,3 +377,5 @@
 - Real import completed: 4 561 people, 983 families, 520 sources, 14 588 events, 5 804 citations.
 - All 985 photos recovered (2026-08-06) via a fresh MyHeritage export + `refresh-media` + `media` → 985/985 downloaded, 0 failures (425 MB, gitignored).
 - **Andersson deduplicated (2026-08-09…11): 504 → 486 people, 0 duplicate findings.** One branch imported twice, showing at three levels: Jens himself, his grandparents (invisible to the detector because one copy said "Anders Andersson" and the other "Anders Bertil Andersson"), and six Bergqvist children recorded under both of Anders Bergqvist's wives. The last were assigned by arithmetic: Karin was 6 years old in 1719, Elisabet died in 1733. No citation or photo lost — 483 and 257 before and after.
+
+[1.0.0]: https://github.com/jens-wedin/treemapper/releases/tag/v1.0.0

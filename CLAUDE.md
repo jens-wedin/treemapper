@@ -217,9 +217,12 @@ in a Swedish voice. Check contrast in both themes.
 ## Finishing a piece of work
 
 - Conventional commits, English, explaining **why** rather than restating the
-  diff.
-- Update `changelog.md` (one `## [Unreleased]` section; entries describe the app
-  as it will ship), `README.md` if behaviour changed, and `MEMORY.md` with
-  anything the next session would otherwise have to rediscover.
+  diff — they are what release-please turns into the next version and its
+  `changelog.md` entry, so the body matters. `feat:` bumps the minor, `fix:` the
+  patch, `feat!:`/`BREAKING CHANGE:` the major. Do **not** bump the version or
+  edit the changelog by hand; release-please opens a release PR you review, edit
+  and merge. See `RELEASING.md`.
+- Update `README.md` if behaviour changed, and `MEMORY.md` with anything the
+  next session would otherwise have to rediscover.
 - Report honestly: if something is unverified, say so; if you left part of the
   scope out, say which part and why.

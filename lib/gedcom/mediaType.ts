@@ -1,5 +1,11 @@
 // Stored `form` is a bare file extension (jpg, png…) — 5.5.1's shape and our
 // download filename. 7.0 wants an IANA media type on FILE.FORM.
+//
+// Key order matters: where two extensions share a media type (jpeg/jpg,
+// tiff/tif), the LAST one wins as the canonical form in the reverse
+// (TYPE_TO_EXT) map below, since Object.fromEntries keeps the last value for a
+// repeated key. Re-sorting or alphabetising this map would silently change
+// what canonicalForm() returns.
 const EXT_TO_TYPE: Record<string, string> = {
   jpeg: 'image/jpeg', jpg: 'image/jpeg', png: 'image/png', gif: 'image/gif',
   tiff: 'image/tiff', tif: 'image/tiff', bmp: 'image/bmp', webp: 'image/webp',

@@ -124,6 +124,26 @@ describe('renaming and deleting', () => {
     expect((await res.json()).tree.name).toBe('Rätt namn');
   });
 
+  it('rejects an invalid GEDCOM export format', async () => {
+    const res = await api.request('/api/trees/default', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gedcomFormat: '6.0' }),
+    });
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toContain('gedcomFormat');
+  });
+
+  it('accepts a valid GEDCOM export format', async () => {
+    const res = await api.request('/api/trees/default', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gedcomFormat: '5.5.1' }),
+    });
+    expect(res.status).toBe(200);
+    expect((await res.json()).tree.gedcomFormat).toBe('5.5.1');
+  });
+
   it('deletes a tree', async () => {
     await upload(MINI, 'mini.ged', 'Larsson');
     expect((await api.request('/api/trees/larsson', { method: 'DELETE' })).status).toBe(200);

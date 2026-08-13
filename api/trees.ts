@@ -101,7 +101,10 @@ export function createTreesApi() {
   api.patch('/api/trees/:id', async c => {
     const body = await c.req.json().catch(() => ({}));
     try {
-      if (body.gedcomFormat === '5.5.1' || body.gedcomFormat === '7.0') {
+      if ('gedcomFormat' in body) {
+        if (body.gedcomFormat !== '5.5.1' && body.gedcomFormat !== '7.0') {
+          return c.json({ error: 'gedcomFormat must be "5.5.1" or "7.0"' }, 400);
+        }
         return c.json({ ok: true, tree: setTreeFormat(c.req.param('id'), body.gedcomFormat) });
       }
       const name = typeof body.name === 'string' ? body.name : '';

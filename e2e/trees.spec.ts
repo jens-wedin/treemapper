@@ -203,4 +203,8 @@ test('a tree can be switched to GEDCOM 5.5.1 and it exports that way', async ({ 
   await expect(select).toHaveValue('5.5.1');
   const dl = await page.request.get('/api/export/gedcom?tree=wedin');
   expect(await dl.text()).toContain('2 VERS 5.5.1');
+
+  // leave the suite as it found it — this tree's format is shared fixture state
+  await select.selectOption('7.0');
+  await expect(select).toHaveValue('7.0');
 });

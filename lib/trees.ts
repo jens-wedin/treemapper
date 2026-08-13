@@ -187,7 +187,7 @@ export function infoFor(id: string): TreeInfo {
     isDefault: isDefaultId(id),
     persons: personCount,
     photosPending: pending,
-    gedcomFormat: (meta.gedcomFormat as '5.5.1' | '7.0') ?? '7.0',
+    gedcomFormat: meta.gedcomFormat === '5.5.1' ? '5.5.1' : '7.0',
   };
 }
 

@@ -32,14 +32,24 @@ checked on a copy (4 511 persons, 19 distinct `_extension` tags all SCHMA-declar
 media `FORM` = image/jpeg + application/pdf). See README → "Validating GEDCOM 7.0
 output" for the offline recipe.
 
+**P2 — GEDZIP (`.gdz`) export: DONE (2026-08-14).** `buildGedzip(db)` (`lib/gedcom/gedzip.ts`,
+using **fflate**) zips `gedcom.ged` (7.0) plus the tree's downloaded photos, rewriting each
+bundled photo's `FILE` payload to `<id>.<form>` (undownloaded stay URLs). Exposed as
+`?container=gdz` (API), `--gdz` (CLI), and a Settings "Download GEDZIP" link. Externally
+validated: a synthetic `.gdz`'s `gedcom.ged` passes `js-gedcom` with **0 errors**. GEDZIP is
+7.0-only. GEDZIP *import* is P4.
+
 **Still open (spec's later phases, not started):**
-- **P2 — GEDZIP** (`.gdz`) export/import; reference file: `maximal70.gdz` from gedcom.io.
 - **P3 — full 7.0 *import*** (foreign files): version/encoding detection (UTF-16, reject
-  ANSEL), `SNOTE`→`shared_notes`, calendar-keyword dates, `SCHMA` resolution. Use
-  `maximal70.ged` as the fixture. Known foreign-input round-trip edges to fix then:
-  a preserved unresolved `1 OBJE @X@` re-serialises as a dangling pointer; null
-  `media.form` round-trips as `application/octet-stream`; `@M{id}@` xref could
-  collide with a foreign `@M<n>@`; shared media isn't de-duplicated on import.
+  ANSEL), `SNOTE`→`shared_notes`, calendar-keyword dates, `SCHMA` resolution. Fixture:
+  `maximal70.ged` (from gedcom.io) — a stress test on 2026-08-14 confirmed our parser/mapper
+  ingest it without crashing but **drop** the records we don't model (SNOTE/SUBM/REPO) while
+  keeping pointers to them, so re-export leaves **dangling pointers** — exactly what
+  `shared_notes` + record-preservation fix. Other foreign-input edges for P3: null `media.form`
+  round-trips as `application/octet-stream`; `@M{id}@` xref could collide with a foreign `@M<n>@`;
+  `NO` (negative assertion) is mis-mapped as an event; shared media isn't de-duplicated on import.
+- **P4 — GEDZIP *import*** (`.gdz` unzip + media extraction; map bundle entry `<id>.<form>` back to
+  media, files into `media/<tree>/`). Reference: `maximal70.gdz`.
 - Promoting our extension tags to standard 7.0 structures (`_MARNM`→`NAME`/`TYPE`,
   `_UID`→`UID`) is deliberately deferred — they round-trip losslessly as raw for now.
 

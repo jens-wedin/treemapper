@@ -58,7 +58,8 @@ function buildTree() {
   }).run();
 }
 
-const roundTrip = (): MappedData => mapGedcom(parseGedcom(exportGedcom(db)));
+const roundTrip = (version: '5.5.1' | '7.0'): MappedData =>
+  mapGedcom(parseGedcom(exportGedcom(db, { version })));
 
 describe('exportGedcom — struktur', () => {
   it('writes a valid GEDCOM skeleton', () => {
@@ -100,7 +101,7 @@ describe('exportGedcom — round trip through our own parser', () => {
     ].join('\n');
     db.update(sources).set({ transcription: text }).where(eq(sources.id, 'S1')).run();
 
-    const back = roundTrip();
+    const back = roundTrip('5.5.1');
     const s1 = back.sources.find(s => s.id === 'S1')!;
     expect(s1.transcription).toBe(text);
     // The fixture also carries a note, so this is the case that matters: both
@@ -110,7 +111,7 @@ describe('exportGedcom — round trip through our own parser', () => {
 
   it('preserves counts and key values', () => {
     buildTree();
-    const back = roundTrip();
+    const back = roundTrip('5.5.1');
 
     expect(back.persons).toHaveLength(3);
     expect(back.families).toHaveLength(1);
@@ -145,7 +146,7 @@ describe('exportGedcom — round trip through our own parser', () => {
 
   it('preserves raw_tags on person, event and media', () => {
     buildTree();
-    const back = roundTrip();
+    const back = roundTrip('5.5.1');
     expect(back.persons.find(p => p.id === 'I1')!.rawTags).toContain('_UID');
     expect(back.events.find(e => e.type === 'BIRT')!.rawTags).toContain('Testgatan 1');
     expect(back.media[0]!.rawTags).toContain('MH:P1');
@@ -153,7 +154,7 @@ describe('exportGedcom — round trip through our own parser', () => {
 
   it('recreates EVEN with its TYPE', () => {
     buildTree();
-    const back = roundTrip();
+    const back = roundTrip('5.5.1');
     const even = back.events.find(e => e.type === 'EVEN')!;
     expect(even.description).toBe('Militärtjänst: Var med i kriget');
   });
@@ -164,7 +165,7 @@ describe('exportGedcom — round trip through our own parser', () => {
       id: 'I1', givenName: 'Lång', surname: 'Text', sex: 'U',
       note: `${long}\nandra raden`, rawTags: null,
     }).run();
-    const back = roundTrip();
+    const back = roundTrip('5.5.1');
     expect(back.persons[0]!.note).toBe(`${long}\nandra raden`);
   });
 
@@ -178,7 +179,7 @@ describe('exportGedcom — round trip through our own parser', () => {
     const text = exportGedcom(db);
     const bad = text.split('\r\n').filter(l => l.includes('\r'));
     expect(bad).toEqual([]);   // no line may contain a stray CR
-    const back = roundTrip();
+    const back = roundTrip('5.5.1');
     expect(back.sources[0]!.note).toBe('<p>Data från anarkiv</p>\n<p>Andra stycket</p>');
   });
 
@@ -205,7 +206,7 @@ describe('exportGedcom — round trip through our own parser', () => {
     const dataLines = block.slice(0, 8).filter(l => /^\d+ DATA$/.test(l));
     expect(dataLines).toHaveLength(1);
 
-    const back = roundTrip();
+    const back = roundTrip('5.5.1');
     const c = back.citations.find(x => x.ownerId === 'I9')!;
     expect(c.text).toBe('Tillagd genom bekräftelse av en Smart Match');
     expect(c.page).toBe('sid 4');
@@ -216,7 +217,20 @@ describe('exportGedcom — round trip through our own parser', () => {
     const text = exportGedcom(db);
     expect(text).toContain('0 HEAD');
     expect(text.trimEnd().endsWith('0 TRLR')).toBe(true);
-    expect(roundTrip().persons).toHaveLength(0);
+    expect(roundTrip('5.5.1').persons).toHaveLength(0);
+  });
+});
+
+describe.each(['5.5.1', '7.0'] as const)('round-trip through our own parser (%s)', version => {
+  it('preserves counts and key values', () => {
+    buildTree();
+    const out = roundTrip(version);
+    expect(out.persons).toHaveLength(3);
+    expect(out.families).toHaveLength(1);
+    expect(out.sources).toHaveLength(1);
+    expect(out.media[0]!.form).toBe('jpg');                       // 7.0 MIME normalised back
+    expect(out.persons.find(p => p.id === 'I1')!.rawTags).toContain('_UID');
+    expect(out.persons.find(p => p.id === 'I1')!.note).toBe('En anteckning\nmed två rader');
   });
 });
 

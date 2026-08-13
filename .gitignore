@@ -26,3 +26,7 @@ playwright-report/
 
 # Internal planning docs (brief, plans, specs) — kept local, not published.
 docs/superpowers/
+# Vendored copy of the official GEDCOM 7.0 spec, kept locally for reference.
+docs/GEDCOM-7.0.18/
+# Subagent-driven-development scratch: ledger, briefs, review packages.
+.superpowers/

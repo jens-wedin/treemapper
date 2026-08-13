@@ -5,6 +5,7 @@
       "release-type": "node",
       "changelog-path": "changelog.md",
       "include-v-in-tag": true,
+      "include-component-in-tag": false,
       "changelog-sections": [
         { "type": "feat", "section": "Added" },
         { "type": "fix", "section": "Fixed" },

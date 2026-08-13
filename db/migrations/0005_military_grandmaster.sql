@@ -1,0 +1,1 @@
+ALTER TABLE `tree_meta` ADD `gedcom_format` text DEFAULT '7.0' NOT NULL;

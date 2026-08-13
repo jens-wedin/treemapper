@@ -4,7 +4,7 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { persons } from '../db/schema';
 import { createDb } from '../db/client';
-import { TreeNotFound, closeTrees, createEmptyTree, createTree, defaultTreeId, deleteTree, listTrees, openTree, renameTree } from './trees';
+import { TreeNotFound, closeTrees, createEmptyTree, createTree, defaultTreeId, deleteTree, infoFor, listTrees, openTree, renameTree, setTreeFormat } from './trees';
 import { SAFE_ENV } from '../vitest.setup';
 
 const MINI = path.resolve('lib/gedcom/fixtures/mini.ged');
@@ -230,6 +230,13 @@ describe('a tree started from nothing', () => {
   it('shares the naming rules with an imported one', () => {
     createTree('Larsson', MINI, 'x.ged');
     expect(createEmptyTree('Larsson').id).toBe('larsson-2');
+  });
+
+  it('defaults a new tree to GEDCOM 7.0 and lets it be switched to 5.5.1', () => {
+    const info = createEmptyTree('Formats');
+    expect(info.gedcomFormat).toBe('7.0');
+    expect(setTreeFormat(info.id, '5.5.1').gedcomFormat).toBe('5.5.1');
+    expect(infoFor(info.id).gedcomFormat).toBe('5.5.1');
   });
 });
 

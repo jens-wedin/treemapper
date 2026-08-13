@@ -27,6 +27,8 @@ export interface TreeInfo {
   persons: number;
   /** Photos the GEDCOM names but that are not on disk. */
   photosPending: number;
+  /** Which GEDCOM version this tree exports as. Import ignores this. */
+  gedcomFormat: '5.5.1' | '7.0';
 }
 
 export class TreeNotFound extends Error {
@@ -169,7 +171,7 @@ export function openTree(id: string): Db {
   return openAt(file);
 }
 
-function infoFor(id: string): TreeInfo {
+export function infoFor(id: string): TreeInfo {
   const db = openTree(id);
   const meta = db.select().from(treeMeta).all()[0]!;
   const personCount = db.select({ n: sql<number>`count(*)` }).from(persons).all()[0]?.n ?? 0;
@@ -185,6 +187,7 @@ function infoFor(id: string): TreeInfo {
     isDefault: isDefaultId(id),
     persons: personCount,
     photosPending: pending,
+    gedcomFormat: (meta.gedcomFormat as '5.5.1' | '7.0') ?? '7.0',
   };
 }
 
@@ -311,6 +314,12 @@ export function renameTree(id: string, name: string): TreeInfo {
   if (!trimmed) throw new Error('A family tree must have a name');
   const db = openTree(id);
   db.update(treeMeta).set({ name: trimmed }).where(eq(treeMeta.id, 1)).run();
+  return infoFor(id);
+}
+
+export function setTreeFormat(id: string, format: '5.5.1' | '7.0'): TreeInfo {
+  const db = openTree(id);
+  db.update(treeMeta).set({ gedcomFormat: format }).where(eq(treeMeta.id, 1)).run();
   return infoFor(id);
 }
 

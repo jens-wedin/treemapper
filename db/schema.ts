@@ -17,6 +17,9 @@ export const treeMeta = sqliteTable('tree_meta', {
   // somebody saved. Empty on rows written before slugs existed; backfilled on
   // first open.
   slug: text('slug').notNull().default(''),
+  // Which GEDCOM version this tree exports as. 7.0 is the modern default;
+  // switchable per tree. Import always reads the file's own version regardless.
+  gedcomFormat: text('gedcom_format').notNull().default('7.0'),
 });
 
 export const persons = sqliteTable('persons', {

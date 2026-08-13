@@ -60,6 +60,17 @@ export default function SettingsPage() {
         >
           {t('export.download')}
         </a>
+        {/* apiUrl() always carries `?tree=<id>` here: this page only ever
+            renders inside a scoped route, which has already adopted a real
+            tree id before render, so a plain `&` is safe. */}
+        <a
+          href={`${apiUrl('/api/export/gedcom')}&container=gdz`}
+          download
+          className="mt-4 ml-3 inline-block rounded-md border px-4 py-2 font-medium hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+        >
+          {t('export.gedzip')}
+        </a>
+        <p className="mt-2 text-sm text-muted-foreground">{t('export.gedzipHelp')}</p>
         <p className="mt-4 text-sm text-muted-foreground">{t('export.backupNote')}</p>
         <p className="mt-1 text-sm text-muted-foreground">
           <code>{t('export.cliNote')}</code>

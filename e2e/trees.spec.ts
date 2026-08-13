@@ -208,3 +208,16 @@ test('a tree can be switched to GEDCOM 5.5.1 and it exports that way', async ({ 
   await select.selectOption('7.0');
   await expect(select).toHaveValue('7.0');
 });
+
+test('Settings offers a GEDZIP (.gdz) download that bundles photos', async ({ page }) => {
+  await page.goto('/wedin/settings');
+  const gdz = page.getByRole('link', { name: /GEDZIP|\.gdz/ });
+  await expect(gdz).toBeVisible();
+  const href = await gdz.getAttribute('href');
+  expect(href).toContain('container=gdz');
+  const dl = await page.request.get(href!);
+  expect(dl.headers()['content-type']).toContain('zip');
+  const { unzipSync, strFromU8 } = await import('fflate');
+  const entries = unzipSync(new Uint8Array(await dl.body()));
+  expect(strFromU8(entries['gedcom.ged']!).replace(/^﻿/, '').split('\r\n')).toContain('2 VERS 7.0');
+});

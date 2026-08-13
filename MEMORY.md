@@ -10,7 +10,38 @@ in it. Environment variables are `TREEMAPPER_DB`, `TREEMAPPER_TREES_DIR`,
 _Last updated: 2026-08-13. All six spec phases are built, plus tree UX work, a
 shadcn theme, Statistics, multiple family trees, the tree in every URL, sources
 you can write out and cite by hand, several rounds of data repair, the move to
-English — and the project is now published open-source on GitHub._
+English, GEDCOM 7.0 export — and the project is now published open-source on GitHub._
+
+## GEDCOM 7.0 export + per-tree format (2026-08-13)
+
+A tree now exports as **GEDCOM 5.5.1 or 7.0**, chosen by a per-tree setting
+(`tree_meta.gedcom_format`, default **7.0**) shown in Settings; the export API
+(`?format=`) and CLI (`--format=`) honour it. The 5.5.1 output is byte-for-byte
+unchanged. The 7.0 writer drops `CHAR`/`GEDC.FORM`, uses `CONT`-only continuation,
+IANA media types, **multimedia records (`0 @M@ OBJE` / `1 FILE` / `2 FORM` / `2
+TITL`) referenced by `1 OBJE @M@` pointers**, and a `SCHMA` block declaring every
+`_extension` tag. One serializer, version-aware at ~8 seams (`lib/gedcomExport.ts`,
+`lib/gedcom/mediaType.ts`, `lib/gedcom/extensions.ts`). The importer reads our own
+7.0 multimedia back so 7.0 round-trips losslessly through our parser.
+
+**Externally validated:** the 7.0 output passes FamilySearch's official
+`g7validation.json` via the `gedcom7code/js-gedcom` validator (run **offline** — no
+upload) with **0 errors** (only benign "unregistered extension" warnings for our
+SCHMA-documented custom tags). The real `wedin.db` 7.0 export was structurally
+checked on a copy (4 511 persons, 19 distinct `_extension` tags all SCHMA-declared,
+media `FORM` = image/jpeg + application/pdf). See README → "Validating GEDCOM 7.0
+output" for the offline recipe.
+
+**Still open (spec's later phases, not started):**
+- **P2 — GEDZIP** (`.gdz`) export/import; reference file: `maximal70.gdz` from gedcom.io.
+- **P3 — full 7.0 *import*** (foreign files): version/encoding detection (UTF-16, reject
+  ANSEL), `SNOTE`→`shared_notes`, calendar-keyword dates, `SCHMA` resolution. Use
+  `maximal70.ged` as the fixture. Known foreign-input round-trip edges to fix then:
+  a preserved unresolved `1 OBJE @X@` re-serialises as a dangling pointer; null
+  `media.form` round-trips as `application/octet-stream`; `@M{id}@` xref could
+  collide with a foreign `@M<n>@`; shared media isn't de-duplicated on import.
+- Promoting our extension tags to standard 7.0 structures (`_MARNM`→`NAME`/`TYPE`,
+  `_UID`→`UID`) is deliberately deferred — they round-trip losslessly as raw for now.
 
 ## Every database lives in `trees/` (2026-08-12)
 

@@ -89,9 +89,11 @@ reserved.
 - **Countries** — fills in the country of a place that names none, one approval
   at a time, learned from the tree itself rather than an outside list; nothing
   reaches the network and every change is audit-logged.
-- **Export** — GEDCOM 5.5.1, round-trip verified: exporting and re-importing
-  reproduces every table exactly, re-emitting the `raw_tags` subtrees for
-  structures the app doesn't model.
+- **Export** — GEDCOM **5.5.1 or 7.0**, chosen per tree (7.0 is the default),
+  round-trip verified: exporting and re-importing reproduces every table exactly,
+  re-emitting the `raw_tags` subtrees for structures the app doesn't model. The
+  7.0 writer uses `CONT`-only continuation, IANA media types, multimedia records
+  referenced by pointers, and a `SCHMA` block declaring every extension tag.
 
 ## Languages
 
@@ -120,17 +122,22 @@ Copying a `.db` directly also preserves the audit log and dismissals; copy its
 ## Validating GEDCOM 7.0 output
 
 Our round-trip tests only prove that our own parser can read back what our own
-writer produced — a self-check, not an interop check. The honest test is the
-official [gedcom.io validator](https://gedcom.io/tools/#validation): export a
-tree as 7.0 and run the file through it.
+writer produced — a self-check, not an interop check. For real conformance,
+validate the 7.0 output against the official FamilySearch GEDCOM 7 rules.
 
 ```bash
 npm run export -- out.ged --format=7.0
 ```
 
-**Never upload a real family database's export to a third-party service** — it
-contains living people. Validate a synthetic or fixture export, or use offline
-conformance tooling, when checking 7.0 output externally.
+The privacy-safe way is **offline**, so nothing leaves the machine: clone the
+reference validator
+[`gedcom7code/js-gedcom`](https://github.com/gedcom7code/js-gedcom), fetch
+FamilySearch's
+[`g7validation.json`](https://github.com/FamilySearch/GEDCOM-registries/blob/main/generated_files/g7validation.json),
+and run the export through it in Node. The online
+[gedcom.io validator](https://gedcom.io/tools/#validation) works too — but
+**never upload a real family database's export to a third-party web service**
+(it contains living people); validate only a synthetic or fixture export there.
 
 ## Commands
 
@@ -146,7 +153,7 @@ Data tools:
 ```bash
 npm run import -- <file.ged> "<name>"        # create a new tree from a GEDCOM
 npm run media -- <tree>                      # download a tree's photos
-npm run export -- [path]                     # write the tree out as GEDCOM 5.5.1
+npm run export -- [path] [--format=5.5.1|7.0]  # write the tree out (default: the tree's format, 7.0)
 npm run merge-duplicates -- <person-id> ...  # fold up a re-imported branch
 ```
 

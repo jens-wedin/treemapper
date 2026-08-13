@@ -5,7 +5,7 @@ import { Hono, type Context } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { HTTPException } from 'hono/http-exception';
 import type { Db } from '../db/client';
-import { DEFAULT_TREE, TreeNotFound, createEmptyTree, createTree, deleteTree, listTrees, openTree, renameTree } from '../lib/trees';
+import { DEFAULT_TREE, TreeNotFound, createEmptyTree, createTree, deleteTree, listTrees, openTree, renameTree, setTreeFormat } from '../lib/trees';
 import { parseGedcom } from '../lib/gedcom/parser';
 
 export interface ActiveTree { id: string; db: Db }
@@ -100,8 +100,11 @@ export function createTreesApi() {
 
   api.patch('/api/trees/:id', async c => {
     const body = await c.req.json().catch(() => ({}));
-    const name = typeof body.name === 'string' ? body.name : '';
     try {
+      if (body.gedcomFormat === '5.5.1' || body.gedcomFormat === '7.0') {
+        return c.json({ ok: true, tree: setTreeFormat(c.req.param('id'), body.gedcomFormat) });
+      }
+      const name = typeof body.name === 'string' ? body.name : '';
       return c.json({ ok: true, tree: renameTree(c.req.param('id'), name) });
     } catch (err) {
       return c.json({ error: (err as Error).message }, err instanceof TreeNotFound ? 404 : 400);

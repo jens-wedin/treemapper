@@ -71,6 +71,7 @@ const en = {
     photosPending: 'Photos not downloaded: {n} — run npm run media in the terminal.',
     notFound: 'That family tree no longer exists — showing the original one instead.',
     empty: 'No imported family trees yet.',
+    format: 'GEDCOM export format', format70: 'GEDCOM 7.0', format551: 'GEDCOM 5.5.1',
   },
   home: { lead: 'Search the family tree', searchLabel: 'Search for a person' },
   search: {
@@ -431,6 +432,7 @@ const sv: DeepPartial<Dict> = {
     photosPending: 'Foton som inte laddats ner: {n} — kör npm run media i terminalen.',
     notFound: 'Släktträdet finns inte längre — visar det ursprungliga i stället.',
     empty: 'Inga importerade släktträd ännu.',
+    format: 'GEDCOM-exportformat', format70: 'GEDCOM 7.0', format551: 'GEDCOM 5.5.1',
   },
   home: { lead: 'Sök i släktträdet', searchLabel: 'Sök person' },
   search: {
@@ -786,6 +788,7 @@ const de: DeepPartial<Dict> = {
     photosPending: 'Nicht heruntergeladene Fotos: {n} — führe npm run media im Terminal aus.',
     notFound: 'Diesen Stammbaum gibt es nicht mehr — es wird der ursprüngliche angezeigt.',
     empty: 'Noch keine importierten Stammbäume.',
+    format: 'GEDCOM-Exportformat', format70: 'GEDCOM 7.0', format551: 'GEDCOM 5.5.1',
   },
   home: { lead: 'Im Stammbaum suchen', searchLabel: 'Person suchen' },
   search: {
@@ -1141,6 +1144,7 @@ const es: DeepPartial<Dict> = {
     photosPending: 'Fotos sin descargar: {n}: ejecuta npm run media en la terminal.',
     notFound: 'Ese árbol genealógico ya no existe: se muestra el original.',
     empty: 'Todavía no hay árboles genealógicos importados.',
+    format: 'Formato de exportación GEDCOM', format70: 'GEDCOM 7.0', format551: 'GEDCOM 5.5.1',
   },
   home: { lead: 'Buscar en el árbol', searchLabel: 'Buscar persona' },
   search: {

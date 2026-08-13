@@ -191,3 +191,16 @@ test('the suite runs against its own database, not the real one', async ({ reque
   expect(db).toContain('.e2e');
   expect(db).not.toMatch(/[/\\]wedin-tree[/\\]wedin\.db$/);
 });
+
+test('a tree can be switched to GEDCOM 5.5.1 and it exports that way', async ({ page }) => {
+  await page.goto('/wedin/settings');
+  // Scoped to the Wedin row: every tree gets its own format select, and an
+  // unscoped getByLabel would be ambiguous the moment a second tree exists.
+  const row = page.getByRole('listitem').filter({ hasText: 'Wedin' });
+  const select = row.getByLabel('GEDCOM export format');
+  await expect(select).toHaveValue('7.0');            // default
+  await select.selectOption('5.5.1');
+  await expect(select).toHaveValue('5.5.1');
+  const dl = await page.request.get('/api/export/gedcom?tree=wedin');
+  expect(await dl.text()).toContain('2 VERS 5.5.1');
+});

@@ -83,6 +83,19 @@ function Row({ tree, onChanged }: { tree: TreeSummary; onChanged: () => void }) 
         {error && <p className="text-sm text-destructive">{error}</p>}
       </div>
 
+      <div>
+        <label htmlFor={`fmt-${tree.id}`} className="sr-only">{t('trees.format')}</label>
+        <select
+          id={`fmt-${tree.id}`}
+          value={tree.gedcomFormat}
+          onChange={e => void send(`/api/trees/${tree.id}`, 'PATCH', { gedcomFormat: e.target.value })}
+          className="rounded-md border px-2 py-1 text-sm"
+        >
+          <option value="7.0">{t('trees.format70')}</option>
+          <option value="5.5.1">{t('trees.format551')}</option>
+        </select>
+      </div>
+
       {!renaming && (
         <Button size="sm" variant="outline" onClick={() => setRenaming(true)}>{t('trees.rename')}</Button>
       )}

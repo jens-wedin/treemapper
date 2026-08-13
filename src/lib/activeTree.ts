@@ -22,6 +22,7 @@ export interface TreeSummary {
   persons: number;
   /** Photos the GEDCOM names but that have never been downloaded. */
   photosPending: number;
+  gedcomFormat: '5.5.1' | '7.0';
 }
 
 export const DEFAULT_TREE = 'default';

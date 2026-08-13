@@ -9,6 +9,10 @@ import { exportGedcom } from '../gedcomExport';
  * tree's downloaded photos. Each bundled photo's FILE payload is rewritten from
  * its CDN URL to a bundle-relative name (`<id>.<form>`); photos not downloaded
  * stay as URLs. GEDZIP is 7.0-only (spec §GEDZIP).
+ *
+ * Reads every bundled photo into memory and zips synchronously — fine for
+ * this local single-user app; revisit (streaming) only if a tree's media
+ * grows very large.
  */
 export function buildGedzip(db: Db, opts: { now?: Date } = {}): Uint8Array {
   const rows = db.select().from(media).all();
@@ -16,7 +20,8 @@ export function buildGedzip(db: Db, opts: { now?: Date } = {}): Uint8Array {
   const files: Zippable = {};
 
   for (const m of rows) {
-    if (m.downloadStatus !== 'done' || !m.localPath || !fs.existsSync(m.localPath)) continue;
+    if (m.ownerType !== 'person' || m.downloadStatus !== 'done' || !m.localPath || !fs.existsSync(m.localPath))
+      continue;
     const name = `${m.id}.${m.form ?? 'jpg'}`;
     bundleName.set(m.id, name);
     // Images are already compressed — store (level 0) rather than deflate.

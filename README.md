@@ -145,7 +145,7 @@ A `.gdz` archive is validated by unzipping it and running its `gedcom.ged` throu
 the same offline `js-gedcom` + `g7validation.json` recipe — the `gedcom.ged` inside
 is valid 7.0, and all bundled photo entries are referenced by their bundle names
 (e.g., `1.jpg`, `2.jpg`). The reference archive
-[`maximal70.gdz`](https://gedcom.io/resources/) (from gedcom.io) demonstrates the format.
+[`maximal70.gdz`](https://gedcom.io/testfiles/gedcom70/maximal70.gdz) (from gedcom.io) demonstrates the format.
 
 Export a `.gdz`:
 

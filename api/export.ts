@@ -11,7 +11,7 @@ export function createExportApi(tree: TreeResolver) {
     const { db } = tree(c);
     const stamp = new Date().toISOString().slice(0, 10);
     if (c.req.query('container') === 'gdz') {
-      return new Response(buildGedzip(db) as any, {
+      return new Response(buildGedzip(db) as BodyInit, {
         status: 200,
         headers: {
           'Content-Type': 'application/zip',

@@ -2,6 +2,7 @@ import { asc } from 'drizzle-orm';
 import type { Db } from '../db/client';
 import { persons, families, familyChildren, events, sources, citations, media, treeMeta } from '../db/schema';
 import { extensionUri } from './gedcom/extensions';
+import { mediaType } from './gedcom/mediaType';
 
 export interface ExportOptions {
   /** Fixed header date, for deterministic tests. */
@@ -245,7 +246,7 @@ export function exportGedcom(db: Db, opts: ExportOptions = {}): string {
     writeCitations(w, 1, citationsByOwner.get(`person:${p.id}`) ?? []);
     for (const m of mediaByPerson.get(p.id) ?? []) {
       w.line(1, 'OBJE');
-      if (m.form) w.line(2, 'FORM', m.form);
+      if (m.form) w.line(2, 'FORM', version === '7.0' ? mediaType(m.form) : m.form);
       if (m.originalUrl) w.line(2, 'FILE', m.originalUrl);
       if (m.title) w.line(2, 'TITL', m.title);
       if (m.filesize != null) w.line(2, '_FILESIZE', String(m.filesize));

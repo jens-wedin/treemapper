@@ -242,6 +242,14 @@ describe('exportGedcom — version-aware header', () => {
   });
 });
 
+describe('exportGedcom — version-aware media FORM', () => {
+  it('7.0 writes an IANA media type on FORM; 5.5.1 keeps the bare extension', () => {
+    buildTree();
+    expect(exportGedcom(db, { version: '7.0' })).toContain('2 FORM image/jpeg');
+    expect(exportGedcom(db)).toContain('2 FORM jpg');
+  });
+});
+
 describe('Writer — version-aware continuation', () => {
   it('7.0 uses CONT for newlines and never CONC', () => {
     const w = new Writer('7.0');

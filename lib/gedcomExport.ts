@@ -13,8 +13,10 @@ const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', '
 // GEDCOM 5.5.1 caps a line at 255 bytes including level and tag — split well below.
 const MAX_VALUE = 200;
 
-class Writer {
+export class Writer {
   private lines: string[] = [];
+
+  constructor(private version: '5.5.1' | '7.0') {}
 
   /** Emits a line, splitting long values with CONC and newlines with CONT. */
   line(level: number, tag: string, value?: string | null, xref?: string) {
@@ -23,7 +25,7 @@ class Writer {
       this.lines.push(head);
       return;
     }
-    const [firstChunk, ...restChunks] = splitValue(value);
+    const [firstChunk, ...restChunks] = splitValue(value, this.version);
     this.lines.push(`${head} ${firstChunk!.text}`);
     for (const chunk of restChunks) {
       this.lines.push(`${level + 1} ${chunk.continuation} ${chunk.text}`);
@@ -37,12 +39,17 @@ class Writer {
 
 interface Chunk { text: string; continuation: 'CONC' | 'CONT' }
 
-function splitValue(value: string): Chunk[] {
+function splitValue(value: string, version: '5.5.1' | '7.0'): Chunk[] {
   const chunks: Chunk[] = [];
   // Imported text can carry \r\n or lone \r inside a value — normalise first so
   // no stray carriage return ends up inside an exported line.
   const rows = value.replace(/\r\n?/g, '\n').split('\n');
   rows.forEach((row, rowIndex) => {
+    if (version === '7.0') {
+      // 7.0 has no line-length limit and no CONC — a newline is a CONT, nothing else.
+      chunks.push({ text: row, continuation: rowIndex > 0 ? 'CONT' : 'CONC' });
+      return;
+    }
     let rest = row;
     let first = true;
     do {
@@ -134,7 +141,7 @@ function headerDate(d: Date): string {
  * the raw_tags subtrees, so re-importing our own output reproduces the tree.
  */
 export function exportGedcom(db: Db, opts: ExportOptions = {}): string {
-  const w = new Writer();
+  const w = new Writer('5.5.1');
   const now = opts.now ?? new Date();
 
   const allPersons = db.select().from(persons).orderBy(asc(persons.id)).all();

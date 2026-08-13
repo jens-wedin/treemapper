@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { createDb, type Db } from '../db/client';
 import { persons, families, familyChildren, events, sources, citations, media } from '../db/schema';
-import { exportGedcom } from './gedcomExport';
+import { exportGedcom, Writer } from './gedcomExport';
 import { parseGedcom } from './gedcom/parser';
 import { mapGedcom, type MappedData } from './gedcom/mapper';
 
@@ -217,5 +217,22 @@ describe('exportGedcom — round trip through our own parser', () => {
     expect(text).toContain('0 HEAD');
     expect(text.trimEnd().endsWith('0 TRLR')).toBe(true);
     expect(roundTrip().persons).toHaveLength(0);
+  });
+});
+
+describe('Writer — version-aware continuation', () => {
+  it('7.0 uses CONT for newlines and never CONC', () => {
+    const w = new Writer('7.0');
+    w.line(1, 'NOTE', 'a'.repeat(250) + '\nsecond line');
+    const lines = w.toString().split('\r\n');
+    expect(lines[0]).toBe('1 NOTE ' + 'a'.repeat(250)); // no length split
+    expect(lines[1]).toBe('2 CONT second line');
+    expect(w.toString()).not.toContain('CONC');
+  });
+
+  it('5.5.1 still splits long values with CONC', () => {
+    const w = new Writer('5.5.1');
+    w.line(1, 'NOTE', 'a'.repeat(250));
+    expect(w.toString()).toContain('2 CONC');
   });
 });

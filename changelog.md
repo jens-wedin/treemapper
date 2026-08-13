@@ -8,6 +8,13 @@ Releases are automated from [Conventional Commits](https://www.conventionalcommi
 with [release-please](https://github.com/googleapis/release-please); see
 [`RELEASING.md`](RELEASING.md).
 
+## [1.1.0](https://github.com/jens-wedin/treemapper/compare/v1.0.0...v1.1.0) (2026-08-13)
+
+
+### Added
+
+* **statistics:** link each name to the People list searched for it ([f41f4c0](https://github.com/jens-wedin/treemapper/commit/f41f4c04fad769fd2c8b14762a232ced2418db8c))
+
 ## [1.0.0] - 2026-08-13
 
 ### Changed

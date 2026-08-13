@@ -75,6 +75,26 @@ test('a name in the statistics leads to that person\'s page', async ({ page }) =
   await expect(families.locator('li').first().getByRole('link')).toHaveCount(2);
 });
 
+/**
+ * A common name answers "how many?" and immediately asks "who?" — clicking it
+ * searches the People list for that name, rather than being dead text to retype.
+ */
+test('a common name in the statistics searches the People list', async ({ page }) => {
+  await page.goto('/wedin/statistics');
+
+  const womensNames = page.locator('h3', { hasText: /women/i })
+    .locator('xpath=following-sibling::ol[1]');
+  const first = womensNames.getByRole('link').first();
+  await expect(first).toBeVisible();
+  const name = (await first.textContent())!.trim();
+
+  await first.click();
+  await expect(page).toHaveURL(/\/wedin\/people\?q=/);
+  // the search box is filled with the name, and the results are that search
+  await expect(page.locator('#search-name')).toHaveValue(name);
+  await expect(page.getByRole('table')).toBeVisible();
+});
+
 test('emigration and immigration can be filtered one direction at a time', async ({ page }) => {
   await page.goto('/wedin/statistics');
 

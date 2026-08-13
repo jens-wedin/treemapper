@@ -9,6 +9,9 @@ export interface ExportOptions {
   now?: Date;
   /** GEDCOM version to write. Defaults to 5.5.1. */
   version?: '5.5.1' | '7.0';
+  /** Rewrite a 7.0 multimedia record's FILE payload (used by GEDZIP to point at
+   *  a bundle-relative path). Return null to keep the media's originalUrl. */
+  mediaFilePath?: (m: typeof media.$inferSelect) => string | null;
 }
 
 interface RawTag { tag: string; value?: string; pointer?: string; children?: RawTag[] }
@@ -291,7 +294,7 @@ export function exportGedcom(db: Db, opts: ExportOptions = {}): string {
     for (const m of allMedia) {
       if (m.ownerType !== 'person') continue;     // only the referenced ones
       w.line(0, 'OBJE', null, `@M${m.id}@`);
-      w.line(1, 'FILE', m.originalUrl);
+      w.line(1, 'FILE', opts.mediaFilePath?.(m) ?? m.originalUrl);
       w.line(2, 'FORM', mediaType(m.form) ?? 'application/octet-stream');  // FORM required under FILE in 7.0
       if (m.title) w.line(2, 'TITL', m.title);   // TITL is a sibling of FORM, under FILE — not a direct child of the record
       if (m.filesize != null) w.line(1, '_FILESIZE', String(m.filesize));

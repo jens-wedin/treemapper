@@ -305,6 +305,23 @@ describe('exportGedcom — 7.0 multimedia records', () => {
     expect(v55).toContain('2 FORM jpg');
     expect(v55.some(l => /^0 @M1@ OBJE$/.test(l))).toBe(false); // no records in 5.5.1
   });
+
+  it('7.0 FILE payload can be rewritten to a bundle path via mediaFilePath', () => {
+    buildTree(); // media id 1, url https://cdn.example.com/a/b/foto.jpg, form 'jpg'
+    const v7 = exportGedcom(db, { version: '7.0', mediaFilePath: m => `${m.id}.${m.form}` })
+      .replace(/^﻿/, '').split('\r\n');
+    expect(v7).toContain('1 FILE 1.jpg');                                    // rewritten
+    expect(v7).not.toContain('1 FILE https://cdn.example.com/a/b/foto.jpg'); // url replaced
+    expect(v7).toContain('2 FORM image/jpeg');                              // FORM/TITL unaffected
+
+    // No callback → the URL is kept (unchanged behaviour).
+    const plain = exportGedcom(db, { version: '7.0' }).replace(/^﻿/, '').split('\r\n');
+    expect(plain).toContain('1 FILE https://cdn.example.com/a/b/foto.jpg');
+
+    // 5.5.1 is unaffected by the callback (GEDZIP is 7.0-only).
+    const v55 = exportGedcom(db, { mediaFilePath: m => `${m.id}.${m.form}` }).replace(/^﻿/, '').split('\r\n');
+    expect(v55).toContain('2 FILE https://cdn.example.com/a/b/foto.jpg');
+  });
 });
 
 describe('Writer — version-aware continuation', () => {

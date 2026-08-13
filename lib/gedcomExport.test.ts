@@ -220,6 +220,28 @@ describe('exportGedcom — round trip through our own parser', () => {
   });
 });
 
+describe('exportGedcom — version-aware header', () => {
+  it('writes a 7.0 header: VERS 7.0, no CHAR/FORM, SCHMA for extensions', () => {
+    buildTree();
+    const lines = exportGedcom(db, { version: '7.0' }).replace(/^﻿/, '').split('\r\n');
+    expect(lines).toContain('2 VERS 7.0');
+    expect(lines).not.toContain('1 CHAR UTF-8');
+    expect(lines).not.toContain('2 FORM LINEAGE-LINKED');
+    expect(lines).toContain('1 SCHMA');
+    expect(lines).toContain('2 TAG _MARNM https://github.com/jens-wedin/treemapper/gedcom/MARNM');
+    expect(lines).toContain('2 TAG _UID https://github.com/jens-wedin/treemapper/gedcom/UID');
+  });
+
+  it('keeps the 5.5.1 header exactly as before', () => {
+    buildTree();
+    const lines = exportGedcom(db).replace(/^﻿/, '').split('\r\n');
+    expect(lines).toContain('2 VERS 5.5.1');
+    expect(lines).toContain('2 FORM LINEAGE-LINKED');
+    expect(lines).toContain('1 CHAR UTF-8');
+    expect(lines).not.toContain('1 SCHMA');
+  });
+});
+
 describe('Writer — version-aware continuation', () => {
   it('7.0 uses CONT for newlines and never CONC', () => {
     const w = new Writer('7.0');

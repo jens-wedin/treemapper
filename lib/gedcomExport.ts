@@ -1,10 +1,13 @@
 import { asc } from 'drizzle-orm';
 import type { Db } from '../db/client';
-import { persons, families, familyChildren, events, sources, citations, media } from '../db/schema';
+import { persons, families, familyChildren, events, sources, citations, media, treeMeta } from '../db/schema';
+import { extensionUri } from './gedcom/extensions';
 
 export interface ExportOptions {
   /** Fixed header date, for deterministic tests. */
   now?: Date;
+  /** GEDCOM version to write. Defaults to 5.5.1. */
+  version?: '5.5.1' | '7.0';
 }
 
 interface RawTag { tag: string; value?: string; pointer?: string; children?: RawTag[] }
@@ -15,11 +18,14 @@ const MAX_VALUE = 200;
 
 export class Writer {
   private lines: string[] = [];
+  /** Every tag emitted through line(), for building a 7.0 SCHMA block. */
+  readonly tags = new Set<string>();
 
   constructor(private version: '5.5.1' | '7.0') {}
 
   /** Emits a line, splitting long values with CONC and newlines with CONT. */
   line(level: number, tag: string, value?: string | null, xref?: string) {
+    this.tags.add(tag);
     const head = xref ? `${level} ${xref} ${tag}` : `${level} ${tag}`;
     if (value == null || value === '') {
       this.lines.push(head);
@@ -136,13 +142,44 @@ function headerDate(d: Date): string {
 }
 
 /**
- * Serialises the whole database back to GEDCOM 5.5.1 — backup and escape
- * hatch (spec §8). Everything the import preserved is re-emitted, including
- * the raw_tags subtrees, so re-importing our own output reproduces the tree.
+ * Builds the HEAD record for the given version. 5.5.1 keeps the fixed
+ * CHAR/GEDC.FORM pair; 7.0 drops both (UTF-8 and LINEAGE-LINKED are implicit
+ * in the spec) and instead declares every extension (underscore) tag the
+ * body emitted, so a 7.0-aware reader knows what `_MARNM` etc. mean.
+ */
+function writeHeader(version: '5.5.1' | '7.0', treeName: string | null, now: Date, emittedTags: Set<string>): string {
+  const h = new Writer(version);
+  h.line(0, 'HEAD');
+  h.line(1, 'SOUR', 'TREEMAPPER');
+  if (treeName) h.line(2, 'NAME', treeName);
+  h.line(2, 'VERS', '0.1.0');
+  h.line(1, 'DATE', headerDate(now));
+  h.line(1, 'GEDC');
+  h.line(2, 'VERS', version);
+  if (version === '5.5.1') {
+    h.line(2, 'FORM', 'LINEAGE-LINKED');
+    h.line(1, 'CHAR', 'UTF-8');
+  } else {
+    const ext = [...emittedTags].filter(t => t.startsWith('_')).sort();
+    if (ext.length) {
+      h.line(1, 'SCHMA');
+      for (const tag of ext) h.line(2, 'TAG', `${tag} ${extensionUri(tag)}`);
+    }
+  }
+  return h.toString();
+}
+
+/**
+ * Serialises the whole database back to GEDCOM — backup and escape hatch
+ * (spec §8). Everything the import preserved is re-emitted, including the
+ * raw_tags subtrees, so re-importing our own output reproduces the tree.
+ * Defaults to 5.5.1; pass `{ version: '7.0' }` for the modern header.
  */
 export function exportGedcom(db: Db, opts: ExportOptions = {}): string {
-  const w = new Writer('5.5.1');
+  const version = opts.version ?? '5.5.1';
+  const w = new Writer(version);
   const now = opts.now ?? new Date();
+  const treeName = db.select().from(treeMeta).all()[0]?.name ?? null;
 
   const allPersons = db.select().from(persons).orderBy(asc(persons.id)).all();
   const allFamilies = db.select().from(families).orderBy(asc(families.id)).all();
@@ -194,17 +231,6 @@ export function exportGedcom(db: Db, opts: ExportOptions = {}): string {
     }
   }
 
-  // ---- HEAD ----
-  w.line(0, 'HEAD');
-  w.line(1, 'SOUR', 'TREEMAPPER');
-  w.line(2, 'NAME', 'Wedin släktträd');
-  w.line(2, 'VERS', '0.1.0');
-  w.line(1, 'DATE', headerDate(now));
-  w.line(1, 'GEDC');
-  w.line(2, 'VERS', '5.5.1');
-  w.line(2, 'FORM', 'LINEAGE-LINKED');
-  w.line(1, 'CHAR', 'UTF-8');
-
   // ---- INDI ----
   for (const p of allPersons) {
     w.line(0, 'INDI', null, `@${p.id}@`);
@@ -255,6 +281,7 @@ export function exportGedcom(db: Db, opts: ExportOptions = {}): string {
     writeRawTags(w, 1, s.rawTags);
   }
 
-  w.line(0, 'TRLR');
-  return `﻿${w.toString()}`;
+  const body = w.toString();
+  const header = writeHeader(version, treeName, now, w.tags);
+  return `﻿${header}${body ? `\r\n${body}` : ''}\r\n0 TRLR`;
 }

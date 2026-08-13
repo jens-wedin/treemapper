@@ -7,10 +7,10 @@ in it. Environment variables are `TREEMAPPER_DB`, `TREEMAPPER_TREES_DIR`,
 `TREEMAPPER_MEDIA_DIR`, `TREEMAPPER_E2E`; browser preferences are
 `treemapper-*`, with the two older names still read once and migrated.
 
-_Last updated: 2026-08-11. All six spec phases are built, plus tree UX work, a
+_Last updated: 2026-08-13. All six spec phases are built, plus tree UX work, a
 shadcn theme, Statistics, multiple family trees, the tree in every URL, sources
-you can write out and cite by hand, several rounds of data repair — and the
-whole project moved to English._
+you can write out and cite by hand, several rounds of data repair, the move to
+English — and the project is now published open-source on GitHub._
 
 ## Every database lives in `trees/` (2026-08-12)
 
@@ -138,6 +138,11 @@ was rewritten with `git filter-repo` before the push:
   and replaced with synthetic placeholders — the example tree is `Andersson`,
   example people are names like `Karl Johan Fredrik Lindqvist`. The real
   databases stay local and gitignored: the public repo holds code, not a family.
+- The README was rewritten as a tight public overview (not the old design
+  notes), and the internal planning docs under `docs/superpowers/` were
+  gitignored **and purged from history**. `filter-repo` drops the `origin`
+  remote after a rewrite — re-add it before pushing. `wedin` deliberately stays
+  as the default tree id in the code.
 
 Check history stays clean before any future force-push:
 
@@ -503,6 +508,10 @@ panel on click.
 
 ## Gotchas worth remembering
 
+- **A doc claim is only as true as the code.** The README and this file said the
+  data tools were "dry-run by default"; `import`, `media` and `export` are not —
+  they write immediately, and a code review caught the false safety promise.
+  Only the repair/normalisation scripts gate on `--apply`.
 - **Drizzle raw SQL**: an interpolated `${persons.id}` inside a `sql` fragment
   renders unqualified and binds to the wrong table in a correlated subquery.
   Write the qualifier literally (`persons.id`). Bit us in `lib/queries.ts`.

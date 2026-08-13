@@ -4,6 +4,14 @@
 
 ### Changed
 
+**Published as open source**
+- The project is public at `github.com/jens-wedin/treemapper` under the **MIT
+  license** (`LICENSE`). Before the push, git history was rewritten to purge the
+  backup-database blobs and to replace the family's real names throughout the
+  docs with synthetic placeholders — see Security below.
+- The README was rewritten as a concise public overview, and the internal
+  planning docs under `docs/superpowers/` are no longer tracked.
+
 **Every family database lives in one folder**
 - The default tree moved from `wedin.db` at the repository root to `trees/wedin.db`, in the same folder as every imported tree — the root no longer carries a database. Its id, its `wedin` slug and every link to it are unchanged, and `TREEMAPPER_DB` still overrides the location for the tests and the e2e copy.
 - Because the default now sits inside the scanned directory, the tree list skips its own file so it appears once, as the default, and not a second time as a tree found sitting alongside the others.
@@ -73,6 +81,13 @@
 - `*.db.*` and `backups/` are ignored, the files were untracked, and git history was rewritten with `git filter-repo` to purge every backup blob before the repo went public. Real family names in the tracked docs were replaced with synthetic placeholders for the same reason — the published repo holds code, not a family.
 
 ### Fixed
+
+**The data-tool docs promised a dry run that isn't there**
+- `import`, `media` and `export` write immediately; the README and `CLAUDE.md`
+  had listed them among tools that are "dry-run by default". Only the
+  repair/normalisation scripts gate on `--apply`, and only `merge-duplicates`
+  and `repair-conc` back the database up first. Corrected, so nobody runs `npm
+  run media` expecting a preview and writes to the live database instead.
 
 **Storage, tested for the first time**
 - Every stored preference is wrapped in a try/catch, and the unit tests run in node, which has no `localStorage` — so those paths were passing by never reaching storage at all. The setup file now provides an in-memory one.

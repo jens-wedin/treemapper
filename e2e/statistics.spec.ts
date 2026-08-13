@@ -16,6 +16,21 @@ test('every chart has its numbers as a table too', async ({ page }) => {
   await expect.poll(() => page.getByRole('table').count()).toBe(3);
 });
 
+test('the family-sizes chart and its table sit side by side to save space', async ({ page }) => {
+  await page.goto('/wedin/statistics');
+  const figure = page.locator('figure', { has: page.getByText('Family sizes', { exact: true }) });
+  const table = figure.getByRole('table');
+  const chart = figure.locator('svg.recharts-surface').first();
+  await table.waitFor();
+  await chart.waitFor();
+  const tb = (await table.boundingBox())!;
+  const cb = (await chart.boundingBox())!;
+  // the table is its own column to the right of the chart, not stacked below it
+  expect(tb.x).toBeGreaterThan(cb.x + cb.width / 2);
+  const overlap = Math.min(tb.y + tb.height, cb.y + cb.height) - Math.max(tb.y, cb.y);
+  expect(overlap).toBeGreaterThan(0);
+});
+
 test('impossible ages are not presented as fun facts', async ({ page }) => {
   await page.goto('/wedin/statistics');
   await expect(page.getByText(/Ages over 110 are treated as data errors/)).toBeVisible();

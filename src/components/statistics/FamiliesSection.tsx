@@ -59,11 +59,12 @@ export default function FamiliesSection({ stats }: { stats: FamiliesStats }) {
         {t('statistics.basedOn').replace('{n}', n(stats.couplesWithBothBirths))}
       </p>
 
-      <div className="mt-8 max-w-xl">
+      <div className="mt-8">
         <BarChartWithTable
           title={t('statistics.familySizes')}
           data={stats.sizeDistribution.map(r => ({ label: r.children, value: r.families }))}
           xLabel={t('statistics.children')} yLabel={t('stats.families')}
+          inline
         />
       </div>
     </section>

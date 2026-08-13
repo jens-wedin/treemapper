@@ -167,10 +167,10 @@ export function mapGedcom(records: GedcomNode[]): MappedData {
             const url = fileNode?.value;
             if (objeRec) consumedObjeXrefs.add(objeXref);
             if (objeRec && url?.startsWith('http')) {
-              const consumed = new Set(['FILE', 'TITL', '_FILESIZE']);  // FORM lives under FILE, consumed with it
+              const consumed = new Set(['FILE', '_FILESIZE']);  // FORM and TITL live under FILE, consumed with it
               out.media.push({
                 id: ++mediaId, ownerType: 'person', ownerId: id,
-                title: childValue(objeRec, 'TITL') ?? null,
+                title: childValue(fileNode!, 'TITL') ?? null,
                 originalUrl: url,
                 form: canonicalForm(childValue(fileNode!, 'FORM') ?? null),
                 filesize: childValue(objeRec, '_FILESIZE') != null ? Number(childValue(objeRec, '_FILESIZE')) : null,

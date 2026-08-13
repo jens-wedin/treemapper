@@ -292,6 +292,10 @@ describe('exportGedcom — 7.0 multimedia records', () => {
     expect(v7).toContain('0 @M1@ OBJE');           // the record exists at level 0
     expect(v7).toContain('1 FILE https://cdn.example.com/a/b/foto.jpg');
     expect(v7).toContain('2 FORM image/jpeg');     // FORM nested under FILE (level 2)
+    expect(v7).toContain('2 TITL Porträtt');       // TITL also nests under FILE — the grammar
+                                                    // forbids TITL as a direct child of the record
+    expect(v7).not.toContain('1 TITL Porträtt');   // the media title is never a record-direct child in 7.0
+                                                    // (SOUR's own '1 TITL Testkälla' is unrelated and fine)
     expect(v7.some(l => /^1 OBJE$/.test(l))).toBe(false);  // no embedded OBJE block
     expect(v7.some(l => /^2 FILE /.test(l))).toBe(false);  // FILE never at level 2 in 7.0
 

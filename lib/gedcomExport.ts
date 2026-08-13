@@ -293,7 +293,7 @@ export function exportGedcom(db: Db, opts: ExportOptions = {}): string {
       w.line(0, 'OBJE', null, `@M${m.id}@`);
       w.line(1, 'FILE', m.originalUrl);
       w.line(2, 'FORM', mediaType(m.form) ?? 'application/octet-stream');  // FORM required under FILE in 7.0
-      if (m.title) w.line(1, 'TITL', m.title);
+      if (m.title) w.line(2, 'TITL', m.title);   // TITL is a sibling of FORM, under FILE — not a direct child of the record
       if (m.filesize != null) w.line(1, '_FILESIZE', String(m.filesize));
       writeRawTags(w, 1, m.rawTags);
     }

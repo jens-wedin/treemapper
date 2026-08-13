@@ -55,3 +55,19 @@ it('treats a done row whose file is missing on disk as not bundled', () => {
   expect(ged.split('\r\n')).toContain('1 FILE https://cdn/x/3.jpg'); // fell back to URL
   expect(Object.keys(entries)).not.toContain('3.jpg');
 });
+
+it('the gedcom.ged is 7.0-shaped and every bundled FILE has a matching entry', () => {
+  const jpg = path.join(dir, '7.jpg');
+  fs.writeFileSync(jpg, Buffer.from([1, 2, 3]));
+  db.insert(media).values({ id: 7, ownerType: 'person', ownerId: 'I1', title: 'P', originalUrl: 'https://cdn/x/7.jpg',
+    form: 'jpg', downloadStatus: 'done', localPath: jpg }).run();
+
+  const entries = unzipSync(buildGedzip(db));
+  const lines = strFromU8(entries['gedcom.ged']!).replace(/^﻿/, '').split('\r\n');
+  expect(lines.some(l => / CONC /.test(l))).toBe(false);   // 7.0: no CONC
+  expect(lines).not.toContain('1 CHAR UTF-8');             // 7.0: no CHAR
+  // every local (non-URL) FILE payload names an entry that exists in the archive
+  const localFiles = lines.filter(l => /^1 FILE /.test(l)).map(l => l.slice(7)).filter(v => !/^https?:/.test(v));
+  expect(localFiles).toContain('7.jpg');
+  for (const f of localFiles) expect(Object.keys(entries)).toContain(f);
+});

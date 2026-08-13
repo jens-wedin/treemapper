@@ -139,6 +139,21 @@ and run the export through it in Node. The online
 **never upload a real family database's export to a third-party web service**
 (it contains living people); validate only a synthetic or fixture export there.
 
+### GEDZIP (.gdz) validation
+
+A `.gdz` archive is validated by unzipping it and running its `gedcom.ged` through
+the same offline `js-gedcom` + `g7validation.json` recipe — the `gedcom.ged` inside
+is valid 7.0, and all bundled photo entries are referenced by their bundle names
+(e.g., `1.jpg`, `2.jpg`). The reference archive
+[`maximal70.gdz`](https://gedcom.io/resources/) (from gedcom.io) demonstrates the format.
+
+Export a `.gdz`:
+
+```bash
+npm run export -- out.gdz --gdz          # CLI
+# or Settings → "Download GEDZIP (.gdz)"
+```
+
 ## Commands
 
 ```bash

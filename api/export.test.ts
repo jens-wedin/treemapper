@@ -31,4 +31,15 @@ describe('GET /api/export/gedcom', () => {
     expect(await (await api.request('/api/export/gedcom?format=7.0')).text()).toContain('2 VERS 7.0'); // explicit
     expect(await (await api.request('/api/export/gedcom?format=5.5.1')).text()).toContain('2 VERS 5.5.1'); // override
   });
+
+  it('serves a GEDZIP when container=gdz', async () => {
+    const res = await api.request('/api/export/gedcom?container=gdz');
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toContain('zip');
+    expect(res.headers.get('content-disposition')).toMatch(/attachment; filename="treemapper-\d{4}-\d{2}-\d{2}\.gdz"/);
+    const { unzipSync, strFromU8 } = await import('fflate');
+    const entries = unzipSync(new Uint8Array(await res.arrayBuffer()));
+    expect(Object.keys(entries)).toContain('gedcom.ged');
+    expect(strFromU8(entries['gedcom.ged']!).replace(/^﻿/, '').split('\r\n')).toContain('2 VERS 7.0');
+  });
 });

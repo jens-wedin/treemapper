@@ -3,11 +3,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Issue } from '../../../lib/issues';
 import { t } from '../../lib/i18n';
-import { issueText, issueTitle } from '../../lib/issueText';
+import { issueTitle } from '../../lib/issueText';
 import { mutateJson } from '../../lib/api';
 import { clearIssueMarks } from '../../lib/issueMarks';
 import { useTreeUrl } from '../../lib/treeUrl';
 import DuplicateMerge from './DuplicateMerge';
+import IssueText from './IssueText';
 
 export type IssueListItem = Issue & { dismissed: boolean };
 
@@ -33,7 +34,9 @@ export default function IssueCard({ issue, onChanged }: { issue: IssueListItem; 
         {issue.dismissed && <Badge variant="outline">{t('issues.dismissedBadge')}</Badge>}
       </div>
 
-      <p className="mt-2 text-foreground">{issueText(issue.code, issue.params)}</p>
+      <p className="mt-2 text-foreground">
+        <IssueText code={issue.code} params={issue.params} personIds={issue.personIds} />
+      </p>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <Button asChild variant="outline" size="sm">

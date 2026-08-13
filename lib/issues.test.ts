@@ -82,6 +82,18 @@ describe('detectIssues — logical errors', () => {
     expect(hits.filter(h => h.personIds[0] === 'STRAX')[0].personIds[1]).toBe('MOR');
   });
 
+  it('names its people in personIds order, so the queue links each to the right page', () => {
+    human('DAD', 1750, 1800, { given: 'Abraham', surname: 'Abrahamsson', sex: 'M' });
+    person('KID', { given: 'Maria Kristina', surname: 'Abrahamsson' });
+    event('KID', 'BIRT', '1836');
+    family('F', 'DAD', null, ['KID']);
+    const issue = of(run(), 'child-born-after-parent-died')[0]!;
+    // child is personIds[0], parent personIds[1] — the order PERSON_PARAMS links by
+    expect(issue.personIds).toEqual(['KID', 'DAD']);
+    expect(issue.params.child).toBe('Maria Kristina Abrahamsson');
+    expect(issue.params.parent).toBe('Abraham Abrahamsson');
+  });
+
   it('a fact after death — but a burial is allowed', () => {
     human('I1', 1800, 1850);
     event('I1', 'RESI', '1860');

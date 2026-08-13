@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { ISSUE_CODES } from '../../lib/issues';
 import { DICTIONARIES } from './i18n/dictionaries';
 import { LANGUAGES, setLanguage } from './i18n';
-import { issueText, issueTitle } from './issueText';
+import { issueText, issueTitle, PERSON_PARAMS } from './issueText';
 
 afterEach(() => setLanguage('en'));
 
@@ -96,5 +96,22 @@ describe('the possessive role', () => {
     setLanguage('en');
     expect(issueText('child-born-after-parent-died', params))
       .toBe('Maria was born in 1836, after their father Abraham died in 1800.');
+  });
+});
+
+describe('PERSON_PARAMS — the names the queue turns into links', () => {
+  const english = DICTIONARIES.en as Record<string, Record<string, string>>;
+
+  it('names a real placeholder in every template it claims', () => {
+    for (const [code, keys] of Object.entries(PERSON_PARAMS)) {
+      const supplied = new Set(placeholders(english.issueText![code]!));
+      const missing = keys!.filter(k => !supplied.has(k));
+      expect({ code, missing }).toEqual({ code, missing: [] });
+    }
+  });
+
+  it('only names codes that still exist', () => {
+    const known = new Set<string>(ISSUE_CODES);
+    expect(Object.keys(PERSON_PARAMS).filter(c => !known.has(c))).toEqual([]);
   });
 });

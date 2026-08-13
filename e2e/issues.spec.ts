@@ -15,6 +15,17 @@ test('the queue is grouped by severity, worst first', async ({ page }) => {
   await expect(page.getByLabel('Category')).toBeVisible();
 });
 
+test('a person named in a consistency problem links to their page', async ({ page }) => {
+  await page.goto('/wedin/issues');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Consistency bench');
+  // the worst-first cards name a person; the name in the sentence is a link
+  const nameLink = page.locator('li p a').first();
+  await expect(nameLink).toBeVisible();
+  await nameLink.click();
+  await expect(page).toHaveURL(/\/wedin\/person\/I\d+/);
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+});
+
 test('the filters replace the list rather than adding to it', async ({ page }) => {
   await page.goto('/wedin/issues');
   await expect(page.getByRole('heading', { level: 2 }).first()).toContainText('Logical error');

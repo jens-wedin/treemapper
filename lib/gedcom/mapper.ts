@@ -1,4 +1,5 @@
 import type { GedcomNode } from './parser';
+import { canonicalForm } from './mediaType';
 import { extractYear } from '../dates';
 import type { persons, families, familyChildren, events, sources, citations, media } from '../../db/schema';
 
@@ -162,7 +163,7 @@ export function mapGedcom(records: GedcomNode[]): MappedData {
             ownerId: id,
             title: childValue(c, 'TITL') ?? null,
             originalUrl: url,
-            form: childValue(c, 'FORM') ?? null,
+            form: canonicalForm(childValue(c, 'FORM') ?? null),
             filesize: childValue(c, '_FILESIZE') != null ? Number(childValue(c, '_FILESIZE')) : null,
             downloadStatus: 'pending',
             rawTags: serializeRaw(c.children.filter(x => !consumed.has(x.tag))),

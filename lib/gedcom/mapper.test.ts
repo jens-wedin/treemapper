@@ -93,4 +93,13 @@ describe('mapGedcom', () => {
     expect(p1.rawTags).toContain('_UPD');
     expect(mapped.albums).toBe(1);
   });
+
+  it('normalises a 7.0 media type on FORM back to a bare extension', () => {
+    const tree = parseGedcom([
+      '0 HEAD', '0 @I1@ INDI', '1 OBJE', '2 FILE https://x/y.jpg',
+      '2 FORM image/jpeg', '0 TRLR',
+    ].join('\n'));
+    const { media } = mapGedcom(tree);
+    expect(media[0]!.form).toBe('jpg');
+  });
 });

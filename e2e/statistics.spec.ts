@@ -160,3 +160,28 @@ test('countries are named, not left as two-letter codes', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Länder', exact: true })).toBeVisible();
   await expect(topCountry('Länder')).toContainText('Schweden');
 });
+
+test('a birth place in the statistics searches the People list by place', async ({ page }) => {
+  await page.goto('/wedin/statistics');
+  const list = page.getByRole('heading', { name: /birth places/i })
+    .locator('xpath=following-sibling::ol[1]');
+  const first = list.getByRole('link').first();
+  await expect(first).toBeVisible();
+  const place = (await first.textContent())!.trim();
+
+  await first.click();
+  await expect(page).toHaveURL(/\/wedin\/people\?place=/);
+  await expect(page.locator('#search-place')).toHaveValue(place);
+  await expect(page.getByRole('table')).toBeVisible();
+});
+
+test('a country in the statistics searches the People list by its Swedish place name', async ({ page }) => {
+  await page.goto('/wedin/statistics');
+  const list = page.getByRole('heading', { name: 'Countries', exact: true })
+    .locator('xpath=following-sibling::ol[1]');
+  // the top country is Sweden; the place text is Swedish, so the search is 'Sverige'
+  await list.getByRole('link').first().click();
+  await expect(page).toHaveURL(/\/wedin\/people\?place=/);
+  await expect(page.locator('#search-place')).toHaveValue('Sverige');
+  await expect(page.getByRole('table')).toBeVisible();
+});

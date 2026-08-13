@@ -11,10 +11,11 @@ export default function RankedList({ title, rows, caption, icon, label, href }: 
   /** For rows keyed by a code rather than by their own name — countries. */
   label?: (name: string) => string;
   /**
-   * When set, each name is a link to this address — the names lists search the
-   * People page, so a common name is one click from the people who carry it.
+   * When set, each row links here — the statistics lists lead into the People
+   * page searched for that name, place or country. Returning undefined leaves a
+   * row as plain text, for the rare country the search has no term for.
    */
-  href?: (name: string) => string;
+  href?: (name: string) => string | undefined;
 }) {
   return (
     <div>
@@ -25,13 +26,14 @@ export default function RankedList({ title, rows, caption, icon, label, href }: 
         <ol className="mt-2 space-y-1">
           {rows.map((r, i) => {
             const text = label ? label(r.name) : r.name;
+            const to = href?.(r.name);
             return (
               <li key={r.name} className="flex justify-between gap-4">
                 <span className="flex items-center gap-2">
                   <span className="text-muted-foreground">{i + 1}.</span>
                   {icon?.(r.name)}
-                  {href ? (
-                    <Link to={href(r.name)} className="text-primary underline-offset-2 hover:underline">
+                  {to ? (
+                    <Link to={to} className="text-primary underline-offset-2 hover:underline">
                       {text}
                     </Link>
                   ) : (

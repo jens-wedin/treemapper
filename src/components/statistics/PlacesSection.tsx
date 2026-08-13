@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import type { PlacesStats } from '../../../lib/statistics';
 import { t, eventLabel, uiLocale, countryLabel } from '../../lib/i18n';
+import { useTreeUrl } from '../../lib/treeUrl';
+import { countryName } from '../../../lib/places';
 import PersonLink from './PersonLink';
 import CountryFlag from '../CountryFlag';
 import RankedList from './RankedList';
@@ -10,6 +12,16 @@ type Direction = 'all' | 'IMMI' | 'EMIG';
 
 export default function PlacesSection({ stats }: { stats: PlacesStats }) {
   const asRows = (rows: { place: string; count: number }[]) => rows.map(r => ({ name: r.place, count: r.count }));
+  const link = useTreeUrl();
+  // A place or country answers "how many?" and asks "who?" — each leads into the
+  // People list. Birth places search by their own text; countries are keyed by
+  // an ISO code (for the flag and the reader's language), so a country searches
+  // by the Swedish name that sits in the place text — `countryName(code)`.
+  const placeSearch = (place: string) => link(`/people?place=${encodeURIComponent(place)}`);
+  const countrySearch = (code: string) => {
+    const sv = countryName(code);
+    return sv ? link(`/people?place=${encodeURIComponent(sv)}`) : undefined;
+  };
   // Filtered here rather than on the server: the whole list already arrives —
   // only the ranked lists above are cut to a top ten — so narrowing it is
   // instant and can never show a truncated answer as if it were the full one.
@@ -36,11 +48,13 @@ export default function PlacesSection({ stats }: { stats: PlacesStats }) {
         <RankedList
           title={t('statistics.birthPlaces')}
           rows={asRows(stats.birthPlaces)}
+          href={placeSearch}
           caption={t('statistics.basedOn').replace('{n}', stats.withBirthPlace.toLocaleString(uiLocale()))}
         />
         <RankedList
           title={t('statistics.countries')}
           rows={asRows(stats.countries)}
+          href={countrySearch}
           // Countries come back as ISO codes; Intl names them in the reader's
           // language, and the flag is the same one the tree cards draw.
           label={countryLabel}

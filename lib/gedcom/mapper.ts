@@ -123,6 +123,9 @@ export function mapGedcom(records: GedcomNode[]): MappedData {
   // pass so the INDI branch below can resolve one when it meets a pointer.
   const objeRecords = new Map<string, GedcomNode>();
   for (const rec of records) if (rec.tag === 'OBJE') objeRecords.set(stripAt(rec.xref), rec);
+  // Every xref a pointer actually resolved to, so an orphan record (one no
+  // INDI points to) can be flagged instead of silently vanishing.
+  const consumedObjeXrefs = new Set<string>();
 
   for (const rec of records) {
     if (rec.tag === 'HEAD' || rec.tag === 'TRLR') continue;
@@ -158,9 +161,11 @@ export function mapGedcom(records: GedcomNode[]): MappedData {
           if (c.value) notes.push(c.value);
         } else if (c.tag === 'OBJE') {
           if (c.value?.startsWith('@')) {                       // 7.0 multimedia link (pointer)
-            const objeRec = objeRecords.get(stripAt(c.value));
+            const objeXref = stripAt(c.value);
+            const objeRec = objeRecords.get(objeXref);
             const fileNode = objeRec && child(objeRec, 'FILE');
             const url = fileNode?.value;
+            if (objeRec) consumedObjeXrefs.add(objeXref);
             if (objeRec && url?.startsWith('http')) {
               const consumed = new Set(['FILE', 'TITL', '_FILESIZE']);  // FORM lives under FILE, consumed with it
               out.media.push({
@@ -172,6 +177,14 @@ export function mapGedcom(records: GedcomNode[]): MappedData {
                 downloadStatus: 'pending',
                 rawTags: serializeRaw(objeRec.children.filter(x => !consumed.has(x.tag))),
               });
+            } else if (objeRec) {
+              // The record resolved but has no usable http FILE — keep the
+              // record's own data (TITL/_FILESIZE/…), not just the bare
+              // pointer, so it is not silently dropped. The 5.5.1 embedded
+              // path never loses data this way; the pointer path must not
+              // either.
+              out.warnings.push(`OBJE pointer ${c.value} resolved to a record with no usable FILE on ${id}; record kept in raw_tags`);
+              raw.push({ level: c.level, tag: 'OBJE', value: c.value, children: objeRec.children });
             } else {
               out.warnings.push(`OBJE pointer ${c.value} unresolved on ${id} kept in raw_tags`);
               raw.push(c);
@@ -252,5 +265,15 @@ export function mapGedcom(records: GedcomNode[]): MappedData {
       out.warnings.push(`Skipped unknown level-0 record ${rec.tag} ${id}`);
     }
   }
+
+  // A level-0 OBJE record that no INDI's pointer ever resolved to is foreign
+  // data we have nowhere to attach — flag it rather than let it vanish
+  // without a trace.
+  for (const xref of objeRecords.keys()) {
+    if (!consumedObjeXrefs.has(xref)) {
+      out.warnings.push(`OBJE record @${xref}@ not referenced by any INDI`);
+    }
+  }
+
   return out;
 }

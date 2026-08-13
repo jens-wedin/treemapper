@@ -114,5 +114,39 @@ describe('mapGedcom', () => {
     expect(media).toHaveLength(1);
     expect(media[0]).toMatchObject({ ownerId: 'I1', originalUrl: 'https://x/y.jpg', form: 'jpg', title: 'Ett foto', filesize: 4242 });
     expect(warnings.some(w => /Skipped unknown level-0 record OBJE/.test(w))).toBe(false);
+    expect(warnings.some(w => /not referenced by any INDI/.test(w))).toBe(false);
+  });
+
+  /**
+   * A resolved 7.0 multimedia record whose FILE is missing or not http
+   * (e.g. a local-only path from a desktop program) must not vanish: the
+   * 5.5.1 embedded path never drops TITL/_FILESIZE when FILE is unusable,
+   * so the pointer path may not either.
+   */
+  it('keeps a resolved OBJE record\'s TITL/_FILESIZE in raw_tags when its FILE is not usable', () => {
+    const tree = parseGedcom([
+      '0 HEAD',
+      '0 @I1@ INDI', '1 NAME Test /Person/', '1 OBJE @M9@',
+      '0 @M9@ OBJE', '1 FILE C:\\Photos\\album.jpg', '2 FORM image/jpeg', '1 TITL Familjealbum', '1 _FILESIZE 999',
+      '0 TRLR',
+    ].join('\n'));
+    const { persons, media, warnings } = mapGedcom(tree);
+    expect(media).toHaveLength(0);   // no usable http FILE, so no media row
+    const p1 = persons.find(p => p.id === 'I1')!;
+    expect(p1.rawTags).toContain('Familjealbum');
+    expect(p1.rawTags).toContain('999');
+    expect(warnings.some(w => /resolved to a record with no usable FILE/.test(w))).toBe(true);
+  });
+
+  it('warns about a level-0 OBJE record that no INDI points to', () => {
+    const tree = parseGedcom([
+      '0 HEAD',
+      '0 @I1@ INDI', '1 NAME Test /Person/',
+      '0 @M7@ OBJE', '1 FILE https://x/orphan.jpg', '2 FORM image/jpeg',
+      '0 TRLR',
+    ].join('\n'));
+    const { media, warnings } = mapGedcom(tree);
+    expect(media).toHaveLength(0);
+    expect(warnings.some(w => /OBJE record @M7@ not referenced by any INDI/.test(w))).toBe(true);
   });
 });

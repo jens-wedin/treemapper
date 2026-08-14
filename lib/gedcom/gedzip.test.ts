@@ -6,6 +6,7 @@ import { unzipSync, strFromU8, zipSync, strToU8 } from 'fflate';
 import { createDb, type Db } from '../../db/client';
 import { persons, media } from '../../db/schema';
 import { parseGedcom } from './parser';
+import { mapGedcom } from './mapper';
 import { buildGedzip, readGedzip, isZip } from './gedzip';
 
 let db: Db;
@@ -87,4 +88,23 @@ it('reads a .gdz back into gedcom.ged text and its media bytes', () => {
 it('rejects a zip with no gedcom.ged', () => {
   const zip = zipSync({ 'notes.txt': strToU8('hi') });
   expect(() => readGedzip(zip)).toThrow(/gedcom\.ged/);
+});
+
+it('a built .gdz round-trips: buildGedzip → readGedzip → mapGedcom yields a media row', () => {
+  const jpg = path.join(dir, '1.jpg');
+  fs.writeFileSync(jpg, Buffer.from([9, 8, 7, 6]));
+  db.insert(media).values({ id: 1, ownerType: 'person', ownerId: 'I1', title: 'Foto',
+    originalUrl: 'https://cdn/x/1.jpg', form: 'jpg', downloadStatus: 'done', localPath: jpg }).run();
+
+  const out = readGedzip(buildGedzip(db));
+  // the archive bundled the photo under buildGedzip's id-based name
+  expect(out.media.has('1.jpg')).toBe(true);
+  expect([...out.media.get('1.jpg')!]).toEqual([9, 8, 7, 6]);
+
+  // re-importing with the archive's names as localFiles turns the OBJE back into a media row
+  const remapped = mapGedcom(parseGedcom(out.gedcomText), { localFiles: new Set(out.media.keys()) });
+  expect(remapped.media).toHaveLength(1);
+  expect(remapped.media[0]!.ownerId).toBe('I1');
+  expect(remapped.media[0]!.originalUrl).toBe('1.jpg');         // the bundle entry name it maps back to
+  expect(out.media.has(remapped.media[0]!.originalUrl)).toBe(true);
 });

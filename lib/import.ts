@@ -5,6 +5,7 @@ import { parseGedcom } from './gedcom/parser';
 import { mapGedcom } from './gedcom/mapper';
 import { detectGedcom, type SupportedVersion } from './gedcom/detect';
 import { isZip, readGedzip } from './gedcom/gedzip';
+import { safeFormExt } from './gedcom/mediaType';
 import { createDb } from '../db/client';
 import { persons, families, familyChildren, events, sources, citations, media, auditLog, rawRecords } from '../db/schema';
 
@@ -80,17 +81,16 @@ export function runImport(gedPath: string, dbPath: string, mediaDir?: string): I
     // extension comes from the file's FORM tag, which is attacker-controlled in
     // a foreign .gdz — `canonicalForm` hands back an unknown media type verbatim,
     // so a FORM like `../../../../pwned` would otherwise steer the write out of
-    // mediaDir (zip-slip). Restrict it to a short alphanumeric extension; anything
-    // else falls back to `bin`. That keeps the name free of path separators, so
-    // it can never escape mediaDir. (originalUrl is only ever a map key here,
-    // never a path, so it needs no such guard.)
+    // mediaDir (zip-slip). `safeFormExt` keeps only a short alphanumeric
+    // extension; anything else falls back to `bin`, so the name is free of path
+    // separators and can never escape mediaDir. (originalUrl is only ever a map
+    // key here, never a path, so it needs no such guard.)
     if (gedzip && mediaDir) {
       fs.mkdirSync(mediaDir, { recursive: true });
       for (const m of db.select().from(media).all()) {
         const data = gedzip.media.get(m.originalUrl);
         if (!data) continue;
-        const ext = /^[a-z0-9]{1,10}$/i.test(m.form ?? '') ? m.form : 'bin';
-        const dest = path.join(mediaDir, `${m.id}.${ext}`);
+        const dest = path.join(mediaDir, `${m.id}.${safeFormExt(m.form) ?? 'bin'}`);
         fs.writeFileSync(dest, data);
         db.update(media).set({ localPath: dest, downloadStatus: 'done' }).where(eq(media.id, m.id)).run();
       }

@@ -8,7 +8,7 @@ import type { Db } from '../db/client';
 import { DEFAULT_TREE, TreeNotFound, createEmptyTree, createTree, deleteTree, listTrees, openTree, renameTree, setTreeFormat } from '../lib/trees';
 import { parseGedcom } from '../lib/gedcom/parser';
 import { detectGedcom, UnsupportedGedcom } from '../lib/gedcom/detect';
-import { isZip, readGedzip } from '../lib/gedcom/gedzip';
+import { isZip, readGedzipText } from '../lib/gedcom/gedzip';
 
 export interface ActiveTree { id: string; db: Db }
 
@@ -84,9 +84,9 @@ export function createTreesApi() {
         let hasPeople: boolean;
         try {
           const bytes = fs.readFileSync(tmp);
-          // A GEDZIP hides its GEDCOM inside a zip; read that out first. createTree
-          // handles the actual .gdz import — only this pre-check needs to look in.
-          const text = isZip(bytes) ? readGedzip(bytes).gedcomText : detectGedcom(bytes).text;
+          // A GEDZIP hides its GEDCOM inside a zip; read just that out (not the
+          // photos) for the pre-check. createTree does the real .gdz import.
+          const text = isZip(bytes) ? readGedzipText(bytes) : detectGedcom(bytes).text;
           hasPeople = parseGedcom(text, []).some(r => r.tag === 'INDI');
         } catch (err) {
           if (err instanceof UnsupportedGedcom) return c.json({ error: err.message }, 400);

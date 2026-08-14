@@ -7,7 +7,7 @@ import { createDb, type Db } from '../../db/client';
 import { persons, media } from '../../db/schema';
 import { parseGedcom } from './parser';
 import { mapGedcom } from './mapper';
-import { buildGedzip, readGedzip, isZip } from './gedzip';
+import { buildGedzip, readGedzip, readGedzipText, isZip } from './gedzip';
 
 let db: Db;
 let dir: string;
@@ -107,4 +107,29 @@ it('a built .gdz round-trips: buildGedzip → readGedzip → mapGedcom yields a 
   expect(remapped.media[0]!.ownerId).toBe('I1');
   expect(remapped.media[0]!.originalUrl).toBe('1.jpg');         // the bundle entry name it maps back to
   expect(out.media.has(remapped.media[0]!.originalUrl)).toBe(true);
+});
+
+it('refuses a decompression bomb (total uncompressed far over the cap)', () => {
+  // a tiny archive that inflates to ~1 MB of zeros; the real cap is size-adaptive
+  // (≥64 MB), so pass a small maxBytes to trip the guard without huge buffers
+  const bomb = zipSync({ 'gedcom.ged': strToU8('0 HEAD\n0 TRLR'), 'big': new Uint8Array(1024 * 1024) });
+  expect(() => readGedzip(bomb, { maxBytes: 10_000 })).toThrow(/decompression bomb/i);
+  expect(() => readGedzipText(bomb, { maxBytes: 10_000 })).not.toThrow();   // reads only gedcom.ged, well under the cap
+  expect(readGedzip(bomb).media.has('big')).toBe(true);                     // the default (adaptive) cap admits it
+});
+
+it('readGedzipText returns the gedcom.ged text and rejects a zip without one', () => {
+  const zip = zipSync({ 'gedcom.ged': strToU8('0 HEAD\r\n1 GEDC\r\n2 VERS 7.0\r\n0 TRLR'), '1.jpg': new Uint8Array([1, 2]) });
+  expect(readGedzipText(zip).split('\r\n')).toContain('2 VERS 7.0');
+  expect(() => readGedzipText(zipSync({ 'notes.txt': strToU8('hi') }))).toThrow(/gedcom\.ged/);
+});
+
+it('buildGedzip sanitises a hostile form into a safe bundle entry name', () => {
+  const jpg = path.join(dir, 'photo');
+  fs.writeFileSync(jpg, Buffer.from([1, 2, 3]));
+  db.insert(media).values({ id: 5, ownerType: 'person', ownerId: 'I1', title: null,
+    originalUrl: 'https://cdn/x/5', form: '../../../../pwned', downloadStatus: 'done', localPath: jpg }).run();
+  const entries = unzipSync(buildGedzip(db));
+  expect(Object.keys(entries)).toContain('5.jpg');                 // fell back to a safe name
+  expect(Object.keys(entries).some(n => n.includes('..'))).toBe(false);
 });

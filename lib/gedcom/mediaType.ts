@@ -26,3 +26,13 @@ export function canonicalForm(value: string | null): string | null {
   if (value.toLowerCase() === 'application/octet-stream') return null;
   return value.includes('/') ? (TYPE_TO_EXT[value.toLowerCase()] ?? value) : value;
 }
+
+// A `form` safe to splice into a file name or a zip entry name: a short
+// alphanumeric extension, or null. `form` is stored verbatim (canonicalForm
+// keeps an unknown media type as-is, and a foreign file's FORM is
+// attacker-controlled), so anything bearing a slash or `..` — a path traversal
+// waiting to happen — is rejected here, at the point a name is built from it.
+// Callers apply their own fallback (`jpg`, `bin`) for the null case.
+export function safeFormExt(form: string | null): string | null {
+  return form != null && /^[a-z0-9]{1,10}$/i.test(form) ? form : null;
+}

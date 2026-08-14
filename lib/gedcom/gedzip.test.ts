@@ -2,11 +2,11 @@ import { it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { unzipSync, strFromU8 } from 'fflate';
+import { unzipSync, strFromU8, zipSync, strToU8 } from 'fflate';
 import { createDb, type Db } from '../../db/client';
 import { persons, media } from '../../db/schema';
 import { parseGedcom } from './parser';
-import { buildGedzip } from './gedzip';
+import { buildGedzip, readGedzip, isZip } from './gedzip';
 
 let db: Db;
 let dir: string;
@@ -70,4 +70,21 @@ it('the gedcom.ged is 7.0-shaped and every bundled FILE has a matching entry', (
   const localFiles = lines.filter(l => /^1 FILE /.test(l)).map(l => l.slice(7)).filter(v => !/^https?:/.test(v));
   expect(localFiles).toContain('7.jpg');
   for (const f of localFiles) expect(Object.keys(entries)).toContain(f);
+});
+
+it('reads a .gdz back into gedcom.ged text and its media bytes', () => {
+  const ged = '﻿0 HEAD\r\n1 GEDC\r\n2 VERS 7.0\r\n0 TRLR';
+  const jpg = new Uint8Array([0xff, 0xd8, 0xff, 1, 2, 3]);
+  const zip = zipSync({ 'gedcom.ged': strToU8(ged), '7.jpg': jpg });
+  expect(isZip(zip)).toBe(true);
+  expect(isZip(strToU8('0 HEAD'))).toBe(false);
+  const out = readGedzip(zip);
+  expect(out.gedcomText.replace(/^﻿/, '').split('\r\n')).toContain('2 VERS 7.0');
+  expect([...out.media.get('7.jpg')!]).toEqual([0xff, 0xd8, 0xff, 1, 2, 3]);
+  expect(out.media.has('gedcom.ged')).toBe(false);   // gedcom.ged is not media
+});
+
+it('rejects a zip with no gedcom.ged', () => {
+  const zip = zipSync({ 'notes.txt': strToU8('hi') });
+  expect(() => readGedzip(zip)).toThrow(/gedcom\.ged/);
 });

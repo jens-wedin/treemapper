@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { zipSync, strToU8 } from 'fflate';
 import { media, persons, rawRecords, treeMeta } from '../db/schema';
 import { createDb } from '../db/client';
-import { TreeNotFound, closeTrees, createEmptyTree, createTree, defaultTreeId, deleteTree, infoFor, listTrees, openTree, renameTree, setTreeFormat } from './trees';
+import { TreeNotFound, closeTrees, createEmptyTree, createTree, defaultTreeId, deleteTree, infoFor, listTrees, mediaDirFor, openTree, renameTree, setTreeFormat } from './trees';
 import { SAFE_ENV } from '../vitest.setup';
 
 const MINI = path.resolve('lib/gedcom/fixtures/mini.ged');
@@ -240,6 +240,24 @@ describe('importing a tree', () => {
     expect(rows[0]!.downloadStatus).toBe('done');
     expect(fs.existsSync(rows[0]!.localPath!)).toBe(true);                 // extracted to disk
     expect([...fs.readFileSync(rows[0]!.localPath!)]).toEqual([1, 2, 3]);
+  });
+
+  it('a crafted GEDZIP FORM cannot escape the tree media folder (zip-slip)', () => {
+    // FORM is attacker-controlled in a foreign .gdz; a "../" one must not steer
+    // the extracted file out of the tree's own media folder, nor crash the import.
+    const ged = ['0 HEAD', '1 GEDC', '2 VERS 7.0',
+      '0 @I1@ INDI', '1 NAME A /B/', '1 OBJE @M1@',
+      '0 @M1@ OBJE', '1 FILE evil.jpg', '2 FORM ../../../../pwned',
+      '0 TRLR'].join('\n');
+    const zip = zipSync({ 'gedcom.ged': strToU8(ged), 'evil.jpg': new Uint8Array([6, 6, 6]) });
+    const gdz = path.join(workDir, 'evil.gdz');
+    fs.writeFileSync(gdz, zip);
+    const { tree } = createTree('Ondska', gdz, 'evil.gdz');   // must not throw
+    const db = openTree(tree.id);
+    const root = path.resolve(mediaDirFor(tree.id)) + path.sep;
+    for (const r of db.select().from(media).all()) {
+      if (r.localPath) expect(path.resolve(r.localPath).startsWith(root)).toBe(true);
+    }
   });
 });
 

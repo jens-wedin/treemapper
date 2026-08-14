@@ -74,15 +74,23 @@ export function runImport(gedPath: string, dbPath: string, mediaDir?: string): I
     // Extract the GEDZIP's bundled photos into the tree's media folder and
     // finalise their rows. A bundled media row's originalUrl is the archive
     // entry name (so gedzip.media.get finds it); an undownloaded http-URL row
-    // is not in the archive and stays 'pending'. The on-disk name is derived
-    // from the row id + form — never from the archive entry name — so a
-    // crafted entry ("../../…") cannot escape mediaDir (zip-slip).
+    // is not in the archive and stays 'pending'.
+    //
+    // The on-disk name is <row id>.<ext>. The id is a safe integer, but the
+    // extension comes from the file's FORM tag, which is attacker-controlled in
+    // a foreign .gdz — `canonicalForm` hands back an unknown media type verbatim,
+    // so a FORM like `../../../../pwned` would otherwise steer the write out of
+    // mediaDir (zip-slip). Restrict it to a short alphanumeric extension; anything
+    // else falls back to `bin`. That keeps the name free of path separators, so
+    // it can never escape mediaDir. (originalUrl is only ever a map key here,
+    // never a path, so it needs no such guard.)
     if (gedzip && mediaDir) {
       fs.mkdirSync(mediaDir, { recursive: true });
       for (const m of db.select().from(media).all()) {
         const data = gedzip.media.get(m.originalUrl);
         if (!data) continue;
-        const dest = path.join(mediaDir, `${m.id}.${m.form ?? 'jpg'}`);
+        const ext = /^[a-z0-9]{1,10}$/i.test(m.form ?? '') ? m.form : 'bin';
+        const dest = path.join(mediaDir, `${m.id}.${ext}`);
         fs.writeFileSync(dest, data);
         db.update(media).set({ localPath: dest, downloadStatus: 'done' }).where(eq(media.id, m.id)).run();
       }

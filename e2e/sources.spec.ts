@@ -50,17 +50,26 @@ test('the person page\'s citation links to the source', async ({ page }) => {
 test('settings offers a GEDCOM download', async ({ page }) => {
   await page.goto('/wedin/settings');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Settings');
-  // The link names the tree it exports, so what you downloaded is never a guess.
-  const link = page.getByRole('link', { name: 'Download GEDCOM' });
-  await expect(link).toHaveAttribute('href', '/api/export/gedcom?tree=wedin');
+  // Three self-describing downloads, each carrying an explicit format (or the
+  // GEDZIP container) and the tree it exports — so what you get is never a guess.
+  await expect(page.getByRole('link', { name: 'Download GEDCOM 5.5.1' }))
+    .toHaveAttribute('href', '/api/export/gedcom?format=5.5.1&tree=wedin');
+  await expect(page.getByRole('link', { name: 'Download GEDCOM 7.0' }))
+    .toHaveAttribute('href', '/api/export/gedcom?format=7.0&tree=wedin');
+  await expect(page.getByRole('link', { name: 'Download GEDZIP (.gdz)' }))
+    .toHaveAttribute('href', '/api/export/gedcom?container=gdz&tree=wedin');
 
-  // fetch the file and check that it looks like GEDCOM
-  const res = await page.request.get('/api/export/gedcom');
+  // each explicit format really produces that version
+  expect(await (await page.request.get('/api/export/gedcom?format=5.5.1')).text()).toContain('2 VERS 5.5.1');
+  expect(await (await page.request.get('/api/export/gedcom?format=7.0')).text()).toContain('2 VERS 7.0');
+
+  // fetch the 5.5.1 file and check that it looks like GEDCOM
+  const res = await page.request.get('/api/export/gedcom?format=5.5.1');
   expect(res.status()).toBe(200);
   expect(res.headers()['content-disposition']).toContain('.ged');
   const body = await res.text();
   expect(body.replace(/^﻿/, '').startsWith('0 HEAD')).toBe(true);
-  expect(body).toMatch(/2 VERS (5\.5\.1|7\.0)/);   // the tree's configured format (7.0 by default)
+  expect(body).toContain('2 VERS 5.5.1');
   expect(body.trimEnd().endsWith('0 TRLR')).toBe(true);
 });
 

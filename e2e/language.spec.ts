@@ -43,7 +43,7 @@ test('the language choice is remembered between visits, on every page', async ({
   // and on a completely different page
   await page.goto('/wedin/settings');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Inställningar');
-  await expect(page.getByRole('link', { name: 'Ladda ner GEDCOM' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Ladda ner GEDCOM 5.5.1' })).toBeVisible();
 
   await page.goto('/wedin/tree/I500001?view=fan');
   await expect(page.getByRole('tab', { name: 'Solfjäder', exact: true })).toBeVisible();

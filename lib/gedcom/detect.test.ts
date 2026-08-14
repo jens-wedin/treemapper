@@ -1,5 +1,8 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { decodeGedcom, detectGedcom, UnsupportedGedcom } from './detect';
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
 
 describe('decodeGedcom', () => {
   const sample = '0 HEAD\n1 GEDC\n2 VERS 7.0\n0 TRLR';
@@ -32,5 +35,46 @@ describe('detectGedcom', () => {
     expect(() => detectGedcom(Buffer.from('0 HEAD\n1 SYST PAF\n1 GEDC\n2 VERS 5.5.1\n0 TRLR', 'utf-8'))).toThrow(/PAF/);
     expect(() => detectGedcom(head('5.6', 'UTF-8'))).toThrow(/5\.6/);
     expect(() => detectGedcom(head('4.0'))).toThrow(UnsupportedGedcom);
+  });
+});
+
+describe('detectGedcom fixture-driven tests', () => {
+  const fixturesDir = path.join(path.dirname(new URL(import.meta.url).pathname), 'fixtures');
+  let tmpDir: string;
+
+  beforeAll(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gedcom-test-'));
+  });
+
+  afterAll(() => {
+    if (tmpDir && fs.existsSync(tmpDir)) {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  it('detects GEDCOM 7.0 from a file', () => {
+    const content = fs.readFileSync(path.join(fixturesDir, 'foreign70.ged'));
+    const result = detectGedcom(content);
+    expect(result.version).toBe('7.0');
+    expect(result.text).toContain('0 HEAD');
+  });
+
+  it('detects UTF-16 LE encoded GEDCOM 5.5.1', () => {
+    const utf16Content = '0 HEAD\n1 GEDC\n2 VERS 5.5.1\n1 CHAR UTF-8\n0 TRLR';
+    const buffer = Buffer.from(utf16Content, 'utf-16le');
+    const result = detectGedcom(buffer);
+    expect(result.version).toBe('5.5.1');
+  });
+
+  it('rejects ANSEL charset from file', () => {
+    const content = fs.readFileSync(path.join(fixturesDir, 'ansel.ged'));
+    expect(() => detectGedcom(content)).toThrow(UnsupportedGedcom);
+    expect(() => detectGedcom(content)).toThrow(/ANSEL/);
+  });
+
+  it('rejects PAF system from file', () => {
+    const content = fs.readFileSync(path.join(fixturesDir, 'paf.ged'));
+    expect(() => detectGedcom(content)).toThrow(UnsupportedGedcom);
+    expect(() => detectGedcom(content)).toThrow(/PAF/);
   });
 });

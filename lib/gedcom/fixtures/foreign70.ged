@@ -1,0 +1,10 @@
+0 HEAD
+1 GEDC
+2 VERS 7.0
+1 LANG en
+0 @I1@ INDI
+1 NAME Test /Person/
+1 BIRT
+2 DATE JULIAN 1 JAN 1700
+0 @N1@ SNOTE This is a shared note in GEDCOM 7.0
+0 TRLR

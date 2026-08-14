@@ -14,6 +14,7 @@ export interface MappedData {
   rawRecords: (typeof rawRecords.$inferInsert)[];
   albums: number;
   warnings: string[];
+  schema: Record<string, string>;
 }
 
 const EVENT_TAGS = new Set([
@@ -41,6 +42,7 @@ export function mapGedcom(records: GedcomNode[]): MappedData {
   const out: MappedData = {
     persons: [], families: [], familyChildren: [], events: [],
     sources: [], citations: [], media: [], rawRecords: [], albums: 0, warnings: [],
+    schema: {},
   };
   let eventId = 0;
   let citationId = 0;
@@ -130,7 +132,20 @@ export function mapGedcom(records: GedcomNode[]): MappedData {
   const consumedObjeXrefs = new Set<string>();
 
   for (const rec of records) {
-    if (rec.tag === 'HEAD' || rec.tag === 'TRLR') continue;
+    if (rec.tag === 'TRLR') continue;
+    if (rec.tag === 'HEAD') {
+      // 7.0's HEAD.SCHMA maps an extension tag (`_LOC`) to the URI defining
+      // it, so re-export can re-emit the file's own extension URIs rather
+      // than inventing new ones. Each TAG child's value is "_X http://…" —
+      // split on the first space into tag and URI.
+      const schma = rec.children.find(c => c.tag === 'SCHMA');
+      for (const t of schma?.children ?? []) {
+        if (t.tag !== 'TAG' || !t.value) continue;
+        const sp = t.value.indexOf(' ');
+        if (sp > 0) out.schema[t.value.slice(0, sp)] = t.value.slice(sp + 1).trim();
+      }
+      continue;
+    }
     if (rec.tag === 'ALBUM') { out.albums++; continue; }
     if (rec.tag === 'OBJE') continue;   // consumed via pointers, not a record of its own
     const id = stripAt(rec.xref);
@@ -215,6 +230,11 @@ export function mapGedcom(records: GedcomNode[]): MappedData {
           // consumed by addCitations(rec, …) below; only kept out of raw here
         } else if (c.tag === 'FAMC' || c.tag === 'FAMS') {
           // relations are derived from FAM records; drop
+        } else if (c.tag === 'NO') {
+          // 7.0 negative assertion ("this event did NOT happen") — it has a
+          // DATE, so isEventNode below would mis-map it as an event. Keep it
+          // in raw_tags instead.
+          raw.push(c);
         } else if (isEventNode(c)) {
           if (!EVENT_TAGS.has(c.tag)) out.warnings.push(`Treating unknown tag ${c.tag} on ${id} as event`);
           addEvent(c, 'person', id);
@@ -239,6 +259,7 @@ export function mapGedcom(records: GedcomNode[]): MappedData {
         else if (c.tag === 'CHIL') out.familyChildren.push({ id: ++fcId, familyId: id, childId: stripAt(c.value), seq: seq++ });
         else if (c.tag === 'NOTE') { if (c.value) notes.push(c.value); }
         else if (c.tag === 'SOUR') { /* handled below */ }
+        else if (c.tag === 'NO') raw.push(c);   // negative assertion, not an event — see INDI loop
         else if (isEventNode(c)) addEvent(c, 'family', id);
         else raw.push(c);
       }

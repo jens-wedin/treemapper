@@ -152,6 +152,18 @@ describe('mapGedcom', () => {
     expect(warnings.some(w => /OBJE record @M7@ not referenced by any INDI/.test(w))).toBe(true);
   });
 
+  it('captures HEAD.SCHMA tag→URI and does not treat NO as an event', () => {
+    const tree = parseGedcom([
+      '0 HEAD', '1 SCHMA', '2 TAG _LOC http://example.com/loc',
+      '0 @I1@ INDI', '1 NAME A /B/', '1 NO MARR', '2 DATE FROM 1900 TO 1950',
+      '0 TRLR',
+    ].join('\n'));
+    const out = mapGedcom(tree);
+    expect(out.schema).toMatchObject({ _LOC: 'http://example.com/loc' });
+    expect(out.events.some(e => e.type === 'NO')).toBe(false);                 // NO is not an event
+    expect(out.persons[0]!.rawTags).toContain('NO');                           // NO preserved in raw
+  });
+
   it('preserves a foreign level-0 record (SNOTE, SUBM) verbatim in rawRecords', () => {
     const tree = parseGedcom([
       '0 HEAD',

@@ -25,4 +25,7 @@ describe('canonicalForm (import: type/extension → stored extension)', () => {
     expect(canonicalForm('jpg')).toBe('jpg');
     expect(canonicalForm(null)).toBeNull();
   });
+  it('normalises the 7.0 null-form fallback back to null on import', () => {
+    expect(canonicalForm('application/octet-stream')).toBeNull();
+  });
 });

@@ -23,5 +23,6 @@ export function mediaType(form: string | null): string | null {
 
 export function canonicalForm(value: string | null): string | null {
   if (value == null) return null;
+  if (value.toLowerCase() === 'application/octet-stream') return null;
   return value.includes('/') ? (TYPE_TO_EXT[value.toLowerCase()] ?? value) : value;
 }

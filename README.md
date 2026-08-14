@@ -20,8 +20,9 @@ npm run dev            # app on :5173, API on :3001
 A fresh clone has **no family tree**, and the app does nothing until you make
 one — two ways:
 
-- **Import a GEDCOM** export from Ancestry, MyHeritage, Geni or another program
-  (Settings → Import family tree), or
+- **Import a GEDCOM** export from Ancestry, MyHeritage, Geni or another program —
+  a `.ged` (5.5.1 or 7.0) or a `.gdz` GEDZIP, whose bundled photos are extracted
+  into the tree as you import (Settings → Import family tree), or
 - **Start an empty tree** and add people by hand (Settings → Create an empty
   family tree).
 
@@ -89,6 +90,10 @@ reserved.
 - **Countries** — fills in the country of a place that names none, one approval
   at a time, learned from the tree itself rather than an outside list; nothing
   reaches the network and every change is audit-logged.
+- **Import** — GEDCOM **5.5.1 or 7.0** (auto-detected from the file), or a `.gdz`
+  GEDZIP whose `gedcom.ged` is imported and whose bundled photos are unpacked into
+  the tree's `media/` folder as ready-to-view media. Records the app doesn't model
+  are preserved verbatim as `raw_records` so a round-trip loses nothing.
 - **Export** — GEDCOM **5.5.1 or 7.0**, chosen per tree (7.0 is the default),
   round-trip verified: exporting and re-importing reproduces every table exactly,
   re-emitting the `raw_tags` subtrees for structures the app doesn't model. The
@@ -154,6 +159,12 @@ npm run export -- out.gdz --gdz          # CLI
 # or Settings → "Download GEDZIP (.gdz)"
 ```
 
+Import one the same way you import a `.ged` — the CLI `npm run import` and
+Settings → Import both accept a `.gdz`, unzip its `gedcom.ged`, and unpack the
+bundled photos into the tree's `media/` folder (an extracted photo's on-disk
+name is derived from its row id, never the archive entry name, so a crafted
+archive can't write outside the folder).
+
 ## Commands
 
 ```bash
@@ -166,7 +177,7 @@ npm run build          # tsc -b && vite build
 Data tools:
 
 ```bash
-npm run import -- <file.ged> "<name>"        # create a new tree from a GEDCOM
+npm run import -- <file.ged|.gdz> "<name>"   # create a new tree from a GEDCOM or GEDZIP
 npm run media -- <tree>                      # download a tree's photos
 npm run export -- [path] [--format=5.5.1|7.0]  # write the tree out (default: the tree's format, 7.0)
 npm run merge-duplicates -- <person-id> ...  # fold up a re-imported branch

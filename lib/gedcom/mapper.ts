@@ -210,6 +210,7 @@ export function mapGedcom(records: GedcomNode[]): MappedData {
                 filesize: childValue(objeRec, '_FILESIZE') != null ? Number(childValue(objeRec, '_FILESIZE')) : null,
                 downloadStatus: 'pending',
                 rawTags: serializeRaw(objeRec.children.filter(x => !consumed.has(x.tag))),
+                xref: objeXref,
               });
             } else if (objeRec) {
               // The record resolved but has no usable http FILE. Keep only
@@ -241,6 +242,7 @@ export function mapGedcom(records: GedcomNode[]): MappedData {
             filesize: childValue(c, '_FILESIZE') != null ? Number(childValue(c, '_FILESIZE')) : null,
             downloadStatus: 'pending',
             rawTags: serializeRaw(c.children.filter(x => !consumed.has(x.tag))),
+            xref: null,
           });
         } else if (c.tag === 'SOUR') {
           // consumed by addCitations(rec, …) below; only kept out of raw here

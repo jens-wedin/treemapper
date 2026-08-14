@@ -84,6 +84,18 @@ function parseRawTags(json: string | null | undefined): RawTag[] {
   }
 }
 
+// tree_meta.schema_json is a hand-editable column; a malformed value must not
+// abort the whole export, so this falls back to null exactly like parseRawTags
+// falls back to an empty array.
+function parseSchemaJson(json: string | null | undefined): Record<string, string> | null {
+  if (!json) return null;
+  try {
+    return JSON.parse(json) as Record<string, string>;
+  } catch {
+    return null;
+  }
+}
+
 function writeRawNodes(w: Writer, level: number, nodes: RawTag[]) {
   for (const node of nodes) {
     const value = node.pointer ? `@${node.pointer}@` : node.value;
@@ -192,9 +204,10 @@ export function exportGedcom(db: Db, opts: ExportOptions = {}): string {
   const version = opts.version ?? '5.5.1';
   const w = new Writer(version);
   const now = opts.now ?? new Date();
-  const treeName = db.select().from(treeMeta).all()[0]?.name ?? null;
+  const meta = db.select().from(treeMeta).all()[0];
+  const treeName = meta?.name ?? null;
   const rawRows = db.select().from(rawRecords).orderBy(asc(rawRecords.id)).all();
-  const schema = JSON.parse(db.select().from(treeMeta).all()[0]?.schemaJson ?? 'null') as Record<string, string> | null;
+  const schema = parseSchemaJson(meta?.schemaJson);
 
   const allPersons = db.select().from(persons).orderBy(asc(persons.id)).all();
   const allFamilies = db.select().from(families).orderBy(asc(families.id)).all();
@@ -260,7 +273,7 @@ export function exportGedcom(db: Db, opts: ExportOptions = {}): string {
     writeCitations(w, 1, citationsByOwner.get(`person:${p.id}`) ?? []);
     for (const m of mediaByPerson.get(p.id) ?? []) {
       if (version === '7.0') {
-        w.line(1, 'OBJE', `@M${m.id}@`);            // 7.0: pointer to the record
+        w.line(1, 'OBJE', `@${m.xref ?? `M${m.id}`}@`);   // 7.0: pointer to the record
       } else {
         w.line(1, 'OBJE');                          // 5.5.1: embedded (unchanged)
         if (m.form) w.line(2, 'FORM', m.form);
@@ -304,7 +317,7 @@ export function exportGedcom(db: Db, opts: ExportOptions = {}): string {
   if (version === '7.0') {
     for (const m of allMedia) {
       if (m.ownerType !== 'person') continue;     // only the referenced ones
-      w.line(0, 'OBJE', null, `@M${m.id}@`);
+      w.line(0, 'OBJE', null, `@${m.xref ?? `M${m.id}`}@`);
       w.line(1, 'FILE', opts.mediaFilePath?.(m) ?? m.originalUrl);
       w.line(2, 'FORM', mediaType(m.form) ?? 'application/octet-stream');  // FORM required under FILE in 7.0
       if (m.title) w.line(2, 'TITL', m.title);   // TITL is a sibling of FORM, under FILE — not a direct child of the record

@@ -57,6 +57,13 @@
       "when": 1786704935170,
       "tag": "0007_cute_hex",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1786705740611,
+      "tag": "0008_fast_forgotten_one",
+      "breakpoints": true
     }
   ]
 }

@@ -102,6 +102,7 @@ export const media = sqliteTable('media', {
   downloadStatus: text('download_status', { enum: ['pending', 'done', 'failed'] }).notNull().default('pending'),
   downloadedAt: text('downloaded_at'),
   rawTags: text('raw_tags'),
+  xref: text('xref'),                 // the source OBJE record's @X@ id for 7.0 media, or null
 });
 
 export const issueDismissals = sqliteTable('issue_dismissals', {

@@ -416,4 +416,58 @@ describe('exportGedcom — foreign 7.0 integration round trip', () => {
     expect(back.rawRecords.map(r => r.tag)).toEqual(['OBJE']);   // preserved on re-import
     expect(back.media).toHaveLength(0);
   });
+
+  /**
+   * The bug the final review found, masked by maximal70's @O#@-prefixed
+   * xrefs: real vendor files number multimedia records @M1@, @M2@… A file
+   * that mixes a shared OBJE (kept verbatim in raw_records, xref @M1@) with a
+   * solo-referenced OBJE (which becomes a media row) used to re-export the
+   * media row under a *freshly synthesized* `@M1@` too — two `0 @M1@ OBJE`
+   * records, invalid GEDCOM, and an ambiguous `1 OBJE @M1@` pointer. Giving
+   * 7.0 media its source record's own xref makes the collision impossible:
+   * a media row's source OBJE is by construction referenced exactly once, so
+   * its xref is unique within the file (Task 8).
+   */
+  it('keeps a synthesized media xref from colliding with a preserved raw OBJE record of the same original id', () => {
+    const src = [
+      '0 HEAD', '1 GEDC', '2 VERS 7.0',
+      '0 @I1@ INDI', '1 NAME A /B/', '1 OBJE @M1@',
+      '0 @I2@ INDI', '1 NAME C /D/', '1 OBJE @M1@',
+      '0 @I3@ INDI', '1 NAME E /F/', '1 OBJE @X9@',
+      '0 @M1@ OBJE', '1 FILE https://x/shared.jpg', '2 FORM image/jpeg',
+      '0 @X9@ OBJE', '1 FILE https://x/solo.jpg', '2 FORM image/jpeg',
+      '0 TRLR',
+    ].join('\n');
+    const mapped = mapGedcom(parseGedcom(src));
+    expect(mapped.media).toHaveLength(1);                 // only the solo OBJE became media
+    expect(mapped.media[0]).toMatchObject({ ownerId: 'I3', originalUrl: 'https://x/solo.jpg', xref: 'X9' });
+    expect(mapped.rawRecords.find(r => r.tag === 'OBJE' && r.xref === 'M1')).toBeDefined();  // shared kept verbatim
+
+    db.insert(persons).values(mapped.persons).run();
+    db.insert(media).values(mapped.media).run();
+    db.insert(rawRecords).values(mapped.rawRecords).run();
+    db.insert(treeMeta).values({ id: 1, name: 'T', createdAt: 'x', slug: 't', schemaJson: JSON.stringify(mapped.schema) }).run();
+
+    const out = exportGedcom(db, { version: '7.0' });
+    const lines = out.replace(/^﻿/, '').split('\r\n');
+
+    const level0Objects = lines.filter(l => /^0 @.+@ OBJE/.test(l));
+    expect(level0Objects).toHaveLength(2);                 // one shared record, one solo record — not three, not a duplicate
+    const xrefs = level0Objects.map(l => l.match(/^0 @(.+)@ OBJE/)![1]);
+    expect(new Set(xrefs).size).toBe(xrefs.length);         // no duplicate level-0 xrefs
+
+    expect(lines.filter(l => l === '0 @M1@ OBJE')).toHaveLength(1);   // exactly one @M1@ record — the shared one
+    expect(lines).toContain('0 @X9@ OBJE');                // the solo media kept ITS OWN original xref
+
+    const solo = lines.findIndex(l => l === '0 @X9@ OBJE');
+    expect(lines[solo + 1]).toBe('1 FILE https://x/solo.jpg');   // @X9@ is the solo record, not the shared one
+
+    expect(lines).toContain('1 OBJE @M1@');   // I1/I2 both still point at the shared record
+    expect(lines).toContain('1 OBJE @X9@');   // I3 points at the solo record under its own xref
+
+    const back = mapGedcom(parseGedcom(out));
+    expect(back.media).toHaveLength(1);
+    expect(back.media[0]).toMatchObject({ originalUrl: 'https://x/solo.jpg', xref: 'X9' });   // solo media round-trips stably
+    expect(back.rawRecords.find(r => r.tag === 'OBJE' && r.xref === 'M1')).toBeDefined();      // shared record still preserved
+  });
 });

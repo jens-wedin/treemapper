@@ -1,6 +1,6 @@
 import { asc } from 'drizzle-orm';
 import type { Db } from '../db/client';
-import { persons, families, familyChildren, events, sources, citations, media, treeMeta } from '../db/schema';
+import { persons, families, familyChildren, events, sources, citations, media, treeMeta, rawRecords } from '../db/schema';
 import { extensionUri } from './gedcom/extensions';
 import { mediaType } from './gedcom/mediaType';
 
@@ -151,7 +151,13 @@ function headerDate(d: Date): string {
  * in the spec) and instead declares every extension (underscore) tag the
  * body emitted, so a 7.0-aware reader knows what `_MARNM` etc. mean.
  */
-function writeHeader(version: '5.5.1' | '7.0', treeName: string | null, now: Date, emittedTags: Set<string>): string {
+function writeHeader(
+  version: '5.5.1' | '7.0',
+  treeName: string | null,
+  now: Date,
+  emittedTags: Set<string>,
+  schema: Record<string, string> | null,
+): string {
   const h = new Writer(version);
   h.line(0, 'HEAD');
   h.line(1, 'SOUR', 'TREEMAPPER');
@@ -167,7 +173,10 @@ function writeHeader(version: '5.5.1' | '7.0', treeName: string | null, now: Dat
     const ext = [...emittedTags].filter(t => t.startsWith('_')).sort();
     if (ext.length) {
       h.line(1, 'SCHMA');
-      for (const tag of ext) h.line(2, 'TAG', `${tag} ${extensionUri(tag)}`);
+      for (const tag of ext) {
+        const uri = schema?.[tag] ?? extensionUri(tag);
+        h.line(2, 'TAG', `${tag} ${uri}`);
+      }
     }
   }
   return h.toString();
@@ -184,6 +193,8 @@ export function exportGedcom(db: Db, opts: ExportOptions = {}): string {
   const w = new Writer(version);
   const now = opts.now ?? new Date();
   const treeName = db.select().from(treeMeta).all()[0]?.name ?? null;
+  const rawRows = db.select().from(rawRecords).orderBy(asc(rawRecords.id)).all();
+  const schema = JSON.parse(db.select().from(treeMeta).all()[0]?.schemaJson ?? 'null') as Record<string, string> | null;
 
   const allPersons = db.select().from(persons).orderBy(asc(persons.id)).all();
   const allFamilies = db.select().from(families).orderBy(asc(families.id)).all();
@@ -302,7 +313,13 @@ export function exportGedcom(db: Db, opts: ExportOptions = {}): string {
     }
   }
 
+  // ---- preserved unmodeled records (SNOTE, SUBM, REPO, foreign extensions …) ----
+  for (const r of rawRows) {
+    w.line(0, r.tag, null, r.xref ? `@${r.xref}@` : undefined);
+    writeRawTags(w, 1, r.rawTags);
+  }
+
   const body = w.toString();
-  const header = writeHeader(version, treeName, now, w.tags);
+  const header = writeHeader(version, treeName, now, w.tags, schema);
   return `﻿${header}${body ? `\r\n${body}` : ''}\r\n0 TRLR`;
 }

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { createDb, type Db } from '../db/client';
-import { persons, families, familyChildren, events, sources, citations, media } from '../db/schema';
+import { persons, families, familyChildren, events, sources, citations, media, rawRecords, treeMeta } from '../db/schema';
 import { exportGedcom, Writer } from './gedcomExport';
 import { parseGedcom } from './gedcom/parser';
 import { mapGedcom, type MappedData } from './gedcom/mapper';
@@ -253,6 +253,20 @@ describe('exportGedcom — version-aware header', () => {
     expect(lines).toContain('2 FORM LINEAGE-LINKED');
     expect(lines).toContain('1 CHAR UTF-8');
     expect(lines).not.toContain('1 SCHMA');
+  });
+});
+
+describe('exportGedcom — lossless foreign 7.0 round trip', () => {
+  it('re-emits preserved raw_records and honours the stored SCHMA URI', () => {
+    buildTree();
+    db.insert(treeMeta).values({ id: 1, name: 'T', createdAt: 'x', slug: 't' }).run();
+    db.insert(rawRecords).values({ id: 1, xref: 'N1', tag: 'SNOTE', rawTags: JSON.stringify([{ tag: 'LANG', value: 'en' }]) }).run();
+    db.update(treeMeta).set({ schemaJson: JSON.stringify({ _MARNM: 'http://foreign/marnm' }) }).where(eq(treeMeta.id, 1)).run();
+
+    const v7 = exportGedcom(db, { version: '7.0' }).replace(/^﻿/, '').split('\r\n');
+    expect(v7).toContain('0 @N1@ SNOTE');                       // record re-emitted
+    expect(v7).toContain('1 LANG en');                          // its children too
+    expect(v7).toContain('2 TAG _MARNM http://foreign/marnm');  // stored URI, not our namespace
   });
 });
 

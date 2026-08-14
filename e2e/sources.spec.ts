@@ -60,7 +60,7 @@ test('settings offers a GEDCOM download', async ({ page }) => {
   expect(res.headers()['content-disposition']).toContain('.ged');
   const body = await res.text();
   expect(body.replace(/^﻿/, '').startsWith('0 HEAD')).toBe(true);
-  expect(body).toContain('2 VERS 5.5.1');
+  expect(body).toMatch(/2 VERS (5\.5\.1|7\.0)/);   // the tree's configured format (7.0 by default)
   expect(body.trimEnd().endsWith('0 TRLR')).toBe(true);
 });
 

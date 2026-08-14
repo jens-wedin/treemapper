@@ -254,9 +254,9 @@ test('the person page links to the tree', async ({ page }) => {
 });
 
 test.describe('problem marks', () => {
-  // I500244 has eight problems, one of them an error — a convenient starting point
-  const url = '/tree/I500244?up=1&down=1&view=family';
-  const card = (page: import('@playwright/test').Page) => page.locator('[data-tree-node="I500244"]');
+  // I503910 has eight problems, one of them an error — a convenient starting point
+  const url = '/tree/I503910?up=1&down=1&view=family';
+  const card = (page: import('@playwright/test').Page) => page.locator('[data-tree-node="I503910"]');
 
   test('are off until asked for, and the choice is remembered', async ({ page }) => {
     await page.goto(url);
@@ -275,10 +275,10 @@ test.describe('problem marks', () => {
     await expect(toggle).toBeChecked();
     await expect(card(page).locator('[data-issue-severity]')).toBeVisible();
 
-    await page.goto('/wedin/tree/I500244?up=2&view=pedigree');
+    await page.goto('/wedin/tree/I503910?up=2&view=pedigree');
     await expect(card(page).locator('[data-issue-severity]')).toBeVisible();
 
-    await page.goto('/wedin/tree/I500244?up=2&view=fan');
+    await page.goto('/wedin/tree/I503910?up=2&view=fan');
     await expect(page.locator('[data-issue-severity]').first()).toBeVisible();
   });
 
@@ -314,7 +314,7 @@ test.describe('problem marks', () => {
     const group = panel.getByRole('listitem').filter({ hasText: 'Child born after a parent died' });
     await expect(group).toHaveCount(1);
     await expect(group).toContainText('(4)');
-    await expect(group).toContainText('after their father Abraham Abrahamsson died in 1800');
+    await expect(group).toContainText('after their father Franz Joseph Grundel died in 1840');
 
     // a person with no problems gets no section
     await page.goto('/wedin/tree/I500001?up=1&down=1&view=family');
@@ -331,7 +331,7 @@ test.describe('problem marks', () => {
 
     // dismiss one of the eight, as the queue would
     const queue = await (await page.request.get('/api/issues?limit=500')).json();
-    const mine = queue.items.find((i: { personIds: string[] }) => i.personIds.includes('I500244'));
+    const mine = queue.items.find((i: { personIds: string[] }) => i.personIds.includes('I503910'));
     await page.request.post('/api/issues/dismiss', { data: { fingerprint: mine.fingerprint } });
 
     await page.reload();

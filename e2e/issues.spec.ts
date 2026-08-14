@@ -125,8 +125,8 @@ test('Home shows the consistency scoreboard', async ({ page }) => {
 });
 
 test('the person page ends with that person\'s problems', async ({ page }) => {
-  // I500244 has four children born after his own death, plus more problems
-  await page.goto('/wedin/person/I500244');
+  // I503910 has four children born after his own death, plus more problems
+  await page.goto('/wedin/person/I503910');
   const section = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Inconsistencies' }) });
   await expect(section).toBeVisible();
 
@@ -138,7 +138,7 @@ test('the person page ends with that person\'s problems', async ({ page }) => {
   const group = section.getByRole('listitem').filter({ hasText: 'Child born after a parent died' });
   await expect(group).toHaveCount(1);
   await expect(group).toContainText('(4)');
-  await expect(group).toContainText('after their father Abraham Abrahamsson died in 1800');
+  await expect(group).toContainText('after their father Franz Joseph Grundel died in 1840');
 
   // and no heading at all for somebody with nothing flagged
   await page.goto('/wedin/person/I500001');

@@ -20,6 +20,9 @@ export const treeMeta = sqliteTable('tree_meta', {
   // Which GEDCOM version this tree exports as. 7.0 is the modern default;
   // switchable per tree. Import always reads the file's own version regardless.
   gedcomFormat: text('gedcom_format').notNull().default('7.0'),
+  // The imported file's HEAD.SCHMA tag→URI map (JSON), so re-export re-emits each
+  // extension tag with the URI the file declared. Null when nothing was imported.
+  schemaJson: text('schema_json'),
 });
 
 export const persons = sqliteTable('persons', {
@@ -134,4 +137,17 @@ export const auditLog = sqliteTable('audit_log', {
   entityId: text('entity_id').notNull(),
   before: text('before'),
   after: text('after'),
+});
+
+/**
+ * Any level-0 record a foreign GEDCOM carries that we do not model — SNOTE
+ * (shared notes), SUBM, REPO, or a foreign extension record. Preserved verbatim
+ * so a 7.0 import → export loses nothing and pointers to it never dangle. Not
+ * surfaced in the app; pure round-trip fidelity.
+ */
+export const rawRecords = sqliteTable('raw_records', {
+  id: integer('id').primaryKey(),
+  xref: text('xref'),                 // the @X@ id (without @), or null
+  tag: text('tag').notNull(),         // SNOTE, SUBM, REPO, _LOC …
+  rawTags: text('raw_tags'),          // the record's children as our raw JSON
 });

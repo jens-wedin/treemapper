@@ -275,15 +275,17 @@ export function createTree(name: string, gedPath: string, sourceFile: string): {
   }
 
   const db = openTree(id);
+  const schemaJson = Object.keys(summary.schema).length ? JSON.stringify(summary.schema) : null;
   db.insert(treeMeta).values({
     id: 1,
     name: name.trim() || id,
     createdAt: new Date().toISOString(),
     sourceFile,
     gedcomFormat: summary.version === '7.0' ? '7.0' : '5.5.1',
+    schemaJson,
   }).onConflictDoUpdate({
     target: treeMeta.id,
-    set: { name: name.trim() || id, sourceFile, gedcomFormat: summary.version === '7.0' ? '7.0' : '5.5.1' },
+    set: { name: name.trim() || id, sourceFile, gedcomFormat: summary.version === '7.0' ? '7.0' : '5.5.1', schemaJson },
   }).run();
 
   return { tree: infoFor(id), summary };

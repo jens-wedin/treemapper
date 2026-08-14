@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { persons } from '../db/schema';
+import { persons, rawRecords, treeMeta } from '../db/schema';
 import { createDb } from '../db/client';
 import { TreeNotFound, closeTrees, createEmptyTree, createTree, defaultTreeId, deleteTree, infoFor, listTrees, openTree, renameTree, setTreeFormat } from './trees';
 import { SAFE_ENV } from '../vitest.setup';
@@ -214,6 +214,17 @@ describe('importing a tree', () => {
     expect(() => createTree('Trasig', path.join(workDir, 'finns-inte.ged'), 'x.ged')).toThrow();
     expect(listTrees().map(t => t.id)).toEqual(['wedin']);
     expect(fs.existsSync(path.join(workDir, 'trees', 'trasig.db'))).toBe(false);
+  });
+
+  it('preserves foreign records and the SCHMA map through import', () => {
+    const ged = path.join(process.env.TREEMAPPER_TREES_DIR!, 'foreign.ged');
+    fs.mkdirSync(path.dirname(ged), { recursive: true });
+    fs.writeFileSync(ged, ['0 HEAD', '1 GEDC', '2 VERS 7.0', '1 SCHMA', '2 TAG _LOC http://ex/loc',
+      '0 @I1@ INDI', '1 NAME A /B/', '1 SNOTE @N1@', '0 @N1@ SNOTE Shared', '0 TRLR'].join('\n'), 'utf-8');
+    const { tree } = createTree('Utländsk', ged, 'foreign.ged');
+    const db = openTree(tree.id);
+    expect(db.select().from(rawRecords).all().some(r => r.tag === 'SNOTE')).toBe(true);
+    expect(JSON.parse(db.select().from(treeMeta).all()[0]!.schemaJson!)._LOC).toBe('http://ex/loc');
   });
 });
 

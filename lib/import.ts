@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { parseGedcom } from './gedcom/parser';
 import { mapGedcom } from './gedcom/mapper';
+import { detectGedcom, type SupportedVersion } from './gedcom/detect';
 import { createDb } from '../db/client';
 import { persons, families, familyChildren, events, sources, citations, media, auditLog } from '../db/schema';
 
@@ -9,6 +10,7 @@ export interface ImportSummary {
   inserted: { persons: number; families: number; familyChildren: number; events: number; sources: number; citations: number; media: number };
   sourceRecords: { INDI: number; FAM: number; SOUR: number; ALBUM: number };
   warnings: string[];
+  version: SupportedVersion;
 }
 
 const CHUNK = 500;
@@ -24,7 +26,7 @@ function chunkInsert<T>(insert: (rows: T[]) => void, rows: T[]) {
  * thing. scripts/import.ts is the command-line wrapper around it.
  */
 export function runImport(gedPath: string, dbPath: string): ImportSummary {
-  const text = fs.readFileSync(gedPath, 'utf-8');
+  const { version, text } = detectGedcom(fs.readFileSync(gedPath));
   const parseWarnings: string[] = [];
   const records = parseGedcom(text, parseWarnings);
   const mapped = mapGedcom(records);
@@ -69,7 +71,7 @@ export function runImport(gedPath: string, dbPath: string): ImportSummary {
       media: db.select().from(media).all().length,
     };
     if (inserted.persons !== mapped.persons.length) throw new Error('Inserted person count mismatch');
-    return { inserted, sourceRecords, warnings };
+    return { inserted, sourceRecords, warnings, version };
   } finally {
     // The server imports repeatedly; a handle per import would accumulate.
     db.$client.close();

@@ -238,6 +238,18 @@ describe('a tree started from nothing', () => {
     expect(setTreeFormat(info.id, '5.5.1').gedcomFormat).toBe('5.5.1');
     expect(infoFor(info.id).gedcomFormat).toBe('5.5.1');
   });
+
+  it("sets a new tree to the imported file's version (7.0)", () => {
+    const ged = path.join(process.env.TREEMAPPER_TREES_DIR!, 'in.ged');
+    fs.mkdirSync(path.dirname(ged), { recursive: true });
+    fs.writeFileSync(ged, '0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @I1@ INDI\n1 NAME A /B/\n0 TRLR', 'utf-8');
+    const { tree } = createTree('Sjunde', ged, 'in.ged');
+    expect(tree.gedcomFormat).toBe('7.0');
+
+    const ged55 = path.join(process.env.TREEMAPPER_TREES_DIR!, 'in55.ged');
+    fs.writeFileSync(ged55, '0 HEAD\n1 GEDC\n2 VERS 5.5.1\n1 CHAR UTF-8\n0 @I1@ INDI\n1 NAME A /B/\n0 TRLR', 'utf-8');
+    expect(createTree('Femma', ged55, 'in55.ged').tree.gedcomFormat).toBe('5.5.1');   // fails today (defaults to 7.0)
+  });
 });
 
 describe('a tree id is not a path', () => {

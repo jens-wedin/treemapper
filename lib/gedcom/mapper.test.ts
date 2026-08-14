@@ -147,6 +147,28 @@ describe('mapGedcom', () => {
     expect(objeRecord!.rawTags).toContain('999');
   });
 
+  /**
+   * The same non-http FILE that is preserved as a raw_record above becomes a
+   * real media row when a GEDZIP tells us the file is bundled in the archive
+   * (its FILE payload is a bundle-relative name, listed in `localFiles`).
+   * runImport then extracts the bytes and finalises the row (Task 3).
+   */
+  it('turns a bundled (local-file) OBJE into a media row when localFiles says so', () => {
+    const tree = parseGedcom([
+      '0 HEAD', '0 @I1@ INDI', '1 NAME A /B/', '1 OBJE @O1@',
+      '0 @O1@ OBJE', '1 FILE 7.jpg', '2 FORM image/jpeg', '2 TITL Foto',
+      '0 TRLR',
+    ].join('\n'));
+    const withBundle = mapGedcom(tree, { localFiles: new Set(['7.jpg']) });
+    expect(withBundle.media).toHaveLength(1);
+    expect(withBundle.media[0]).toMatchObject({ ownerId: 'I1', originalUrl: '7.jpg', form: 'jpg', title: 'Foto' });
+    expect(withBundle.rawRecords.some(r => r.tag === 'OBJE')).toBe(false);   // not preserved as raw — it's media
+
+    const noBundle = mapGedcom(tree);   // without localFiles → non-http local FILE → preserved as raw
+    expect(noBundle.media).toHaveLength(0);
+    expect(noBundle.rawRecords.some(r => r.tag === 'OBJE')).toBe(true);
+  });
+
   it('preserves a level-0 OBJE record that no INDI points to, instead of warning it away', () => {
     const tree = parseGedcom([
       '0 HEAD',

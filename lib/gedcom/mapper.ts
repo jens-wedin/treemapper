@@ -38,7 +38,7 @@ function serializeRaw(nodes: GedcomNode[]): string | null {
   return nodes.length ? JSON.stringify(nodes.map(toRaw)) : null;
 }
 
-export function mapGedcom(records: GedcomNode[]): MappedData {
+export function mapGedcom(records: GedcomNode[], opts: { localFiles?: Set<string> } = {}): MappedData {
   const out: MappedData = {
     persons: [], families: [], familyChildren: [], events: [],
     sources: [], citations: [], media: [], rawRecords: [], albums: 0, warnings: [],
@@ -199,7 +199,11 @@ export function mapGedcom(records: GedcomNode[]): MappedData {
             const objeRec = objeRecords.get(objeXref);
             const fileNode = objeRec && child(objeRec, 'FILE');
             const url = fileNode?.value;
-            if (objeRec && url?.startsWith('http') && objeRefCount.get(objeXref) === 1) {
+            // A bundled GEDZIP photo names a bundle-relative FILE (not http);
+            // localFiles lists those entry names. runImport (import.ts) extracts
+            // the bytes and flips this row to downloadStatus 'done' afterwards.
+            const isBundled = !!url && (opts.localFiles?.has(url) ?? false);
+            if (objeRec && (url?.startsWith('http') || isBundled) && objeRefCount.get(objeXref) === 1) {
               mediaObjeXrefs.add(objeXref);
               const consumed = new Set(['FILE', '_FILESIZE']);  // FORM and TITL live under FILE, consumed with it
               out.media.push({

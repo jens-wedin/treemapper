@@ -110,6 +110,15 @@ describe('POST /api/trees/import', () => {
     const res = await upload('', 'tom.ged');
     expect(res.status).toBe(400);
   });
+
+  it('rejects an unsupported GEDCOM (ANSEL) with a clear 400', async () => {
+    const body = new FormData();
+    body.set('name', 'Ansel');
+    body.set('file', new File(['0 HEAD\n1 GEDC\n2 VERS 5.5.1\n1 CHAR ANSEL\n0 @I1@ INDI\n1 NAME A /B/\n0 TRLR'], 'a.ged'));
+    const res = await api.request('/api/trees/import', { method: 'POST', body });
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toMatch(/ANSEL|character set/i);
+  });
 });
 
 describe('renaming and deleting', () => {

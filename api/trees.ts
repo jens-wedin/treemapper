@@ -7,6 +7,7 @@ import { HTTPException } from 'hono/http-exception';
 import type { Db } from '../db/client';
 import { DEFAULT_TREE, TreeNotFound, createEmptyTree, createTree, deleteTree, listTrees, openTree, renameTree, setTreeFormat } from '../lib/trees';
 import { parseGedcom } from '../lib/gedcom/parser';
+import { detectGedcom, UnsupportedGedcom } from '../lib/gedcom/detect';
 
 export interface ActiveTree { id: string; db: Db }
 
@@ -81,8 +82,10 @@ export function createTreesApi() {
         // confusing thing to be handed than a refusal.
         let hasPeople: boolean;
         try {
-          hasPeople = parseGedcom(fs.readFileSync(tmp, 'utf-8'), []).some(r => r.tag === 'INDI');
-        } catch {
+          const { text } = detectGedcom(fs.readFileSync(tmp));
+          hasPeople = parseGedcom(text, []).some(r => r.tag === 'INDI');
+        } catch (err) {
+          if (err instanceof UnsupportedGedcom) return c.json({ error: err.message }, 400);
           hasPeople = false;   // unreadable is the same answer as empty, to the person uploading
         }
         if (!hasPeople) {
@@ -91,6 +94,7 @@ export function createTreesApi() {
         const { tree, summary } = createTree(name, tmp, file.name);
         return c.json({ ok: true, tree, summary });
       } catch (err) {
+        if (err instanceof UnsupportedGedcom) return c.json({ error: err.message }, 400);
         return c.json({ error: (err as Error).message }, 500);
       } finally {
         fs.rmSync(tmpDir, { recursive: true, force: true });

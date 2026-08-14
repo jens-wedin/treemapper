@@ -13,6 +13,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { runImport, type ImportSummary } from '../lib/import';
 import { createTree } from '../lib/trees';
+import { UnsupportedGedcom } from '../lib/gedcom/detect';
 
 export { runImport, type ImportSummary };
 
@@ -67,13 +68,21 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     process.exit(1);
   }
 
-  const { tree, summary } = createTree(args.name, args.gedPath, path.basename(args.gedPath));
-  const reportPath = 'data/import-report.md';
-  writeReport(summary, args.gedPath, reportPath);
+  try {
+    const { tree, summary } = createTree(args.name, args.gedPath, path.basename(args.gedPath));
+    const reportPath = 'data/import-report.md';
+    writeReport(summary, args.gedPath, reportPath);
 
-  console.log(`Imported into "${tree.name}" (trees/${tree.id}.db):`);
-  console.log(`  ${summary.inserted.persons} people, ${summary.inserted.families} families, ${summary.inserted.sources} sources, ${summary.inserted.media} photos (pending).`);
-  console.log(`Report: ${reportPath}`);
-  if (summary.warnings.length) console.log(`⚠ ${summary.warnings.length} warnings — see the report.`);
-  console.log(`Open it at /${tree.id}`);
+    console.log(`Imported into "${tree.name}" (trees/${tree.id}.db):`);
+    console.log(`  ${summary.inserted.persons} people, ${summary.inserted.families} families, ${summary.inserted.sources} sources, ${summary.inserted.media} photos (pending).`);
+    console.log(`Report: ${reportPath}`);
+    if (summary.warnings.length) console.log(`⚠ ${summary.warnings.length} warnings — see the report.`);
+    console.log(`Open it at /${tree.id}`);
+  } catch (err) {
+    if (err instanceof UnsupportedGedcom) {
+      console.error(err.message);
+      process.exit(1);
+    }
+    throw err;
+  }
 }

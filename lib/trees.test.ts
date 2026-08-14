@@ -2,7 +2,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { persons, rawRecords, treeMeta } from '../db/schema';
+import { zipSync, strToU8 } from 'fflate';
+import { media, persons, rawRecords, treeMeta } from '../db/schema';
 import { createDb } from '../db/client';
 import { TreeNotFound, closeTrees, createEmptyTree, createTree, defaultTreeId, deleteTree, infoFor, listTrees, openTree, renameTree, setTreeFormat } from './trees';
 import { SAFE_ENV } from '../vitest.setup';
@@ -225,6 +226,20 @@ describe('importing a tree', () => {
     const db = openTree(tree.id);
     expect(db.select().from(rawRecords).all().some(r => r.tag === 'SNOTE')).toBe(true);
     expect(JSON.parse(db.select().from(treeMeta).all()[0]!.schemaJson!)._LOC).toBe('http://ex/loc');
+  });
+
+  it('imports a .gdz: extracts the bundled photo into the tree media folder', () => {
+    const ged = '0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @I1@ INDI\n1 NAME A /B/\n1 OBJE @O1@\n0 @O1@ OBJE\n1 FILE 1.jpg\n2 FORM image/jpeg\n0 TRLR';
+    const zip = zipSync({ 'gedcom.ged': strToU8(ged), '1.jpg': new Uint8Array([1, 2, 3]) });
+    const gdz = path.join(workDir, 'in.gdz');
+    fs.writeFileSync(gdz, zip);
+    const { tree } = createTree('Zippad', gdz, 'in.gdz');
+    const db = openTree(tree.id);
+    const rows = db.select().from(media).all();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.downloadStatus).toBe('done');
+    expect(fs.existsSync(rows[0]!.localPath!)).toBe(true);                 // extracted to disk
+    expect([...fs.readFileSync(rows[0]!.localPath!)]).toEqual([1, 2, 3]);
   });
 });
 

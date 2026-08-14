@@ -1,8 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { eq } from 'drizzle-orm';
 import { parseGedcom } from './gedcom/parser';
 import { mapGedcom } from './gedcom/mapper';
 import { detectGedcom, type SupportedVersion } from './gedcom/detect';
+import { isZip, readGedzip } from './gedcom/gedzip';
 import { createDb } from '../db/client';
 import { persons, families, familyChildren, events, sources, citations, media, auditLog, rawRecords } from '../db/schema';
 
@@ -25,12 +27,18 @@ function chunkInsert<T>(insert: (rows: T[]) => void, rows: T[]) {
  * Lives in lib/ rather than scripts/ because the API imports it too: a tree
  * created from the browser and one created from the terminal must be the same
  * thing. scripts/import.ts is the command-line wrapper around it.
+ *
+ * When `gedPath` is a GEDZIP (.gdz), the gedcom.ged inside is imported and the
+ * bundled photos are extracted into `mediaDir` (given by the caller that knows
+ * the tree id — createTree). A plain .ged never enters that branch.
  */
-export function runImport(gedPath: string, dbPath: string): ImportSummary {
-  const { version, text } = detectGedcom(fs.readFileSync(gedPath));
+export function runImport(gedPath: string, dbPath: string, mediaDir?: string): ImportSummary {
+  const bytes = fs.readFileSync(gedPath);
+  const gedzip = isZip(bytes) ? readGedzip(bytes) : null;
+  const { version, text } = detectGedcom(gedzip ? Buffer.from(gedzip.gedcomText, 'utf-8') : bytes);
   const parseWarnings: string[] = [];
   const records = parseGedcom(text, parseWarnings);
-  const mapped = mapGedcom(records);
+  const mapped = mapGedcom(records, gedzip ? { localFiles: new Set(gedzip.media.keys()) } : {});
   const warnings = [...parseWarnings, ...mapped.warnings];
 
   const sourceRecords = {
@@ -62,6 +70,23 @@ export function runImport(gedPath: string, dbPath: string): ImportSummary {
         after: JSON.stringify(sourceRecords),
       }).run();
     });
+
+    // Extract the GEDZIP's bundled photos into the tree's media folder and
+    // finalise their rows. A bundled media row's originalUrl is the archive
+    // entry name (so gedzip.media.get finds it); an undownloaded http-URL row
+    // is not in the archive and stays 'pending'. The on-disk name is derived
+    // from the row id + form — never from the archive entry name — so a
+    // crafted entry ("../../…") cannot escape mediaDir (zip-slip).
+    if (gedzip && mediaDir) {
+      fs.mkdirSync(mediaDir, { recursive: true });
+      for (const m of db.select().from(media).all()) {
+        const data = gedzip.media.get(m.originalUrl);
+        if (!data) continue;
+        const dest = path.join(mediaDir, `${m.id}.${m.form ?? 'jpg'}`);
+        fs.writeFileSync(dest, data);
+        db.update(media).set({ localPath: dest, downloadStatus: 'done' }).where(eq(media.id, m.id)).run();
+      }
+    }
 
     const inserted = {
       persons: db.select().from(persons).all().length,

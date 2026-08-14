@@ -266,11 +266,13 @@ export function createTree(name: string, gedPath: string, sourceFile: string): {
 
   let summary: ImportSummary;
   try {
-    summary = runImport(gedPath, file);
+    // mediaDirFor(id) receives a GEDZIP's bundled photos; a plain .ged ignores it.
+    summary = runImport(gedPath, file, mediaDirFor(id));
   } catch (err) {
     // A half-written tree is worse than no tree: it would show up in the list
-    // looking like a real one.
+    // looking like a real one. Drop the database and any photos we extracted.
     for (const suffix of ['', '-wal', '-shm']) fs.rmSync(`${file}${suffix}`, { force: true });
+    fs.rmSync(mediaDirFor(id), { recursive: true, force: true });
     throw err;
   }
 

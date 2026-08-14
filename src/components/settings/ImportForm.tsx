@@ -61,13 +61,13 @@ export default function ImportForm({ onImported }: { onImported?: (tree: TreeSum
           id="gedcom-file"
           ref={fileRef}
           type="file"
-          accept=".ged,.GED"
+          accept=".ged,.GED,.gdz,.GDZ"
           required
           // Naming the tree after the file is right often enough to be a good
           // default, and it is still editable.
           onChange={e => {
             const chosen = e.target.files?.[0];
-            if (chosen && !name) setName(chosen.name.replace(/\.ged$/i, ''));
+            if (chosen && !name) setName(chosen.name.replace(/\.(ged|gdz)$/i, ''));
           }}
           className="mt-1 block w-full rounded-md border px-3 py-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-secondary file:px-3 file:py-1 file:text-secondary-foreground"
         />

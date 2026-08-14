@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { zipSync, strToU8 } from 'fflate';
 import { createTreesApi, treeResolver } from './trees';
 import { createPersonsApi } from './persons';
 import { createDb } from '../db/client';
@@ -90,6 +91,17 @@ describe('POST /api/trees/import', () => {
   it('names the tree after the file when no name is given', async () => {
     const body = await (await upload(MINI, 'Farmors släkt.ged')).json();
     expect(body.tree.name).toBe('Farmors släkt');
+  });
+
+  it('accepts a GEDZIP (.gdz) upload', async () => {
+    const ged = '0 HEAD\n1 GEDC\n2 VERS 7.0\n0 @I1@ INDI\n1 NAME A /B/\n0 TRLR';
+    const zip = zipSync({ 'gedcom.ged': strToU8(ged) });
+    const body = new FormData();
+    body.set('name', 'Zip');
+    body.set('file', new File([zip], 'a.gdz'));
+    const res = await api.request('/api/trees/import', { method: 'POST', body });
+    expect(res.status).toBe(200);
+    expect((await res.json()).tree.id).toBe('zip');
   });
 
   it('leaves the existing tree alone', async () => {

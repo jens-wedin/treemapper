@@ -8,6 +8,7 @@ import type { Db } from '../db/client';
 import { DEFAULT_TREE, TreeNotFound, createEmptyTree, createTree, deleteTree, listTrees, openTree, renameTree, setTreeFormat } from '../lib/trees';
 import { parseGedcom } from '../lib/gedcom/parser';
 import { detectGedcom, UnsupportedGedcom } from '../lib/gedcom/detect';
+import { isZip, readGedzip } from '../lib/gedcom/gedzip';
 
 export interface ActiveTree { id: string; db: Db }
 
@@ -68,7 +69,7 @@ export function createTreesApi() {
       if (!(file instanceof File) || !file.size) return c.json({ error: 'Ingen fil vald' }, 400);
 
       const given = typeof body['name'] === 'string' ? body['name'].trim() : '';
-      const name = given || file.name.replace(/\.ged$/i, '');
+      const name = given || file.name.replace(/\.(ged|gdz)$/i, '');
       // mkdtemp, not a name built from the clock: a predictable path in a
       // shared /tmp is a file another process can sit on beforehand.
       const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'wedin-import-'));
@@ -82,7 +83,10 @@ export function createTreesApi() {
         // confusing thing to be handed than a refusal.
         let hasPeople: boolean;
         try {
-          const { text } = detectGedcom(fs.readFileSync(tmp));
+          const bytes = fs.readFileSync(tmp);
+          // A GEDZIP hides its GEDCOM inside a zip; read that out first. createTree
+          // handles the actual .gdz import — only this pre-check needs to look in.
+          const text = isZip(bytes) ? readGedzip(bytes).gedcomText : detectGedcom(bytes).text;
           hasPeople = parseGedcom(text, []).some(r => r.tag === 'INDI');
         } catch (err) {
           if (err instanceof UnsupportedGedcom) return c.json({ error: err.message }, 400);

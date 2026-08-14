@@ -151,4 +151,20 @@ describe('mapGedcom', () => {
     expect(media).toHaveLength(0);
     expect(warnings.some(w => /OBJE record @M7@ not referenced by any INDI/.test(w))).toBe(true);
   });
+
+  it('preserves a foreign level-0 record (SNOTE, SUBM) verbatim in rawRecords', () => {
+    const tree = parseGedcom([
+      '0 HEAD',
+      '0 @I1@ INDI', '1 NAME A /B/', '1 SNOTE @N1@',
+      '0 @N1@ SNOTE A shared note', '1 LANG en',
+      '0 @U1@ SUBM', '1 NAME The submitter',
+      '0 TRLR',
+    ].join('\n'));
+    const { rawRecords } = mapGedcom(tree);
+    const snote = rawRecords.find(r => r.tag === 'SNOTE');
+    expect(snote).toMatchObject({ xref: 'N1', tag: 'SNOTE' });
+    expect(snote!.rawTags).toContain('LANG');                 // children preserved
+    expect(rawRecords.find(r => r.tag === 'SUBM')?.xref).toBe('U1');
+    expect(mapGedcom(tree).warnings.some(w => /Skipped unknown level-0/.test(w))).toBe(false);
+  });
 });

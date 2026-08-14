@@ -1,7 +1,7 @@
 import type { GedcomNode } from './parser';
 import { canonicalForm } from './mediaType';
 import { extractYear } from '../dates';
-import type { persons, families, familyChildren, events, sources, citations, media } from '../../db/schema';
+import type { persons, families, familyChildren, events, sources, citations, media, rawRecords } from '../../db/schema';
 
 export interface MappedData {
   persons: (typeof persons.$inferInsert)[];
@@ -11,6 +11,7 @@ export interface MappedData {
   sources: (typeof sources.$inferInsert)[];
   citations: (typeof citations.$inferInsert)[];
   media: (typeof media.$inferInsert)[];
+  rawRecords: (typeof rawRecords.$inferInsert)[];
   albums: number;
   warnings: string[];
 }
@@ -39,12 +40,13 @@ function serializeRaw(nodes: GedcomNode[]): string | null {
 export function mapGedcom(records: GedcomNode[]): MappedData {
   const out: MappedData = {
     persons: [], families: [], familyChildren: [], events: [],
-    sources: [], citations: [], media: [], albums: 0, warnings: [],
+    sources: [], citations: [], media: [], rawRecords: [], albums: 0, warnings: [],
   };
   let eventId = 0;
   let citationId = 0;
   let mediaId = 0;
   let fcId = 0;
+  let rawId = 0;
 
   const addCitations = (node: GedcomNode, ownerType: 'event' | 'person' | 'family', ownerId: string): GedcomNode[] => {
     // Returns SOUR nodes that could NOT be consumed (inline sources) for raw_tags.
@@ -262,7 +264,7 @@ export function mapGedcom(records: GedcomNode[]): MappedData {
         rawTags: serializeRaw(rec.children.filter(c => !consumed.has(c.tag))),
       });
     } else {
-      out.warnings.push(`Skipped unknown level-0 record ${rec.tag} ${id}`);
+      out.rawRecords.push({ id: ++rawId, xref: id || null, tag: rec.tag, rawTags: serializeRaw(rec.children) });
     }
   }
 

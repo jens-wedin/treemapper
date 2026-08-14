@@ -127,9 +127,25 @@ export function mapGedcom(records: GedcomNode[]): MappedData {
   // pass so the INDI branch below can resolve one when it meets a pointer.
   const objeRecords = new Map<string, GedcomNode>();
   for (const rec of records) if (rec.tag === 'OBJE') objeRecords.set(stripAt(rec.xref), rec);
+  // A record referenced more than once (e.g. by several INDIs, or by a
+  // pointer nested somewhere else in the file) must never become a media
+  // row: export would re-emit it under a new `@M{id}@` xref, leaving every
+  // other reference to the original xref dangling. Count references
+  // recursively — they can sit at any level, not just directly under INDI.
+  const objeRefCount = new Map<string, number>();
+  const countRefs = (nodes: GedcomNode[]) => {
+    for (const n of nodes) {
+      if (n.value && /^@[^@]+@$/.test(n.value)) {
+        const x = stripAt(n.value);
+        if (objeRecords.has(x)) objeRefCount.set(x, (objeRefCount.get(x) ?? 0) + 1);
+      }
+      if (n.children.length) countRefs(n.children);
+    }
+  };
+  countRefs(records);
   // Every xref that became a media row — every OBJE record NOT in this set
-  // (referenced-but-unusable, or truly orphaned) is preserved as a raw
-  // record below, so its pointer never dangles.
+  // (referenced-but-unusable, shared, or truly orphaned) is preserved as a
+  // raw record below, so its pointer never dangles.
   const mediaObjeXrefs = new Set<string>();
 
   for (const rec of records) {
@@ -183,7 +199,7 @@ export function mapGedcom(records: GedcomNode[]): MappedData {
             const objeRec = objeRecords.get(objeXref);
             const fileNode = objeRec && child(objeRec, 'FILE');
             const url = fileNode?.value;
-            if (objeRec && url?.startsWith('http')) {
+            if (objeRec && url?.startsWith('http') && objeRefCount.get(objeXref) === 1) {
               mediaObjeXrefs.add(objeXref);
               const consumed = new Set(['FILE', '_FILESIZE']);  // FORM and TITL live under FILE, consumed with it
               out.media.push({

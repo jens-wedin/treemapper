@@ -185,6 +185,35 @@ describe('mapGedcom', () => {
     expect(objeRecord!.rawTags).toContain('some/local.jpg');
   });
 
+  /**
+   * maximal70.ged has an OBJE record referenced 5 times — by an INDI and
+   * several nested `2 OBJE @O2@` pointers elsewhere. Turning it into a media
+   * row would re-export it under a new `@M{id}@` xref, leaving every other
+   * reference to the original xref dangling. A record referenced exactly
+   * once has no such problem and must still become media.
+   */
+  it('keeps a shared OBJE record (referenced by more than one pointer) out of media, but maps a singly-referenced one', () => {
+    const tree = parseGedcom([
+      '0 HEAD',
+      '0 @I1@ INDI', '1 NAME First /Person/', '1 OBJE @S1@',
+      '0 @I2@ INDI', '1 NAME Second /Person/', '1 OBJE @S1@',
+      '0 @I3@ INDI', '1 NAME Third /Person/', '1 OBJE @M1@',
+      '0 @S1@ OBJE', '1 FILE https://x/shared.jpg', '2 FORM image/jpeg',
+      '0 @M1@ OBJE', '1 FILE https://x/solo.jpg', '2 FORM image/jpeg',
+      '0 TRLR',
+    ].join('\n'));
+    const { media, rawRecords } = mapGedcom(tree);
+
+    expect(media).toHaveLength(1);
+    expect(media[0]).toMatchObject({ ownerId: 'I3', originalUrl: 'https://x/solo.jpg' });
+
+    const shared = rawRecords.find(r => r.tag === 'OBJE' && r.xref === 'S1');
+    expect(shared).toBeDefined();
+    expect(shared!.rawTags).toContain('https://x/shared.jpg');
+    const solo = rawRecords.find(r => r.tag === 'OBJE' && r.xref === 'M1');
+    expect(solo).toBeUndefined();   // the singly-referenced record became media, not a raw_record
+  });
+
   it('captures HEAD.SCHMA tag→URI and does not treat NO as an event', () => {
     const tree = parseGedcom([
       '0 HEAD', '1 SCHMA', '2 TAG _LOC http://example.com/loc',

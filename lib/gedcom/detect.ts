@@ -16,7 +16,13 @@ export function decodeGedcom(bytes: Buffer): string {
 export type SupportedVersion = '7.0' | '5.5.1' | '5.5';
 
 export class UnsupportedGedcom extends Error {
-  constructor(message: string, readonly detail: string) {
+  /**
+   * True when the file has no GEDCOM header at all (no `1 GEDC` / `2 VERS`), so
+   * it is simply not a GEDCOM — as opposed to a real GEDCOM whose version or
+   * charset we cannot read. The importer uses this to tell "that isn't a GEDCOM
+   * file" from "re-export as 5.5.1 or 7.0".
+   */
+  constructor(message: string, readonly detail: string, readonly notGedcom = false) {
     super(message);
     this.name = 'UnsupportedGedcom';
   }
@@ -58,7 +64,13 @@ export function detectGedcom(bytes: Buffer): { version: SupportedVersion; text: 
   }
   const version = versionToken !== undefined ? matchVersion(versionToken) : undefined;
   if (!version) {
-    throw new UnsupportedGedcom(`GEDCOM version ${versionToken?.trim() || '(not found)'} isn't supported — re-export as 5.5.1 or 7.0.`, versionToken?.trim() || 'unknown');
+    // No version token at all means there was no GEDCOM header to read one from
+    // — the file isn't a GEDCOM, which is a different message from a real GEDCOM
+    // whose version we don't support.
+    if (versionToken === undefined) {
+      throw new UnsupportedGedcom('This does not look like a GEDCOM file — it has no GEDCOM header.', 'no-header', true);
+    }
+    throw new UnsupportedGedcom(`GEDCOM version ${versionToken.trim() || '(not found)'} isn't supported — re-export as 5.5.1 or 7.0.`, versionToken.trim() || 'unknown');
   }
   // 7.0 is always UTF-8 (no CHAR). For 5.5.x, only UTF-8/ASCII decode correctly here.
   if (version !== '7.0' && charset && !['UTF-8', 'UTF8', 'UNICODE', 'ASCII'].includes(charset)) {

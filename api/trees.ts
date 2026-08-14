@@ -89,7 +89,10 @@ export function createTreesApi() {
           const text = isZip(bytes) ? readGedzipText(bytes) : detectGedcom(bytes).text;
           hasPeople = parseGedcom(text, []).some(r => r.tag === 'INDI');
         } catch (err) {
-          if (err instanceof UnsupportedGedcom) return c.json({ error: err.message }, 400);
+          // A real GEDCOM we can't read (PAF, ANSEL, an old version) gets its
+          // specific reason. A file with no GEDCOM header isn't a GEDCOM at all,
+          // so it falls through to the friendlier "is it really a GEDCOM file?".
+          if (err instanceof UnsupportedGedcom && !err.notGedcom) return c.json({ error: err.message }, 400);
           hasPeople = false;   // unreadable is the same answer as empty, to the person uploading
         }
         if (!hasPeople) {

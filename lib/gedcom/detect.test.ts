@@ -36,6 +36,13 @@ describe('detectGedcom', () => {
     expect(() => detectGedcom(head('5.6', 'UTF-8'))).toThrow(/5\.6/);
     expect(() => detectGedcom(head('4.0'))).toThrow(UnsupportedGedcom);
   });
+  it('flags a file with no GEDCOM header as notGedcom, a real unsupported version as not', () => {
+    const caught = (b: Buffer) => { try { detectGedcom(b); } catch (e) { return e as UnsupportedGedcom; } throw new Error('did not throw'); };
+    // no 1 GEDC / 2 VERS at all → this is simply not a GEDCOM file
+    expect(caught(Buffer.from('this is not a gedcom file')).notGedcom).toBe(true);
+    // a real GEDCOM header, just a version we do not support → not the same thing
+    expect(caught(head('4.0')).notGedcom).toBe(false);
+  });
 });
 
 describe('detectGedcom fixture-driven tests', () => {

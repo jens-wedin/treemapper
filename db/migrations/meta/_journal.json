@@ -50,6 +50,13 @@
       "when": 1786702832659,
       "tag": "0006_dashing_riptide",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1786704935170,
+      "tag": "0007_cute_hex",
+      "breakpoints": true
     }
   ]
 }

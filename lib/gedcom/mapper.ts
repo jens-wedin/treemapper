@@ -301,7 +301,7 @@ export function mapGedcom(records: GedcomNode[]): MappedData {
         rawTags: serializeRaw(rec.children.filter(c => !consumed.has(c.tag))),
       });
     } else {
-      out.rawRecords.push({ id: ++rawId, xref: id || null, tag: rec.tag, rawTags: serializeRaw(rec.children) });
+      out.rawRecords.push({ id: ++rawId, xref: id || null, tag: rec.tag, value: rec.value ?? null, rawTags: serializeRaw(rec.children) });
     }
   }
 
@@ -311,7 +311,7 @@ export function mapGedcom(records: GedcomNode[]): MappedData {
   // what keeps a foreign 7.0 file's `1 OBJE @X@` pointers from dangling.
   for (const [xref, objeRec] of objeRecords) {
     if (!mediaObjeXrefs.has(xref)) {
-      out.rawRecords.push({ id: ++rawId, xref, tag: 'OBJE', rawTags: serializeRaw(objeRec.children) });
+      out.rawRecords.push({ id: ++rawId, xref, tag: 'OBJE', value: objeRec.value ?? null, rawTags: serializeRaw(objeRec.children) });
     }
   }
 

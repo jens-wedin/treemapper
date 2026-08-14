@@ -1,0 +1,1 @@
+ALTER TABLE `raw_records` ADD `value` text;

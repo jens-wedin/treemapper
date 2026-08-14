@@ -315,7 +315,7 @@ export function exportGedcom(db: Db, opts: ExportOptions = {}): string {
 
   // ---- preserved unmodeled records (SNOTE, SUBM, REPO, foreign extensions …) ----
   for (const r of rawRows) {
-    w.line(0, r.tag, null, r.xref ? `@${r.xref}@` : undefined);
+    w.line(0, r.tag, r.value ?? null, r.xref ? `@${r.xref}@` : undefined);
     writeRawTags(w, 1, r.rawTags);
   }
 

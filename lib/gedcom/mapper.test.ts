@@ -238,6 +238,8 @@ describe('mapGedcom', () => {
     const snote = rawRecords.find(r => r.tag === 'SNOTE');
     expect(snote).toMatchObject({ xref: 'N1', tag: 'SNOTE' });
     expect(snote!.rawTags).toContain('LANG');                 // children preserved
+    expect(snote!.value).toBe('A shared note');               // the record's own level-0 payload, not just its children
+    expect(rawRecords.find(r => r.tag === 'SUBM')?.value).toBeNull();   // no payload on this one → null, not dropped
     expect(rawRecords.find(r => r.tag === 'SUBM')?.xref).toBe('U1');
     expect(mapGedcom(tree).warnings.some(w => /Skipped unknown level-0/.test(w))).toBe(false);
   });

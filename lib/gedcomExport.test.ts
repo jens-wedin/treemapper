@@ -260,11 +260,11 @@ describe('exportGedcom — lossless foreign 7.0 round trip', () => {
   it('re-emits preserved raw_records and honours the stored SCHMA URI', () => {
     buildTree();
     db.insert(treeMeta).values({ id: 1, name: 'T', createdAt: 'x', slug: 't' }).run();
-    db.insert(rawRecords).values({ id: 1, xref: 'N1', tag: 'SNOTE', rawTags: JSON.stringify([{ tag: 'LANG', value: 'en' }]) }).run();
+    db.insert(rawRecords).values({ id: 1, xref: 'N1', tag: 'SNOTE', value: 'Some note text', rawTags: JSON.stringify([{ tag: 'LANG', value: 'en' }]) }).run();
     db.update(treeMeta).set({ schemaJson: JSON.stringify({ _MARNM: 'http://foreign/marnm' }) }).where(eq(treeMeta.id, 1)).run();
 
     const v7 = exportGedcom(db, { version: '7.0' }).replace(/^﻿/, '').split('\r\n');
-    expect(v7).toContain('0 @N1@ SNOTE');                       // record re-emitted
+    expect(v7).toContain('0 @N1@ SNOTE Some note text');        // record re-emitted, with its payload — not empty
     expect(v7).toContain('1 LANG en');                          // its children too
     expect(v7).toContain('2 TAG _MARNM http://foreign/marnm');  // stored URI, not our namespace
   });
@@ -378,12 +378,13 @@ describe('exportGedcom — foreign 7.0 integration round trip', () => {
 
     const out = exportGedcom(db, { version: '7.0' });
     const lines = out.replace(/^﻿/, '').split('\r\n');
-    expect(lines).toContain('1 SNOTE @N1@');   // the INDI's pointer, preserved
-    expect(lines).toContain('0 @N1@ SNOTE');   // the record itself → pointer is not dangling
-    expect(lines).toContain('0 @U1@ SUBM');    // the submitter, unreferenced but still preserved
+    expect(lines).toContain('1 SNOTE @N1@');              // the INDI's pointer, preserved
+    expect(lines).toContain('0 @N1@ SNOTE A shared note'); // the record itself, with its text — not an empty, invalid SNOTE
+    expect(lines).toContain('0 @U1@ SUBM');               // the submitter, unreferenced but still preserved
 
     const back = mapGedcom(parseGedcom(out));
     expect(back.rawRecords.map(r => r.tag).sort()).toEqual(['SNOTE', 'SUBM']);   // preserved on re-import
+    expect(back.rawRecords.find(r => r.tag === 'SNOTE')?.value).toBe('A shared note');   // value round-trips too
   });
 
   /**

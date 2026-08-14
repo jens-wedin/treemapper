@@ -149,5 +149,6 @@ export const rawRecords = sqliteTable('raw_records', {
   id: integer('id').primaryKey(),
   xref: text('xref'),                 // the @X@ id (without @), or null
   tag: text('tag').notNull(),         // SNOTE, SUBM, REPO, _LOC …
+  value: text('value'),               // the record's own payload (e.g. a SNOTE's text), or null
   rawTags: text('raw_tags'),          // the record's children as our raw JSON
 });

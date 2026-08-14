@@ -250,6 +250,13 @@ describe('a tree started from nothing', () => {
     fs.writeFileSync(ged55, '0 HEAD\n1 GEDC\n2 VERS 5.5.1\n1 CHAR UTF-8\n0 @I1@ INDI\n1 NAME A /B/\n0 TRLR', 'utf-8');
     expect(createTree('Femma', ged55, 'in55.ged').tree.gedcomFormat).toBe('5.5.1');   // fails today (defaults to 7.0)
   });
+
+  it('a GEDCOM 5.5 import exports as 5.5.1 (the closest supported format)', () => {
+    const ged = path.join(process.env.TREEMAPPER_TREES_DIR!, 'in5.ged');
+    fs.mkdirSync(path.dirname(ged), { recursive: true });
+    fs.writeFileSync(ged, '0 HEAD\n1 GEDC\n2 VERS 5.5\n1 CHAR UTF-8\n0 @I1@ INDI\n1 NAME A /B/\n0 TRLR', 'utf-8');
+    expect(createTree('Femmafem', ged, 'in5.ged').tree.gedcomFormat).toBe('5.5.1');
+  });
 });
 
 describe('a tree id is not a path', () => {

@@ -280,10 +280,10 @@ export function createTree(name: string, gedPath: string, sourceFile: string): {
     name: name.trim() || id,
     createdAt: new Date().toISOString(),
     sourceFile,
-    gedcomFormat: summary.version,
+    gedcomFormat: summary.version === '7.0' ? '7.0' : '5.5.1',
   }).onConflictDoUpdate({
     target: treeMeta.id,
-    set: { name: name.trim() || id, sourceFile, gedcomFormat: summary.version },
+    set: { name: name.trim() || id, sourceFile, gedcomFormat: summary.version === '7.0' ? '7.0' : '5.5.1' },
   }).run();
 
   return { tree: infoFor(id), summary };

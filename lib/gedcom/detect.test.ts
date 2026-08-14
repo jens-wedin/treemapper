@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { decodeGedcom, detectGedcom, UnsupportedGedcom } from './detect';
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 describe('decodeGedcom', () => {
   const sample = '0 HEAD\n1 GEDC\n2 VERS 7.0\n0 TRLR';
@@ -39,18 +39,7 @@ describe('detectGedcom', () => {
 });
 
 describe('detectGedcom fixture-driven tests', () => {
-  const fixturesDir = path.join(path.dirname(new URL(import.meta.url).pathname), 'fixtures');
-  let tmpDir: string;
-
-  beforeAll(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gedcom-test-'));
-  });
-
-  afterAll(() => {
-    if (tmpDir && fs.existsSync(tmpDir)) {
-      fs.rmSync(tmpDir, { recursive: true, force: true });
-    }
-  });
+  const fixturesDir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'fixtures');
 
   it('detects GEDCOM 7.0 from a file', () => {
     const content = fs.readFileSync(path.join(fixturesDir, 'foreign70.ged'));

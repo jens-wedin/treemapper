@@ -354,3 +354,35 @@ describe('Writer — version-aware continuation', () => {
     expect(w.toString()).toContain('2 CONC');
   });
 });
+
+describe('exportGedcom — foreign 7.0 integration round trip', () => {
+  /**
+   * P3b end to end: a foreign 7.0 file — not one we produced — imports through
+   * the mapper, exports again, and the SNOTE an INDI points at is neither lost
+   * nor left dangling. This is the shape maximal70.ged exercises at scale (35
+   * dangling-pointer errors before raw_records existed); here it is the
+   * smallest dataset that can show the same failure.
+   */
+  it('a foreign 7.0 file with a referenced SNOTE round-trips with no dangling pointer', () => {
+    const src = [
+      '0 HEAD', '1 GEDC', '2 VERS 7.0',
+      '0 @I1@ INDI', '1 NAME A /B/', '1 SNOTE @N1@',
+      '0 @N1@ SNOTE A shared note', '1 LANG en',
+      '0 @U1@ SUBM', '1 NAME Submitter',
+      '0 TRLR',
+    ].join('\n');
+    const mapped = mapGedcom(parseGedcom(src));
+    db.insert(persons).values(mapped.persons).run();
+    db.insert(rawRecords).values(mapped.rawRecords).run();
+    db.insert(treeMeta).values({ id: 1, name: 'T', createdAt: 'x', slug: 't', schemaJson: JSON.stringify(mapped.schema) }).run();
+
+    const out = exportGedcom(db, { version: '7.0' });
+    const lines = out.replace(/^﻿/, '').split('\r\n');
+    expect(lines).toContain('1 SNOTE @N1@');   // the INDI's pointer, preserved
+    expect(lines).toContain('0 @N1@ SNOTE');   // the record itself → pointer is not dangling
+    expect(lines).toContain('0 @U1@ SUBM');    // the submitter, unreferenced but still preserved
+
+    const back = mapGedcom(parseGedcom(out));
+    expect(back.rawRecords.map(r => r.tag).sort()).toEqual(['SNOTE', 'SUBM']);   // preserved on re-import
+  });
+});

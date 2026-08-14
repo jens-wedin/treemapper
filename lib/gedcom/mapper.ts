@@ -127,9 +127,10 @@ export function mapGedcom(records: GedcomNode[]): MappedData {
   // pass so the INDI branch below can resolve one when it meets a pointer.
   const objeRecords = new Map<string, GedcomNode>();
   for (const rec of records) if (rec.tag === 'OBJE') objeRecords.set(stripAt(rec.xref), rec);
-  // Every xref a pointer actually resolved to, so an orphan record (one no
-  // INDI points to) can be flagged instead of silently vanishing.
-  const consumedObjeXrefs = new Set<string>();
+  // Every xref that became a media row — every OBJE record NOT in this set
+  // (referenced-but-unusable, or truly orphaned) is preserved as a raw
+  // record below, so its pointer never dangles.
+  const mediaObjeXrefs = new Set<string>();
 
   for (const rec of records) {
     if (rec.tag === 'TRLR') continue;
@@ -182,8 +183,8 @@ export function mapGedcom(records: GedcomNode[]): MappedData {
             const objeRec = objeRecords.get(objeXref);
             const fileNode = objeRec && child(objeRec, 'FILE');
             const url = fileNode?.value;
-            if (objeRec) consumedObjeXrefs.add(objeXref);
             if (objeRec && url?.startsWith('http')) {
+              mediaObjeXrefs.add(objeXref);
               const consumed = new Set(['FILE', '_FILESIZE']);  // FORM and TITL live under FILE, consumed with it
               out.media.push({
                 id: ++mediaId, ownerType: 'person', ownerId: id,
@@ -195,13 +196,12 @@ export function mapGedcom(records: GedcomNode[]): MappedData {
                 rawTags: serializeRaw(objeRec.children.filter(x => !consumed.has(x.tag))),
               });
             } else if (objeRec) {
-              // The record resolved but has no usable http FILE — keep the
-              // record's own data (TITL/_FILESIZE/…), not just the bare
-              // pointer, so it is not silently dropped. The 5.5.1 embedded
-              // path never loses data this way; the pointer path must not
-              // either.
-              out.warnings.push(`OBJE pointer ${c.value} resolved to a record with no usable FILE on ${id}; record kept in raw_tags`);
-              raw.push({ level: c.level, tag: 'OBJE', value: c.value, children: objeRec.children });
+              // The record resolved but has no usable http FILE. Keep only
+              // the bare pointer here — a pointer line may not carry the
+              // record's children in 7.0 — the record's own data
+              // (TITL/_FILESIZE/…) is preserved separately as a raw_record
+              // below, keyed by the same xref, so the pointer still resolves.
+              raw.push(c);
             } else {
               out.warnings.push(`OBJE pointer ${c.value} unresolved on ${id} kept in raw_tags`);
               raw.push(c);
@@ -289,12 +289,13 @@ export function mapGedcom(records: GedcomNode[]): MappedData {
     }
   }
 
-  // A level-0 OBJE record that no INDI's pointer ever resolved to is foreign
-  // data we have nowhere to attach — flag it rather than let it vanish
-  // without a trace.
-  for (const xref of objeRecords.keys()) {
-    if (!consumedObjeXrefs.has(xref)) {
-      out.warnings.push(`OBJE record @${xref}@ not referenced by any INDI`);
+  // Every OBJE record that didn't become a media row — referenced but with
+  // no usable http FILE, or not referenced by any INDI at all — is preserved
+  // as a raw record, the same way SNOTE/SUBM/REPO are (see above). This is
+  // what keeps a foreign 7.0 file's `1 OBJE @X@` pointers from dangling.
+  for (const [xref, objeRec] of objeRecords) {
+    if (!mediaObjeXrefs.has(xref)) {
+      out.rawRecords.push({ id: ++rawId, xref, tag: 'OBJE', rawTags: serializeRaw(objeRec.children) });
     }
   }
 

@@ -385,4 +385,34 @@ describe('exportGedcom — foreign 7.0 integration round trip', () => {
     const back = mapGedcom(parseGedcom(out));
     expect(back.rawRecords.map(r => r.tag).sort()).toEqual(['SNOTE', 'SUBM']);   // preserved on re-import
   });
+
+  /**
+   * maximal70.ged's actual failure: OBJE records with LOCAL (non-http) FILE
+   * paths. Before this fix they were skipped outright (13 dangling
+   * `1 OBJE @…@` pointers on re-export); now they preserve as raw_records so
+   * the pointer resolves both in our own export and on re-import.
+   */
+  it('a foreign 7.0 file with a local-file OBJE round-trips with no dangling pointer', () => {
+    const src = [
+      '0 HEAD', '1 GEDC', '2 VERS 7.0',
+      '0 @I1@ INDI', '1 NAME A /B/', '1 OBJE @O1@',
+      '0 @O1@ OBJE', '1 FILE some/local.jpg', '2 FORM image/jpeg',
+      '0 TRLR',
+    ].join('\n');
+    const mapped = mapGedcom(parseGedcom(src));
+    expect(mapped.media).toHaveLength(0);   // local path, not http → no media row
+    db.insert(persons).values(mapped.persons).run();
+    db.insert(rawRecords).values(mapped.rawRecords).run();
+    db.insert(treeMeta).values({ id: 1, name: 'T', createdAt: 'x', slug: 't', schemaJson: JSON.stringify(mapped.schema) }).run();
+
+    const out = exportGedcom(db, { version: '7.0' });
+    const lines = out.replace(/^﻿/, '').split('\r\n');
+    expect(lines).toContain('1 OBJE @O1@');   // the INDI's pointer, preserved
+    expect(lines).toContain('0 @O1@ OBJE');   // the record itself → pointer is not dangling
+    expect(lines).toContain('1 FILE some/local.jpg');
+
+    const back = mapGedcom(parseGedcom(out));
+    expect(back.rawRecords.map(r => r.tag)).toEqual(['OBJE']);   // preserved on re-import
+    expect(back.media).toHaveLength(0);
+  });
 });

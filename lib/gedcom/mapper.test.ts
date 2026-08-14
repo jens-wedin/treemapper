@@ -121,35 +121,68 @@ describe('mapGedcom', () => {
 
   /**
    * A resolved 7.0 multimedia record whose FILE is missing or not http
-   * (e.g. a local-only path from a desktop program) must not vanish: the
-   * 5.5.1 embedded path never drops TITL/_FILESIZE when FILE is unusable,
-   * so the pointer path may not either.
+   * (e.g. a local-only path from a desktop program) must not vanish, and it
+   * must not dangle on re-export either. Its data (TITL/_FILESIZE/…) now
+   * lives in raw_records as the `0 @M9@ OBJE` record itself; the person keeps
+   * only the bare `1 OBJE @M9@` pointer, which is exactly what a 7.0 file
+   * requires — a pointer line may not carry the record's children.
    */
-  it('keeps a resolved OBJE record\'s TITL/_FILESIZE in raw_tags when its FILE is not usable', () => {
+  it('preserves a resolved-but-unusable OBJE record as a raw_record, keeping only the bare pointer on the person', () => {
     const tree = parseGedcom([
       '0 HEAD',
       '0 @I1@ INDI', '1 NAME Test /Person/', '1 OBJE @M9@',
       '0 @M9@ OBJE', '1 FILE C:\\Photos\\album.jpg', '2 FORM image/jpeg', '1 TITL Familjealbum', '1 _FILESIZE 999',
       '0 TRLR',
     ].join('\n'));
-    const { persons, media, warnings } = mapGedcom(tree);
+    const { persons, media, rawRecords } = mapGedcom(tree);
     expect(media).toHaveLength(0);   // no usable http FILE, so no media row
     const p1 = persons.find(p => p.id === 'I1')!;
-    expect(p1.rawTags).toContain('Familjealbum');
-    expect(p1.rawTags).toContain('999');
-    expect(warnings.some(w => /resolved to a record with no usable FILE/.test(w))).toBe(true);
+    expect(p1.rawTags).toContain('"tag":"OBJE"');
+    expect(p1.rawTags).toContain('"value":"@M9@"');
+    expect(p1.rawTags).not.toContain('Familjealbum');   // the record's data moved to rawRecords, not the person
+    expect(p1.rawTags).not.toContain('999');
+    const objeRecord = rawRecords.find(r => r.tag === 'OBJE' && r.xref === 'M9');
+    expect(objeRecord).toBeDefined();
+    expect(objeRecord!.rawTags).toContain('Familjealbum');
+    expect(objeRecord!.rawTags).toContain('999');
   });
 
-  it('warns about a level-0 OBJE record that no INDI points to', () => {
+  it('preserves a level-0 OBJE record that no INDI points to, instead of warning it away', () => {
     const tree = parseGedcom([
       '0 HEAD',
       '0 @I1@ INDI', '1 NAME Test /Person/',
       '0 @M7@ OBJE', '1 FILE https://x/orphan.jpg', '2 FORM image/jpeg',
       '0 TRLR',
     ].join('\n'));
-    const { media, warnings } = mapGedcom(tree);
+    const { media, rawRecords, warnings } = mapGedcom(tree);
     expect(media).toHaveLength(0);
-    expect(warnings.some(w => /OBJE record @M7@ not referenced by any INDI/.test(w))).toBe(true);
+    const objeRecord = rawRecords.find(r => r.tag === 'OBJE' && r.xref === 'M7');
+    expect(objeRecord).toBeDefined();
+    expect(objeRecord!.rawTags).toContain('https://x/orphan.jpg');
+    expect(warnings.some(w => /not referenced by any INDI/.test(w))).toBe(false);
+  });
+
+  /**
+   * The scenario maximal70.ged actually hits: an OBJE record whose FILE is a
+   * LOCAL (non-http) path. It must round-trip through rawRecords with no
+   * dangling pointer — the person's `1 OBJE @O1@` resolves to a preserved
+   * `0 @O1@ OBJE` record, not to nothing.
+   */
+  it('round-trips a local-file OBJE record via rawRecords with no dangling pointer', () => {
+    const tree = parseGedcom([
+      '0 HEAD',
+      '0 @I1@ INDI', '1 NAME Test /Person/', '1 OBJE @O1@',
+      '0 @O1@ OBJE', '1 FILE some/local.jpg', '2 FORM image/jpeg',
+      '0 TRLR',
+    ].join('\n'));
+    const mapped = mapGedcom(tree);
+    expect(mapped.media).toHaveLength(0);
+    const p1 = mapped.persons.find(p => p.id === 'I1')!;
+    expect(p1.rawTags).toContain('"tag":"OBJE"');
+    expect(p1.rawTags).toContain('"value":"@O1@"');
+    const objeRecord = mapped.rawRecords.find(r => r.tag === 'OBJE' && r.xref === 'O1');
+    expect(objeRecord).toBeDefined();
+    expect(objeRecord!.rawTags).toContain('some/local.jpg');
   });
 
   it('captures HEAD.SCHMA tag→URI and does not treat NO as an event', () => {

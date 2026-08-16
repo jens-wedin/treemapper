@@ -3,9 +3,8 @@
  *
  * Pure URL-building, kept out of React so it can be tested directly. Each site
  * is one small builder; the exact query schemes were checked against the live
- * sites (2026-08) — FamilySearch and Riksarkivet accept the parameters below,
- * ArkivDigital has no public pre-fillable search, so we scope a web search to
- * its domain instead.
+ * sites (2026-08) — FamilySearch, Geneanet and Riksarkivet all accept the
+ * parameters below.
  *
  * The subject carries only the maiden `surname` on purpose: historical records
  * index a person under the name they were born with, so a married name is not
@@ -21,7 +20,7 @@ export interface ResearchSubject {
 
 export interface ResearchLink {
   /** Stable key, also the React list key and the id the tests address. */
-  id: 'riksarkivet' | 'arkivdigital' | 'familysearch' | 'google';
+  id: 'riksarkivet' | 'familysearch' | 'geneanet' | 'google';
   /** The site's own name — a proper noun, the same in every language. */
   label: string;
   /** A search for this person, opened in a new tab. */
@@ -41,10 +40,17 @@ function riksarkivet(s: ResearchSubject): string {
   return `https://sok.riksarkivet.se/fritext?Sokord=${encodeURIComponent(fullName(s))}`;
 }
 
-function arkivdigital(s: ResearchSubject): string {
-  // No public search takes a name in its URL, so aim a domain-scoped web search
-  // at whatever of ArkivDigital's pages are indexed.
-  return google(`site:arkivdigital.se ${fullName(s)}`);
+function geneanet(s: ResearchSubject): string {
+  // en. so the site opens in English, matching the app's default language.
+  const params = new URLSearchParams({ go: '1' });
+  if (s.givenName.trim()) params.set('prenom', s.givenName.trim());
+  if (s.surname.trim()) params.set('nom', s.surname.trim());
+  if (s.birthYear != null) {
+    params.set('type_periode', 'between');
+    params.set('from', String(s.birthYear));
+    params.set('to', String(s.birthYear));
+  }
+  return `https://en.geneanet.org/fonds/individus/?${params}`;
 }
 
 function familysearch(s: ResearchSubject): string {
@@ -69,8 +75,8 @@ function googleSubject(s: ResearchSubject): string {
 export function researchLinks(subject: ResearchSubject): ResearchLink[] {
   return [
     { id: 'riksarkivet', label: 'Riksarkivet', url: riksarkivet(subject) },
-    { id: 'arkivdigital', label: 'ArkivDigital', url: arkivdigital(subject) },
     { id: 'familysearch', label: 'FamilySearch', url: familysearch(subject) },
+    { id: 'geneanet', label: 'Geneanet', url: geneanet(subject) },
     { id: 'google', label: 'Google', url: googleSubject(subject) },
   ];
 }

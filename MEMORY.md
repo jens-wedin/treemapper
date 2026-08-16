@@ -17,7 +17,7 @@ and the project is now published open-source on GitHub._
 
 A **Research elsewhere** section sits high on the person page (under the header,
 above Photos) with four outline buttons that open a pre-filled search for the
-person in a new tab: **Riksarkivet**, **ArkivDigital**, **FamilySearch**,
+person in a new tab: **Riksarkivet**, **FamilySearch**, **Geneanet**,
 **Google**. All URL-building is a pure function, `src/lib/researchLinks.ts`
 (`researchLinks(subject) → { id, label, url }[]`), unit-tested in
 `researchLinks.test.ts`; `src/components/ResearchLinks.tsx` renders it and
@@ -25,16 +25,20 @@ person in a new tab: **Riksarkivet**, **ArkivDigital**, **FamilySearch**,
 in `e2e/research-links.spec.ts`.
 
 Schemes, verified against the live sites 2026-08 (browser extension was down, so
-Riksarkivet/ArkivDigital were checked by fetching candidate URLs, not by a live
-search — worth a real click-through if they ever look wrong):
+Riksarkivet was checked by fetching candidate URLs, not by a live search — worth
+a real click-through if they ever look wrong):
 - **FamilySearch** — full deep link, separate fields: `www.familysearch.org/
   search/record/results?q.givenName=&q.surname=&q.birthLikeDate.from/.to=&q.birthLikePlace=`.
+- **Geneanet** — individuals search `en.geneanet.org/fonds/individus/?go=1&
+  prenom=<given>&nom=<surname>` (+ `type_periode=between&from=&to=<year>` when a
+  birth year is known); `en.` so it opens in English.
 - **Riksarkivet** — free-text search `sok.riksarkivet.se/fritext?Sokord=<name>`
   (the path/param the endpoint accepted; it's the searchable surface the
   husförhörslängder sit behind — a name alone can't deep-link a volume).
-- **ArkivDigital** — no public pre-fillable search (its app is behind login), so
-  a domain-scoped web search: `google.com/search?q=site:arkivdigital.se <name>`.
 - **Google** — `google.com/search?q=<name place year>`.
+
+_ArkivDigital was in the first cut but pulled 2026-08-16 (no public pre-fillable
+search — its app is behind login) and replaced with Geneanet._
 
 Decisions: searches use the **maiden `surname`, never `marriedName`** (records
 index people under their birth name); site names are proper nouns, not

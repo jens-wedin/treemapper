@@ -17,7 +17,7 @@ test('a person page offers pre-filled searches on the external archives', async 
   await expect(section.getByRole('heading', { name: 'Research elsewhere' })).toBeVisible();
 
   const links = section.getByRole('link');
-  await expect(links).toHaveText([/Riksarkivet/, /ArkivDigital/, /FamilySearch/, /Google/]);
+  await expect(links).toHaveText([/Riksarkivet/, /FamilySearch/, /Geneanet/, /Google/]);
 
   const href = async (name: RegExp) => (await section.getByRole('link', { name }).getAttribute('href'))!;
 
@@ -38,9 +38,11 @@ test('a person page offers pre-filled searches on the external archives', async 
   expect(ra.hostname).toBe('sok.riksarkivet.se');
   expect(ra.searchParams.get('Sokord')).toContain('Sven-Erik Wedin');
 
-  // ArkivDigital: no public pre-fillable search, so a domain-scoped web search.
-  const ad = new URL(await href(/ArkivDigital/));
-  expect(ad.searchParams.get('q')).toContain('site:arkivdigital.se');
+  // Geneanet: the given name and the maiden surname go in as separate fields.
+  const gn = new URL(await href(/Geneanet/));
+  expect(gn.hostname).toBe('en.geneanet.org');
+  expect(gn.searchParams.get('prenom')).toBe('Sven-Erik');
+  expect(gn.searchParams.get('nom')).toBe('Wedin');
 
   // Google: a plain web search carrying the name.
   const g = new URL(await href(/Google/));

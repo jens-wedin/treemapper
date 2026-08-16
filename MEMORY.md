@@ -7,10 +7,41 @@ in it. Environment variables are `TREEMAPPER_DB`, `TREEMAPPER_TREES_DIR`,
 `TREEMAPPER_MEDIA_DIR`, `TREEMAPPER_E2E`; browser preferences are
 `treemapper-*`, with the two older names still read once and migrated.
 
-_Last updated: 2026-08-13. All six spec phases are built, plus tree UX work, a
+_Last updated: 2026-08-16. All six spec phases are built, plus tree UX work, a
 shadcn theme, Statistics, multiple family trees, the tree in every URL, sources
 you can write out and cite by hand, several rounds of data repair, the move to
-English, GEDCOM 7.0 export — and the project is now published open-source on GitHub._
+English, GEDCOM 7.0 export, per-person research links to the external archives —
+and the project is now published open-source on GitHub._
+
+## Research-elsewhere links on the person page (2026-08-16)
+
+A **Research elsewhere** section sits high on the person page (under the header,
+above Photos) with four outline buttons that open a pre-filled search for the
+person in a new tab: **Riksarkivet**, **ArkivDigital**, **FamilySearch**,
+**Google**. All URL-building is a pure function, `src/lib/researchLinks.ts`
+(`researchLinks(subject) → { id, label, url }[]`), unit-tested in
+`researchLinks.test.ts`; `src/components/ResearchLinks.tsx` renders it and
+`PersonPage.tsx` passes `givenName / surname / birthYear / birthPlace`. e2e cover
+in `e2e/research-links.spec.ts`.
+
+Schemes, verified against the live sites 2026-08 (browser extension was down, so
+Riksarkivet/ArkivDigital were checked by fetching candidate URLs, not by a live
+search — worth a real click-through if they ever look wrong):
+- **FamilySearch** — full deep link, separate fields: `www.familysearch.org/
+  search/record/results?q.givenName=&q.surname=&q.birthLikeDate.from/.to=&q.birthLikePlace=`.
+- **Riksarkivet** — free-text search `sok.riksarkivet.se/fritext?Sokord=<name>`
+  (the path/param the endpoint accepted; it's the searchable surface the
+  husförhörslängder sit behind — a name alone can't deep-link a volume).
+- **ArkivDigital** — no public pre-fillable search (its app is behind login), so
+  a domain-scoped web search: `google.com/search?q=site:arkivdigital.se <name>`.
+- **Google** — `google.com/search?q=<name place year>`.
+
+Decisions: searches use the **maiden `surname`, never `marriedName`** (records
+index people under their birth name); site names are proper nouns, not
+translated — only the heading (`person.researchElsewhere`) and the sr-only
+`person.opensNewTab` are in the dictionaries. Plain `<a>` links, nothing sent
+until clicked (matters for the living people in the tree). To add a site: one
+builder function + one row in `researchLinks()`.
 
 ## GEDCOM 7.0 export + per-tree format (2026-08-13)
 

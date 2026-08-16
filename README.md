@@ -62,7 +62,11 @@ reserved.
 
 - **Browse** — a searchable person list (name, birth year, birth place) and a
   read-only person page with photos, a clickable family box, an event timeline
-  with citations, and notes.
+  with citations, and notes. A **Research elsewhere** row opens a pre-filled
+  search for the person — by given name, maiden surname, birth year and place —
+  at Riksarkivet (husförhörslängder), FamilySearch and Google, plus a
+  domain-scoped web search for ArkivDigital. Plain links: nothing about a living
+  person leaves the app until you click.
 - **The tree** — four views switched in the toolbar and remembered in the URL:
   **Family** (ancestors up, descendants down, partners as couples), **Pedigree**
   and **Fan chart** (ancestors only, colour-coded by the four grandparent lines,

@@ -14,6 +14,7 @@ import ProblemList from '../components/issues/ProblemList';
 import ChangeLog from '../components/issues/ChangeLog';
 import PersonEditForm from '../components/edit/PersonEditForm';
 import PhotoLightbox from '../components/PhotoLightbox';
+import ResearchLinks from '../components/ResearchLinks';
 import PhotoUpload from '../components/edit/PhotoUpload';
 import EventEditor from '../components/edit/EventEditor';
 import MarriageEditor from '../components/edit/MarriageEditor';
@@ -150,6 +151,16 @@ export default function PersonPage() {
           />
         )}
       </header>
+
+      {/* High on the page: you land on a person to research them, so the jumping-
+          off points to the archives sit right under who they are. Maiden surname
+          on purpose — records index a person under the name they were born with. */}
+      <ResearchLinks
+        givenName={person.givenName}
+        surname={person.surname}
+        birthYear={birth?.dateYear ?? null}
+        birthPlace={birth?.place ?? null}
+      />
 
       {/* Shown even with no photos: adding the first one has to be possible. */}
       <section className="mt-8">

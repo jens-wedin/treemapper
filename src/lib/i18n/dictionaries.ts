@@ -98,6 +98,7 @@ const en = {
     photoRemoveBody: 'The photo is removed from the person. The image file stays on disk, and the removal is recorded in the change log.',
     photoOpen: 'View {name} larger', photoPrev: 'Previous photo',
     photoNext: 'Next photo', photoCount: '{n} of {total}',
+    researchElsewhere: 'Research elsewhere', opensNewTab: 'opens in a new tab',
   },
   stats: { persons: 'People', families: 'Families', sources: 'Sources', photos: 'Photos' },
   issues: {
@@ -462,6 +463,7 @@ const sv: DeepPartial<Dict> = {
     photoRemoveBody: 'Fotot tas bort från personen. Bildfilen ligger kvar på disken, och borttagningen loggas i ändringshistoriken.',
     photoOpen: 'Visa {name} i större format', photoPrev: 'Föregående foto',
     photoNext: 'Nästa foto', photoCount: '{n} av {total}',
+    researchElsewhere: 'Sök vidare', opensNewTab: 'öppnas i en ny flik',
   },
   stats: { persons: 'Personer', families: 'Familjer', sources: 'Källor', photos: 'Foton' },
   issues: {
@@ -821,6 +823,7 @@ const de: DeepPartial<Dict> = {
     photoRemoveBody: 'Das Foto wird von der Person entfernt. Die Bilddatei bleibt auf der Festplatte, und die Entfernung wird im Änderungsverlauf festgehalten.',
     photoOpen: '{name} größer anzeigen', photoPrev: 'Vorheriges Foto',
     photoNext: 'Nächstes Foto', photoCount: '{n} von {total}',
+    researchElsewhere: 'Weiterforschen', opensNewTab: 'wird in einem neuen Tab geöffnet',
   },
   stats: { persons: 'Personen', families: 'Familien', sources: 'Quellen', photos: 'Fotos' },
   issues: {
@@ -1180,6 +1183,7 @@ const es: DeepPartial<Dict> = {
     photoRemoveBody: 'La foto se quita de la persona. El archivo de imagen permanece en el disco y la eliminación queda registrada en el historial de cambios.',
     photoOpen: 'Ver {name} más grande', photoPrev: 'Foto anterior',
     photoNext: 'Foto siguiente', photoCount: '{n} de {total}',
+    researchElsewhere: 'Investigar en otros sitios', opensNewTab: 'se abre en una pestaña nueva',
   },
   stats: { persons: 'Personas', families: 'Familias', sources: 'Fuentes', photos: 'Fotos' },
   issues: {

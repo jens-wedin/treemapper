@@ -94,11 +94,14 @@ reserved.
   GEDZIP whose `gedcom.ged` is imported and whose bundled photos are unpacked into
   the tree's `media/` folder as ready-to-view media. Records the app doesn't model
   are preserved verbatim as `raw_records` so a round-trip loses nothing.
-- **Export** — GEDCOM **5.5.1 or 7.0**, chosen per tree (7.0 is the default),
-  round-trip verified: exporting and re-importing reproduces every table exactly,
-  re-emitting the `raw_tags` subtrees for structures the app doesn't model. The
-  7.0 writer uses `CONT`-only continuation, IANA media types, multimedia records
-  referenced by pointers, and a `SCHMA` block declaring every extension tag.
+- **Export** — GEDCOM **5.5.1 or 7.0**, picked explicitly at download time
+  (Settings offers a button for each, plus GEDZIP); the tree's configured format
+  is the default the CLI uses. Round-trip verified: exporting and re-importing
+  reproduces every table exactly, re-emitting the `raw_tags` subtrees for
+  structures the app doesn't model. The 7.0 writer uses `CONT`-only continuation,
+  IANA media types, multimedia records referenced by pointers, and a `SCHMA`
+  block declaring every extension tag. GEDZIP is the only export that carries the
+  photo files themselves — a plain GEDCOM holds just the links.
 
 ## Languages
 

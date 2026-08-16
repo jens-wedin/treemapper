@@ -8,6 +8,64 @@ Releases are automated from [Conventional Commits](https://www.conventionalcommi
 with [release-please](https://github.com/googleapis/release-please); see
 [`RELEASING.md`](RELEASING.md).
 
+## [1.3.0](https://github.com/jens-wedin/treemapper/compare/v1.2.0...v1.3.0) (2026-08-16)
+
+
+### Added
+
+* **db:** add raw_records and tree_meta.schema_json for lossless 7.0 import ([1052273](https://github.com/jens-wedin/treemapper/commit/105227333355e80803cb0d644b4d9038f98609c0))
+* **export:** npm run export --gdz writes a GEDZIP archive ([b2728c5](https://github.com/jens-wedin/treemapper/commit/b2728c5126a735a5df5474249fe49c180778a32d))
+* **export:** serve a GEDZIP from /api/export/gedcom?container=gdz ([15dd41e](https://github.com/jens-wedin/treemapper/commit/15dd41ed36a82a98a6731e81479453e25777de0b))
+* **export:** three self-describing download buttons, and fix the misleading copy ([128a804](https://github.com/jens-wedin/treemapper/commit/128a804edb0318c799598798d0364b1dab95bdb2))
+* **export:** use the tree's format (default 7.0); ?format / --format override ([0bd2158](https://github.com/jens-wedin/treemapper/commit/0bd2158800dadb0940a0a6a238ec35ad240a8a5a))
+* **gedcom:** 7.0 header with SCHMA; tree name from tree_meta ([4ce7f9d](https://github.com/jens-wedin/treemapper/commit/4ce7f9d385c00e04518e4a7a8ea3a9d1154d5d5d))
+* **gedcom:** build a GEDZIP (.gdz) bundling a tree's downloaded photos ([c76bb86](https://github.com/jens-wedin/treemapper/commit/c76bb86d82ce0bbd9906e4580db1c5cd7ff26a46))
+* **gedcom:** capture HEAD.SCHMA, keep NO out of events, normalise octet-stream ([aef2d57](https://github.com/jens-wedin/treemapper/commit/aef2d57a9be7410011c8facf6d73a28fbefd98d7))
+* **gedcom:** CONT-only continuation for 7.0 export ([70d5df8](https://github.com/jens-wedin/treemapper/commit/70d5df82ae21f72297d004baaa163c94c00fdea8))
+* **gedcom:** decode GEDCOM bytes by width/byte-order (UTF-8/UTF-16) ([7274965](https://github.com/jens-wedin/treemapper/commit/727496580de2d6dadc107c20bcf2fdf10962922b))
+* **gedcom:** detect GEDCOM version; reject PAF, ANSEL and old versions ([4689008](https://github.com/jens-wedin/treemapper/commit/4689008b54c69fa558bae444514714d9a1ba6d19))
+* **gedcom:** IANA media type on 7.0 OBJE FORM ([2856456](https://github.com/jens-wedin/treemapper/commit/2856456191fecc41693bbfb57e0240d94b174481))
+* **gedcom:** let 7.0 export rewrite media FILE payloads (for GEDZIP) ([71e3148](https://github.com/jens-wedin/treemapper/commit/71e31489d551569260da5719bceb3f2b44c5bebb))
+* **gedcom:** map a bundled OBJE (GEDZIP) to a media row ([6bb4c92](https://github.com/jens-wedin/treemapper/commit/6bb4c920ecbbeb694edb75a8e098a13ea3a23913))
+* **gedcom:** map media file extensions to IANA types (7.0 FORM) ([4cf409c](https://github.com/jens-wedin/treemapper/commit/4cf409cfd8e8fd8749de1821ca5fce74f28d98aa))
+* **gedcom:** normalise 7.0 media type to a stored extension on import ([bb3aa47](https://github.com/jens-wedin/treemapper/commit/bb3aa47c5ec6acb8f58f499f898d968c40235fed))
+* **gedcom:** preserve unmodeled level-0 records (SNOTE/SUBM/…) verbatim on import ([f4532cd](https://github.com/jens-wedin/treemapper/commit/f4532cd1c9457bc819cccbfff38663fed319f35f))
+* **gedcom:** re-emit preserved raw_records and stored SCHMA URIs on export ([da847f5](https://github.com/jens-wedin/treemapper/commit/da847f5b52091e5908ba939569d8df3369add57b))
+* **gedcom:** read a GEDZIP back into gedcom.ged text and media bytes ([48ec783](https://github.com/jens-wedin/treemapper/commit/48ec78343117a0c0b4ad9ca15a22bcb1f8724dbd))
+* **import:** accept a GEDZIP upload (API + import form) ([e96e573](https://github.com/jens-wedin/treemapper/commit/e96e5738f5cebdc9940f64e684ca71952189b026))
+* **import:** detect the file's GEDCOM version and set the tree's export format ([9ed6b13](https://github.com/jens-wedin/treemapper/commit/9ed6b1372333370cdbcfcc8212cf34871f5575a1))
+* **import:** import a GEDZIP — extract bundled photos into the tree media folder ([1e20208](https://github.com/jens-wedin/treemapper/commit/1e20208c900b6098f71f3a1fc4f0c2604d1a4dfa))
+* **import:** reject an unsupported GEDCOM with a clear message (API 400 + CLI) ([0229b23](https://github.com/jens-wedin/treemapper/commit/0229b239870b182ae3bf7e33a101533a0ab8fcc2))
+* **import:** store preserved records and the SCHMA map on import ([b7d0482](https://github.com/jens-wedin/treemapper/commit/b7d0482cb704123efb8ba41ff7ac498ea42f9a8e))
+* **issues:** link the people named in a consistency problem to their pages ([b315680](https://github.com/jens-wedin/treemapper/commit/b3156804909dbbf1793b21d907db94e551febc8c))
+* **settings:** choose a tree's GEDCOM export format ([d9fca6b](https://github.com/jens-wedin/treemapper/commit/d9fca6bfd66ef4b150ab75b89ff2f7c37e5e7968))
+* **settings:** offer a GEDZIP (.gdz) download that bundles photos ([a3e6080](https://github.com/jens-wedin/treemapper/commit/a3e6080b150e5196be7b13868ebe0e840a9cd55a))
+* **trees:** add a per-tree GEDCOM export format (default 7.0) ([1deeea7](https://github.com/jens-wedin/treemapper/commit/1deeea78638132d84ec139c8f4815fb50114a256))
+
+
+### Fixed
+
+* **gedcom:** give 7.0 media its source OBJE xref so it can't collide with a preserved record ([32fe95d](https://github.com/jens-wedin/treemapper/commit/32fe95d6951cb51891d947a70072d1adf9c9d4c5))
+* **gedcom:** harden GEDZIP export (apiUrl query, person-only bundling, typed Response) ([cef61d1](https://github.com/jens-wedin/treemapper/commit/cef61d14b46ecf977c3e385e2245304667390bf9))
+* **gedcom:** keep a shared OBJE record verbatim instead of remapping it to a media xref ([1bf52b9](https://github.com/jens-wedin/treemapper/commit/1bf52b9890497a49e38de38aa82a50d518b94114))
+* **gedcom:** preserve a raw record's payload (e.g. a SNOTE's text) on round-trip ([ac62010](https://github.com/jens-wedin/treemapper/commit/ac620100d3aa95a2ed71519a3bbf6a2d06a8b497))
+* **gedcom:** preserve non-media OBJE records so foreign 7.0 pointers don't dangle ([56e2332](https://github.com/jens-wedin/treemapper/commit/56e23323f4e61fe7fe01b410db7a85137e1e4b99))
+* **gedcom:** put 7.0 media TITL under FILE per the 7.0 grammar ([0b4153f](https://github.com/jens-wedin/treemapper/commit/0b4153f353229722854fcfd8d526c94c7395e939))
+* **gedcom:** stop dropping data on unusable 7.0 OBJE pointers, warn on orphans ([d3fd694](https://github.com/jens-wedin/treemapper/commit/d3fd6940ce79e53117c3f1420694bcc7e17c74d8))
+* **gedcom:** valid 7.0 multimedia via OBJE records + pointers, both directions ([2f577a3](https://github.com/jens-wedin/treemapper/commit/2f577a3b332b854bccc5afb13728a3ca6b339cc2))
+* **import:** close a zip-slip via the FORM field in GEDZIP extraction ([61c2a84](https://github.com/jens-wedin/treemapper/commit/61c2a84e8708b74f2ac346f57762d8963799aedf))
+* **import:** normalise a 5.5 import's export format to 5.5.1; tidy detect test ([1a6e552](https://github.com/jens-wedin/treemapper/commit/1a6e5522f2ca0107b02093bb80f61b52df90f50a))
+* **import:** tell a non-GEDCOM file apart from an unsupported version ([58a651e](https://github.com/jens-wedin/treemapper/commit/58a651ebc1a32de8e90cf10b7185ab297cc039ec))
+* **trees:** reject invalid export format, normalise reads, leave e2e fixture as found ([d523ad2](https://github.com/jens-wedin/treemapper/commit/d523ad2065b9d01da434ae5be8bb916316b8bd8d))
+
+
+### Changed
+
+* describe 7.0 export, the per-tree format setting, and offline validation ([468289b](https://github.com/jens-wedin/treemapper/commit/468289b08625e86ccd6cdd34ce60695810c7e250))
+* describe the explicit export format choice and what GEDZIP adds ([c4ab0c4](https://github.com/jens-wedin/treemapper/commit/c4ab0c4c203f814219e19a903adacffe1d937a90))
+* document GEDZIP (.gdz) import ([4575f7d](https://github.com/jens-wedin/treemapper/commit/4575f7d04cc9b997ff81880f369895d4054f98e4))
+* mark GEDZIP export done; record maximal70 findings for P3/P4 ([ec2257b](https://github.com/jens-wedin/treemapper/commit/ec2257b6af8ec02420ce6b89bebefc9c799e2e0b))
+
 ## [1.2.0](https://github.com/jens-wedin/treemapper/compare/v1.1.0...v1.2.0) (2026-08-13)
 
 

@@ -8,6 +8,14 @@ Releases are automated from [Conventional Commits](https://www.conventionalcommi
 with [release-please](https://github.com/googleapis/release-please); see
 [`RELEASING.md`](RELEASING.md).
 
+## [1.4.0](https://github.com/jens-wedin/treemapper/compare/v1.3.0...v1.4.0) (2026-08-17)
+
+
+### Added
+
+* **person:** quick research links to external archives ([7c03128](https://github.com/jens-wedin/treemapper/commit/7c0312883cf28a7528833beb478307d49b197887))
+* **person:** swap ArkivDigital research link for Geneanet ([3f27a62](https://github.com/jens-wedin/treemapper/commit/3f27a62ab56d69b39500e339aa9970c8c515220b))
+
 ## [1.3.0](https://github.com/jens-wedin/treemapper/compare/v1.2.0...v1.3.0) (2026-08-16)
 
 
